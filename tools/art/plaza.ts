@@ -159,3 +159,43 @@ export function campusWall(): Sprite {
   return { img: out, ax: out.w / 2, ay: H + 1, block: { x: -W / 2, y: -26, w: W, h: 26 } };
 }
 void mix;
+
+/** 钓具摊（精工湖边，钓具老板的摊子）：蓝白条遮阳篷 + 木柜台 + 鱼竿架 + 水桶 + 挂鱼串。96×64（外加描边），脚点在底边正中 */
+export const FISH_STALL_W = 96, FISH_STALL_H = 64;
+export function fishStall(): Sprite {
+  const W = FISH_STALL_W, H = FISH_STALL_H, img = new Img(W, H), wood = PAL.wood;
+  const blue = hex('#3a78b4'), blueD = hex('#2a5a8a'), white = hex('#f4efe2'), whiteD = hex('#d6ceb8');
+  // ---- 两根立柱
+  for (const x of [6, 86]) { img.rect(x, 22, 4, 36, wood[1]); img.rect(x, 22, 1, 36, wood[3]); img.rect(x + 3, 22, 1, 36, wood[0]); }
+  // ---- 遮阳篷：y 4~24，蓝白条，下沿扇形
+  for (let x = 0; x < W; x++) {
+    const inset = Math.max(0, Math.round((22 - 0) * 0.0)), a = Math.floor(x / 8) % 2 === 0;
+    img.rect(x, 5 + (x < 6 || x > W - 7 ? 2 : 0), 1, 15, a ? blue : white);
+    const sc = 20 + (Math.abs((x % 8) - 3.5) < 2.5 ? 3 : 0) + (Math.abs((x % 8) - 3.5) < 1.2 ? 1 : 0);
+    for (let y = 20; y < sc; y++) img.set(x, y, a ? blueD : whiteD);
+    void inset;
+  }
+  img.rect(0, 4, W, 2, hex('#1f4466')); img.rect(8, 2, W - 16, 3, blueD);
+  // ---- 挂鱼串（篷下两条小鱼）
+  img.hline(14, 26, 68, hex('#6a5a3a'));
+  for (const [x, c] of [[24, '#9ab8d0'], [40, '#d8905a'], [58, '#a8c4d8'], [72, '#c8b070']] as [number, string][]) { img.vline(x, 26, 3, hex('#6a5a3a')); img.ellipse(x, 31, 2.5, 4, hex(c)); img.set(x - 1, 29, hex('#2a1f2e')); img.set(x, 35, hex(c)); img.set(x + 1, 36, hex(c)); }
+  // ---- 鱼竿架（左柱旁）：三根斜竿
+  for (let i = 0; i < 3; i++) { const bx = 12 + i * 4; for (let k = 0; k < 28; k++) img.set(bx + Math.round(k * 0.18), 52 - k, hex(i === 1 ? '#c8a45a' : '#3a4250')); img.set(bx + 5, 24, hex('#e8eef2')); }
+  // ---- 柜台：y 40~58
+  img.rect(4, 42, 88, 4, wood[4]); img.rect(4, 42, 88, 1, hex('#e8c48a')); img.rect(4, 46, 88, 12, wood[2]);
+  for (let x = 4; x < 92; x += 11) img.vline(x, 46, 12, wood[1]);
+  img.rect(4, 56, 88, 2, wood[0]);
+  // 价牌（深色小黑板）和招牌木条（字由地图上的标签写）
+  img.rect(34, 47, 28, 9, hex('#2f3a34')); img.rect(34, 47, 28, 1, wood[3]); img.rect(34, 55, 28, 1, wood[0]);
+  for (let i = 0; i < 3; i++) { img.hline(37, 49 + i * 2, 12 - (i % 2) * 3, hex('#e8e4da')); img.rect(53, 49 + i * 2, 4, 1, hex('#f0c040')); }
+  // ---- 柜台上的东西：饵盒（三个）、浮漂、小鱼桶
+  for (const [x, c] of [[12, '#d6405c'], [20, '#e0a52a'], [70, '#4a9a4a'], [78, '#7a2ab8']] as [number, string][]) { img.rect(x, 36, 6, 6, hex('#cfe4ee')); img.rect(x, 35, 6, 2, hex(c)); img.rect(x + 1, 39, 4, 2, hex('#5a3a20')); }
+  img.rect(46, 38, 3, 4, hex('#d6405c')); img.rect(46, 37, 3, 2, white);
+  // ---- 水桶（右前）、木桶（左前）
+  img.rect(80, 48, 12, 10, wood[3]); img.rect(80, 48, 12, 2, wood[4]); img.hline(80, 52, 12, wood[0]); img.hline(80, 56, 12, wood[0]);
+  for (let i = 0; i < 3; i++) { img.ellipse(83 + i * 3, 47, 1.8, 1.2, hex(i % 2 ? '#8fb7d8' : '#e9edf2')); }
+  const out = img.outlined(PAL.outlineBrick);
+  shadowOf(out, W / 2 + 1, H + 1, W / 2 + 3, 3);
+  // 阻挡脚印：柜台（脚点上方 22 像素，整个宽度）
+  return { img: out, ax: out.w / 2, ay: H + 1, block: { x: -W / 2 + 2, y: -22, w: W - 4, h: 22 } };
+}

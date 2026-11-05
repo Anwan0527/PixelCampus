@@ -25,7 +25,7 @@ export function bpCategory(id: string, e: { kind: string; prop?: string }): 'spo
   if (e.kind === 'prop' || e.kind === 'at' || e.kind === 'row' || e.kind === 'cluster' || e.kind === 'grove' || e.kind === 'ring' || e.kind === 'label' || e.kind === 'interact' || e.kind === 'cars') return null;
   if (/^(40|45)-/.test(file)) return 'sports';
   if (/^(20|21|25|26)-/.test(file)) return 'road';
-  if (/^(30|31|32|33|34)-/.test(file)) return 'plaza';
+  if (/^(30|31|32|33|34|35)-/.test(file)) return 'plaza';
   if (/^(05|07|12|36)-/.test(file)) return 'green';
   return null;
 }

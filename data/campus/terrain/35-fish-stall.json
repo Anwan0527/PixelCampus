@@ -1,0 +1,36 @@
+{
+ "_doc": "精工湖南岸的钓具摊（钓具老板的摊子，2026-11-05 钓鱼 3.0）：摊子（96×64 像素，3 格宽）、牌子、互动区。钓具老板是客户端按摊子位置站在摊子右边的固定 NPC；传送点 fish-stall 在 data/campus/pois.json。挪摊子：同时改这里的三处坐标和 pois.json 里的 fish-stall。",
+ "scatter": [
+  {
+   "kind": "at",
+   "prop": "fishStall",
+   "x": 193.0,
+   "y": 122.4,
+   "note": "钓具摊：买全部钓鱼用品、合成、领每日 / 每周委托"
+  },
+  {
+   "kind": "label",
+   "text": "钓具摊",
+   "x": 193.0,
+   "y": 121.78,
+   "size": 12,
+   "color": "#ffe9a0",
+   "stroke": "#2e1a10",
+   "note": "摊子前面的价牌上方",
+   "ds": 70
+  },
+  {
+   "kind": "interact",
+   "id": "fishshop",
+   "rect": [
+    190.8,
+    122.55,
+    5.6,
+    2.0
+   ],
+   "hint": "E  找钓具老板：买钓具 / 合成 / 委托",
+   "action": "fishshop",
+   "note": "站在摊子前按 E"
+  }
+ ]
+}
