@@ -25,7 +25,7 @@ export const CREDITS: readonly Credit[] = [
   { name: 'Phaser 3', by: 'Photon Storm', license: 'MIT', url: 'https://phaser.io', note: '游戏引擎' },
   { name: 'Ark Pixel Font 12px', by: 'TakWolf', license: 'SIL OFL 1.1', url: 'https://github.com/TakWolf/ark-pixel-font', note: '中文像素字体' },
   { name: 'OpenStreetMap', by: 'OpenStreetMap contributors', license: 'ODbL', url: 'https://www.openstreetmap.org/copyright', note: '校园道路数据（© OpenStreetMap contributors）' },
-  { name: '河北工程大学全景图（地图参考）', by: '维生酥鱼老师', license: '作者开源分享', url: 'https://vr.douhuiai.com/v/96t4da9wazv5fa-1788138756.html', note: '校园 VR 全景，为地图布局提供了大量参考' },
+  { name: '河北工程大学全景图（地图参考）', by: '维生酥鱼老师', license: '作者开源分享', url: 'https://mab.suyu.ink', note: '校园 VR 全景，为地图布局提供了大量参考' },
   { name: '50+ Monsters Pack 2D', by: 'isaiah658', license: 'CC0', url: 'https://opengameart.org/content/50-monsters-pack-2d', note: '精灵美术' },
   { name: 'Sensitive-lexicon', by: 'konsheng', license: 'MIT', url: 'https://github.com/konsheng/Sensitive-lexicon', note: '敏感词过滤词库（服务器端）' },
   { name: 'List of Dirty, Naughty, Obscene, and Otherwise Bad Words', by: 'LDNOOBW', license: 'CC BY 4.0', url: 'https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words', note: '脏话词库（服务器端）' },
@@ -35,6 +35,6 @@ export const CREDITS: readonly Credit[] = [
 /** 一般性致谢（不是许可要求，是想说的话） */
 export const THANKS = [
   '感谢所有来玩、提意见、留言反馈的同学和朋友。',
-  '感谢维生酥鱼老师开源的河北工程大学全景图，为本项目做了许多参考。',
+  '感谢维生酥鱼老师开源。',
   '地图依据公开的卫星影像与 OpenStreetMap 量测复原；本项目是个人学习作品，与河北工程大学没有隶属或官方关系，校名、地名仅用于描述真实地点。',
 ] as const;
