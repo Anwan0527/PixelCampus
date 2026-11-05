@@ -22,3 +22,9 @@ archive/legacy-handoff-*/
 
 data/mons/packs/local-*/
 data/mons/packs/local-*/
+
+# 开发计划 / 设计方案 / 任务拆分 / 进度路线：只在主人本机（docs/private/plans/），不进公开仓库
+docs/*_PLAN.md
+docs/*_TASKS.md
+docs/*_DESIGN.md
+docs/ROADMAP.md

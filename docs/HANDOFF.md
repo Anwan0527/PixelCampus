@@ -1,7 +1,7 @@
 # 项目交接 / 现状（2026-11-05 整理）
 
 > 给新开的对话、新协作者用：先读这一份和 `CLAUDE.md`，再按需读专题文档（§8 索引）。
-> 本文只写**现在是什么样**；做过什么看 [CHANGELOG.md](CHANGELOG.md)，有什么功能看 [FEATURES.md](FEATURES.md)，接下来做什么看 [ROADMAP.md](ROADMAP.md)。
+> 本文只写**现在是什么样**；做过什么看 [CHANGELOG.md](CHANGELOG.md)，有什么功能看 [FEATURES.md](FEATURES.md)，接下来做什么听主人的安排。
 
 ## 1. 一句话
 **像素校园 · 河北工程大学新校区**：星露谷风格的俯视角 2D 网页游戏。校园地图按卫星图 + OSM 路网还原，**多人在线**，电脑和手机都能玩。**不商用，仅个人学习。** 项目主人是中文用户，**一律用中文沟通**。
@@ -42,7 +42,7 @@ PixelGame/
 **联机（客户端视角）**：身份 = 浏览器里的随机 token，没有账号体系；服务器分配稳定的校园号（uid）；好友、私聊只认 uid；客户端通过 `src/net/client.ts` 收发 `src/shared/protocol.ts` 里的消息。世界分公共 / 个人 / 好友三种（`src/ui/WorldPanel.ts`）。详见 [MULTIPLAYER.md](MULTIPLAYER.md)。
 **经济**：校园币只由服务器入账，客户端只显示；价格与规则在 `src/shared/economy.ts` 等共享文件里，设计见 [ECONOMY.md](ECONOMY.md)。
 **安全约定**：玩家写的文字一律 `textContent` 渲染（不用 `innerHTML`）；校验逻辑放 `src/shared/`；客户端发来的东西服务器一律不信任，所以客户端只做展示与请求。
-**美术**：全部程序化、确定性；人物/小猫走 Rig 管线（外观可自定义，手持物），设计与取舍见 [ART_CHARACTER_CAT_DESIGN.md](ART_CHARACTER_CAT_DESIGN.md)；老猫的毛色与编号已冻结（别改，会影响玩家的好感记录）。
+**美术**：全部程序化、确定性；人物/小猫走 Rig 管线（外观可自定义，手持物），设计与取舍在主人本机的私有设计稿里；老猫的毛色与编号已冻结（别改，会影响玩家的好感记录）。
 
 ## 4. 关键决策与主人偏好
 - **优先级**：先外部平面与道路与真实一致，再景观；**室内试点**（2026-11-03 起只开放 42 号楼 214 室，其余关闭，扩范围要主人点头）；人物要好看；非商用。
@@ -69,26 +69,20 @@ PixelGame/
 
 ## 7. 开场建议
 1. 读本文件和 `CLAUDE.md`，`npm ci && npm run assets && npm test` 确认全绿。
-2. 看 [ROADMAP.md](ROADMAP.md) 的"下一步"和主人的新需求。
+2. 听主人的新需求（路线、方案、进度计划是主人本机的私有文档，不在公开仓库）。
 3. `npm run dev`，浏览器打开 `http://127.0.0.1:5173/?offline`。
 
 ## 8. 文档索引
 | 文档 | 内容 |
 |---|---|
 | [README.md](../README.md) | 快速开始与操作 |
-| [ROADMAP.md](ROADMAP.md) | **开发路线**：已完成里程碑、下一步、长期方向 |
 | [FEATURES.md](FEATURES.md) | 现在有什么功能（分类清单，每次更新同步） |
 | [CHANGELOG.md](CHANGELOG.md) | 每次更新了什么（按日期倒序） |
 | [COLLABORATION.md](COLLABORATION.md) | **多人协作流程**：怎么 fork、提 PR，主人怎么审、怎么上线 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 代码与数据流架构 |
 | [MULTIPLAYER.md](MULTIPLAYER.md) | 联机需求、协议、各批功能设计 |
 | [ECONOMY.md](ECONOMY.md) | 货币、商店、校园墙的设计 |
-| [WORLDS_PLAN.md](WORLDS_PLAN.md) | 个人 / 公共 / 好友世界的设计 |
-| [CHAT_CHANNELS_PLAN.md](CHAT_CHANNELS_PLAN.md) | 聊天频道系统方案（世界/附近/队伍/群聊/系统，开关静音，管理）：P1 已完成并部署，P2 群聊待做 |
-| [FISHING_V2_PLAN.md](FISHING_V2_PLAN.md) | **钓鱼系统 2.0 调研与设计方案**：星露谷钓鱼调研、神话鱼 / 特殊鱼竿 / 新饵 / 配件 / 盲盒 / 三栏图鉴、分期（已拍板：P1+P2 一起做），任务拆分见 [FISHING_V2_TASKS.md](FISHING_V2_TASKS.md)；**P1+P2 已实现并部署（2026-11-05）**，说明见 CHANGELOG；P3 第一批（钓鱼等级 / 钓具老板与委托 / 放生 / 湖边传送点）已实现并部署（2026-11-05），方案见 [FISHING_V3_PLAN.md](FISHING_V3_PLAN.md) |
-| [CHAT_P1_TASKS.md](CHAT_P1_TASKS.md) | 聊天频道 **P1 任务拆分**：协议契约、共享 / 客户端 / 服务端任务、联调验收清单 |
 | [MAP_EDITOR.md](MAP_EDITOR.md) | **地图编辑器**：主人手动微调地图的小工具、手动层格式 |
 | [MAP_PIPELINE.md](MAP_PIPELINE.md) / [SCALE.md](SCALE.md) | 地图数据来源与校验、**已知偏差**；比例约定 |
-| [ART_STYLE.md](ART_STYLE.md) / [ART_CHARACTER_CAT_DESIGN.md](ART_CHARACTER_CAT_DESIGN.md) / [ASSETS_AND_LICENSES.md](ASSETS_AND_LICENSES.md) | 美术风格；人物小猫 Rig 设计；素材许可 |
+| [ART_STYLE.md](ART_STYLE.md) / [ASSETS_AND_LICENSES.md](ASSETS_AND_LICENSES.md) | 美术风格；人物小猫 Rig 设计；素材许可 |
 | [GLB_REFERENCE.md](GLB_REFERENCE.md) | 校园 GLB 模型：是什么、能信多少、用在了哪些区域 |
-| [CREATURES_PLAN.md](CREATURES_PLAN.md) | 校园精灵（宝可梦式玩法，原创）的设计稿 |

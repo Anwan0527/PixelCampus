@@ -41,11 +41,11 @@ archive/            上一版（只读，已废弃，不入库）
 
 ## 文档
 - **[docs/HANDOFF.md](docs/HANDOFF.md) — 项目交接：现状、约定、待办、调试手册（新会话/新协作者先读这个）**
-- [docs/ROADMAP.md](docs/ROADMAP.md) 开发路线 · [docs/FEATURES.md](docs/FEATURES.md) 现有功能 · [docs/CHANGELOG.md](docs/CHANGELOG.md) 更新记录
+- [docs/FEATURES.md](docs/FEATURES.md) 现有功能 · [docs/CHANGELOG.md](docs/CHANGELOG.md) 更新记录
 - [docs/COLLABORATION.md](docs/COLLABORATION.md) 协作流程（fork + PR）
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 架构 · [docs/MULTIPLAYER.md](docs/MULTIPLAYER.md) 联机协议与各批功能设计 · [docs/ECONOMY.md](docs/ECONOMY.md) 货币/商店/校园墙设计
 - [docs/MAP_PIPELINE.md](docs/MAP_PIPELINE.md) 地图管线与已知偏差（改地图前先读）· [docs/SCALE.md](docs/SCALE.md) 比例约定
-- [docs/ART_STYLE.md](docs/ART_STYLE.md) 美术风格 · [docs/ART_CHARACTER_CAT_DESIGN.md](docs/ART_CHARACTER_CAT_DESIGN.md) 人物/小猫 Rig 设计 · [docs/ASSETS_AND_LICENSES.md](docs/ASSETS_AND_LICENSES.md) 素材许可
+- [docs/ART_STYLE.md](docs/ART_STYLE.md) 美术风格 · [docs/ASSETS_AND_LICENSES.md](docs/ASSETS_AND_LICENSES.md) 素材许可
 
 ## 许可说明
 本项目是**个人学习作品，不是开源软件**：版权所有 © 2026 [EXIST-D](https://github.com/EXIST-D)，**保留所有权利**。代码虽然公开在 GitHub 上，但公开不等于开源授权。下面是摘要，**以仓库根目录的 [LICENSE](LICENSE) 为准**（中文条款为准，文末附英文摘要）。
