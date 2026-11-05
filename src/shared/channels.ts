@@ -65,6 +65,11 @@ export function applyChannelSet(prefs: ChannelPrefsMap, ch: ChannelId, set: { on
 export const isChannelOn = (prefs: ChannelPrefsMap, ch: ChannelId): boolean => !prefs[ch]?.off;
 export const isChannelMuted = (prefs: ChannelPrefsMap, ch: ChannelId): boolean => !!prefs[ch]?.mute;
 
+/** 刚连上、服务器的 channels 还没到之前客户端先用的默认频道 */
+export const DEFAULT_CHANNEL_STATES: readonly ChannelState[] = [{ id: 'world', on: true, mute: false }, { id: 'near', on: true, mute: false }, { id: 'sys', on: true, mute: false }];
+/** 没连上服务器（单机）时的频道：只有世界（只回显自己）和系统 */
+export const OFFLINE_CHANNEL_STATES: readonly ChannelState[] = [{ id: 'world', on: true, mute: false }, { id: 'sys', on: true, mute: false }];
+
 /** 服务器发给客户端的频道状态（见 protocol.ts 的 `channels` 消息） */
 export interface ChannelState {
   id: ChannelId; on: boolean; mute: boolean;

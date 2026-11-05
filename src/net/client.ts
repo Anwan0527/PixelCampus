@@ -1,4 +1,5 @@
 import { cleanChatText, type ChatMessage } from '@/shared/chat';
+import { DEFAULT_CHANNEL_STATES, OFFLINE_CHANNEL_STATES, type ChannelId, type ChannelState } from '@/shared/channels';
 import { hueOf, type Profile } from '@/shared/profile';
 import type { BoardItem } from '@/shared/board';
 import type { WallComment, WallPost } from '@/shared/wall';
@@ -237,7 +238,9 @@ export class NetClient implements ChatTransport {
       case 'held': this.handlers.held?.(m.pid, m.h); break;
       case 'despawn': this.handlers.despawn?.(m.id); break;
       case 'correct': this.handlers.correct?.(m.x, m.y); break;
-      case 'chat': this.emit({ id: ++this.seq, kind: 'chat', pid: m.pid, uid: m.uid, from: m.from, hue: m.hue, text: m.text, ts: m.ts, mid: m.mid }); break;
+      case 'chat': this.emit({ id: ++this.seq, kind: 'chat', pid: m.pid, uid: m.uid, from: m.from, hue: m.hue, text: m.text, ts: m.ts, mid: m.mid, ...(m.ch ? { ch: m.ch } : {}) }); break;
+      case 'channels': this.setChannels(m.items); break;
+      case 'ch_result': for (const cb of this.chResultCbs) cb(m.ok, m.msg); break;
       case 'chat_recall': this.handlers.chatRecall?.(m.mids); break;
       case 'adm_chatlog': this.handlers.admChatlog?.(m.items, m.more); break;
       case 'adm_dmlog': this.handlers.admDmlog?.(m); break;
@@ -432,7 +435,7 @@ export class NetClient implements ChatTransport {
   emote(e: number) { this.tx({ t: 'emote', e }); }
   held(h: number) { this.tx({ t: 'held', h }); }
   /** 举报：kind = chat / dm / board / wall / user；ref 见 ReportDialog */
-  report(kind: ReportKind, ref: number, reason: number, note?: string, cid?: number) { this.tx({ t: 'report', kind, ref, reason, ...(note ? { note } : {}), ...(cid ? { cid } : {}) }); }
+  report(kind: ReportKind, ref: number, reason: number, note?: string, cid?: number, ch?: ChannelId) { this.tx({ t: 'report', kind, ref, reason, ...(note ? { note } : {}), ...(cid ? { cid } : {}), ...(ch && ch !== 'world' ? { ch } : {}) }); }
   /** 管理员控制台操作（服务器会检查你是不是管理员） */
   adm(op: AdminOp) { this.tx({ t: 'adm', ...op }); }
   hideLoc(on: boolean) { this.tx({ t: 'loc_hide', on }); }
@@ -470,16 +473,32 @@ export class NetClient implements ChatTransport {
   updateProfile(p: Profile) { if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'profile', profile: p })); }
 
   // ------------------------------------------------------------ ChatTransport
-  send(text: string) {
+  send(text: string, ch: ChannelId = 'world') {
     const t = cleanChatText(text);
     if (!t) return;
-    if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'chat', text: t }));
+    if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'chat', text: t, ...(ch !== 'world' ? { ch } : {}) }));
     else { const p = this.getProfile(); this.emit({ id: ++this.seq, kind: 'chat', from: p.name, hue: hueOf(p.name), text: t, ts: Date.now() }); } // 离线：只回显给自己
   }
   system(text: string) { this.emit({ id: ++this.seq, kind: 'system', text, ts: Date.now() }); }
+  /** 我现在有哪些频道（服务器发来的；没连上就是离线的两个） */
+  channels: readonly ChannelState[] = OFFLINE_CHANNEL_STATES;
+  private chCbs: ((items: readonly ChannelState[]) => void)[] = [];
+  private chResultCbs: ((ok: boolean, msg: string) => void)[] = [];
+  onChannels(cb: (items: readonly ChannelState[]) => void) { this.chCbs.push(cb); }
+  onChResult(cb: (ok: boolean, msg: string) => void) { this.chResultCbs.push(cb); }
+  private setChannels(items: readonly ChannelState[]) { this.channels = items; for (const cb of this.chCbs) cb(items); }
+  /** 改频道的开关 / 静音：在线发给服务器（它存档并回 channels）；离线只改本机的显示 */
+  chSet(ch: ChannelId, set: { on?: boolean; mute?: boolean }) {
+    if (this.status === 'online') { this.ws?.send(JSON.stringify({ t: 'ch_set', ch, ...set })); return; }
+    this.setChannels(this.channels.map((c) => (c.id === ch ? { ...c, ...(typeof set.on === 'boolean' ? { on: set.on } : {}), ...(typeof set.mute === 'boolean' ? { mute: set.mute } : {}) } : c)));
+  }
   onMessage(cb: (m: ChatMessage) => void) { this.msgCbs.push(cb); }
   onStatus(cb: (s: ChatStatus) => void) { this.statusCbs.push(cb); }
-  private setStatus(s: ChatStatus) { this.status = s; for (const cb of this.statusCbs) cb(s); }
+  private setStatus(s: ChatStatus) {
+    const was = this.status; this.status = s;
+    if (s !== was) this.setChannels(s === 'online' ? DEFAULT_CHANNEL_STATES : OFFLINE_CHANNEL_STATES); // 在线先用默认频道，服务器的 channels 随后就到
+    for (const cb of this.statusCbs) cb(s);
+  }
   private emit(m: ChatMessage) { for (const cb of this.msgCbs) cb(m); }
 }
 
