@@ -59,6 +59,8 @@ export interface ChannelState { id: ChannelId; on: boolean; mute: boolean; /** �
 **依赖**：S1、S2 先做完（契约）→ 客户端 C* 和服务端 V* **可以并行** → 联调（§5）→ 文档与部署。尺寸：S 小（≈半天内）、M 中（≈1 天）、L 大（≈2 天）。
 
 ### 共享（S）
+> **S1–S3 已完成（2026-11-05）**：`src/shared/channels.ts`、`protocol.ts`（版本 9）、`tests/channels.test.ts`（14 项）。客户端 C* 和服务端 V* 现在都可以开工，以它们为准。
+
 | # | 任务 | 内容与验收 | 尺寸 | 谁 |
 |---|---|---|---|---|
 | **S1** | `src/shared/channels.ts` | 上面 2.1 的类型 / 常量 / `cleanChannelPrefs` / `parseSlash`；`parseSlash` 覆盖：无前缀、三个前缀及别名、前缀后没内容、未知前缀、`/` 开头的普通话（如路径）、全角空格 | S | 任何人 |

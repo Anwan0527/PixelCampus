@@ -5,6 +5,15 @@
 
 ---
 
+## 2026.11.5（聊天频道 S1–S3：共享契约，玩家暂时看不到变化）更新内容
+**新增（给后续开发用的共享部分，不影响现有玩法）**
+- `src/shared/channels.ts`：频道定义（`world / near / party / sys`，名字、图标、颜色、能否发言、占位符）、频道偏好 `ChannelPrefs`（开 / 关、静音）及清洗 `cleanChannelPrefs`（只认已知频道和 off / mute，不读原型链）、`applyChannelSet`、前缀命令解析 `parseSlash`（`/w /n /p` 和中文别名，未知前缀返回 `unknown`）。
+- 协议：`chat` 带 `ch`、`ch_get`、`ch_set`、`channels`、`ch_result`，举报和管理员 `log_chat` 带 `ch`，`ChatMessage` / `ChatHistoryItem` / `AdminChatItem` / `ReportEntry` 加可选 `ch`；**`PROTOCOL_VERSION` 8 → 9**（部署时服务端和客户端必须一起上，旧页面会被要求刷新一次）。
+- 测试 568 项（新增 `tests/channels.test.ts` 14 项）。
+- 下一步：客户端 C1–C8（聊天窗口重构、频道管理面板等）和服务端 V1–V6，见 [CHAT_P1_TASKS.md](CHAT_P1_TASKS.md)。**未部署**。
+
+---
+
 ## 2026.11.5（关于面板加项目链接 + 白天变长，已部署 2026-11-05）更新内容
 **新增**
 - **「关于」面板**：加了**项目仓库链接**（https://github.com/EXIST-D/PixelCampus）和「一起开发」一节——说明代码公开，欢迎 fork 后提 Pull Request，经作者审核同意才会合并、上线由作者统一部署，并附「如何参与（协作流程）」「提想法 / 报问题（Issue）」两个链接；许可一节补了「提交的贡献按许可授权给作者」。浏览器控制台署名也带上项目地址。链接常量在 `src/shared/about.ts` 的 `ABOUT.repo`。
