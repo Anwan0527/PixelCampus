@@ -146,3 +146,9 @@
 **消息**：客户端→服务器 `equip_set {slot: rod|bait|tackle|target}`、`box_open {id}`、`craft {recipe, param?}`、`geardex_get`、`bundle_claim {id}`；服务器→客户端 `equip`（带 `tackle` / `target`）、`box_result`、`craft_result`、`geardex {gd}`、`bundle_result`；`fish_state`：fight 带 `bar/sink/cling/drop/burst/crown`，bite 带 `sonar`（鱼 id，没钓过的是 `'?'`），catch 带 `twin/box/pearl/first`。
 **校验**：装备必须在背包里、配件数不超过竿的槽数、指名目标必须是图鉴里已有的常见 / 少见 / 稀有鱼；开盲盒 / 合成 / 领册页都由服务器扣东西；合成要站在商店旁；神话条件服务器按自己的时间判断；交易禁令（`UNTRADABLE` + 盲盒 / 配件类型）在服务器的交易校验里同样生效。
 **界面**：`BackpackPanel`（装备栏 + 盲盒详情）、`BoxPanel`（开盲盒）、`ShopPanel`（钓具分栏 + 合成页）、`CodexPanel`（四个子页）、`fishData.ts`（图鉴记录 / 装备图鉴 / 当前环境的共享存储）、`fishdexModel.ts`（纯逻辑）。
+
+## 钓鱼 3.0（2026-11-05，协议版本 11）
+**共享规则**：`fishlevel.ts`（经验 / 曲线 / 软上限 / 路线 / 配方门槛 / 档案 `FishFx`）、`commissions.ts`（周编号、每日 / 每周委托、`commDelta`、`estimateCasts`、档案 `CommSave`）、`release.ts`（保护名单、放生奖励）；`craft.ts` 的 `minLevel`、`economy.ts` 的卖价加成与 `FISH_GEAR_IDS`、`gear.ts` 的 `resolveGear` 等级 / 路线参数。
+**服务端**：`Progress.fx / addXp / catchXp / setRoute / release / comm / commView / commEvent / commClaim`；`fishCatch` 结算经验与委托进度（含软上限 `fx.xd`），`afterXp` 处理升级（成就、奖励）；`onShop` 按离哪个摊子近分模式（`nearSpot('fishshop')`：摊子必须真的存在）；`onWqClaim` 要站在摊子前；登录时老玩家折算（`backfillFishLevel`）。
+**消息**：C→S `fx_get / fx_route {slot, route} / wq_get / wq_claim {id} / fish_release {id}`；S→C `fx {xp, lv, into, need, rt, rel, wk, today, up?}`、`wq {week, list, daily, allDone, allClaimed}`、`wq_result`、`release_result`；`fish_state` catch 带 `xp {total, base, perfect, isNew, capped?}` 和 `lv`。
+**地图**：`data/campus/terrain/35-fish-stall.json`（摊子、牌子、互动区 `fishshop`）、`pois.json` 的 `fish-stall`（传送落点）；美术 `tools/art/plaza.ts` 的 `fishStall()`；钓具老板是客户端 NPC（`WorldScene.spawnKeeper`，站在 `fishStall` 道具右边）。
