@@ -9,6 +9,7 @@ describe('作者声明 / 许可 / 致谢', () => {
     expect(ABOUT.github).toBe('https://github.com/EXIST-D');
     expect(ABOUT.homepage === '' || /^https:\/\//.test(ABOUT.homepage)).toBe(true);
     expect(ABOUT.site).toMatch(/^https:\/\//);
+    expect(ABOUT.repo).toBe('https://github.com/EXIST-D/PixelCampus');
     expect(copyrightLine()).toContain('EXIST-D');
   });
   it('致谢每一项都写明许可，外链只用 https', () => {

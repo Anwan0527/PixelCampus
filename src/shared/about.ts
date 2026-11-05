@@ -7,6 +7,8 @@ export const ABOUT = {
   github: 'https://github.com/EXIST-D',
   /** 作者的个人主页（填上后自动出现在「关于」里；留空就不显示） */
   homepage: '',
+  /** 项目仓库（公开，欢迎 fork 提 PR；合并由作者审核，上线由作者统一部署） */
+  repo: 'https://github.com/EXIST-D/PixelCampus',
   /** 游戏线上地址 */
   site: 'https://exist.qd.je/pixel/',
   /** 许可简称（完整条款见仓库根目录 LICENSE，线上是 ./LICENSE.txt） */

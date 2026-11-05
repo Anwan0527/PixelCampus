@@ -29,13 +29,20 @@ export class AboutPanel {
 
     const who = el('div', 'about-sec'); who.append(el('div', 'about-h', '作者'));
     const links = el('div', 'about-links');
+    links.append(link('项目仓库 · PixelCampus', ABOUT.repo));
     links.append(link(`GitHub 主页 · ${ABOUT.author}`, ABOUT.github));
     if (ABOUT.homepage) links.append(link('个人主页', ABOUT.homepage));
     links.append(link('游戏地址', ABOUT.site));
     who.append(links); body.append(who);
 
+    const dev = el('div', 'about-sec'); dev.append(el('div', 'about-h', '一起开发'));
+    dev.append(el('div', 'about-p', '这个游戏的代码公开在 GitHub，欢迎一起协作开发：fork 仓库，在自己的分支里改好，提交 Pull Request；经作者审核同意后才会合并，上线由作者统一部署。想法和建议也可以在仓库里提 Issue。'));
+    const devLinks = el('div', 'about-links');
+    devLinks.append(link('如何参与（协作流程）', `${ABOUT.repo}/blob/main/docs/COLLABORATION.md`), link('提想法 / 报问题', `${ABOUT.repo}/issues`));
+    dev.append(devLinks); body.append(dev);
+
     const lic = el('div', 'about-sec'); lic.append(el('div', 'about-h', '许可'));
-    lic.append(el('div', 'about-p', `${ABOUT.license}。可以游玩、为个人学习阅读和运行；未经许可不得商用、转载或二次发布，也不得去掉署名和水印。`));
+    lic.append(el('div', 'about-p', `${ABOUT.license}。可以游玩、为个人学习阅读和运行；未经许可不得商用、转载或二次发布，也不得去掉署名和水印。提交的贡献按许可授权给作者。`));
     lic.append(link('完整许可条款', `./${ABOUT.licenseFile}`)); body.append(lic);
 
     const th = el('div', 'about-sec'); th.append(el('div', 'about-h', '致谢'));

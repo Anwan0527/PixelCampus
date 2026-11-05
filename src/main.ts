@@ -31,5 +31,5 @@ function whenSized(cb: () => void) {
   };
   window.addEventListener('resize', onResize);
 }
-try { console.info(`%c${ABOUT.title}%c\n© ${ABOUT.year} ${ABOUT.author} · ${ABOUT.github}\n${ABOUT.license}`, 'font-weight:bold;font-size:14px', ''); } catch { /* 没有控制台也不影响 */ }
+try { console.info(`%c${ABOUT.title}%c\n© ${ABOUT.year} ${ABOUT.author} · ${ABOUT.github}\n项目：${ABOUT.repo}（欢迎提 PR）\n${ABOUT.license}`, 'font-weight:bold;font-size:14px', ''); } catch { /* 没有控制台也不影响 */ }
 whenSized(start);
