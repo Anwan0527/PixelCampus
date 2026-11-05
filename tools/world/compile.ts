@@ -155,6 +155,7 @@ for (const b of buildings) {
   buildingsOut.push(out);
 }
 log('建筑翼体', buildingSprites.length);
+if (!REGION) mkdirSync(CACHE, { recursive: true }); // 全新克隆（CI）里还没有 .cache 目录
 if (!REGION) writeFileSync(join(CACHE, 'editor-buildings.json'), JSON.stringify({ scale: S, buildings: editorOut }));
 if (!REGION) { // 给地图编辑器用的蓝图条目（原 5 m 格坐标）：只含编辑器能改的几类，已被前面各层去掉的不列，被前面各层改过的用改后的
   const base = applyBp(terrainRaw, bakedLayers);
