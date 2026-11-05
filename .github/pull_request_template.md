@@ -7,6 +7,7 @@
 - [ ] 改了 `src/shared/*`（客户端和服务器共用）→ 在下面说明：需要服务端一起部署
 - [ ] 改了 `tools/world/compile.ts`、`data/campus/*` 或美术 → 说明：合并后要重新 `npm run assets`
 - [ ] 没提交 `public/assets/generated*`、`data/server/`、口令/密钥/令牌
+- [ ] 我同意我的贡献按仓库 `LICENSE` 授权给作者（保留所有权利，仅限个人学习的非商业使用）
 
 ## 怎么验证的
 <!-- 截图、测试、手动走了哪些步骤 -->

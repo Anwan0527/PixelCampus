@@ -1,7 +1,7 @@
 # 像素校园 · 河北工程大学新校区
 
 星露谷风格的俯视角 2D 网页游戏，多人在线（Phaser 3 + TypeScript + Vite 客户端）。**不商用，仅个人学习。** © 2026 [EXIST-D](https://github.com/EXIST-D)，保留所有权利，条款见 [LICENSE](LICENSE)。
-线上：https://exist.qd.je/pixel/
+线上：https://exist.qd.je/pixel/　·　仓库：https://github.com/EXIST-D/PixelCampus（公开；欢迎 fork 提 PR，须经仓库主人审核才合并）
 
 地图**平面布局以真实校园为准**（卫星正射图量测 + OSM 交叉校验：101 栋建筑、道路网、湖、运动场、三个大门；世界 704×544 格，1 格 = 2.5 m）；
 画面（地面、建筑、树、人物、小猫、UI）全部由代码程序化生成，没有第三方素材（仅 Ark Pixel 12px 字体，OFL）。
