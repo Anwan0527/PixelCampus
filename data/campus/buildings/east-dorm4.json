@@ -1,0 +1,247 @@
+[
+ {
+  "id": "d4-a",
+  "name": "四社区A楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 311,
+    "y": 101.4,
+    "w": 12,
+    "d": 3.4
+   },
+   {
+    "x": 319.3,
+    "y": 104.8,
+    "w": 3.7,
+    "d": 3.8,
+    "door": {
+     "tx": 0.8,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-b",
+  "name": "四社区B楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 319.6,
+    "y": 109.6,
+    "w": 3.4,
+    "d": 2.4
+   },
+   {
+    "x": 311,
+    "y": 112,
+    "w": 11.7,
+    "d": 2.8,
+    "door": {
+     "tx": 3,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-c",
+  "name": "四社区C楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 310.8,
+    "y": 122,
+    "w": 11.9,
+    "d": 3.4
+   },
+   {
+    "x": 319.3,
+    "y": 125.4,
+    "w": 3.7,
+    "d": 3.5,
+    "door": {
+     "tx": 0.8,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-d",
+  "name": "四社区D楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 310.8,
+    "y": 132.6,
+    "w": 11.4,
+    "d": 3.2
+   },
+   {
+    "x": 319.3,
+    "y": 135.8,
+    "w": 3.5,
+    "d": 3.4,
+    "door": {
+     "tx": 0.8,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-i",
+  "name": "四社区I楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 310.8,
+    "y": 143,
+    "w": 12.2,
+    "d": 2.8,
+    "door": {
+     "tx": 5,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-e",
+  "name": "四社区E楼",
+  "kind": "dorm",
+  "style": "brickPale",
+  "f": 6,
+  "wings": [
+   {
+    "x": 301.5,
+    "y": 101.3,
+    "w": 3.5,
+    "d": 3.2,
+    "door": {
+     "tx": 0.8,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-f",
+  "name": "四社区F楼",
+  "kind": "dorm",
+  "style": "brickPale",
+  "f": 6,
+  "wings": [
+   {
+    "x": 301.3,
+    "y": 112,
+    "w": 3.8,
+    "d": 2.9,
+    "door": {
+     "tx": 0.9,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-bath",
+  "name": "四社区浴室",
+  "kind": "service",
+  "style": "white",
+  "f": 3,
+  "wings": [
+   {
+    "x": 300.5,
+    "y": 122,
+    "w": 6.3,
+    "d": 6.6,
+    "roof": "solar",
+    "door": {
+     "tx": 2,
+     "tw": 2
+    }
+   }
+  ],
+  "sign": "浴室"
+ },
+ {
+  "id": "d4-g",
+  "name": "四社区G楼",
+  "kind": "dorm",
+  "style": "brickPale",
+  "f": 6,
+  "wings": [
+   {
+    "x": 300.2,
+    "y": 131,
+    "w": 5,
+    "d": 4.4,
+    "door": {
+     "tx": 1.5,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-h",
+  "name": "四社区H楼",
+  "kind": "dorm",
+  "style": "brickPale",
+  "f": 6,
+  "wings": [
+   {
+    "x": 299.9,
+    "y": 142,
+    "w": 5,
+    "d": 3.8,
+    "door": {
+     "tx": 1.5,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d4-tower",
+  "name": "四社区服务楼",
+  "kind": "service",
+  "style": "white",
+  "f": 4,
+  "wings": [
+   {
+    "x": 294.8,
+    "y": 97.1,
+    "w": 6.6,
+    "d": 15.6,
+    "windows": "grid",
+    "door": {
+     "tx": 2.5,
+     "tw": 2
+    }
+   }
+  ]
+ }
+]

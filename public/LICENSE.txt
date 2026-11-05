@@ -1,0 +1,52 @@
+像素校园 · 河北工程大学新校区（PixelHue）
+Pixel Campus — Hebei University of Engineering, New Campus
+
+版权所有 © 2026 EXIST-D（https://github.com/EXIST-D）。保留所有权利。
+Copyright (c) 2026 EXIST-D. All rights reserved.
+
+本项目是个人学习作品，不是开源软件。源代码、程序化生成的美术与音效、地图数据加工结果、
+游戏设计与文字内容（以下合称"本作品"）的版权归作者所有。
+
+一、你可以（无需申请）
+  1. 在线游玩本作品；
+  2. 为个人学习、研究的目的阅读源代码，在自己的电脑上运行、修改，用来学习；
+  3. 在个人学习笔记、课程作业中引用少量片段，并注明出处（作者 EXIST-D、项目名称与链接）；
+  4. 分享游戏截图、录屏（截图里的作者水印请保留）。
+
+二、未经作者书面许可，你不可以
+  1. 将本作品或其中的主要部分用于任何商业目的（售卖、收费、接广告、付费服务、商业宣传等）；
+  2. 复制、再发布、转售本作品，或把它部署为对公众开放的服务；
+  3. 删除、遮盖或篡改作品中的版权声明、作者署名、水印和致谢；
+  4. 声称本作品或其主要部分是你自己创作的，或以作者的名义发布、背书；
+  5. 将本作品用于违法用途，或用于训练、微调机器学习模型并对外发布。
+
+三、协作者的贡献
+  向本项目提交代码、美术或文字（例如 Pull Request），即表示你保证对其拥有权利，并授予作者
+  永久的、全球范围的、免费的、不可撤销的许可，可以以任何方式使用、修改、发布并再授权你的贡献；
+  你保留对自己贡献的署名权。
+
+四、第三方内容
+  本作品使用的第三方库、字体、素材、数据遵循它们各自的许可，不受本许可证约束，见游戏内「关于」
+  面板与 docs/ASSETS_AND_LICENSES.md。其中 OpenStreetMap 数据需署名 © OpenStreetMap contributors。
+
+五、玩家内容
+  玩家在游戏里发布的文字（聊天、留言、校园墙等）版权归玩家本人；玩家发布即同意本游戏在其服务中
+  展示这些内容，并由管理员按规则审核、撤回或删除。
+
+六、关于校名
+  本项目与河北工程大学没有隶属、授权或官方关系。校名、地名、建筑名只用来描述真实地点。
+
+七、免责声明
+  本作品"按现状"提供，不附带任何明示或暗示的担保，包括适销性、特定用途适用性和不侵权的担保。
+  在法律允许的最大范围内，作者不对因使用本作品产生的任何损失承担责任。
+
+需要商业使用、转载、合作或其他授权，请通过 GitHub 联系作者：https://github.com/EXIST-D
+
+---
+English summary (the Chinese text above is the controlling version):
+Copyright (c) 2026 EXIST-D. All rights reserved. This is a personal learning project, not open
+source. You may play it, read the source code and run/modify it locally for personal, non-commercial
+study. Without written permission you may not use it commercially, redistribute or host it publicly,
+remove copyright notices/credits/watermarks, claim it as your own, or use it to train models that
+are then published. Contributions are licensed to the author perpetually and irrevocably. Third-party
+components remain under their own licenses. Provided "AS IS" without warranty of any kind.

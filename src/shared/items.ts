@@ -1,0 +1,106 @@
+/**
+ * 背包与物品（客户端与服务器共用）。
+ * 背包存在服务器上（跟着身份走：换设备/用备份码恢复后物品还在），客户端只显示；所有增减都由服务器根据规则执行——
+ * 将来的物品交互、彩蛋触发（"背包里有 X 才能触发"）也都由服务器判断，不信任客户端。
+ * 背包的数据形态很简单：物品 id → 数量。格子的排列由 ITEMS 的顺序决定，不存位置。
+ */
+export type ItemKind = 'food' | 'collect' | 'key' | 'tool' | 'fish';
+export interface ItemDef { id: string; name: string; desc: string; kind: ItemKind; stack: number }
+
+/** 物品目录。新增物品：在这里加一项，并在 tools/art/items.ts 里画同名图标 */
+export const ITEMS = [
+  { id: 'cat_food', name: '猫粮', desc: '一小袋猫咪爱吃的猫粮。走近校园里的小猫，按 E 就能投喂。每天第一次进入校园会补到 5 包。', kind: 'food', stack: 99 },
+  { id: 'cat_treat', name: '猫条', desc: '小猫最爱的零食，投喂时好感度涨得更多。和小猫熟悉起来之后，它们会回赠给你。', kind: 'food', stack: 99 },
+  { id: 'ginkgo_leaf', name: '银杏叶', desc: '一片金黄的银杏叶，是小猫叼来送你的。也许哪天能派上用场。', kind: 'collect', stack: 99 },
+  { id: 'cat_badge', name: '爱猫徽章', desc: '和一只小猫成为"亲密"好友的证明。', kind: 'key', stack: 1 },
+  { id: 'fishing_rod', name: '鱼竿', desc: '一根结实的竹节鱼竿。走到精工湖边，面朝水面按 E 抛竿。', kind: 'tool', stack: 1 },
+  { id: 'bait', name: '鱼饵', desc: '一小盒蚯蚓。每抛一次竿用掉一份。每天登录、做每日任务都会送。', kind: 'tool', stack: 99 },
+  { id: 'bait_pro', name: '香饵', desc: '加了特制香料的鱼饵：咬钩更快，稀有鱼更爱上钩。抛竿时优先用掉。商店有售。', kind: 'tool', stack: 99 },
+  { id: 'mon_ball', name: '零食包', desc: '战斗里用来收服野生精灵：把它扔出去，血量越低的精灵越容易上钩（成不成功都会用掉）。每天登录会补到 5 包，商店有售。', kind: 'tool', stack: 99 },
+  { id: 'rod_carbon', name: '碳素鱼竿', desc: '又轻又韧的碳素鱼竿：拉鱼更轻松、咬钩更快、稀有鱼更多。有多根竿时自动用最好的。', kind: 'tool', stack: 1 },
+  { id: 'rod_golden', name: '金龙鱼竿', desc: '传说中的金色鱼竿：拉鱼大幅放宽、咬钩最快、稀有鱼显著增多。', kind: 'tool', stack: 1 },
+  { id: 'cat_bed', name: '猫窝', desc: '软软的猫窝。在小猫面板里送给一只小猫：它有了自己的窝（只有你看得到），好感度 +20。', kind: 'food', stack: 99 },
+  { id: 'fish_crucian', name: '鲫鱼', desc: '精工湖里最常见的鱼，个头不大，劲儿不小。', kind: 'fish', stack: 99 },
+  { id: 'fish_carp', name: '鲤鱼', desc: '红尾巴的大鲤鱼，湖边的老住户。', kind: 'fish', stack: 99 },
+  { id: 'fish_grass', name: '草鱼', desc: '爱吃水草的草鱼，长得又长又结实。', kind: 'fish', stack: 99 },
+  { id: 'fish_gudgeon', name: '麦穗鱼', desc: '小小的、闪着银光的野生小鱼，总在岸边打转，反应快得很。', kind: 'fish', stack: 99 },
+  { id: 'fish_loach', name: '泥鳅', desc: '滑溜溜的泥鳅，下雨天会从泥里钻出来。', kind: 'fish', stack: 99 },
+  { id: 'fish_shrimp', name: '河虾', desc: '透明的小河虾，夏天最多，冬天几乎看不到。', kind: 'fish', stack: 99 },
+  { id: 'fish_bream', name: '鳊鱼', desc: '扁扁的、银亮亮的一条。', kind: 'fish', stack: 99 },
+  { id: 'fish_snakehead', name: '黑鱼', desc: '凶巴巴的黑鱼，夜里更活跃。', kind: 'fish', stack: 99 },
+  { id: 'fish_catfish', name: '鲶鱼', desc: '长着长胡须的鲶鱼，喜欢在夜里出来。', kind: 'fish', stack: 99 },
+  { id: 'fish_silver', name: '鲢鱼', desc: '身子银白、游得悠闲的大鱼，劲儿很稳。', kind: 'fish', stack: 99 },
+  { id: 'fish_bighead', name: '鳙鱼', desc: '大脑袋的胖头鱼，一条就沉甸甸的。', kind: 'fish', stack: 99 },
+  { id: 'fish_crayfish', name: '小龙虾', desc: '举着大钳子的小龙虾，夏天最爱横着走。', kind: 'fish', stack: 99 },
+  { id: 'fish_goldfish', name: '金鱼', desc: '不知道是谁放生在湖里的金鱼，金灿灿的。', kind: 'fish', stack: 99 },
+  { id: 'fish_koi', name: '锦鲤', desc: '传说钓到锦鲤会有好运。白天更容易遇见。', kind: 'fish', stack: 99 },
+  { id: 'fish_culter', name: '翘嘴鲌', desc: '嘴巴向上翘的凶猛掠食者，窜得飞快。', kind: 'fish', stack: 99 },
+  { id: 'fish_mandarin', name: '鳜鱼', desc: '背上带着花纹的鳜鱼，春天肉最肥。', kind: 'fish', stack: 99 },
+  { id: 'fish_turtle', name: '中华鳖', desc: '慢吞吞的老鳖，夜里会爬到岸边来，冬天躲起来睡觉。', kind: 'fish', stack: 99 },
+  { id: 'fish_eel', name: '黄鳝', desc: '细长滑腻的黄鳝，夜里和雨天出来觅食，像一条小蛇。', kind: 'fish', stack: 99 },
+  { id: 'fish_blackcarp', name: '青鱼', desc: '青灰色的大家伙，力气大得惊人，传说它们能长得比人还长。', kind: 'fish', stack: 99 },
+  { id: 'fish_salamander', name: '娃娃鱼', desc: '叫声像婴儿的大鲵，只在夜里和雨天出没，十分罕见。', kind: 'fish', stack: 99 },
+  { id: 'fish_arowana', name: '银龙鱼', desc: '银鳞闪闪、须须飘飘的龙鱼，夏天更容易遇到。', kind: 'fish', stack: 99 },
+  { id: 'fish_sturgeon', name: '鲟鱼', desc: '古老的大鱼，身披骨板，冬天的深水里最容易遇见。', kind: 'fish', stack: 99 },
+  { id: 'fish_goldkoi', name: '黄金锦鲤', desc: '传说中通体金色的锦鲤王，只在白天、阳光好的时候才会露面。', kind: 'fish', stack: 99 },
+  { id: 'fish_icefish', name: '冰湖银鱼王', desc: '只在冬天冰冷的湖水里出现的银白色小王者，窜动起来几乎看不清。', kind: 'fish', stack: 99 },
+  { id: 'fish_lakedragon', name: '精工湖神龙', desc: '湖里的传说：下雨的夜里，水面下有一条巨大的影子游过……', kind: 'fish', stack: 99 },
+  { id: 'junk_boot', name: '旧球鞋', desc: '不知道谁掉进湖里的球鞋。也许是个教训。', kind: 'collect', stack: 99 },
+  { id: 'junk_weed', name: '水草', desc: '缠在鱼钩上的一团水草。', kind: 'collect', stack: 99 },
+  { id: 'junk_can', name: '空易拉罐', desc: '锈迹斑斑的易拉罐。请把垃圾带去垃圾桶。', kind: 'collect', stack: 99 },
+  { id: 'junk_bottle', name: '空饮料瓶', desc: '漂在湖里的空瓶子，被你捞上来了。', kind: 'collect', stack: 99 },
+  { id: 'trash_paper', name: '废纸团', desc: '从垃圾桶里翻出来的一团揉皱的草稿纸，上面写满了算不出来的高数题。', kind: 'collect', stack: 99 },
+  { id: 'trash_cup', name: '空奶茶杯', desc: '喝得只剩几颗珍珠的奶茶杯。', kind: 'collect', stack: 99 },
+  { id: 'trash_wrapper', name: '零食包装袋', desc: '被捏成一团的零食包装袋，还有一点辣条的味道。', kind: 'collect', stack: 99 },
+  { id: 'trash_chopsticks', name: '一次性筷子', desc: '用过的一次性筷子，没什么用处。', kind: 'collect', stack: 99 },
+  { id: 'trash_peel', name: '香蕉皮', desc: '一张香蕉皮。小心，别踩上去。', kind: 'collect', stack: 99 },
+  { id: 'bin_usb', name: 'U盘', desc: '垃圾桶底下摸出来的 U 盘，贴着"毕业论文·终稿·真的终稿"的标签。居然是好东西，拿去校园商店能卖 999 校园币。', kind: 'collect', stack: 99 },
+] as const satisfies readonly ItemDef[];
+
+export type ItemId = (typeof ITEMS)[number]['id'];
+export type Inv = Record<string, number>;
+export interface Gain { id: string; n: number }
+
+/** 背包界面的格子数（物品种类不会超过它） */
+export const INV_SLOTS = 48;
+
+const BY_ID = new Map<string, ItemDef>(ITEMS.map((i) => [i.id, i]));
+export const itemDef = (id: string): ItemDef | undefined => BY_ID.get(id);
+export const isItemId = (id: unknown): id is ItemId => typeof id === 'string' && BY_ID.has(id);
+
+/** 从磁盘/网络来的背包数据：只保留认识的物品，数量收敛到 1..堆叠上限 */
+export function cleanInv(raw: unknown): Inv {
+  const out: Inv = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [id, n] of Object.entries(raw as Record<string, unknown>)) {
+    const d = BY_ID.get(id);
+    if (!d || typeof n !== 'number' || !Number.isFinite(n)) continue;
+    const v = Math.min(d.stack, Math.floor(n));
+    if (v >= 1) out[id] = v;
+  }
+  return out;
+}
+
+/** 放进背包（原地修改），返回实际放进去的数量（超出堆叠上限的部分放不下） */
+export function invAdd(inv: Inv, id: string, n: number): number {
+  const d = BY_ID.get(id);
+  if (!d || !Number.isInteger(n) || n <= 0) return 0;
+  const have = inv[id] ?? 0, add = Math.max(0, Math.min(n, d.stack - have));
+  if (add > 0) inv[id] = have + add;
+  return add;
+}
+
+/** 从背包拿走（原地修改）。不够就一个也不拿，返回 false */
+export function invTake(inv: Inv, id: string, n: number): boolean {
+  if (!Number.isInteger(n) || n <= 0 || (inv[id] ?? 0) < n) return false;
+  inv[id] -= n;
+  if (inv[id] <= 0) delete inv[id];
+  return true;
+}
+
+export const invCount = (inv: Inv, id: string) => inv[id] ?? 0;
+
+/** 界面用：按目录顺序列出背包里有的物品 */
+export function invList(inv: Inv): { def: ItemDef; n: number }[] {
+  return ITEMS.filter((d) => (inv[d.id] ?? 0) > 0).map((def) => ({ def, n: inv[def.id] }));
+}

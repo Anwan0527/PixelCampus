@@ -1,0 +1,48 @@
+{
+  "name": "pixel-campus",
+  "version": "0.3.0",
+  "private": true,
+  "description": "像素校园（河北工程大学新校区）— 星露谷风格俯视角 2D 探索游戏",
+  "author": "EXIST-D (https://github.com/EXIST-D)",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://exist.qd.je/pixel/",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "ref:fetch": "tsx tools/reference/fetch-satellite.ts",
+    "ref:view": "tsx tools/reference/render-views.ts",
+    "assets": "tsx tools/build-assets.ts",
+    "assets:art": "tsx tools/art/index.ts",
+    "assets:world": "tsx tools/world/compile.ts",
+    "assets:interiors": "tsx tools/world/interiors.ts",
+    "server": "tsx server/index.ts",
+    "assets:s1": "SCALE=1 OUT=generated-s1 tsx tools/world/compile.ts",
+    "serve": "npm run build && tsx server/index.ts",
+    "bots": "tsx server/bot.ts",
+    "deploy": "bash deploy/deploy.sh",
+    "board": "bash deploy/board.sh",
+    "admin:set": "node deploy/set-admin.mjs",
+    "editor": "tsx tools/editor/server.ts",
+    "bake": "tsx tools/editor/bake.ts"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/ws": "^8.18.2",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.7",
+    "vitest": "^5.0.5"
+  }
+}

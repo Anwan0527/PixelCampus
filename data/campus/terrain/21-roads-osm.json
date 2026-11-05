@@ -1,0 +1,74 @@
+{
+ "_doc": "校园环路与门前车道：折线直接取自 OSM（Maxar 影像描图，约 0.3 格精度）。way 坐标由 tools/reference/osm-roads.ts 转为 tile 存在 osm-roads.json。",
+ "shapes": [
+  {
+   "kind": "stroke",
+   "mat": "path",
+   "w": 5.4,
+   "osm": 775116469,
+   "note": "环路(南/西)人行道 OSM775116469"
+  },
+  {
+   "kind": "stroke",
+   "mat": "path",
+   "w": 5.4,
+   "osm": 1561666646,
+   "note": "环路(北/东)人行道 OSM1561666646"
+  },
+  {
+   "kind": "stroke",
+   "mat": "asphalt",
+   "w": 3.2,
+   "mark": "center",
+   "osm": 775116469,
+   "note": "环路：西→西南→南广场东西路→东(y≈212) OSM775116469"
+  },
+  {
+   "kind": "stroke",
+   "mat": "asphalt",
+   "w": 3.2,
+   "mark": "center",
+   "osm": 1561666646,
+   "note": "环路：西北→湖北→北主路(y≈44)→东环路(x≈329) OSM1561666646"
+  },
+  {
+   "kind": "stroke",
+   "mat": "asphalt",
+   "w": 2.2,
+   "osm": 775116468,
+   "note": "南环路 OSM775116468"
+  },
+  {
+   "kind": "stroke",
+   "mat": "asphalt",
+   "w": 2,
+   "osm": 775116464,
+   "note": "东侧南北路南段 x≈236 OSM775116464"
+  },
+  {
+   "kind": "stroke",
+   "mat": "asphalt",
+   "w": 3.4,
+   "osm": 775116467,
+   "note": "南门西车道 OSM775116467",
+   "mark": "center"
+  },
+  {
+   "kind": "stroke",
+   "mat": "asphalt",
+   "w": 3.4,
+   "osm": 775116466,
+   "note": "南门东车道 OSM775116466",
+   "mark": "center"
+  },
+  {
+   "kind": "stroke",
+   "mat": "asphalt",
+   "w": 4.2,
+   "osm": 775116465,
+   "note": "南门中轴出口 OSM775116465"
+  }
+ ],
+ "scatter": [],
+ "blocks": []
+}

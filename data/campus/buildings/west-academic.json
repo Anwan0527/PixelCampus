@@ -1,0 +1,268 @@
+[
+ {
+  "id": "info-elec",
+  "name": "信息与电气工程学院",
+  "kind": "teaching",
+  "style": "brick",
+  "f": 5,
+  "roofTone": 0,
+  "wings": [
+   {
+    "x": 97,
+    "y": 85.5,
+    "w": 15,
+    "d": 4.5,
+    "door": {
+     "tx": 6.7,
+     "tw": 2.5,
+     "main": true
+    }
+   },
+   {
+    "x": 99,
+    "y": 91.5,
+    "w": 3,
+    "d": 3.5
+   }
+  ],
+  "sign": "信息与电气工程学院",
+  "ground": true
+ },
+ {
+  "id": "mech",
+  "name": "机械与装备工程学院",
+  "kind": "teaching",
+  "style": "brick",
+  "f": 5,
+  "roofTone": 0,
+  "wings": [
+   {
+    "x": 97,
+    "y": 97,
+    "w": 15.5,
+    "d": 4,
+    "door": {
+     "tx": 6.7,
+     "tw": 2.5,
+     "main": true
+    }
+   },
+   {
+    "x": 107,
+    "y": 101,
+    "w": 5.5,
+    "d": 2
+   }
+  ],
+  "sign": "机械与装备工程学院",
+  "ground": true
+ },
+ {
+  "id": "material",
+  "name": "材料科学与工程学院",
+  "kind": "teaching",
+  "style": "brickPale",
+  "f": 5,
+  "roofTone": 0,
+  "wings": [
+   {
+    "x": 117.5,
+    "y": 86,
+    "w": 25,
+    "d": 4.5,
+    "door": {
+     "tx": 8.1,
+     "tw": 3,
+     "main": true
+    }
+   },
+   {
+    "x": 136.5,
+    "y": 90.5,
+    "w": 6,
+    "d": 3.5
+   }
+  ],
+  "sign": "材料科学与工程学院",
+  "ground": true
+ },
+ {
+  "id": "lab-a",
+  "name": "学院配套楼",
+  "kind": "lab",
+  "style": "white",
+  "f": 3,
+  "roofTone": 1,
+  "wings": [
+   {
+    "x": 117.5,
+    "y": 96.5,
+    "w": 7,
+    "d": 6.5,
+    "door": {
+     "tx": 1.9,
+     "tw": 2
+    }
+   }
+  ],
+  "ground": true
+ },
+ {
+  "id": "mining",
+  "name": "矿业与测绘工程学院",
+  "kind": "teaching",
+  "style": "brick",
+  "f": 5,
+  "roofTone": 0,
+  "wings": [
+   {
+    "x": 126.5,
+    "y": 97,
+    "w": 15,
+    "d": 4.5,
+    "door": {
+     "tx": 4.3,
+     "tw": 3,
+     "main": true
+    }
+   },
+   {
+    "x": 138.5,
+    "y": 102.5,
+    "w": 9,
+    "d": 4.5
+   }
+  ],
+  "sign": "矿业与测绘工程学院",
+  "ground": true
+ },
+ {
+  "id": "geo",
+  "name": "地球科学与工程学院",
+  "kind": "teaching",
+  "style": "brick",
+  "f": 5,
+  "roofTone": 0,
+  "wings": [
+   {
+    "x": 124.5,
+    "y": 108.5,
+    "w": 17.5,
+    "d": 4,
+    "door": {
+     "tx": 10.3,
+     "tw": 3,
+     "main": true
+    }
+   }
+  ],
+  "sign": "地球科学与工程学院",
+  "ground": true
+ },
+ {
+  "id": "practice",
+  "name": "实验实训楼",
+  "kind": "lab",
+  "style": "brickPale",
+  "f": 4,
+  "roofTone": 0,
+  "wings": [
+   {
+    "x": 82.5,
+    "y": 105.5,
+    "w": 17.5,
+    "d": 4.5
+   },
+   {
+    "x": 98.5,
+    "y": 106,
+    "w": 2,
+    "d": 8
+   },
+   {
+    "x": 81.5,
+    "y": 111,
+    "w": 3,
+    "d": 4.5
+   },
+   {
+    "x": 82,
+    "y": 117,
+    "w": 17.5,
+    "d": 4,
+    "door": {
+     "tx": 6.9,
+     "tw": 3,
+     "main": true
+    }
+   }
+  ],
+  "sign": "实验实训楼",
+  "ground": true
+ },
+ {
+  "id": "public-1",
+  "name": "第一公共教学楼",
+  "kind": "teaching",
+  "style": "brick",
+  "f": 5,
+  "roofTone": 0,
+  "interior": "classroom",
+  "desc": "全校公共课所在的教学楼，学生每天最常穿行的地方：四翼围合的大院，南侧斜翼，东侧是通向图书馆广场的平台。",
+  "wings": [
+   {
+    "x": 126.7,
+    "y": 129.1,
+    "w": 31.2,
+    "d": 4.5
+   },
+   {
+    "x": 121.7,
+    "y": 129.5,
+    "w": 5,
+    "d": 7.8
+   },
+   {
+    "x": 157.9,
+    "y": 129.1,
+    "w": 4.9,
+    "d": 17.6
+   },
+   {
+    "x": 145.1,
+    "y": 141.3,
+    "w": 12.8,
+    "d": 5.2,
+    "door": {
+     "tx": 4.5,
+     "tw": 3,
+     "main": true
+    }
+   },
+   {
+    "x": 123.5,
+    "y": 140.8,
+    "w": 15.8,
+    "d": 7.4,
+    "rot": 27
+   }
+  ],
+  "sign": "第一教学楼"
+ },
+ {
+  "id": "public-1-podium",
+  "name": "第一公共教学楼平台",
+  "kind": "misc",
+  "style": "sand",
+  "f": 2,
+  "roofTone": 0,
+  "wings": [
+   {
+    "x": 162.8,
+    "y": 135.5,
+    "w": 3,
+    "d": 11.5
+   }
+  ]
+ }
+]

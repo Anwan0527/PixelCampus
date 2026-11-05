@@ -1,0 +1,260 @@
+[
+ {
+  "id": "d3-a",
+  "name": "三社区A楼",
+  "kind": "dorm",
+  "style": "white",
+  "f": 6,
+  "wings": [
+   {
+    "x": 232.8,
+    "y": 13.2,
+    "w": 16.2,
+    "d": 4.1
+   },
+   {
+    "x": 231.2,
+    "y": 17.3,
+    "w": 4.7,
+    "d": 5,
+    "door": {
+     "tx": 1.2,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 1
+ },
+ {
+  "id": "d3-bath",
+  "name": "三社区浴室",
+  "kind": "service",
+  "style": "white",
+  "f": 3,
+  "wings": [
+   {
+    "x": 252.9,
+    "y": 11,
+    "w": 7.1,
+    "d": 7.2,
+    "roof": "solar",
+    "door": {
+     "tx": 2.5,
+     "tw": 2
+    }
+   }
+  ],
+  "sign": "浴室"
+ },
+ {
+  "id": "d3-e",
+  "name": "三社区E楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 265.3,
+    "y": 13.2,
+    "w": 17.8,
+    "d": 4.4
+   },
+   {
+    "x": 278.4,
+    "y": 17.6,
+    "w": 4.7,
+    "d": 4.3,
+    "door": {
+     "tx": 1.2,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d3-b",
+  "name": "三社区B楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 232.8,
+    "y": 23.5,
+    "w": 9.3,
+    "d": 4.1
+   },
+   {
+    "x": 231.2,
+    "y": 27.6,
+    "w": 4.7,
+    "d": 4.7,
+    "door": {
+     "tx": 1.2,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "d3-c",
+  "name": "三社区C楼",
+  "kind": "dorm",
+  "style": "brick",
+  "f": 6,
+  "wings": [
+   {
+    "x": 246.5,
+    "y": 23.5,
+    "w": 20.6,
+    "d": 4.1,
+    "door": {
+     "tx": 9,
+     "tw": 2
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "logistics-1",
+  "name": "第一后勤服务楼",
+  "kind": "service",
+  "style": "brickPale",
+  "f": 3,
+  "wings": [
+   {
+    "x": 292,
+    "y": 13.9,
+    "w": 14.4,
+    "d": 3.3,
+    "door": {
+     "tx": 6,
+     "tw": 2
+    }
+   }
+  ],
+  "sign": "后勤服务楼"
+ },
+ {
+  "id": "clinic",
+  "name": "校医院",
+  "kind": "service",
+  "style": "white",
+  "f": 3,
+  "wings": [
+   {
+    "x": 291.4,
+    "y": 19.4,
+    "w": 14.4,
+    "d": 4.4,
+    "roof": "hip",
+    "door": {
+     "tx": 6,
+     "tw": 2,
+     "main": true
+    }
+   }
+  ],
+  "sign": "校医院"
+ },
+ {
+  "id": "canteen-3",
+  "name": "第三学生食堂",
+  "kind": "canteen",
+  "style": "sand",
+  "f": 3,
+  "wings": [
+   {
+    "x": 293.7,
+    "y": 47.8,
+    "w": 10,
+    "d": 12,
+    "roof": "flat",
+    "door": {
+     "tx": 4,
+     "tw": 2.5,
+     "main": true
+    }
+   }
+  ],
+  "sign": "第三食堂"
+ },
+ {
+  "id": "muslim-restaurant",
+  "name": "民族餐厅",
+  "kind": "canteen",
+  "style": "brick",
+  "f": 2,
+  "wings": [
+   {
+    "x": 293.1,
+    "y": 62.2,
+    "w": 10.5,
+    "d": 6.7,
+    "door": {
+     "tx": 4,
+     "tw": 2
+    }
+   }
+  ],
+  "sign": "民族餐厅"
+ },
+ {
+  "id": "market-2",
+  "name": "学生超市",
+  "kind": "service",
+  "style": "brickPale",
+  "f": 3,
+  "wings": [
+   {
+    "x": 293,
+    "y": 69.5,
+    "w": 9,
+    "d": 10,
+    "roof": "flat",
+    "door": {
+     "tx": 3.5,
+     "tw": 2
+    }
+   }
+  ],
+  "sign": "超市"
+ },
+ {
+  "id": "svc-small",
+  "name": "后勤值班室",
+  "kind": "service",
+  "style": "brick",
+  "f": 2,
+  "wings": [
+   {
+    "x": 301.4,
+    "y": 22.8,
+    "w": 3.9,
+    "d": 5
+   }
+  ]
+ },
+ {
+  "id": "svc-small-2",
+  "name": "门卫室",
+  "kind": "service",
+  "style": "brick",
+  "f": 2,
+  "wings": [
+   {
+    "x": 294.2,
+    "y": 28.9,
+    "w": 11.1,
+    "d": 3.9,
+    "door": {
+     "tx": 4.5,
+     "tw": 2
+    }
+   }
+  ]
+ }
+]

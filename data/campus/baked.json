@@ -1,0 +1,6253 @@
+{
+ "version": 1,
+ "layers": [
+  {
+   "at": "2026-11-03T02:11",
+   "version": 1,
+   "shapes": [
+    {
+     "id": "smvzbuk4wb",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 167.25,
+     "y": 236.75,
+     "w": 0.25,
+     "h": 1
+    },
+    {
+     "id": "smvzbvlz5c",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 169,
+     "y": 236.5,
+     "w": 2,
+     "h": 1
+    },
+    {
+     "id": "smvzbvnj6d",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 169,
+     "y": 237,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvp29e",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 169.5,
+     "y": 237.5,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvprjf",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 170,
+     "y": 237.5,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvqmbg",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 169,
+     "y": 237.5,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvr8ih",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 169.5,
+     "y": 238,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvrxii",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 169,
+     "y": 238,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvsivj",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 170,
+     "y": 238,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvu7rk",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 170.5,
+     "y": 237,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvvbcl",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 170.5,
+     "y": 237.5,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbvvw6m",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 170.5,
+     "y": 238,
+     "w": 0.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbxtsgn",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 190.5,
+     "y": 237,
+     "w": 1,
+     "h": 1.5
+    },
+    {
+     "id": "smvzbxwpso",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 190.5,
+     "y": 238.5,
+     "w": 1,
+     "h": 0.5
+    },
+    {
+     "id": "smvzbye4gp",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 162.5,
+     "y": 237,
+     "w": 5,
+     "h": 0.5
+    },
+    {
+     "id": "smvzbyjloq",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 156,
+     "y": 236.5,
+     "w": 2.5,
+     "h": 1
+    },
+    {
+     "id": "smvzbyu8rr",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 162.5,
+     "y": 236.75,
+     "w": 4.75,
+     "h": 0.25
+    },
+    {
+     "id": "smvzbywqls",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 162.25,
+     "y": 236.75,
+     "w": 1,
+     "h": 0.5
+    },
+    {
+     "id": "smvzbyz10t",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 163.25,
+     "y": 237.25,
+     "w": 4.25,
+     "h": 0.25
+    },
+    {
+     "id": "smvzbzajpv",
+     "kind": "rect",
+     "mat": "plazaWarm",
+     "x": 162.5,
+     "y": 236,
+     "w": 5,
+     "h": 0.5
+    },
+    {
+     "id": "smvzbzk4uw",
+     "kind": "rect",
+     "mat": "plazaWarm",
+     "x": 162.5,
+     "y": 239,
+     "w": 4.75,
+     "h": 0.5
+    },
+    {
+     "id": "smvzbznfdx",
+     "kind": "rect",
+     "mat": "plazaWarm",
+     "x": 162.5,
+     "y": 238.75,
+     "w": 4.75,
+     "h": 0.5
+    },
+    {
+     "id": "smvzbzwkzy",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 167.25,
+     "y": 236,
+     "w": 0.75,
+     "h": 0.75
+    },
+    {
+     "id": "smvzc0bklz",
+     "kind": "rect",
+     "mat": "plazaWarm",
+     "x": 192,
+     "y": 239,
+     "w": 4.75,
+     "h": 0.75
+    },
+    {
+     "id": "smvzc4kd510",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 204.5,
+     "y": 237,
+     "w": 1.75,
+     "h": 1
+    },
+    {
+     "id": "smvzc4ofy11",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 192,
+     "y": 237,
+     "w": 4.75,
+     "h": 0.5
+    },
+    {
+     "id": "smvzcam7e12",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 191.75,
+     "y": 237,
+     "w": 0.75,
+     "h": 0.25
+    },
+    {
+     "id": "smvzcap3313",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 196.5,
+     "y": 237,
+     "w": 0.75,
+     "h": 0.25
+    },
+    {
+     "id": "smvzcbapl14",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 178.5,
+     "y": 211,
+     "w": 5.25,
+     "h": 2.5
+    },
+    {
+     "id": "smvzcc2w716",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 178.5,
+     "y": 210.75,
+     "w": 5.25,
+     "h": 0.25
+    },
+    {
+     "id": "smvzccaht17",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 168.25,
+     "y": 213.75,
+     "w": 2.25,
+     "h": 0.5
+    },
+    {
+     "id": "smvzce8wg1",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 134,
+     "y": 213,
+     "w": 2.5,
+     "h": 2
+    },
+    {
+     "id": "smvzceatf2",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 133.5,
+     "y": 212.5,
+     "w": 0.5,
+     "h": 2.5
+    },
+    {
+     "id": "smvzcmrl80",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 234.5,
+     "y": 209,
+     "w": 3,
+     "h": 2.5
+    },
+    {
+     "id": "smvzcmvw31",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 234,
+     "y": 209,
+     "w": 0.5,
+     "h": 2.5
+    },
+    {
+     "id": "smvzct3z14",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 259,
+     "y": 200,
+     "w": 1.25,
+     "h": 2
+    },
+    {
+     "id": "smvzct6hr5",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 237.25,
+     "y": 200.75,
+     "w": 2.25,
+     "h": 1.25
+    },
+    {
+     "id": "smvzctec36",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 285.5,
+     "y": 200.75,
+     "w": 3.75,
+     "h": 1.25
+    },
+    {
+     "id": "smvzcv41e7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 235.25,
+     "y": 167.25,
+     "w": 2.75,
+     "h": 4.5
+    },
+    {
+     "id": "smvzd4dr43",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 337,
+     "y": 164.5,
+     "w": 2,
+     "h": 3
+    },
+    {
+     "id": "smvzd4k3l4",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 337.5,
+     "y": 171,
+     "w": 1.5,
+     "h": 3
+    },
+    {
+     "id": "smvzd56ob5",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 335.5,
+     "y": 164.5,
+     "w": 1,
+     "h": 9.5
+    },
+    {
+     "id": "smvzd5d0l6",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 335.5,
+     "y": 174,
+     "w": 1.5,
+     "h": 0.5
+    },
+    {
+     "id": "smvzd5gz17",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 335.5,
+     "y": 174.5,
+     "w": 1.5,
+     "h": 0.5
+    },
+    {
+     "id": "smvzd5qe68",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 336.5,
+     "y": 164.5,
+     "w": 0.75,
+     "h": 10.5
+    },
+    {
+     "id": "smvzd5v6u9",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 337.25,
+     "y": 173,
+     "w": 1.75,
+     "h": 3.25
+    },
+    {
+     "id": "smvzd6egea",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 339,
+     "y": 165.75,
+     "w": 8.25,
+     "h": 2
+    },
+    {
+     "id": "smvzd6ijbb",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 339,
+     "y": 173,
+     "w": 8.25,
+     "h": 1.75
+    },
+    {
+     "id": "smvzd6qqac",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 320.75,
+     "y": 168.25,
+     "w": 3,
+     "h": 3
+    },
+    {
+     "id": "smvze09xp0",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 263,
+     "y": 98,
+     "w": 14,
+     "h": 21.5
+    },
+    {
+     "id": "smvze0k591",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 277,
+     "y": 110.5,
+     "w": 10,
+     "h": 28
+    },
+    {
+     "id": "smvze112v2",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 263,
+     "y": 119.5,
+     "w": 14,
+     "h": 19
+    },
+    {
+     "id": "smvze300v5",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 263,
+     "y": 113,
+     "w": 24,
+     "h": 2
+    },
+    {
+     "id": "smvze69qk8",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 237.5,
+     "y": 95.5,
+     "w": 3,
+     "h": 6
+    },
+    {
+     "id": "smvze6v21b",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 239,
+     "y": 97.5,
+     "w": 23,
+     "h": 3
+    },
+    {
+     "id": "smvze7adzc",
+     "kind": "rect",
+     "mat": "plazaDark",
+     "x": 238.5,
+     "y": 100,
+     "w": 23.5,
+     "h": 1.5
+    },
+    {
+     "id": "smvze7wp7d",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 277,
+     "y": 98,
+     "w": 10,
+     "h": 0.5
+    },
+    {
+     "id": "smvze8uzmg",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 279,
+     "y": 100,
+     "w": 1.5,
+     "h": 9
+    },
+    {
+     "id": "smvze8zvjh",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 282,
+     "y": 100,
+     "w": 1.5,
+     "h": 9
+    },
+    {
+     "id": "smvze97jbi",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 286,
+     "y": 98.5,
+     "w": 1,
+     "h": 10.5
+    },
+    {
+     "id": "smvzfb28q2",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 290,
+     "y": 113,
+     "w": 19,
+     "h": 9
+    },
+    {
+     "id": "smvzfdpjo0",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 290,
+     "y": 115,
+     "w": 19.5,
+     "h": 2
+    },
+    {
+     "id": "smvzfdy1g1",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 309.5,
+     "y": 99,
+     "w": 1.5,
+     "h": 20.5
+    },
+    {
+     "id": "smvzfef4y3",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 309,
+     "y": 98.5,
+     "w": 1,
+     "h": 21.5
+    },
+    {
+     "id": "smvzff0f55",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 298.5,
+     "y": 108.5,
+     "w": 12.5,
+     "h": 1
+    },
+    {
+     "id": "smvzfjur58",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 289,
+     "y": 96.5,
+     "w": 38.5,
+     "h": 2
+    },
+    {
+     "id": "smvzfkc2x9",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 311,
+     "y": 98.5,
+     "w": 14,
+     "h": 13
+    },
+    {
+     "id": "smvzfkes5a",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 298,
+     "y": 107,
+     "w": 11,
+     "h": 6.5
+    },
+    {
+     "id": "smvzfkr8xb",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 298.5,
+     "y": 104,
+     "w": 12,
+     "h": 1
+    },
+    {
+     "id": "smvzfuwsg0",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 290,
+     "y": 98.5,
+     "w": 19,
+     "h": 2
+    },
+    {
+     "id": "smvzfv1181",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 298,
+     "y": 107,
+     "w": 11,
+     "h": 5.5
+    },
+    {
+     "id": "smvzfv87g2",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 309,
+     "y": 104,
+     "w": 16,
+     "h": 1
+    },
+    {
+     "id": "smvzfyfok3",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 290,
+     "y": 105.5,
+     "w": 4,
+     "h": 3.5
+    },
+    {
+     "id": "smvzfzwb10",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 311,
+     "y": 115,
+     "w": 14,
+     "h": 2
+    },
+    {
+     "id": "smvzg12e42",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 323,
+     "y": 111,
+     "w": 2,
+     "h": 4
+    },
+    {
+     "id": "smvzg1sum3",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 311,
+     "y": 117.5,
+     "w": 13.5,
+     "h": 22
+    },
+    {
+     "id": "smvzg1zlo4",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 309,
+     "y": 117.5,
+     "w": 2,
+     "h": 29.5
+    },
+    {
+     "id": "smvzg2tld8",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 311,
+     "y": 137,
+     "w": 13,
+     "h": 6
+    },
+    {
+     "id": "smvzgcdjjc",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 290,
+     "y": 117,
+     "w": 19,
+     "h": 31.5
+    },
+    {
+     "id": "smvzgdcoff",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 297,
+     "y": 119.5,
+     "w": 8,
+     "h": 8
+    }
+   ],
+   "objects": [],
+   "rows": [],
+   "erase": [
+    {
+     "id": "emvzd2s0j0",
+     "rect": [
+      238,
+      94,
+      1,
+      1
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzd2tw81",
+     "rect": [
+      238,
+      101,
+      1,
+      0.5
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzd3cch2",
+     "rect": [
+      236,
+      66.5,
+      1.5,
+      2
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzdkqfnd",
+     "rect": [
+      288,
+      162.75,
+      1.75,
+      1.75
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzdks5oe",
+     "rect": [
+      287.75,
+      166,
+      1.75,
+      2
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzdktmxf",
+     "rect": [
+      287.75,
+      169.25,
+      2,
+      1.75
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzdm6trg",
+     "rect": [
+      288.25,
+      133.25,
+      1.5,
+      2
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzdm8v0h",
+     "rect": [
+      288,
+      136,
+      2.5,
+      3
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzdmaari",
+     "rect": [
+      287,
+      139.5,
+      3,
+      1.75
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzdmcmwj",
+     "rect": [
+      287.75,
+      142.5,
+      2.5,
+      6.75
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvze1zab3",
+     "rect": [
+      262,
+      98,
+      25,
+      31.5
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvze26gw4",
+     "rect": [
+      262,
+      129.5,
+      25,
+      9
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvze86zge",
+     "rect": [
+      276.5,
+      99,
+      11,
+      11
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvze9mfsj",
+     "rect": [
+      288,
+      97,
+      21.5,
+      42
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzeaj71k",
+     "rect": [
+      288,
+      97,
+      22,
+      43
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzffcv16",
+     "rect": [
+      311,
+      98.5,
+      14,
+      22.5
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzffiv57",
+     "rect": [
+      305,
+      101,
+      14.5,
+      21
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzg0uz81",
+     "rect": [
+      319,
+      104.5,
+      3.5,
+      2
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzg29om5",
+     "rect": [
+      311,
+      120,
+      13,
+      27.5
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzg2dy36",
+     "rect": [
+      311,
+      145.5,
+      14.5,
+      9.5
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emvzg2o757",
+     "rect": [
+      309,
+      124.5,
+      16.5,
+      19
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzgcmwsd",
+     "rect": [
+      290,
+      139,
+      38,
+      8.5
+     ],
+     "what": "props"
+    },
+    {
+     "id": "emvzgcupse",
+     "rect": [
+      290,
+      139,
+      37.5,
+      8.5
+     ],
+     "what": "trees"
+    }
+   ],
+   "buildings": [
+    {
+     "id": "d4-f",
+     "name": "四社区A楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 300.5,
+       "y": 111,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 302.5,
+       "y": 111,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 304.5,
+       "y": 111,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 306.5,
+       "y": 111,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 300.5,
+       "y": 109,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 302.5,
+       "y": 109,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 304.5,
+       "y": 109,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 306.5,
+       "y": 109,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ],
+     "sign": "四社区A楼"
+    },
+    {
+     "id": "d4-e",
+     "name": "四社区A楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 304.5,
+       "y": 98.5,
+       "w": 3.5,
+       "d": 3,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 0.9,
+        "tw": 2
+       }
+      },
+      {
+       "x": 302.5,
+       "y": 98.5,
+       "w": 2,
+       "d": 3,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 300.5,
+       "y": 98.5,
+       "w": 2,
+       "d": 3,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 302.5,
+       "y": 98.5,
+       "w": 2,
+       "d": 3,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 304.5,
+       "y": 98.5,
+       "w": 2,
+       "d": 3,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 306.5,
+       "y": 98.5,
+       "w": 2,
+       "d": 3,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ],
+     "sign": "四社区A楼"
+    },
+    {
+     "id": "d4-tower",
+     "name": "四社区A楼",
+     "kind": "service",
+     "wings": [
+      {
+       "x": 294,
+       "y": 97,
+       "w": 6.5,
+       "d": 16,
+       "f": 4,
+       "style": "white",
+       "windows": "grid",
+       "roofTone": 1,
+       "door": {
+        "tx": 2.6,
+        "tw": 2
+       }
+      }
+     ],
+     "sign": "四社区A楼"
+    },
+    {
+     "id": "d4-b",
+     "name": "四社区C楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 321.5,
+       "y": 107,
+       "w": 3.5,
+       "d": 2.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 313,
+       "y": 109.5,
+       "w": 12,
+       "d": 3,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 3.1,
+        "tw": 2
+       }
+      },
+      {
+       "x": 321.5,
+       "y": 105,
+       "w": 3.5,
+       "d": 2,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ],
+     "sign": "四社区C楼"
+    },
+    {
+     "id": "d4-a",
+     "name": "四社区C楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 313,
+       "y": 98.5,
+       "w": 12,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 321.5,
+       "y": 102,
+       "w": 3.5,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 0.7,
+        "tw": 2
+       }
+      }
+     ],
+     "sign": "四社区C楼"
+    },
+    {
+     "id": "d4-bath",
+     "name": "四社区浴室",
+     "kind": "service",
+     "sign": "浴室",
+     "wings": [
+      {
+       "x": 301.5,
+       "y": 117,
+       "w": 6.5,
+       "d": 6.5,
+       "f": 3,
+       "style": "white",
+       "roof": "solar",
+       "roofTone": 1,
+       "door": {
+        "tx": 2.05,
+        "tw": 2
+       }
+      }
+     ]
+    },
+    {
+     "id": "d4-c",
+     "name": "四社区D楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 313,
+       "y": 120.5,
+       "w": 12,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 321.5,
+       "y": 124,
+       "w": 3.5,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 0.7,
+        "tw": 2
+       }
+      },
+      {
+       "x": 321.5,
+       "y": 127.5,
+       "w": 3.5,
+       "d": 2,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 321.5,
+       "y": 129.5,
+       "w": 3.5,
+       "d": 2,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 321.5,
+       "y": 131.5,
+       "w": 3.5,
+       "d": 2,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 321.5,
+       "y": 133.5,
+       "w": 3.5,
+       "d": 2,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 321.5,
+       "y": 135.5,
+       "w": 3.5,
+       "d": 2,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ],
+     "sign": "四社区D楼"
+    },
+    {
+     "id": "d4-d",
+     "name": "四社区D楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 313,
+       "y": 129.5,
+       "w": 11.5,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "d4-i",
+     "name": "四社区D楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 313,
+       "y": 137.5,
+       "w": 12,
+       "d": 3,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 4.9,
+        "tw": 2
+       }
+      },
+      {
+       "x": 313,
+       "y": 140.5,
+       "w": 12,
+       "d": 2,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ],
+     "sign": "四社区D楼"
+    },
+    {
+     "id": "d4-g",
+     "name": "四社区B楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 296.5,
+       "y": 128,
+       "w": 5,
+       "d": 4.5,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 1.4,
+        "tw": 2
+       }
+      },
+      {
+       "x": 296.5,
+       "y": 132.5,
+       "w": 5,
+       "d": 2.5,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 301.5,
+       "y": 128,
+       "w": 2.5,
+       "d": 4.5,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 304,
+       "y": 128,
+       "w": 2,
+       "d": 4.5,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 306,
+       "y": 128,
+       "w": 2,
+       "d": 4.5,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ],
+     "sign": "四社区B楼"
+    },
+    {
+     "id": "d4-h",
+     "name": "四社区B楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 296.5,
+       "y": 135,
+       "w": 5,
+       "d": 3.5,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 1.6,
+        "tw": 2
+       }
+      },
+      {
+       "x": 296.5,
+       "y": 138.5,
+       "w": 5,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 296.5,
+       "y": 140.5,
+       "w": 5,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 301.5,
+       "y": 140.5,
+       "w": 2.5,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 304,
+       "y": 140.5,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 306,
+       "y": 140.5,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 301.5,
+       "y": 138.5,
+       "w": 2.5,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 304,
+       "y": 138.5,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 306,
+       "y": 138.5,
+       "w": 2,
+       "d": 2,
+       "f": 6,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ],
+     "sign": "四社区B楼"
+    },
+    {
+     "id": "se-small-1",
+     "name": "配套用房",
+     "kind": "service",
+     "delete": true,
+     "wings": []
+    },
+    {
+     "id": "se-small-2",
+     "name": "配套用房",
+     "kind": "service",
+     "delete": true,
+     "wings": []
+    }
+   ]
+  },
+  {
+   "at": "2026-11-03T03:50",
+   "version": 1,
+   "shapes": [
+    {
+     "id": "smw02culx0",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 263.5,
+     "y": 46.5,
+     "w": 23,
+     "h": 49.5
+    },
+    {
+     "id": "smw02u6380",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 236,
+     "y": 95.5,
+     "w": 51,
+     "h": 2.5
+    },
+    {
+     "id": "smw02ury11",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 286.5,
+     "y": 46.5,
+     "w": 3.5,
+     "h": 121.5
+    },
+    {
+     "id": "smw02vp2q2",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 311,
+     "y": 144,
+     "w": 16,
+     "h": 3
+    },
+    {
+     "id": "smw02vun43",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 327,
+     "y": 144,
+     "w": 0.5,
+     "h": 3
+    },
+    {
+     "id": "smw02w5yj4",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 327.5,
+     "y": 146.5,
+     "w": 3,
+     "h": 18
+    },
+    {
+     "id": "smw03e3n30",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 287,
+     "y": 15,
+     "w": 3,
+     "h": 34.5
+    },
+    {
+     "id": "smw03e9cq1",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 286.5,
+     "y": 15,
+     "w": 0.5,
+     "h": 34.5
+    },
+    {
+     "id": "smw03hynm0",
+     "kind": "poly",
+     "mat": "plaza",
+     "pts": [
+      [
+       269,
+       95.5
+      ],
+      [
+       269,
+       92
+      ],
+      [
+       273,
+       91
+      ],
+      [
+       276,
+       95.5
+      ],
+      [
+       271,
+       95.5
+      ]
+     ]
+    },
+    {
+     "id": "smw03wfxh1",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 247,
+     "y": 111.25,
+     "w": 14.75,
+     "h": 1.25
+    },
+    {
+     "id": "smw03wlh22",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 247,
+     "y": 114.75,
+     "w": 14.75,
+     "h": 1.25
+    },
+    {
+     "id": "smw03xqq53",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 247.25,
+     "y": 123,
+     "w": 14.5,
+     "h": 0.75
+    },
+    {
+     "id": "smw03xu184",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 247.25,
+     "y": 123.75,
+     "w": 0.75,
+     "h": 2.25
+    },
+    {
+     "id": "smw03y2n85",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 247.25,
+     "y": 122.5,
+     "w": 0.75,
+     "h": 0.5
+    },
+    {
+     "id": "smw03y5re6",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 247.25,
+     "y": 126,
+     "w": 0.75,
+     "h": 1.25
+    },
+    {
+     "id": "smw03yb497",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 248,
+     "y": 125.25,
+     "w": 13.75,
+     "h": 0.75
+    },
+    {
+     "id": "smw03ynls8",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 263,
+     "y": 123,
+     "w": 15,
+     "h": 0.75
+    },
+    {
+     "id": "smw03ywfn9",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 263,
+     "y": 125.25,
+     "w": 15,
+     "h": 0.75
+    },
+    {
+     "id": "smw03z54kb",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 274.75,
+     "y": 121.75,
+     "w": 1,
+     "h": 1.25
+    },
+    {
+     "id": "smw03z9mzc",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 277.25,
+     "y": 121.75,
+     "w": 0.75,
+     "h": 6
+    },
+    {
+     "id": "smw043sue1",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 238.25,
+     "y": 132,
+     "w": 23.5,
+     "h": 6.5
+    },
+    {
+     "id": "smw047p8i3",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 282,
+     "y": 115,
+     "w": 2,
+     "h": 21.5
+    },
+    {
+     "id": "smw047vn24",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 278,
+     "y": 135.25,
+     "w": 4,
+     "h": 1.25
+    },
+    {
+     "id": "smw048grt7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 278,
+     "y": 136.5,
+     "w": 1.75,
+     "h": 6.5
+    },
+    {
+     "id": "smw049eiz9",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 263,
+     "y": 141.25,
+     "w": 15,
+     "h": 1.75
+    },
+    {
+     "id": "smw04knou0",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 238,
+     "y": 138.5,
+     "w": 24,
+     "h": 9.5
+    },
+    {
+     "id": "smw04le403",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 238.5,
+     "y": 141,
+     "w": 24.5,
+     "h": 8
+    },
+    {
+     "id": "smw04lt784",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 263,
+     "y": 138.5,
+     "w": 15,
+     "h": 2.5
+    },
+    {
+     "id": "smw04rvkg0",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 238,
+     "y": 135.5,
+     "w": 1,
+     "h": 4
+    },
+    {
+     "id": "smw04rzy31",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 239,
+     "y": 135.5,
+     "w": 11,
+     "h": 1
+    },
+    {
+     "id": "smw04sf4m3",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 239,
+     "y": 138.5,
+     "w": 12.5,
+     "h": 1
+    },
+    {
+     "id": "smw04sin24",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 249,
+     "y": 136.5,
+     "w": 1,
+     "h": 2
+    },
+    {
+     "id": "smw04szbs5",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 251.5,
+     "y": 135.5,
+     "w": 1.5,
+     "h": 7.5
+    },
+    {
+     "id": "smw04t8ei7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 253,
+     "y": 141.25,
+     "w": 10,
+     "h": 1.75
+    },
+    {
+     "id": "smw04tigi8",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 253,
+     "y": 135.5,
+     "w": 8.75,
+     "h": 1.25
+    },
+    {
+     "id": "smw04x4leb",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 279.75,
+     "y": 138.5,
+     "w": 6.75,
+     "h": 5.5
+    },
+    {
+     "id": "smw04y8pdg",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 284.75,
+     "y": 145,
+     "w": 1.75,
+     "h": 8.25
+    },
+    {
+     "id": "smw04yf63h",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 280.5,
+     "y": 145,
+     "w": 1.75,
+     "h": 8.25
+    }
+   ],
+   "objects": [],
+   "rows": [
+    {
+     "id": "rmw051z05m",
+     "k": "maple",
+     "pts": [
+      [
+       285.75,
+       116.25
+      ],
+      [
+       285.75,
+       137
+      ]
+     ],
+     "spacing": 1
+    }
+   ],
+   "erase": [
+    {
+     "id": "emw02k4g00",
+     "rect": [
+      250.5,
+      134.5,
+      11,
+      4.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw03f98a2",
+     "rect": [
+      263.5,
+      47.5,
+      23,
+      48
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emw03fcla3",
+     "rect": [
+      263,
+      47,
+      24,
+      9.5
+     ],
+     "what": "trees"
+    },
+    {
+     "id": "emw03g84k0",
+     "rect": [
+      263.5,
+      46.5,
+      22.5,
+      43
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw03gg8j1",
+     "rect": [
+      263,
+      88,
+      23.5,
+      7.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw03necs1",
+     "rect": [
+      239,
+      100.5,
+      23,
+      21
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw03nko32",
+     "rect": [
+      238,
+      121,
+      24,
+      17.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw049ynfa",
+     "rect": [
+      259.25,
+      139.25,
+      27.25,
+      14
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw04ktz11",
+     "rect": [
+      238,
+      140,
+      26.5,
+      14.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw04l7i22",
+     "rect": [
+      237,
+      136.5,
+      22,
+      7
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw04wc6t9",
+     "rect": [
+      262.25,
+      136.75,
+      5.75,
+      4
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw04ymr5i",
+     "rect": [
+      276.75,
+      145.5,
+      11.75,
+      13.5
+     ],
+     "what": "all"
+    }
+   ],
+   "buildings": [
+    {
+     "id": "life-food",
+     "name": "生命科学与食品工程学院",
+     "kind": "teaching",
+     "sign": "生命科学与食品工程学院",
+     "wings": [
+      {
+       "x": 242,
+       "y": 123,
+       "w": 4.5,
+       "d": 7.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 242,
+       "y": 130.5,
+       "w": 19,
+       "d": 4,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "medical",
+     "name": "医学院",
+     "kind": "teaching",
+     "sign": "医学院",
+     "wings": [
+      {
+       "x": 242,
+       "y": 117.5,
+       "w": 19,
+       "d": 5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.8,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "landscape",
+     "name": "园林与生态工程学院",
+     "kind": "teaching",
+     "sign": "园林与生态工程学院",
+     "wings": [
+      {
+       "x": 269,
+       "y": 117.5,
+       "w": 12.5,
+       "d": 4.5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.25,
+        "tw": 2,
+        "main": true
+       }
+      },
+      {
+       "x": 278,
+       "y": 122,
+       "w": 3.5,
+       "d": 8.5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 263,
+       "y": 130.5,
+       "w": 19,
+       "d": 4,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "math-physics",
+     "name": "数理科学与工程学院",
+     "kind": "teaching",
+     "sign": "数理科学与工程学院",
+     "wings": [
+      {
+       "x": 242,
+       "y": 104.5,
+       "w": 19,
+       "d": 6,
+       "f": 5,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 9.2,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 242,
+       "y": 110.5,
+       "w": 4.5,
+       "d": 7,
+       "f": 5,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "se-small-3",
+     "name": "配套用房",
+     "kind": "service",
+     "fixed": true,
+     "wings": [
+      {
+       "x": 267.5,
+       "y": 134.25,
+       "w": 6.5,
+       "d": 9,
+       "f": 2,
+       "style": "white",
+       "roofTone": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "at": "2026-11-03T05:32",
+   "version": 1,
+   "shapes": [
+    {
+     "id": "smw06wikn0",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 286.5,
+     "y": 168,
+     "w": 3.5,
+     "h": 75
+    },
+    {
+     "id": "smw06yndp2",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 238,
+     "y": 165.5,
+     "w": 48.5,
+     "h": 2.5
+    },
+    {
+     "id": "smw06z0ls3",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 238,
+     "y": 170.5,
+     "w": 48.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw06z5ah4",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 284,
+     "y": 170.5,
+     "w": 2.5,
+     "h": 9.5
+    },
+    {
+     "id": "smw06zxis6",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 279,
+     "y": 181.25,
+     "w": 7.5,
+     "h": 8.75
+    },
+    {
+     "id": "smw071bi1a",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 277.75,
+     "y": 175,
+     "w": 8.75,
+     "h": 1
+    },
+    {
+     "id": "smw071j2qc",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 283,
+     "y": 176,
+     "w": 1,
+     "h": 4
+    },
+    {
+     "id": "smw071t61d",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 277.75,
+     "y": 176,
+     "w": 1.25,
+     "h": 4
+    },
+    {
+     "id": "smw07207he",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 283,
+     "y": 181.25,
+     "w": 1,
+     "h": 3.75
+    },
+    {
+     "id": "smw07262mf",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 277.75,
+     "y": 185,
+     "w": 8.75,
+     "h": 1
+    },
+    {
+     "id": "smw0728zog",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 277.75,
+     "y": 181.25,
+     "w": 1.25,
+     "h": 3.75
+    },
+    {
+     "id": "smw072spdi",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 238,
+     "y": 179.75,
+     "w": 4,
+     "h": 1.75
+    },
+    {
+     "id": "smw0732cpj",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 242,
+     "y": 179.75,
+     "w": 44.5,
+     "h": 1.75
+    },
+    {
+     "id": "smw074t4nm",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 327.75,
+     "y": 98.5,
+     "w": 3,
+     "h": 66
+    },
+    {
+     "id": "smw075ikgn",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 327.75,
+     "y": 173.75,
+     "w": 2.5,
+     "h": 39.25
+    },
+    {
+     "id": "smw075yvbo",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 327,
+     "y": 173.5,
+     "w": 0.75,
+     "h": 39.5
+    },
+    {
+     "id": "smw07ihp92",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 235.5,
+     "y": 46.25,
+     "w": 3,
+     "h": 89.25
+    },
+    {
+     "id": "smw07ksvh3",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 235.5,
+     "y": 135.5,
+     "w": 3,
+     "h": 75.5
+    },
+    {
+     "id": "smw07pmss4",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 238.5,
+     "y": 46.25,
+     "w": 23.25,
+     "h": 23
+    },
+    {
+     "id": "smw07rfj46",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 238.5,
+     "y": 69.25,
+     "w": 23.25,
+     "h": 26
+    },
+    {
+     "id": "smw07x69l8",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 238.5,
+     "y": 69.25,
+     "w": 23.25,
+     "h": 1.25
+    },
+    {
+     "id": "smw07xnrpa",
+     "kind": "rect",
+     "mat": "plazaDark",
+     "x": 250.25,
+     "y": 47.25,
+     "w": 3,
+     "h": 13.75
+    },
+    {
+     "id": "smw07xxwjc",
+     "kind": "rect",
+     "mat": "plazaDark",
+     "x": 238.5,
+     "y": 51,
+     "w": 2.25,
+     "h": 2.5
+    },
+    {
+     "id": "smw07y1fnd",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 238.5,
+     "y": 53.5,
+     "w": 11.75,
+     "h": 2
+    },
+    {
+     "id": "smw07y7vae",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 250.25,
+     "y": 60.75,
+     "w": 11.5,
+     "h": 5.5
+    },
+    {
+     "id": "smw07yd22f",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 259.75,
+     "y": 61.25,
+     "w": 0.75,
+     "h": 4.25
+    },
+    {
+     "id": "smw07z9a4h",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 246.75,
+     "y": 70.5,
+     "w": 1.5,
+     "h": 5.5
+    },
+    {
+     "id": "smw07zf4ni",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 238.5,
+     "y": 76,
+     "w": 18.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw07zpkqk",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 238.5,
+     "y": 81,
+     "w": 18.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw07zrhrl",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 255.5,
+     "y": 77.5,
+     "w": 1.5,
+     "h": 3.5
+    },
+    {
+     "id": "smw080574n",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 238.5,
+     "y": 82.5,
+     "w": 1.75,
+     "h": 12.75
+    },
+    {
+     "id": "smw080f35o",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 240.25,
+     "y": 92,
+     "w": 21.5,
+     "h": 1.25
+    },
+    {
+     "id": "smw080r33p",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 261.75,
+     "y": 45.5,
+     "w": 1.5,
+     "h": 50
+    },
+    {
+     "id": "smw085v0b1",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 211,
+     "y": 61.5,
+     "w": 24.5,
+     "h": 30
+    },
+    {
+     "id": "smw08azx51",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 218,
+     "y": 75,
+     "w": 12,
+     "h": 1.5
+    },
+    {
+     "id": "smw08b2j42",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 228.5,
+     "y": 76.5,
+     "w": 1.5,
+     "h": 3.5
+    },
+    {
+     "id": "smw08bbia3",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 218,
+     "y": 79,
+     "w": 10.5,
+     "h": 1
+    },
+    {
+     "id": "smw08bfzg4",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 218,
+     "y": 76.5,
+     "w": 1.5,
+     "h": 2.5
+    },
+    {
+     "id": "smw08c0jg6",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 216,
+     "y": 66.5,
+     "w": 2,
+     "h": 3.5
+    },
+    {
+     "id": "smw08c5bn7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 216,
+     "y": 65.5,
+     "w": 19.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw08c8m68",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 227,
+     "y": 60,
+     "w": 1.5,
+     "h": 5.5
+    },
+    {
+     "id": "smw08chpa9",
+     "kind": "rect",
+     "mat": "sand",
+     "x": 208,
+     "y": 65.5,
+     "w": 1,
+     "h": 4.5
+    },
+    {
+     "id": "smw08ckpda",
+     "kind": "rect",
+     "mat": "sand",
+     "x": 209,
+     "y": 65.5,
+     "w": 7,
+     "h": 1
+    },
+    {
+     "id": "smw08cmjnb",
+     "kind": "rect",
+     "mat": "sand",
+     "x": 215,
+     "y": 66.5,
+     "w": 1,
+     "h": 3.5
+    },
+    {
+     "id": "smw08coi5c",
+     "kind": "rect",
+     "mat": "sand",
+     "x": 209,
+     "y": 69,
+     "w": 6,
+     "h": 1
+    },
+    {
+     "id": "smw08d8yle",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 209,
+     "y": 45,
+     "w": 1,
+     "h": 3
+    },
+    {
+     "id": "smw08dojgf",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 210,
+     "y": 47.25,
+     "w": 23,
+     "h": 0.75
+    },
+    {
+     "id": "smw08dro7g",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 231.75,
+     "y": 45,
+     "w": 1.25,
+     "h": 2.25
+    },
+    {
+     "id": "smw08e2ysh",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 205.5,
+     "y": 49,
+     "w": 30,
+     "h": 1.25
+    },
+    {
+     "id": "smw08eakui",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 221.5,
+     "y": 50.25,
+     "w": 1.5,
+     "h": 10.25
+    },
+    {
+     "id": "smw08ejzak",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 223,
+     "y": 59,
+     "w": 12.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw08eqt9l",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 210.5,
+     "y": 56,
+     "w": 11,
+     "h": 2.5
+    },
+    {
+     "id": "smw08et8tm",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 217.75,
+     "y": 54.5,
+     "w": 3.75,
+     "h": 1.5
+    },
+    {
+     "id": "smw08ey7gn",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 217,
+     "y": 58.5,
+     "w": 3.75,
+     "h": 2
+    },
+    {
+     "id": "smw08fatqo",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 213.25,
+     "y": 54.5,
+     "w": 4.5,
+     "h": 1.5
+    }
+   ],
+   "objects": [],
+   "rows": [
+    {
+     "id": "rmw077ol2r",
+     "k": "maple",
+     "pts": [
+      [
+       286.25,
+       145
+      ],
+      [
+       286.25,
+       153.25
+      ]
+     ],
+     "spacing": 1
+    }
+   ],
+   "erase": [
+    {
+     "id": "emw06xacn1",
+     "rect": [
+      238,
+      150,
+      49.5,
+      29
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw070lu97",
+     "rect": [
+      252.5,
+      179.25,
+      34,
+      21.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw073w9jk",
+     "rect": [
+      326.25,
+      100.25,
+      6,
+      6.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw076oqdp",
+     "rect": [
+      286.25,
+      144,
+      1.5,
+      2.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw077zlrs",
+     "rect": [
+      235,
+      99.25,
+      5.25,
+      35.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw07ptgp5",
+     "rect": [
+      238.5,
+      46.25,
+      23.25,
+      23
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw07tba67",
+     "rect": [
+      236.75,
+      66.25,
+      26,
+      29.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw082y5f0",
+     "rect": [
+      260.5,
+      45,
+      8,
+      23
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw086ad43",
+     "rect": [
+      205,
+      44,
+      33,
+      49
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw08m4ulp",
+     "rect": [
+      230,
+      15,
+      54.75,
+      27.25
+     ],
+     "what": "all"
+    }
+   ],
+   "buildings": [
+    {
+     "id": "civil-3",
+     "name": "水利水电学院动力馆",
+     "kind": "teaching",
+     "wings": [
+      {
+       "x": 240.75,
+       "y": 47,
+       "w": 9.5,
+       "d": 6.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 3.6,
+        "tw": 2.5,
+        "main": true
+       }
+      }
+     ],
+     "sign": "水利水电学院动力馆"
+    },
+    {
+     "id": "civil-2",
+     "name": "水电学院水工结构及材料实验厂",
+     "kind": "lab",
+     "wings": [
+      {
+       "x": 253,
+       "y": 47.25,
+       "w": 7,
+       "d": 13.5,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 2.2,
+        "tw": 2.5
+       }
+      }
+     ],
+     "sign": "水电学院水工结构及材料实"
+    },
+    {
+     "id": "civil",
+     "name": "水利水电学院水利馆",
+     "kind": "teaching",
+     "sign": "水利水电学院水利馆",
+     "wings": [
+      {
+       "x": 240.75,
+       "y": 55.5,
+       "w": 6.5,
+       "d": 13.5,
+       "f": 5,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 2.4,
+        "tw": 2,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "hydro-d",
+     "name": "水利水电学院",
+     "kind": "teaching",
+     "sign": "水利水电学院",
+     "wings": [
+      {
+       "x": 247.25,
+       "y": 71,
+       "w": 13.5,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 257,
+       "y": 75,
+       "w": 4.5,
+       "d": 8,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 242,
+       "y": 83,
+       "w": 19.5,
+       "d": 5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 8.2,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "hydro-c",
+     "name": "土木工程学院",
+     "kind": "teaching",
+     "wings": [
+      {
+       "x": 213,
+       "y": 77.5,
+       "w": 5,
+       "d": 6.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 213,
+       "y": 83.5,
+       "w": 21.5,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 9.5,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 230,
+       "y": 75,
+       "w": 4.5,
+       "d": 8.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ],
+     "sign": "土木工程学院"
+    },
+    {
+     "id": "hydro-b",
+     "name": "土木工程学院",
+     "kind": "lab",
+     "desc": "试验厅，不对外开放。",
+     "wings": [
+      {
+       "x": 218,
+       "y": 70,
+       "w": 16.5,
+       "d": 5,
+       "f": 3,
+       "style": "brick",
+       "roof": "flat",
+       "roofTone": 4
+      }
+     ],
+     "sign": "土木工程学院"
+    },
+    {
+     "id": "hydro-a",
+     "name": "土木工程学院",
+     "kind": "lab",
+     "wings": [
+      {
+       "x": 208,
+       "y": 72.5,
+       "w": 10,
+       "d": 5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ],
+     "sign": "土木工程学院"
+    },
+    {
+     "id": "energy",
+     "name": "能源与环境工程学院",
+     "kind": "teaching",
+     "sign": "能源与环境工程学院",
+     "wings": [
+      {
+       "x": 208,
+       "y": 50.5,
+       "w": 13.5,
+       "d": 4,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.75,
+        "tw": 2,
+        "main": true
+       }
+      },
+      {
+       "x": 208,
+       "y": 54.5,
+       "w": 2.5,
+       "d": 6,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 208,
+       "y": 60.5,
+       "w": 19,
+       "d": 5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "d3-a",
+     "name": "三社区A楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 230.25,
+       "y": 16.25,
+       "w": 13,
+       "d": 4,
+       "f": 6,
+       "style": "white",
+       "roofTone": 1,
+       "door": {
+        "tx": 5.5,
+        "tw": 2,
+        "main": true
+       }
+      },
+      {
+       "x": 230.25,
+       "y": 20.25,
+       "w": 4.5,
+       "d": 5,
+       "f": 6,
+       "style": "white",
+       "roofTone": 1
+      },
+      {
+       "x": 230.25,
+       "y": 25.25,
+       "w": 9.5,
+       "d": 4,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 230.25,
+       "y": 29.25,
+       "w": 4.5,
+       "d": 4.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 230.25,
+       "y": 33.75,
+       "w": 13,
+       "d": 4.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.6,
+        "tw": 2
+       }
+      }
+     ],
+     "sign": "三社区A楼"
+    },
+    {
+     "id": "d3-b",
+     "name": "三社区B楼",
+     "kind": "dorm",
+     "delete": true,
+     "wings": []
+    },
+    {
+     "id": "d3-d",
+     "name": "三社区D楼",
+     "kind": "dorm",
+     "delete": true,
+     "wings": []
+    },
+    {
+     "id": "d3-c",
+     "name": "三社区B楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 245.25,
+       "y": 23.75,
+       "w": 21,
+       "d": 4,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 9.2,
+        "tw": 2
+       }
+      }
+     ],
+     "sign": "三社区B楼"
+    },
+    {
+     "id": "d3-e",
+     "name": "三社区C楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 263.75,
+       "y": 15.25,
+       "w": 18,
+       "d": 4.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 276.75,
+       "y": 19.75,
+       "w": 5,
+       "d": 4.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 270.75,
+       "y": 24.25,
+       "w": 11,
+       "d": 4,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 1.3,
+        "tw": 2,
+        "main": false
+       }
+      },
+      {
+       "x": 276.25,
+       "y": 28.25,
+       "w": 5.5,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 276.25,
+       "y": 31.75,
+       "w": 5.5,
+       "d": 2.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 268.25,
+       "y": 34.25,
+       "w": 13.5,
+       "d": 4.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.25,
+        "tw": 2,
+        "main": true
+       }
+      }
+     ],
+     "sign": "三社区C楼"
+    },
+    {
+     "id": "d3-f",
+     "name": "三社区F楼",
+     "kind": "dorm",
+     "delete": true,
+     "wings": []
+    },
+    {
+     "id": "d3-g",
+     "name": "三社区G楼",
+     "kind": "dorm",
+     "delete": true,
+     "wings": []
+    },
+    {
+     "id": "d3-bath",
+     "name": "三社区浴室",
+     "kind": "service",
+     "sign": "浴室",
+     "wings": [
+      {
+       "x": 252.5,
+       "y": 14.75,
+       "w": 7,
+       "d": 7,
+       "f": 3,
+       "style": "white",
+       "roof": "solar",
+       "roofTone": 1,
+       "door": {
+        "tx": 2.5,
+        "tw": 2
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "at": "2026-11-03T06:04",
+   "version": 1,
+   "shapes": [
+    {
+     "id": "smw09dczs4",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 230,
+     "y": 20,
+     "w": 14,
+     "h": 21
+    },
+    {
+     "id": "smw09e0cl6",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 231.5,
+     "y": 29.75,
+     "w": 12.5,
+     "h": 1.25
+    },
+    {
+     "id": "smw09e9gc7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 245.25,
+     "y": 28.5,
+     "w": 21,
+     "h": 1
+    },
+    {
+     "id": "smw09eh0e9",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 245.25,
+     "y": 29.5,
+     "w": 21,
+     "h": 1.75
+    },
+    {
+     "id": "smw09g1r8j",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 245.25,
+     "y": 22,
+     "w": 21,
+     "h": 1
+    },
+    {
+     "id": "smw09g3r6k",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 231.5,
+     "y": 22,
+     "w": 12.5,
+     "h": 1
+    },
+    {
+     "id": "smw09g681l",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 244,
+     "y": 20,
+     "w": 1.25,
+     "h": 22
+    },
+    {
+     "id": "smw09gbyrm",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 261,
+     "y": 14.75,
+     "w": 1.5,
+     "h": 8.25
+    },
+    {
+     "id": "smw09gfjnn",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 266.25,
+     "y": 21.5,
+     "w": 1.25,
+     "h": 20.75
+    },
+    {
+     "id": "smw09gj1mo",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 267.5,
+     "y": 29.75,
+     "w": 16.25,
+     "h": 1
+    },
+    {
+     "id": "smw09gqkfp",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 267.5,
+     "y": 22,
+     "w": 16.25,
+     "h": 1
+    },
+    {
+     "id": "smw09gwi5q",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 280.75,
+     "y": 21.5,
+     "w": 5.75,
+     "h": 19.5
+    },
+    {
+     "id": "smw09gza5r",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 265.75,
+     "y": 18,
+     "w": 4.5,
+     "h": 4
+    },
+    {
+     "id": "smw09i0tjs",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 245.25,
+     "y": 23,
+     "w": 21,
+     "h": 5.5
+    },
+    {
+     "id": "smw09j0nxu",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 240,
+     "y": 15,
+     "w": 5.25,
+     "h": 5.5
+    },
+    {
+     "id": "smw09je2tw",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 245.25,
+     "y": 20.5,
+     "w": 4.75,
+     "h": 0.75
+    },
+    {
+     "id": "smw09jj1ix",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 248,
+     "y": 14.75,
+     "w": 2,
+     "h": 5.75
+    },
+    {
+     "id": "smw09jxthy",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 248,
+     "y": 12.75,
+     "w": 61.75,
+     "h": 2.25
+    },
+    {
+     "id": "smw09qqvj10",
+     "kind": "rect",
+     "mat": "path",
+     "x": 297.75,
+     "y": 33,
+     "w": 3.5,
+     "h": 8.25
+    },
+    {
+     "id": "smw09r31411",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 290,
+     "y": 30,
+     "w": 2,
+     "h": 1.25
+    },
+    {
+     "id": "smw09r9ty12",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 290,
+     "y": 35,
+     "w": 7.75,
+     "h": 1
+    },
+    {
+     "id": "smw09ri0513",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 301.25,
+     "y": 35,
+     "w": 6.5,
+     "h": 1
+    },
+    {
+     "id": "smw09rv3w14",
+     "kind": "rect",
+     "mat": "plazaWarm",
+     "x": 291.5,
+     "y": 36.5,
+     "w": 4,
+     "h": 5.75
+    },
+    {
+     "id": "smw09s2mv15",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 306.75,
+     "y": 21.75,
+     "w": 7.25,
+     "h": 19.5
+    },
+    {
+     "id": "smw09s99i16",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 290,
+     "y": 42.25,
+     "w": 24,
+     "h": 3.25
+    },
+    {
+     "id": "smw09sofy17",
+     "kind": "rect",
+     "mat": "plazaDark",
+     "x": 308.75,
+     "y": 21.75,
+     "w": 4.75,
+     "h": 19.5
+    },
+    {
+     "id": "smw09whz118",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 290,
+     "y": 46.5,
+     "w": 16.25,
+     "h": 50
+    },
+    {
+     "id": "smw09z6uc1b",
+     "kind": "rect",
+     "mat": "paver",
+     "x": 290,
+     "y": 78.25,
+     "w": 16.5,
+     "h": 1.75
+    },
+    {
+     "id": "smw09zjcr1c",
+     "kind": "rect",
+     "mat": "paver",
+     "x": 304.75,
+     "y": 45.5,
+     "w": 1.75,
+     "h": 32.75
+    }
+   ],
+   "objects": [],
+   "rows": [],
+   "erase": [
+    {
+     "id": "emw09lexlz",
+     "rect": [
+      289,
+      13.75,
+      24.75,
+      30.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw09wpbu19",
+     "rect": [
+      290,
+      46.5,
+      16.5,
+      50
+     ],
+     "what": "all"
+    }
+   ],
+   "buildings": [
+    {
+     "id": "d3-a",
+     "name": "三社区A楼",
+     "kind": "dorm",
+     "sign": "三社区A楼",
+     "wings": [
+      {
+       "x": 230.5,
+       "y": 16.5,
+       "w": 17,
+       "d": 4,
+       "f": 6,
+       "style": "white",
+       "roofTone": 1,
+       "door": {
+        "tx": 5.25,
+        "tw": 2,
+        "main": true
+       }
+      },
+      {
+       "x": 230.5,
+       "y": 20.5,
+       "w": 4.5,
+       "d": 5,
+       "f": 6,
+       "style": "white",
+       "roofTone": 1
+      },
+      {
+       "x": 230.5,
+       "y": 25.5,
+       "w": 9.5,
+       "d": 4,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 230.5,
+       "y": 29.5,
+       "w": 4.5,
+       "d": 4.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 230.5,
+       "y": 34,
+       "w": 13,
+       "d": 4.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.35,
+        "tw": 2
+       }
+      }
+     ]
+    },
+    {
+     "id": "clinic",
+     "name": "校医院",
+     "kind": "service",
+     "sign": "校医院",
+     "wings": [
+      {
+       "x": 292,
+       "y": 27.5,
+       "w": 15.5,
+       "d": 5.5,
+       "f": 3,
+       "style": "white",
+       "roof": "hip",
+       "roofTone": 1,
+       "door": {
+        "tx": 6.75,
+        "tw": 2,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "svc-small",
+     "name": "后勤值班室",
+     "kind": "service",
+     "wings": [
+      {
+       "x": 304.5,
+       "y": 20.5,
+       "w": 3,
+       "d": 7,
+       "f": 2,
+       "style": "brick",
+       "roofTone": 1
+      }
+     ]
+    },
+    {
+     "id": "logistics-1",
+     "name": "第一后勤服务楼",
+     "kind": "service",
+     "sign": "后勤服务楼",
+     "wings": [
+      {
+       "x": 292.5,
+       "y": 16.5,
+       "w": 17.5,
+       "d": 4,
+       "f": 3,
+       "style": "brickPale",
+       "roofTone": 3,
+       "door": {
+        "tx": 5.85,
+        "tw": 2.5,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "svc-small-2",
+     "name": "门卫室",
+     "kind": "service",
+     "delete": true,
+     "wings": []
+    },
+    {
+     "id": "canteen-3",
+     "name": "第三学生食堂",
+     "kind": "canteen",
+     "sign": "第三食堂",
+     "wings": [
+      {
+       "x": 292.75,
+       "y": 47.25,
+       "w": 10,
+       "d": 12,
+       "f": 3,
+       "style": "sand",
+       "roof": "flat",
+       "roofTone": 0,
+       "door": {
+        "tx": -0.25,
+        "tw": 5,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "muslim-restaurant",
+     "name": "三社区超市",
+     "kind": "canteen",
+     "sign": "三社区超市",
+     "wings": [
+      {
+       "x": 299.75,
+       "y": 59.25,
+       "w": 3,
+       "d": 6.5,
+       "f": 2,
+       "style": "brick",
+       "roofTone": 2
+      },
+      {
+       "x": 292.75,
+       "y": 65.75,
+       "w": 10,
+       "d": 12.5,
+       "f": 3,
+       "style": "brickPale",
+       "roof": "flat",
+       "roofTone": 3,
+       "door": {
+        "tx": 3.6,
+        "tw": 2
+       }
+      }
+     ]
+    },
+    {
+     "id": "market-2",
+     "name": "学生超市",
+     "kind": "service",
+     "delete": true,
+     "wings": []
+    }
+   ]
+  },
+  {
+   "at": "2026-11-03T06:42",
+   "version": 1,
+   "shapes": [
+    {
+     "id": "smw0b9sl64",
+     "kind": "stroke",
+     "mat": "path",
+     "w": 2,
+     "pts": [
+      [
+       303.75,
+       80.25
+      ],
+      [
+       305.5,
+       83.281
+      ],
+      [
+       305.5,
+       92.031
+      ],
+      [
+       305.5,
+       96.531
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw0bb2szb",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 319.5,
+     "y": 96.5,
+     "w": 11.25,
+     "h": 2
+    },
+    {
+     "id": "smw0bdp0og",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 321,
+     "y": 83,
+     "w": 8,
+     "h": 13.75
+    },
+    {
+     "id": "smw0bdtjth",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 321,
+     "y": 83,
+     "w": 8,
+     "h": 13.5
+    }
+   ],
+   "objects": [
+    {
+     "id": "omw0bagy27",
+     "k": "goal",
+     "x": 317.5,
+     "y": 76
+    },
+    {
+     "id": "omw0bakr78",
+     "k": "goal",
+     "x": 317.5,
+     "y": 53.5
+    }
+   ],
+   "rows": [],
+   "erase": [
+    {
+     "id": "emw0bapgn9",
+     "rect": [
+      316.5,
+      51.25,
+      2.5,
+      1
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0barv5a",
+     "rect": [
+      316.75,
+      79,
+      1.5,
+      0.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0bbeiec",
+     "rect": [
+      319.5,
+      83.25,
+      9.5,
+      13.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0bbreod",
+     "rect": [
+      318,
+      96.25,
+      12.25,
+      3.75
+     ],
+     "what": "all"
+    }
+   ],
+   "buildings": [
+    {
+     "id": "innovation",
+     "name": "42号楼创新创业指导中心",
+     "kind": "admin",
+     "sign": "42号楼创新创业指导中心",
+     "wings": [
+      {
+       "x": 239.5,
+       "y": 182.5,
+       "w": 16.5,
+       "d": 3.5,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 239.5,
+       "y": 186,
+       "w": 3.5,
+       "d": 9.5,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 252,
+       "y": 186,
+       "w": 4,
+       "d": 9.5,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 239.5,
+       "y": 195.5,
+       "w": 16.5,
+       "d": 3.5,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 6.4,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    }
+   ],
+   "fields": [
+    {
+     "id": "fmw0b7m6q1",
+     "kind": "tennis",
+     "x": 288,
+     "y": 81,
+     "w": 13.5,
+     "h": 7.5,
+     "gate": "N"
+    },
+    {
+     "id": "fmw0beq1n2",
+     "kind": "basketball",
+     "x": 319.5,
+     "y": 83,
+     "w": 9,
+     "h": 13,
+     "fence": true,
+     "gate": "S",
+     "lights": true
+    }
+   ],
+   "fences": [
+    {
+     "id": "fmw0ba9wp6",
+     "pts": [
+      [
+       306.75,
+       46.5
+      ],
+      [
+       306.75,
+       78
+      ]
+     ],
+     "piers": 4
+    }
+   ],
+   "bp": {
+    "hide": [],
+    "edit": {
+     "40-sports#s30:1i2vd8q": {
+      "kind": "rect",
+      "mat": "courtRed",
+      "x": 319.5,
+      "y": 83,
+      "w": 7.6,
+      "h": 6.6,
+      "note": "东区篮球场(北)"
+     }
+    }
+   }
+  },
+  {
+   "at": "2026-11-03T12:25",
+   "version": 1,
+   "shapes": [
+    {
+     "id": "smw0mv6g91",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 199.25,
+     "y": 180.5,
+     "w": 36,
+     "h": 27.25
+    },
+    {
+     "id": "smw0my7014",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 199,
+     "y": 180,
+     "w": 1.5,
+     "h": 31
+    },
+    {
+     "id": "smw0myerb5",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 199,
+     "y": 179.75,
+     "w": 36.25,
+     "h": 2
+    },
+    {
+     "id": "smw0mz8g36",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 199,
+     "y": 190.75,
+     "w": 15.25,
+     "h": 1.5
+    },
+    {
+     "id": "smw0mze8x7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 206.5,
+     "y": 192.25,
+     "w": 1.75,
+     "h": 6.25
+    },
+    {
+     "id": "smw0n01l69",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 208.25,
+     "y": 197.25,
+     "w": 12.25,
+     "h": 1.25
+    },
+    {
+     "id": "smw0n081ba",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 218.5,
+     "y": 198.5,
+     "w": 2,
+     "h": 9.25
+    },
+    {
+     "id": "smw0n0my3d",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 218.5,
+     "y": 181,
+     "w": 2,
+     "h": 17.5
+    },
+    {
+     "id": "smw0n12qhe",
+     "kind": "rect",
+     "mat": "paver",
+     "x": 200.5,
+     "y": 207.75,
+     "w": 34.75,
+     "h": 1.25
+    },
+    {
+     "id": "smw0n1973f",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 234,
+     "y": 209,
+     "w": 1.25,
+     "h": 0.5
+    },
+    {
+     "id": "smw0n1dggg",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 234,
+     "y": 209.5,
+     "w": 1.25,
+     "h": 1.25
+    },
+    {
+     "id": "smw0n3xwpi",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 235.75,
+     "y": 209.75,
+     "w": 2.75,
+     "h": 42.75
+    },
+    {
+     "id": "smw0n65b1k",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 212.5,
+     "y": 116.5,
+     "w": 22.75,
+     "h": 3.5
+    },
+    {
+     "id": "smw0n7q4dl",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 202.25,
+     "y": 121.5,
+     "w": 32.75,
+     "h": 22.25
+    },
+    {
+     "id": "smw0n8fd6n",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 229.25,
+     "y": 119.75,
+     "w": 6,
+     "h": 3.5
+    },
+    {
+     "id": "smw0n8q8lp",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 229.25,
+     "y": 117.5,
+     "w": 1.5,
+     "h": 2.25
+    },
+    {
+     "id": "smw0n8xfoq",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 209.75,
+     "y": 116.5,
+     "w": 22.75,
+     "h": 1
+    },
+    {
+     "id": "smw0n9lwhs",
+     "kind": "rect",
+     "mat": "plaza",
+     "x": 229.25,
+     "y": 123.25,
+     "w": 2.75,
+     "h": 13.25
+    },
+    {
+     "id": "smw0na6n0t",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 207.5,
+     "y": 135.25,
+     "w": 27.5,
+     "h": 3
+    },
+    {
+     "id": "smw0naj5cw",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 216.5,
+     "y": 122,
+     "w": 2.25,
+     "h": 16.25
+    },
+    {
+     "id": "smw0nalo7x",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 218.75,
+     "y": 122,
+     "w": 8.75,
+     "h": 1.75
+    },
+    {
+     "id": "smw0napm2y",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 225.25,
+     "y": 122.25,
+     "w": 2.5,
+     "h": 16
+    },
+    {
+     "id": "smw0ndf2w3",
+     "kind": "stroke",
+     "mat": "dirt",
+     "w": 2,
+     "pts": [
+      [
+       211.5,
+       116.5
+      ],
+      [
+       205,
+       127.758
+      ],
+      [
+       166.5,
+       127.758
+      ],
+      [
+       166.017,
+       127.887
+      ],
+      [
+       169.017,
+       127.887
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw0nf2wp4",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 165.5,
+     "y": 127,
+     "w": 63,
+     "h": 2
+    },
+    {
+     "id": "smw0nfobq5",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 171.5,
+     "y": 125,
+     "w": 22,
+     "h": 3
+    },
+    {
+     "id": "smw0nk0to7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 112.5,
+     "y": 75,
+     "w": 3,
+     "h": 82.5
+    },
+    {
+     "id": "smw0nkdlm9",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 111.5,
+     "y": 74.5,
+     "w": 1,
+     "h": 82.5
+    },
+    {
+     "id": "smw0nmhk8b",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 132.5,
+     "y": 190,
+     "w": 3.75,
+     "h": 20.5
+    },
+    {
+     "id": "smw0nnv0bd",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 66,
+     "y": 125.5,
+     "w": 44.75,
+     "h": 9.75
+    }
+   ],
+   "objects": [],
+   "rows": [],
+   "erase": [
+    {
+     "id": "emw0mvfqd2",
+     "rect": [
+      200,
+      180,
+      36.75,
+      30
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0n2316h",
+     "rect": [
+      212.75,
+      213.75,
+      31.5,
+      24.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0n5q6bj",
+     "rect": [
+      203,
+      116,
+      32.5,
+      30
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0nihq76",
+     "rect": [
+      114.5,
+      130,
+      51.5,
+      30.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0no2q2e",
+     "rect": [
+      68.25,
+      124.75,
+      45.5,
+      42
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw0noa9mf",
+     "rect": [
+      66,
+      125,
+      48.5,
+      43
+     ],
+     "what": "trees"
+    }
+   ],
+   "buildings": [
+    {
+     "id": "edu-tech",
+     "name": "教育技术中心",
+     "kind": "lab",
+     "sign": "教育技术中心",
+     "wings": [
+      {
+       "x": 200.75,
+       "y": 193.25,
+       "w": 5.5,
+       "d": 8.5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 200.75,
+       "y": 201.75,
+       "w": 8,
+       "d": 3.5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 2.3,
+        "tw": 2.5,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "graduate",
+     "name": "研究生部",
+     "kind": "admin",
+     "sign": "研究生部",
+     "wings": [
+      {
+       "x": 208.75,
+       "y": 201.75,
+       "w": 9,
+       "d": 3.5,
+       "f": 3,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 3,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "research",
+     "name": "科研院",
+     "kind": "admin",
+     "sign": "科研院",
+     "wings": [
+      {
+       "x": 205.25,
+       "y": 182.5,
+       "w": 12.5,
+       "d": 4,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 214.25,
+       "y": 186.5,
+       "w": 3.5,
+       "d": 6.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 208.25,
+       "y": 193,
+       "w": 9.5,
+       "d": 3.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 2.8,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "lake-se",
+     "name": "第二公共教学楼",
+     "kind": "lab",
+     "wings": [
+      {
+       "x": 213.75,
+       "y": 117.5,
+       "w": 18,
+       "d": 4.5,
+       "f": 4,
+       "style": "white",
+       "roofTone": 1,
+       "door": {
+        "tx": 5.9,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 213.75,
+       "y": 122,
+       "w": 2.5,
+       "d": 3.5,
+       "f": 4,
+       "style": "white",
+       "roofTone": 1
+      },
+      {
+       "x": 227.25,
+       "y": 122,
+       "w": 4.5,
+       "d": 13,
+       "f": 4,
+       "style": "white",
+       "roofTone": 1
+      }
+     ],
+     "sign": "第二公共教学楼"
+    },
+    {
+     "id": "public-2",
+     "name": "第二公共教学楼",
+     "kind": "teaching",
+     "sign": "第二教学楼",
+     "desc": "全校公共课所在的第二教学楼，三翼围合的大院朝东开口。",
+     "wings": [
+      {
+       "x": 203.5,
+       "y": 126.25,
+       "w": 13,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 203.5,
+       "y": 130.75,
+       "w": 3,
+       "d": 7.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 203.5,
+       "y": 138.25,
+       "w": 28.5,
+       "d": 5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 12.9,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "public-1",
+     "name": "第一公共教学楼",
+     "kind": "teaching",
+     "interior": "classroom",
+     "sign": "第一教学楼",
+     "desc": "全校公共课所在的教学楼，学生每天最常穿行的地方：四翼围合的大院，南侧斜翼，东侧是通向图书馆广场的平台。",
+     "wings": [
+      {
+       "x": 126,
+       "y": 129.5,
+       "w": 14,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 121,
+       "y": 129.5,
+       "w": 5,
+       "d": 7.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 157.5,
+       "y": 129.5,
+       "w": 5,
+       "d": 17.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 144.5,
+       "y": 141.5,
+       "w": 13,
+       "d": 5.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 4.6,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 123,
+       "y": 141.05,
+       "w": 15.8,
+       "d": 7.4,
+       "f": 5,
+       "style": "brick",
+       "rot": 27,
+       "roofTone": 0
+      },
+      {
+       "x": 142,
+       "y": 129.5,
+       "w": 15.5,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "public-1-podium",
+     "name": "第一公共教学楼平台",
+     "kind": "misc",
+     "wings": [
+      {
+       "x": 162.5,
+       "y": 135.5,
+       "w": 3,
+       "d": 11.5,
+       "f": 2,
+       "style": "sand",
+       "roofTone": 0
+      }
+     ]
+    }
+   ],
+   "bp": {
+    "hide": [
+     "40-sports#s15:1p8lmq5"
+    ],
+    "edit": {}
+   }
+  },
+  {
+   "at": "2026-11-04T05:29",
+   "version": 1,
+   "shapes": [
+    {
+     "id": "smw1mgg1p2",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 100,
+     "y": 104,
+     "w": 11.5,
+     "h": 19
+    },
+    {
+     "id": "smw1mh6rc3",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 100,
+     "y": 104,
+     "w": 2,
+     "h": 19
+    },
+    {
+     "id": "smw1mk4647",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 95.5,
+     "y": 93.5,
+     "w": 16,
+     "h": 9.5
+    },
+    {
+     "id": "smw1mkcgr8",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 99,
+     "y": 92,
+     "w": 12.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw1mnsy6b",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 116,
+     "y": 83,
+     "w": 29.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw1mnvacc",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 144,
+     "y": 84.5,
+     "w": 1.5,
+     "h": 16
+    },
+    {
+     "id": "smw1mo4nwd",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 144,
+     "y": 99,
+     "w": 6.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw1mocg8f",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 148.5,
+     "y": 100.5,
+     "w": 2,
+     "h": 7
+    },
+    {
+     "id": "smw1mofopg",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 144,
+     "y": 105.5,
+     "w": 4.5,
+     "h": 2
+    },
+    {
+     "id": "smw1momo4h",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 144,
+     "y": 107.5,
+     "w": 2,
+     "h": 18
+    },
+    {
+     "id": "smw1mpi0lk",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 120,
+     "y": 112,
+     "w": 26.5,
+     "h": 2.5
+    },
+    {
+     "id": "smw1mplusl",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 120,
+     "y": 104.5,
+     "w": 2.5,
+     "h": 7.5
+    },
+    {
+     "id": "smw1mpov3m",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 115.5,
+     "y": 103,
+     "w": 7.5,
+     "h": 3
+    },
+    {
+     "id": "smw1mpxzwn",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 123,
+     "y": 100.5,
+     "w": 2.5,
+     "h": 7
+    },
+    {
+     "id": "smw1mq25ro",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 123,
+     "y": 105.5,
+     "w": 15.5,
+     "h": 2
+    },
+    {
+     "id": "smw1mq5myp",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 123,
+     "y": 100,
+     "w": 15,
+     "h": 2
+    },
+    {
+     "id": "smw1mqegkq",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 126.5,
+     "y": 93,
+     "w": 18.5,
+     "h": 2.5
+    },
+    {
+     "id": "smw1mqhpwr",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 127,
+     "y": 90,
+     "w": 9,
+     "h": 2
+    },
+    {
+     "id": "smw1mr1dot",
+     "kind": "stroke",
+     "mat": "asphalt",
+     "w": 2,
+     "pts": [
+      [
+       134,
+       126
+      ],
+      [
+       126.5,
+       113.01
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw1mrnynw",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 130.5,
+     "y": 73,
+     "w": 2,
+     "h": 10
+    },
+    {
+     "id": "smw1mut5v0",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 125.5,
+     "y": 102,
+     "w": 21.5,
+     "h": 3
+    },
+    {
+     "id": "smw1muuyk1",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 146,
+     "y": 111.5,
+     "w": 1.5,
+     "h": 4
+    },
+    {
+     "id": "smw1mv6s22",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 142,
+     "y": 91.5,
+     "w": 2,
+     "h": 1
+    },
+    {
+     "id": "smw1mvt3x4",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 115,
+     "y": 83,
+     "w": 4,
+     "h": 1.5
+    },
+    {
+     "id": "smw1mvxud5",
+     "kind": "rect",
+     "mat": "lawn",
+     "x": 119,
+     "y": 84.5,
+     "w": 25,
+     "h": 2.5
+    },
+    {
+     "id": "smw1mwtlb6",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 120.5,
+     "y": 74.5,
+     "w": 1,
+     "h": 1.5
+    },
+    {
+     "id": "smw1mx6gc7",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 125.5,
+     "y": 51,
+     "w": 1.5,
+     "h": 20.5
+    },
+    {
+     "id": "smw1mxbe68",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 127,
+     "y": 57.5,
+     "w": 8.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw1mxzfyb",
+     "kind": "stroke",
+     "mat": "asphalt",
+     "w": 2,
+     "pts": [
+      [
+       135,
+       58
+      ],
+      [
+       144.899,
+       48.101
+      ],
+      [
+       138.399,
+       36.843
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw1mybn9c",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 96.5,
+     "y": 51,
+     "w": 29,
+     "h": 2.5
+    },
+    {
+     "id": "smw1myo33e",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 125.5,
+     "y": 15,
+     "w": 1.5,
+     "h": 36
+    },
+    {
+     "id": "smw1mz9exf",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 113.5,
+     "y": 35,
+     "w": 29.5,
+     "h": 2
+    },
+    {
+     "id": "smw1mzf8og",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 142,
+     "y": 14.5,
+     "w": 2,
+     "h": 22.5
+    },
+    {
+     "id": "smw1mzkvoh",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 97.5,
+     "y": 23,
+     "w": 41,
+     "h": 2
+    },
+    {
+     "id": "smw1mzypyj",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 86,
+     "y": 33,
+     "w": 23.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw1n0admm",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 86,
+     "y": 23,
+     "w": 11.5,
+     "h": 2
+    },
+    {
+     "id": "smw1n0kbun",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 80.5,
+     "y": 43.5,
+     "w": 36,
+     "h": 2
+    },
+    {
+     "id": "smw1n15d7p",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 97,
+     "y": 43.75,
+     "w": 1.25,
+     "h": 9.75
+    },
+    {
+     "id": "smw1n25r1q",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 84.5,
+     "y": 146.25,
+     "w": 21.25,
+     "h": 1.75
+    },
+    {
+     "id": "smw1n2d1nr",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 106,
+     "y": 153.25,
+     "w": 5.5,
+     "h": 2
+    },
+    {
+     "id": "smw1n2qh5t",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 106,
+     "y": 132.75,
+     "w": 1.5,
+     "h": 22.5
+    },
+    {
+     "id": "smw1n2uzqu",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 109.25,
+     "y": 132.75,
+     "w": 1.25,
+     "h": 20.5
+    },
+    {
+     "id": "smw1n2xeqv",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 106,
+     "y": 132.75,
+     "w": 5.5,
+     "h": 2
+    },
+    {
+     "id": "smw1n3cn4x",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 84,
+     "y": 137,
+     "w": 22,
+     "h": 1.75
+    },
+    {
+     "id": "smw1n3vhwz",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 82.25,
+     "y": 125.25,
+     "w": 1.75,
+     "h": 30
+    },
+    {
+     "id": "smw1n4g9x10",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 64.75,
+     "y": 123,
+     "w": 46.75,
+     "h": 2.5
+    },
+    {
+     "id": "smw1n526v11",
+     "kind": "stroke",
+     "mat": "asphalt",
+     "w": 2,
+     "pts": [
+      [
+       106,
+       166.5
+      ],
+      [
+       100.888,
+       147.423
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw1n5cii12",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 107.25,
+     "y": 161.5,
+     "w": 6.5,
+     "h": 7.75
+    },
+    {
+     "id": "smw1n65nv15",
+     "kind": "stroke",
+     "mat": "asphalt",
+     "w": 2,
+     "pts": [
+      [
+       83,
+       155.25
+      ],
+      [
+       93,
+       172.571
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw1n8wuw16",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 98.25,
+     "y": 125.25,
+     "w": 1.5,
+     "h": 8.75
+    },
+    {
+     "id": "smw1nay271a",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 62.75,
+     "y": 62.25,
+     "w": 17.25,
+     "h": 14.25
+    },
+    {
+     "id": "smw1nb1d91b",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 80,
+     "y": 62,
+     "w": 9.25,
+     "h": 14.5
+    },
+    {
+     "id": "smw1nb4661c",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 79.25,
+     "y": 69,
+     "w": 12.25,
+     "h": 5.25
+    },
+    {
+     "id": "smw1nb4tg1d",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 90.5,
+     "y": 70.25,
+     "w": 0.25,
+     "h": 0.75
+    },
+    {
+     "id": "smw1nb6le1e",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 87,
+     "y": 62.5,
+     "w": 3,
+     "h": 13
+    },
+    {
+     "id": "smw1ncvus1",
+     "kind": "stroke",
+     "mat": "asphalt",
+     "w": 2,
+     "pts": [
+      [
+       91.5,
+       76
+      ],
+      [
+       84.5,
+       63.876
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw1ndfee3",
+     "kind": "stroke",
+     "mat": "asphalt",
+     "w": 2,
+     "pts": [
+      [
+       96.5,
+       64.5
+      ],
+      [
+       78.313,
+       75
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw1ne4ts6",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 61.5,
+     "y": 63,
+     "w": 24,
+     "h": 2
+    },
+    {
+     "id": "smw1nex4k8",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 27.5,
+     "y": 63,
+     "w": 34.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw1nfdwv9",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 62.5,
+     "y": 75,
+     "w": 11,
+     "h": 1.5
+    },
+    {
+     "id": "smw1nfkdma",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 77,
+     "y": 66.5,
+     "w": 1.5,
+     "h": 17.5
+    },
+    {
+     "id": "smw1nfq3ic",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 62.5,
+     "y": 66.5,
+     "w": 15.5,
+     "h": 1.5
+    },
+    {
+     "id": "smw1nfv8xd",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 77,
+     "y": 84,
+     "w": 1.5,
+     "h": 2
+    },
+    {
+     "id": "smw1nfz2te",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 62.5,
+     "y": 84,
+     "w": 14.5,
+     "h": 2
+    },
+    {
+     "id": "smw1ngmo6g",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 27.5,
+     "y": 100,
+     "w": 33,
+     "h": 2.5
+    },
+    {
+     "id": "smw1ngzsth",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 31.5,
+     "y": 81,
+     "w": 14.5,
+     "h": 2
+    },
+    {
+     "id": "smw1nh6igi",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 44.5,
+     "y": 70,
+     "w": 13,
+     "h": 3.5
+    },
+    {
+     "id": "smw1nh9apj",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 55.5,
+     "y": 70,
+     "w": 2,
+     "h": 7.5
+    },
+    {
+     "id": "smw1nhb4ck",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 55.5,
+     "y": 75,
+     "w": 5.5,
+     "h": 2.5
+    },
+    {
+     "id": "smw1nhr2yl",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 29,
+     "y": 62,
+     "w": 1.5,
+     "h": 61
+    },
+    {
+     "id": "smw1ni4obm",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 46,
+     "y": 91,
+     "w": 14.5,
+     "h": 2.5
+    },
+    {
+     "id": "smw1nixo1n",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 27,
+     "y": 12.5,
+     "w": 39.5,
+     "h": 2.5
+    },
+    {
+     "id": "smw1njlalp",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 324,
+     "y": 243,
+     "w": 6,
+     "h": 2.25
+    },
+    {
+     "id": "smw1njxraq",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 326.75,
+     "y": 211.25,
+     "w": 3.5,
+     "h": 31.75
+    },
+    {
+     "id": "smw1nl4r4s",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 132.75,
+     "y": 185,
+     "w": 3.5,
+     "h": 5
+    },
+    {
+     "id": "smw1nllhct",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 196.25,
+     "y": 128.5,
+     "w": 6,
+     "h": 4
+    },
+    {
+     "id": "smw1nplthw",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 288,
+     "y": 81,
+     "w": 2,
+     "h": 8
+    },
+    {
+     "id": "smw1nqvg5x",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 159.75,
+     "y": 153.5,
+     "w": 2.75,
+     "h": 57.75
+    },
+    {
+     "id": "smw1nr8spy",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 140.5,
+     "y": 147.25,
+     "w": 24.75,
+     "h": 2.25
+    },
+    {
+     "id": "smw1nrb0tz",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 159,
+     "y": 149.5,
+     "w": 1.5,
+     "h": 4
+    },
+    {
+     "id": "smw1nri1r10",
+     "kind": "stroke",
+     "mat": "asphalt",
+     "w": 2,
+     "pts": [
+      [
+       142,
+       148.25
+      ],
+      [
+       121.648,
+       160
+      ],
+      [
+       117.751,
+       162.25
+      ]
+     ],
+     "flat": true
+    },
+    {
+     "id": "smw1nruqe11",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 140.25,
+     "y": 128,
+     "w": 1.75,
+     "h": 21.25
+    },
+    {
+     "id": "smw1nryx912",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 142.25,
+     "y": 136.25,
+     "w": 15.75,
+     "h": 2.25
+    },
+    {
+     "id": "smw1ns9ap15",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 126.75,
+     "y": 136.25,
+     "w": 15.5,
+     "h": 2.25
+    },
+    {
+     "id": "smw1nslfl16",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 129.5,
+     "y": 173.25,
+     "w": 4.5,
+     "h": 7
+    },
+    {
+     "id": "smw1nspjl17",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 122.25,
+     "y": 161.25,
+     "w": 6.75,
+     "h": 8.75
+    },
+    {
+     "id": "smw1ntj2t19",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 199,
+     "y": 154,
+     "w": 1.5,
+     "h": 27.75
+    },
+    {
+     "id": "smw1ntz111b",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 162.5,
+     "y": 154.75,
+     "w": 38,
+     "h": 2.75
+    },
+    {
+     "id": "smw1nufag1c",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 203.25,
+     "y": 169,
+     "w": 17,
+     "h": 10.75
+    },
+    {
+     "id": "smw1numxx1d",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 220.25,
+     "y": 171.25,
+     "w": 15,
+     "h": 8.5
+    },
+    {
+     "id": "smw1nv6a81e",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 142,
+     "y": 129.5,
+     "w": 23.25,
+     "h": 6.5
+    },
+    {
+     "id": "smw1nvbv61f",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 165.25,
+     "y": 126.75,
+     "w": 2.5,
+     "h": 10.5
+    },
+    {
+     "id": "smw1nvisd1g",
+     "kind": "rect",
+     "mat": "grass",
+     "x": 138.75,
+     "y": 128,
+     "w": 1.5,
+     "h": 3.5
+    },
+    {
+     "id": "smw1nw8ap1j",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 167.75,
+     "y": 126.75,
+     "w": 48.75,
+     "h": 1
+    },
+    {
+     "id": "smw1nwj511k",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 171.5,
+     "y": 127.75,
+     "w": 22,
+     "h": 1.75
+    },
+    {
+     "id": "smw1nx7ma1l",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 329,
+     "y": 12.75,
+     "w": 2,
+     "h": 33.75
+    },
+    {
+     "id": "smw1nyuwa1r",
+     "kind": "rect",
+     "mat": "asphalt",
+     "x": 132.5,
+     "y": 210.5,
+     "w": 30,
+     "h": 0.5
+    }
+   ],
+   "objects": [],
+   "rows": [],
+   "erase": [
+    {
+     "id": "emw1mb5h70",
+     "rect": [
+      38.5,
+      30,
+      16,
+      24.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1mdb7c1",
+     "rect": [
+      84,
+      97.5,
+      29,
+      25.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1miga96",
+     "rect": [
+      88,
+      75,
+      25,
+      21.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1mkydfa",
+     "rect": [
+      115.5,
+      73.5,
+      49.5,
+      54.5
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1msba2x",
+     "rect": [
+      91.5,
+      13.5,
+      61.5,
+      58
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1mvmyo3",
+     "rect": [
+      115.194,
+      84.35,
+      0.3,
+      0.3
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1na5b817",
+     "rect": [
+      46.5,
+      64.25,
+      15.25,
+      58.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1na7yo18",
+     "rect": [
+      62.25,
+      63.25,
+      10,
+      40.75
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1naa6619",
+     "rect": [
+      72.75,
+      62,
+      19.5,
+      28.25
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1nxmpz1o",
+     "rect": [
+      328.694,
+      46.319,
+      0.3,
+      0.3
+     ],
+     "what": "all"
+    },
+    {
+     "id": "emw1nxo9s1p",
+     "rect": [
+      328.694,
+      44.319,
+      0.3,
+      0.3
+     ],
+     "what": "all"
+    }
+   ],
+   "buildings": [
+    {
+     "id": "practice",
+     "name": "机械与装备学院（15号楼）",
+     "kind": "lab",
+     "sign": "机械与装备学院（15号楼",
+     "wings": [
+      {
+       "x": 82.5,
+       "y": 105.5,
+       "w": 17.5,
+       "d": 4.5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 98,
+       "y": 105.5,
+       "w": 2,
+       "d": 8,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 82,
+       "y": 110.5,
+       "w": 3,
+       "d": 4.5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 82,
+       "y": 117,
+       "w": 17.5,
+       "d": 4,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 6.9,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "info-elec",
+     "name": "信息与电气工程学院（16号楼）",
+     "kind": "teaching",
+     "sign": "信息与电气工程学院（16",
+     "wings": [
+      {
+       "x": 96.5,
+       "y": 85,
+       "w": 15,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 6.7,
+        "tw": 2.5,
+        "main": true
+       }
+      },
+      {
+       "x": 98,
+       "y": 90,
+       "w": 3,
+       "d": 3.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 96,
+       "y": 94.5,
+       "w": 15.5,
+       "d": 4,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 6.7,
+        "tw": 2.5,
+        "main": false
+       }
+      },
+      {
+       "x": 106,
+       "y": 98.5,
+       "w": 5.5,
+       "d": 2,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "mech",
+     "name": "机械与装备工程学院",
+     "kind": "teaching",
+     "delete": true,
+     "wings": []
+    },
+    {
+     "id": "material",
+     "name": "材料科学与工程学院（19号楼）",
+     "kind": "teaching",
+     "sign": "材料科学与工程学院（19",
+     "wings": [
+      {
+       "x": 117.5,
+       "y": 84.5,
+       "w": 25,
+       "d": 4.5,
+       "f": 5,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 8.1,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 136.5,
+       "y": 89,
+       "w": 6,
+       "d": 3.5,
+       "f": 5,
+       "style": "brickPale",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "mining",
+     "name": "矿业与测绘工程学院（18号楼）",
+     "kind": "teaching",
+     "sign": "矿业与测绘工程学院（18",
+     "wings": [
+      {
+       "x": 126.5,
+       "y": 95.5,
+       "w": 15,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 4.3,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 138.5,
+       "y": 101,
+       "w": 9,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "geo",
+     "name": "地球科学与工程学院（17号楼）",
+     "kind": "teaching",
+     "sign": "地球科学与工程学院（17",
+     "wings": [
+      {
+       "x": 124.5,
+       "y": 108.5,
+       "w": 17.5,
+       "d": 4,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 10.3,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "law-lit",
+     "name": "文法/继续教育学院",
+     "kind": "teaching",
+     "sign": "文法/继续教育学院",
+     "wings": [
+      {
+       "x": 82.5,
+       "y": 142,
+       "w": 18,
+       "d": 3.5,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 95.5,
+       "y": 141,
+       "w": 5,
+       "d": 6,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 82.5,
+       "y": 145.5,
+       "w": 2,
+       "d": 6,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 82.5,
+       "y": 151.5,
+       "w": 15,
+       "d": 4,
+       "f": 4,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 4.9,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "mgmt",
+     "name": "管理工程与商学院/体育学院",
+     "kind": "teaching",
+     "sign": "管理工程与商学院/体育学",
+     "desc": "弧形围合的 U 形楼，西端是圆形塔楼。",
+     "wings": [
+      {
+       "x": 84.5,
+       "y": 158,
+       "w": 7,
+       "d": 5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0
+      },
+      {
+       "x": 85.5,
+       "y": 157,
+       "w": 5,
+       "d": 7.5,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 0,
+       "door": {
+        "tx": 1.4,
+        "tw": 2.5,
+        "main": true
+       }
+      },
+      {
+       "x": 96.31,
+       "y": 161.49,
+       "w": 4,
+       "d": 9,
+       "f": 4,
+       "style": "brickPale",
+       "rot": 55,
+       "roofTone": 0
+      },
+      {
+       "x": 94.19,
+       "y": 159.37,
+       "w": 10.5,
+       "d": 2,
+       "f": 4,
+       "style": "brickPale",
+       "rot": 55,
+       "roofTone": 0
+      },
+      {
+       "x": 92.08,
+       "y": 155.57,
+       "w": 2.5,
+       "d": 3.5,
+       "f": 4,
+       "style": "brickPale",
+       "rot": 55,
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "sport-college",
+     "name": "配套用房",
+     "kind": "teaching",
+     "sign": "配套用房",
+     "desc": "文法学院北侧的小楼（据校园模型归入文法/管商/体育与健康学院楼群，具体是哪个学院待核对）。",
+     "wings": [
+      {
+       "x": 95.5,
+       "y": 134,
+       "w": 7.5,
+       "d": 3,
+       "f": 4,
+       "style": "brickPale",
+       "roofTone": 1,
+       "door": {
+        "tx": 2.5,
+        "tw": 2.5
+       }
+      }
+     ]
+    },
+    {
+     "id": "d1-a",
+     "name": "一社区A楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 40.5,
+       "y": 66.5,
+       "w": 21.5,
+       "d": 2.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 9.5,
+        "tw": 2.5
+       }
+      },
+      {
+       "x": 58.5,
+       "y": 69,
+       "w": 3,
+       "d": 5.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 40.5,
+       "y": 69,
+       "w": 3,
+       "d": 2.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "d1-d",
+     "name": "一社区D楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 31,
+       "y": 107.5,
+       "w": 12.5,
+       "d": 3,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.8,
+        "tw": 2
+       }
+      },
+      {
+       "x": 31,
+       "y": 117.5,
+       "w": 12.5,
+       "d": 3,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 3.8,
+        "tw": 2
+       }
+      },
+      {
+       "x": 41.5,
+       "y": 110.5,
+       "w": 2,
+       "d": 7,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 31,
+       "y": 104,
+       "w": 3.5,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 39.5,
+       "y": 114,
+       "w": 2,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "d1-c",
+     "name": "一社区C楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 31,
+       "y": 84,
+       "w": 12.5,
+       "d": 3,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 5.3,
+        "tw": 2
+       }
+      },
+      {
+       "x": 31,
+       "y": 97,
+       "w": 12.5,
+       "d": 3,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 3.8,
+        "tw": 2
+       }
+      },
+      {
+       "x": 41.5,
+       "y": 87,
+       "w": 2,
+       "d": 10,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "d1-b",
+     "name": "一社区B楼",
+     "kind": "dorm",
+     "wings": [
+      {
+       "x": 32,
+       "y": 73.5,
+       "w": 11.5,
+       "d": 3,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 4.8,
+        "tw": 2
+       }
+      },
+      {
+       "x": 32,
+       "y": 76.5,
+       "w": 3,
+       "d": 3.5,
+       "f": 6,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 0.7,
+        "tw": 2
+       }
+      }
+     ]
+    },
+    {
+     "id": "public-1",
+     "name": "第一公共教学楼",
+     "kind": "teaching",
+     "interior": "classroom",
+     "sign": "第一教学楼",
+     "desc": "全校公共课所在的教学楼，学生每天最常穿行的地方：四翼围合的大院，南侧斜翼，东侧是通向图书馆广场的平台。",
+     "wings": [
+      {
+       "x": 126.25,
+       "y": 129.5,
+       "w": 14,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 121.25,
+       "y": 129.5,
+       "w": 5,
+       "d": 7.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 157.75,
+       "y": 129.5,
+       "w": 5,
+       "d": 17.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 144.75,
+       "y": 141.5,
+       "w": 13,
+       "d": 5.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 4.6,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 123.25,
+       "y": 141.05,
+       "w": 15.8,
+       "d": 7.4,
+       "f": 5,
+       "style": "brick",
+       "rot": 27,
+       "roofTone": 0
+      },
+      {
+       "x": 142.25,
+       "y": 129.5,
+       "w": 15.5,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      }
+     ]
+    },
+    {
+     "id": "public-2",
+     "name": "第二公共教学楼",
+     "kind": "teaching",
+     "sign": "第二教学楼",
+     "desc": "全校公共课所在的第二教学楼，三翼围合的大院朝东开口。",
+     "wings": [
+      {
+       "x": 203.75,
+       "y": 126.5,
+       "w": 13,
+       "d": 4.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 203.75,
+       "y": 131,
+       "w": 3,
+       "d": 7.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0
+      },
+      {
+       "x": 203.75,
+       "y": 138.5,
+       "w": 28.5,
+       "d": 5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 0,
+       "door": {
+        "tx": 12.9,
+        "tw": 3,
+        "main": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "arch-art",
+     "name": "建筑与艺术学院",
+     "kind": "teaching",
+     "sign": "建筑与艺术学院",
+     "wings": [
+      {
+       "x": 307.5,
+       "y": 190.75,
+       "w": 12.5,
+       "d": 9.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 2,
+       "door": {
+        "tx": 4.75,
+        "tw": 3,
+        "main": true
+       }
+      },
+      {
+       "x": 299.5,
+       "y": 201.75,
+       "w": 28,
+       "d": 6.5,
+       "f": 5,
+       "style": "brick",
+       "roofTone": 2
+      },
+      {
+       "x": 311,
+       "y": 201.25,
+       "w": 6,
+       "d": 4.5,
+       "f": 5,
+       "style": "glass",
+       "roofTone": 2
+      }
+     ]
+    }
+   ],
+   "bp": {
+    "hide": [
+     "40-sports#s5:k71e4n",
+     "45-sports-lines#s11:ct06gw",
+     "63-sports-landscape#c28:1g6bild"
+    ],
+    "edit": {
+     "40-sports#s32:13kir37": {
+      "kind": "rect",
+      "mat": "courtRed",
+      "x": 291.05,
+      "y": 82.7,
+      "w": 7.6,
+      "h": 4.1,
+      "note": "网球场(东区)"
+     }
+    }
+   }
+  }
+ ]
+}

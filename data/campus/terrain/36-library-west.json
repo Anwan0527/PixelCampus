@@ -1,0 +1,707 @@
+{
+ "_doc": "图书馆西侧：花草地取自校园 GLB 模型（library_flower_meadow / library_meadow_flowers 的花色分布），范围按卫星图裸土地量；水渠与小亭按卫星图 20px/格特写描摹。",
+ "shapes": [
+  {
+   "kind": "poly",
+   "mat": "lawn",
+   "pts": [
+    [
+     134,
+     176
+    ],
+    [
+     155,
+     175
+    ],
+    [
+     155.2,
+     157
+    ],
+    [
+     160.8,
+     157
+    ],
+    [
+     160.8,
+     211
+    ],
+    [
+     133.5,
+     211
+    ],
+    [
+     133,
+     190
+    ]
+   ],
+   "note": "图书馆西南花草地（卫星图上还是裸土，模型里是铺满花的草地）"
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 157.2,
+   "cy": 175.1,
+   "rx": 1.1,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 152.7,
+   "cy": 176.7,
+   "rx": 1.1,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 155,
+   "cy": 179.1,
+   "rx": 1,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 153,
+   "cy": 179.2,
+   "rx": 0.8,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 147.1,
+   "cy": 179.2,
+   "rx": 0.8,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 151,
+   "cy": 181,
+   "rx": 0.7,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 155.1,
+   "cy": 181.3,
+   "rx": 0.8,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 144.9,
+   "cy": 181,
+   "rx": 1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 157.2,
+   "cy": 181.1,
+   "rx": 0.9,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 148.8,
+   "cy": 182.9,
+   "rx": 1.1,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 146.8,
+   "cy": 183,
+   "rx": 0.8,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 145,
+   "cy": 183.1,
+   "rx": 1.1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 139.1,
+   "cy": 183.2,
+   "rx": 0.9,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 155.2,
+   "cy": 182.8,
+   "rx": 0.8,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 154.7,
+   "cy": 184.9,
+   "rx": 1,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 145,
+   "cy": 185.2,
+   "rx": 0.9,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 146.8,
+   "cy": 185.2,
+   "rx": 0.8,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 148.9,
+   "cy": 185,
+   "rx": 0.8,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 151,
+   "cy": 185.2,
+   "rx": 1,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 157.1,
+   "cy": 185.1,
+   "rx": 0.7,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 151.1,
+   "cy": 187,
+   "rx": 1.1,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 152.9,
+   "cy": 187.2,
+   "rx": 1,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 149.2,
+   "cy": 186.8,
+   "rx": 1.1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 150.8,
+   "cy": 188.7,
+   "rx": 0.7,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 138.9,
+   "cy": 189,
+   "rx": 1.1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 139,
+   "cy": 190.7,
+   "rx": 1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 148.8,
+   "cy": 191.1,
+   "rx": 1,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 143.2,
+   "cy": 190.8,
+   "rx": 0.9,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 147.1,
+   "cy": 191,
+   "rx": 0.8,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 154.7,
+   "cy": 193.2,
+   "rx": 0.9,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 146.8,
+   "cy": 193.3,
+   "rx": 1,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 139,
+   "cy": 192.7,
+   "rx": 0.9,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 143.3,
+   "cy": 192.7,
+   "rx": 1.1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 155.3,
+   "cy": 194.8,
+   "rx": 0.8,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 136.9,
+   "cy": 194.7,
+   "rx": 0.9,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 144.7,
+   "cy": 195.2,
+   "rx": 0.9,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 146.9,
+   "cy": 195,
+   "rx": 1,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 150.7,
+   "cy": 196.8,
+   "rx": 1.1,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 137.1,
+   "cy": 196.8,
+   "rx": 0.7,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 147.2,
+   "cy": 199.2,
+   "rx": 0.9,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 149.2,
+   "cy": 199.2,
+   "rx": 1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 155.3,
+   "cy": 198.8,
+   "rx": 0.9,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 151.1,
+   "cy": 199.1,
+   "rx": 1,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 142.9,
+   "cy": 198.9,
+   "rx": 0.9,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 142.8,
+   "cy": 201.1,
+   "rx": 0.9,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 145.2,
+   "cy": 201.2,
+   "rx": 0.9,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 152.8,
+   "cy": 200.9,
+   "rx": 0.9,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 151.2,
+   "cy": 201.3,
+   "rx": 1,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 139.2,
+   "cy": 202.9,
+   "rx": 0.8,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 148.7,
+   "cy": 202.9,
+   "rx": 0.9,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 143.1,
+   "cy": 202.7,
+   "rx": 0.9,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 150.8,
+   "cy": 203,
+   "rx": 1.1,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 153,
+   "cy": 202.8,
+   "rx": 0.8,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 149.1,
+   "cy": 205.1,
+   "rx": 0.8,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 147,
+   "cy": 204.8,
+   "rx": 0.9,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 152.9,
+   "cy": 205.3,
+   "rx": 0.7,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 142.9,
+   "cy": 207.1,
+   "rx": 1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 140.8,
+   "cy": 207.3,
+   "rx": 1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 136.9,
+   "cy": 207.2,
+   "rx": 1,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 138.9,
+   "cy": 209.3,
+   "rx": 0.8,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 142.7,
+   "cy": 209.1,
+   "rx": 1,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 148.8,
+   "cy": 209,
+   "rx": 0.7,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 144.9,
+   "cy": 208.8,
+   "rx": 1.1,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 147,
+   "cy": 209.1,
+   "rx": 0.8,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 156.8,
+   "cy": 183.1,
+   "rx": 1.1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 140.8,
+   "cy": 189,
+   "rx": 1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 156.7,
+   "cy": 189.1,
+   "rx": 0.9,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 145.2,
+   "cy": 190.9,
+   "rx": 0.8,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedYellow",
+   "cx": 148.8,
+   "cy": 192.9,
+   "rx": 1,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 138.8,
+   "cy": 195,
+   "rx": 0.9,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 141,
+   "cy": 194.9,
+   "rx": 0.8,
+   "ry": 0.9
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 141.2,
+   "cy": 196.8,
+   "rx": 0.8,
+   "ry": 0.8
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 156.7,
+   "cy": 198.8,
+   "rx": 0.7,
+   "ry": 1
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 149,
+   "cy": 201.3,
+   "rx": 0.8,
+   "ry": 0.7
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 136.8,
+   "cy": 203.3,
+   "rx": 0.9,
+   "ry": 0.6
+  },
+  {
+   "kind": "ellipse",
+   "mat": "bedPink",
+   "cx": 155.2,
+   "cy": 207.2,
+   "rx": 0.8,
+   "ry": 0.9
+  },
+  {
+   "kind": "stroke",
+   "mat": "water",
+   "w": 1.5,
+   "pts": [
+    [
+     135.3,
+     172.9
+    ],
+    [
+     143,
+     167.6
+    ],
+    [
+     152.2,
+     160.6
+    ]
+   ],
+   "note": "图书馆西侧景观水渠（模型里是\"西南景观池塘\"）"
+  },
+  {
+   "kind": "ellipse",
+   "mat": "water",
+   "cx": 136.3,
+   "cy": 172.6,
+   "rx": 2.6,
+   "ry": 1.5,
+   "note": "水渠西南端的小池"
+  }
+ ],
+ "scatter": [
+  {
+   "kind": "at",
+   "prop": "pavilion",
+   "x": 138.3,
+   "y": 168.4,
+   "note": "景观水渠边的小亭1"
+  },
+  {
+   "kind": "at",
+   "prop": "pavilion",
+   "x": 141.1,
+   "y": 166.2,
+   "note": "景观水渠边的小亭2"
+  },
+  {
+   "kind": "at",
+   "prop": "pavilion",
+   "x": 144,
+   "y": 164.2,
+   "note": "景观水渠边的小亭3"
+  },
+  {
+   "kind": "at",
+   "prop": "pavilion",
+   "x": 147,
+   "y": 162.1,
+   "note": "景观水渠边的小亭4"
+  }
+ ]
+}

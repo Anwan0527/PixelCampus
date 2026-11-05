@@ -1,0 +1,1239 @@
+{
+ "_doc": "宿舍组团的树带/庭院林地/长椅/路灯/车棚（按卫星图：四周密植列植树带，楼间庭院成丛灌木与小乔木，中心花园有环形园路和长椅）。",
+ "shapes": [],
+ "scatter": [
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     29.2,
+     63
+    ],
+    [
+     29.2,
+     123
+    ]
+   ],
+   "spacing": 1.9,
+   "jitter": 0.25,
+   "note": "一社区·西侧树带(内)"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     30.4,
+     63
+    ],
+    [
+     30.4,
+     123
+    ]
+   ],
+   "spacing": 2.1,
+   "jitter": 0.25,
+   "note": "一社区·西侧树带(外)"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     32,
+     123.2
+    ],
+    [
+     62,
+     123.2
+    ]
+   ],
+   "spacing": 3.2,
+   "jitter": 0.25,
+   "note": "一社区·南缘树列"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "blossom": 1,
+    "ginkgo": 1
+   },
+   "poly": [
+    [
+     47.5,
+     74
+    ],
+    [
+     61.5,
+     74
+    ],
+    [
+     61.5,
+     93
+    ],
+    [
+     47.5,
+     93
+    ]
+   ],
+   "density": 2.2,
+   "note": "一社区·东侧大草坪(树丛)"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 1
+   },
+   "poly": [
+    [
+     36.5,
+     76.5
+    ],
+    [
+     44,
+     76.5
+    ],
+    [
+     44,
+     80
+    ],
+    [
+     36.5,
+     80
+    ]
+   ],
+   "density": 4,
+   "note": "一社区·B楼庭院"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 2,
+    "bush": 3
+   },
+   "poly": [
+    [
+     36,
+     100.5
+    ],
+    [
+     45,
+     100.5
+    ],
+    [
+     45,
+     103
+    ],
+    [
+     36,
+     103
+    ]
+   ],
+   "density": 4,
+   "note": "一社区·D/F 间"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     47,
+     78
+    ],
+    [
+     47,
+     114
+    ]
+   ],
+   "spacing": 9,
+   "note": "一社区·东园路长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "lamp",
+   "pts": [
+    [
+     46.4,
+     66
+    ],
+    [
+     46.4,
+     122
+    ]
+   ],
+   "spacing": 11,
+   "note": "一社区·东园路灯"
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 38.5,
+   "y": 81.4
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 41.2,
+   "y": 91.2
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 37,
+   "y": 101.2
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 37,
+   "y": 111.5
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 38.5,
+   "y": 121.3
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 51,
+   "y": 72.2
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 70,
+   "y": 76.7
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     82,
+     15.7
+    ],
+    [
+     146,
+     15.7
+    ]
+   ],
+   "spacing": 1.9,
+   "jitter": 0.25,
+   "note": "二社区·北缘树带(内)"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     82,
+     17
+    ],
+    [
+     146,
+     17
+    ]
+   ],
+   "spacing": 2.1,
+   "jitter": 0.25
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "blossom": 1
+   },
+   "poly": [
+    [
+     88,
+     33
+    ],
+    [
+     96.5,
+     33
+    ],
+    [
+     96.5,
+     37.8
+    ],
+    [
+     88,
+     37.8
+    ]
+   ],
+   "density": 3.2,
+   "note": "二社区·D/G 庭院"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "ginkgo": 1
+   },
+   "poly": [
+    [
+     100.5,
+     33
+    ],
+    [
+     106.5,
+     33
+    ],
+    [
+     106.5,
+     37.5
+    ],
+    [
+     100.5,
+     37.5
+    ]
+   ],
+   "density": 3.2,
+   "note": "二社区·E/H 庭院"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 1
+   },
+   "poly": [
+    [
+     100,
+     22.4
+    ],
+    [
+     112,
+     22.4
+    ],
+    [
+     112,
+     26.6
+    ],
+    [
+     100,
+     26.6
+    ]
+   ],
+   "density": 3.4,
+   "note": "二社区·B/E 之间"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 2
+   },
+   "poly": [
+    [
+     131,
+     33
+    ],
+    [
+     142,
+     33
+    ],
+    [
+     142,
+     37
+    ],
+    [
+     131,
+     37
+    ]
+   ],
+   "density": 3.2,
+   "note": "二社区·F 楼南"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     118.4,
+     38.4
+    ],
+    [
+     118.4,
+     43.2
+    ]
+   ],
+   "spacing": 2.6,
+   "jitter": 0.25,
+   "note": "二社区·草坪树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     121.8,
+     38.4
+    ],
+    [
+     121.8,
+     43.2
+    ]
+   ],
+   "spacing": 2.6,
+   "jitter": 0.25,
+   "note": "二社区·草坪树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     125.2,
+     38.4
+    ],
+    [
+     125.2,
+     43.2
+    ]
+   ],
+   "spacing": 2.6,
+   "jitter": 0.25,
+   "note": "二社区·草坪树列"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     116.6,
+     26
+    ],
+    [
+     116.6,
+     50
+    ]
+   ],
+   "spacing": 8,
+   "note": "二社区·中路长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "lamp",
+   "pts": [
+    [
+     114.6,
+     25
+    ],
+    [
+     114.6,
+     52
+    ]
+   ],
+   "spacing": 9,
+   "note": "二社区·中路灯"
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 89,
+   "y": 37.6
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 103,
+   "y": 37.6
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 91,
+   "y": 26
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 110,
+   "y": 26
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 136.5,
+   "y": 33
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 102,
+   "y": 46.2
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 88,
+   "y": 46.2
+  },
+  {
+   "kind": "prop",
+   "prop": "bikeRack",
+   "pts": [
+    [
+     78.9,
+     21.5
+    ],
+    [
+     78.9,
+     43.5
+    ]
+   ],
+   "spacing": 2.4,
+   "note": "二社区·自行车场"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     230.4,
+     10.3
+    ],
+    [
+     262,
+     10.3
+    ]
+   ],
+   "spacing": 1.9,
+   "jitter": 0.25,
+   "note": "三社区·北缘树带(内,西)"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     230.4,
+     11.6
+    ],
+    [
+     262,
+     11.6
+    ]
+   ],
+   "spacing": 2.1,
+   "jitter": 0.25
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     264,
+     10.3
+    ],
+    [
+     286.5,
+     10.3
+    ]
+   ],
+   "spacing": 1.9,
+   "jitter": 0.25,
+   "note": "三社区·北缘树带(内,东)"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     264,
+     11.6
+    ],
+    [
+     286.5,
+     11.6
+    ]
+   ],
+   "spacing": 2.1,
+   "jitter": 0.25
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     285.2,
+     13
+    ],
+    [
+     285.2,
+     43
+    ]
+   ],
+   "spacing": 1.9,
+   "jitter": 0.25,
+   "note": "三社区·东缘树带"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     286.5,
+     13
+    ],
+    [
+     286.5,
+     43
+    ]
+   ],
+   "spacing": 2.1,
+   "jitter": 0.25
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     228.4,
+     14
+    ],
+    [
+     228.4,
+     40
+    ]
+   ],
+   "spacing": 2.0,
+   "jitter": 0.25,
+   "note": "三社区·西缘树带"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     246,
+     41.8
+    ],
+    [
+     266,
+     41.8
+    ]
+   ],
+   "spacing": 1.9,
+   "jitter": 0.25,
+   "note": "三社区·南缘树带(中)"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "blossom": 1
+   },
+   "poly": [
+    [
+     236,
+     18.4
+    ],
+    [
+     243.5,
+     18.4
+    ],
+    [
+     243.5,
+     21.8
+    ],
+    [
+     236,
+     21.8
+    ]
+   ],
+   "density": 3,
+   "note": "三社区·A/B 庭院"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3
+   },
+   "poly": [
+    [
+     252.5,
+     19
+    ],
+    [
+     262,
+     19
+    ],
+    [
+     262,
+     22
+    ],
+    [
+     252.5,
+     22
+    ]
+   ],
+   "density": 3,
+   "note": "三社区·B/C 之间"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "ginkgo": 1
+   },
+   "poly": [
+    [
+     268.5,
+     19
+    ],
+    [
+     277,
+     19
+    ],
+    [
+     277,
+     22
+    ],
+    [
+     268.5,
+     22
+    ]
+   ],
+   "density": 3,
+   "note": "三社区·E/F 之间"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 1
+   },
+   "poly": [
+    [
+     236,
+     28.4
+    ],
+    [
+     244,
+     28.4
+    ],
+    [
+     244,
+     31
+    ],
+    [
+     236,
+     31
+    ]
+   ],
+   "density": 4,
+   "note": "三社区·B/D 之间"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 1
+   },
+   "poly": [
+    [
+     271,
+     28.4
+    ],
+    [
+     277,
+     28.4
+    ],
+    [
+     277,
+     31
+    ],
+    [
+     271,
+     31
+    ]
+   ],
+   "density": 4,
+   "note": "三社区·F/G 之间"
+  },
+  {
+   "kind": "at",
+   "species": "blossom",
+   "x": 249.6,
+   "y": 31.8,
+   "note": "中心花园·海棠"
+  },
+  {
+   "kind": "at",
+   "species": "blossom",
+   "x": 252,
+   "y": 38.2,
+   "note": "中心花园·海棠"
+  },
+  {
+   "kind": "at",
+   "species": "blossom",
+   "x": 259,
+   "y": 31.8,
+   "note": "中心花园·海棠"
+  },
+  {
+   "kind": "at",
+   "species": "blossom",
+   "x": 261.2,
+   "y": 38.0,
+   "note": "中心花园·海棠"
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 255.6,
+   "y": 38.3,
+   "note": "中心花园长椅"
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 255.6,
+   "y": 31.8,
+   "note": "中心花园长椅"
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 250.4,
+   "y": 36.7
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 260.8,
+   "y": 36.7
+  },
+  {
+   "kind": "at",
+   "prop": "lamp",
+   "x": 250,
+   "y": 32
+  },
+  {
+   "kind": "at",
+   "prop": "lamp",
+   "x": 261,
+   "y": 32
+  },
+  {
+   "kind": "at",
+   "prop": "lamp",
+   "x": 250,
+   "y": 38
+  },
+  {
+   "kind": "at",
+   "prop": "lamp",
+   "x": 261,
+   "y": 38
+  },
+  {
+   "kind": "prop",
+   "prop": "lamp",
+   "pts": [
+    [
+     243.8,
+     13
+    ],
+    [
+     243.8,
+     43
+    ]
+   ],
+   "spacing": 10,
+   "note": "三社区·西路灯"
+  },
+  {
+   "kind": "prop",
+   "prop": "lamp",
+   "pts": [
+    [
+     268,
+     22
+    ],
+    [
+     268,
+     43
+    ]
+   ],
+   "spacing": 10,
+   "note": "三社区·东路灯"
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 240,
+   "y": 19.5
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 262,
+   "y": 22
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 278,
+   "y": 26
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 236,
+   "y": 34.6
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 274,
+   "y": 38.6
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 247,
+   "y": 28.6
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "blossom": 1
+   },
+   "poly": [
+    [
+     289.5,
+     98.5
+    ],
+    [
+     296,
+     98.5
+    ],
+    [
+     296,
+     118
+    ],
+    [
+     289.5,
+     118
+    ]
+   ],
+   "density": 2.6,
+   "note": "四社区·西侧林地"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3
+   },
+   "poly": [
+    [
+     289.5,
+     121
+    ],
+    [
+     298,
+     121
+    ],
+    [
+     298,
+     147
+    ],
+    [
+     289.5,
+     147
+    ]
+   ],
+   "density": 2.6,
+   "note": "四社区·西南林地"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 2
+   },
+   "poly": [
+    [
+     302,
+     105.5
+    ],
+    [
+     309,
+     105.5
+    ],
+    [
+     309,
+     110.5
+    ],
+    [
+     302,
+     110.5
+    ]
+   ],
+   "density": 3.4,
+   "note": "四社区·E 楼南庭院"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 2
+   },
+   "poly": [
+    [
+     302,
+     116
+    ],
+    [
+     309,
+     116
+    ],
+    [
+     309,
+     121
+    ],
+    [
+     302,
+     121
+    ]
+   ],
+   "density": 3.4,
+   "note": "四社区·F 楼南庭院"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 2
+   },
+   "poly": [
+    [
+     302,
+     136
+    ],
+    [
+     309,
+     136
+    ],
+    [
+     309,
+     141
+    ],
+    [
+     302,
+     141
+    ]
+   ],
+   "density": 3.4,
+   "note": "四社区·G/H 之间"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 2
+   },
+   "poly": [
+    [
+     311.5,
+     126
+    ],
+    [
+     319,
+     126
+    ],
+    [
+     319,
+     132
+    ],
+    [
+     311.5,
+     132
+    ]
+   ],
+   "density": 3.4,
+   "note": "四社区·C/D 之间"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 2
+   },
+   "poly": [
+    [
+     311.5,
+     115.4
+    ],
+    [
+     319,
+     115.4
+    ],
+    [
+     319,
+     121.5
+    ],
+    [
+     311.5,
+     121.5
+    ]
+   ],
+   "density": 3.4,
+   "note": "四社区·B/C 之间"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "bush": 3,
+    "oakS": 2
+   },
+   "poly": [
+    [
+     311.5,
+     136.5
+    ],
+    [
+     319,
+     136.5
+    ],
+    [
+     319,
+     141.4
+    ],
+    [
+     311.5,
+     141.4
+    ]
+   ],
+   "density": 3.4,
+   "note": "四社区·D/I 之间"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     330.2,
+     99
+    ],
+    [
+     330.2,
+     147
+    ]
+   ],
+   "spacing": 1.9,
+   "jitter": 0.25,
+   "note": "四社区·东缘树带(内)"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     331.5,
+     99
+    ],
+    [
+     331.5,
+     147
+    ]
+   ],
+   "spacing": 2.1,
+   "jitter": 0.25
+  },
+  {
+   "kind": "prop",
+   "prop": "lamp",
+   "pts": [
+    [
+     309,
+     99
+    ],
+    [
+     309,
+     147
+    ]
+   ],
+   "spacing": 10,
+   "note": "四社区·中路灯"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     308.6,
+     102
+    ],
+    [
+     308.6,
+     146
+    ]
+   ],
+   "spacing": 9,
+   "note": "四社区·中路长椅"
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 312,
+   "y": 106.4
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 312,
+   "y": 116.6
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 312,
+   "y": 127.4
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 312,
+   "y": 137.6
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 306.6,
+   "y": 106
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 306.6,
+   "y": 117
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 306.6,
+   "y": 137
+  }
+ ],
+ "blocks": []
+}

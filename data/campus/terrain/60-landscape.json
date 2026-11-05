@@ -1,0 +1,1760 @@
+{
+ "_doc": "景观小品与围栏：门牌、纪念碑、亭、球门/篮板、长椅、车棚、车辆、树列。",
+ "shapes": [],
+ "scatter": [
+  {
+   "kind": "at",
+   "prop": "pavilion",
+   "x": 199.4,
+   "y": 99.8,
+   "note": "湖心岛亭"
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 36.4,
+   "y": 141.4
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 36.4,
+   "y": 162.0
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 45.5,
+   "y": 31.9
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 45.5,
+   "y": 39.4
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 45.5,
+   "y": 40.8
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 45.5,
+   "y": 48.4
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 317.5,
+   "y": 52.0
+  },
+  {
+   "kind": "at",
+   "prop": "goal",
+   "x": 317.5,
+   "y": 79.6
+  },
+  {
+   "kind": "at",
+   "prop": "hoop",
+   "x": 315.0,
+   "y": 25.6
+  },
+  {
+   "kind": "at",
+   "prop": "hoop",
+   "x": 327.8,
+   "y": 25.6
+  },
+  {
+   "kind": "at",
+   "prop": "hoop",
+   "x": 324.8,
+   "y": 83.6
+  },
+  {
+   "kind": "at",
+   "prop": "hoop",
+   "x": 324.8,
+   "y": 96.2
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     208,
+     80
+    ],
+    [
+     212,
+     91
+    ]
+   ],
+   "spacing": 6,
+   "note": "湖东岸长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     216,
+     97
+    ],
+    [
+     213,
+     114
+    ]
+   ],
+   "spacing": 7
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     152.5,
+     76
+    ],
+    [
+     150.8,
+     96
+    ]
+   ],
+   "spacing": 7,
+   "note": "湖西岸长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     166,
+     125.2
+    ],
+    [
+     200,
+     125.2
+    ]
+   ],
+   "spacing": 9,
+   "note": "湖南岸长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     134,
+     168
+    ],
+    [
+     148,
+     159.5
+    ]
+   ],
+   "spacing": 8,
+   "note": "西弧路长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     207,
+     160
+    ],
+    [
+     222,
+     168
+    ]
+   ],
+   "spacing": 8,
+   "note": "东弧路长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     48.5,
+     76
+    ],
+    [
+     48.5,
+     118
+    ]
+   ],
+   "spacing": 10,
+   "note": "一社区中路长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     112.2,
+     100
+    ],
+    [
+     112.2,
+     150
+    ]
+   ],
+   "spacing": 12,
+   "note": "西主干长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     238.6,
+     60
+    ],
+    [
+     238.6,
+     150
+    ]
+   ],
+   "spacing": 14,
+   "note": "东路长椅"
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 47.6,
+   "y": 79.5
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 47.6,
+   "y": 101.8
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 98.6,
+   "y": 47.5
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 246,
+   "y": 41
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 307.8,
+   "y": 106.2
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 316,
+   "y": 146.5
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 150,
+   "y": 148.8
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 56.5,
+   "y": 123
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 244.0,
+   "y": 90.3
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 108,
+   "y": 60.4
+  },
+  {
+   "kind": "at",
+   "prop": "noticeBoard",
+   "x": 60,
+   "y": 123.4
+  },
+  {
+   "kind": "at",
+   "prop": "noticeBoard",
+   "x": 119,
+   "y": 126.2
+  },
+  {
+   "kind": "at",
+   "prop": "noticeBoard",
+   "x": 262,
+   "y": 141.5
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    126.8,
+    215,
+    15,
+    19
+   ],
+   "occupancy": 0.7
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    217.4,
+    216.6,
+    17.3,
+    13.8
+   ],
+   "occupancy": 0.65
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    309.8,
+    11.1,
+    15.5,
+    9.5
+   ],
+   "occupancy": 0.5
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    277,
+    99.3,
+    9.4,
+    11.1
+   ],
+   "occupancy": 0.55
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    293,
+    221,
+    16,
+    5
+   ],
+   "occupancy": 0.5
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    121.8,
+    76,
+    9,
+    6
+   ],
+   "occupancy": 0.6
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    250.5,
+    133,
+    24,
+    5
+   ],
+   "occupancy": 0.5
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     130.8,
+     217
+    ],
+    [
+     130.8,
+     232.5
+    ]
+   ],
+   "spacing": 3.0,
+   "note": "西停车场树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     135.2,
+     217
+    ],
+    [
+     135.2,
+     232.5
+    ]
+   ],
+   "spacing": 3.0,
+   "note": "西停车场树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     139.6,
+     217
+    ],
+    [
+     139.6,
+     232.5
+    ]
+   ],
+   "spacing": 3.0,
+   "note": "西停车场树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     221.8,
+     218
+    ],
+    [
+     221.8,
+     229
+    ]
+   ],
+   "spacing": 3.0,
+   "note": "东停车场树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     226.5,
+     218
+    ],
+    [
+     226.5,
+     229
+    ]
+   ],
+   "spacing": 3.0,
+   "note": "东停车场树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     231.0,
+     218
+    ],
+    [
+     231.0,
+     229
+    ]
+   ],
+   "spacing": 3.0,
+   "note": "东停车场树列"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     150,
+     240.5
+    ],
+    [
+     170,
+     240.5
+    ]
+   ],
+   "force": true,
+   "piers": 4,
+   "note": "南门西侧铁栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     190,
+     240.5
+    ],
+    [
+     209,
+     240.5
+    ]
+   ],
+   "force": true,
+   "piers": 4,
+   "note": "南门东侧铁栏"
+  },
+  {
+   "kind": "at",
+   "x": 170.5,
+   "y": 240.95,
+   "prop": "pier",
+   "note": "墙端砖柱(西)"
+  },
+  {
+   "kind": "at",
+   "x": 175.0,
+   "y": 240.95,
+   "prop": "pier",
+   "note": "门卫室旁砖柱(西)"
+  },
+  {
+   "kind": "at",
+   "x": 185.0,
+   "y": 240.95,
+   "prop": "pier",
+   "note": "门卫室旁砖柱(东)"
+  },
+  {
+   "kind": "at",
+   "x": 180.2,
+   "y": 247.3,
+   "prop": "nameStone",
+   "note": "校名石"
+  },
+  {
+   "kind": "label",
+   "text": "河北工程大学",
+   "x": 180.2,
+   "y": 246.05,
+   "size": 24,
+   "color": "#8a2f26",
+   "stroke": "#e4e0ca",
+   "id": "schoolName",
+   "note": "校名：写在校名石的碑面上（石碑放大 2 倍，碑面中心离脚点 40px）"
+  },
+  {
+   "kind": "interact",
+   "id": "schoolName",
+   "rect": [
+    175.7,
+    247.25,
+    9.0,
+    1.65
+   ],
+   "hint": "E  摸摸校名石",
+   "texts": [
+    "河北宇达大学",
+    "河北美团大学"
+   ],
+   "note": "校名石彩蛋：第 1 次→宇达，第 2 次→美团，第 3 次回到原名"
+  },
+  {
+   "kind": "at",
+   "prop": "messageBoard",
+   "x": 187.9,
+   "y": 243.6,
+   "note": "留言板：南门内东侧人行道，进校第一眼能看到"
+  },
+  {
+   "kind": "label",
+   "text": "留言板",
+   "x": 187.9,
+   "y": 242.17,
+   "size": 12,
+   "color": "#ffe9a0",
+   "stroke": "#3b1f10",
+   "note": "牌面中心 = 脚点上方 46px（1.44 原格）"
+  },
+  {
+   "kind": "interact",
+   "id": "board",
+   "rect": [
+    186.1,
+    243.6,
+    3.8,
+    1.5
+   ],
+   "hint": "E  看看留言板 / 写留言",
+   "action": "board",
+   "note": "站在留言板前按 E 打开留言板面板"
+  },
+  {
+   "kind": "at",
+   "x": 184.9,
+   "y": 246.9,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 184.43,
+   "y": 248.09,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 183.13,
+   "y": 249.05,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 181.25,
+   "y": 249.58,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 179.15,
+   "y": 249.58,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 177.27,
+   "y": 249.05,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 175.97,
+   "y": 248.09,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 175.5,
+   "y": 246.9,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 175.97,
+   "y": 245.71,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 177.27,
+   "y": 244.75,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 179.15,
+   "y": 244.22,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 181.25,
+   "y": 244.22,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 183.13,
+   "y": 244.75,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 184.43,
+   "y": 245.71,
+   "prop": "bollard",
+   "maxS": 1
+  },
+  {
+   "kind": "at",
+   "x": 169.4,
+   "y": 217,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 191.2,
+   "y": 217,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 169.4,
+   "y": 225,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 191.2,
+   "y": 225,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 180.4,
+   "y": 231.4,
+   "prop": "boulder",
+   "note": "校石（庭石）"
+  },
+  {
+   "kind": "at",
+   "x": 171.4,
+   "y": 209.4,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 190.4,
+   "y": 209.4,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 177.6,
+   "y": 195.0,
+   "prop": "lamp"
+  },
+  {
+   "kind": "at",
+   "x": 184.4,
+   "y": 195.0,
+   "prop": "lamp"
+  },
+  {
+   "kind": "at",
+   "x": 177.6,
+   "y": 202.0,
+   "prop": "lamp"
+  },
+  {
+   "kind": "at",
+   "x": 184.4,
+   "y": 202.0,
+   "prop": "lamp"
+  },
+  {
+   "kind": "at",
+   "x": 180.9,
+   "y": 206.9,
+   "prop": "flagpole",
+   "note": "升旗台（旗为3帧动画）"
+  },
+  {
+   "kind": "at",
+   "x": 170.2,
+   "y": 183.5,
+   "prop": "bench"
+  },
+  {
+   "kind": "at",
+   "x": 191.8,
+   "y": 183.5,
+   "prop": "bench"
+  },
+  {
+   "kind": "at",
+   "x": 166.0,
+   "y": 209.8,
+   "prop": "bench"
+  },
+  {
+   "kind": "at",
+   "x": 195.6,
+   "y": 209.8,
+   "prop": "bench"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.5,
+     113
+    ],
+    [
+     26.5,
+     121.5
+    ]
+   ],
+   "force": true,
+   "wall": true,
+   "piers": 4,
+   "note": "西门北侧砖墙"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.5,
+     126.5
+    ],
+    [
+     26.5,
+     135
+    ]
+   ],
+   "force": true,
+   "wall": true,
+   "piers": 4,
+   "note": "西门南侧砖墙"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.5,
+     101
+    ],
+    [
+     26.5,
+     113
+    ]
+   ],
+   "force": true,
+   "piers": 4,
+   "note": "西门北侧铁栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.5,
+     135
+    ],
+    [
+     26.5,
+     147
+    ]
+   ],
+   "force": true,
+   "piers": 4,
+   "note": "西门南侧铁栏"
+  },
+  {
+   "kind": "at",
+   "x": 24.2,
+   "y": 119.8,
+   "prop": "gatePlaque",
+   "note": "西门门牌"
+  },
+  {
+   "kind": "label",
+   "text": "西 门",
+   "x": 24.2,
+   "y": 118.7,
+   "size": 12
+  },
+  {
+   "kind": "at",
+   "x": 21.2,
+   "y": 120.4,
+   "prop": "lamp"
+  },
+  {
+   "kind": "at",
+   "x": 21.2,
+   "y": 128.2,
+   "prop": "lamp"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     31,
+     121.6
+    ],
+    [
+     62,
+     121.6
+    ]
+   ],
+   "spacing": 3.4,
+   "note": "西门路北侧行道树"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     31,
+     127.9
+    ],
+    [
+     62,
+     127.9
+    ]
+   ],
+   "spacing": 3.4,
+   "note": "西门路南侧行道树"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     331.5,
+     157
+    ],
+    [
+     331.5,
+     165.5
+    ]
+   ],
+   "force": true,
+   "wall": true,
+   "piers": 4,
+   "note": "东门北侧砖墙"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     331.5,
+     175.5
+    ],
+    [
+     331.5,
+     184
+    ]
+   ],
+   "force": true,
+   "wall": true,
+   "piers": 4,
+   "note": "东门南侧砖墙"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     331.5,
+     145
+    ],
+    [
+     331.5,
+     157
+    ]
+   ],
+   "force": true,
+   "piers": 4,
+   "note": "东门北侧铁栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     331.5,
+     184
+    ],
+    [
+     331.5,
+     196
+    ]
+   ],
+   "force": true,
+   "piers": 4,
+   "note": "东门南侧铁栏"
+  },
+  {
+   "kind": "at",
+   "x": 327.4,
+   "y": 170.3,
+   "prop": "mottoStone",
+   "note": "东门校训石（岛上）"
+  },
+  {
+   "kind": "at",
+   "x": 326.2,
+   "y": 164.2,
+   "prop": "gatePlaque",
+   "note": "东门门牌"
+  },
+  {
+   "kind": "label",
+   "text": "东 门",
+   "x": 326.2,
+   "y": 163.1,
+   "size": 12
+  },
+  {
+   "kind": "at",
+   "x": 322.6,
+   "y": 165.6,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 322.6,
+   "y": 174.0,
+   "prop": "lampGold"
+  },
+  {
+   "kind": "at",
+   "x": 326.0,
+   "y": 168.9,
+   "prop": "bush",
+   "species": "bush"
+  },
+  {
+   "kind": "at",
+   "x": 328.8,
+   "y": 171.0,
+   "prop": "bush",
+   "species": "bush"
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 181,
+   "y": 131.1,
+   "note": "北广场金灯"
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 181,
+   "y": 153.2,
+   "note": "北广场金灯"
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 172.2,
+   "y": 141.1,
+   "note": "北广场金灯"
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 189.6,
+   "y": 141.1,
+   "note": "北广场金灯"
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 172.6,
+   "y": 137.2
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 189.2,
+   "y": 137.2
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 172.6,
+   "y": 147.2
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 189.2,
+   "y": 147.2
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 176,
+   "y": 141.8
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 186.4,
+   "y": 141.8
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.5,
+     63
+    ],
+    [
+     26.5,
+     101
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "西侧围栏(北段)"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.5,
+     147
+    ],
+    [
+     26.5,
+     250
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "西侧围栏(南段)"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     331.5,
+     16
+    ],
+    [
+     331.5,
+     145
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "东侧围栏(北段)"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     331.5,
+     196
+    ],
+    [
+     331.5,
+     240
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "东侧围栏(南段)"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     28,
+     240.6
+    ],
+    [
+     150,
+     240.6
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "南侧围栏(西段)"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     209,
+     240.6
+    ],
+    [
+     253,
+     240.6
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "南侧围栏(东段)"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     253,
+     240.6
+    ],
+    [
+     253,
+     246.4
+    ],
+    [
+     331.5,
+     246.4
+    ],
+    [
+     331.5,
+     240
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "南侧围栏(东南段，沿环路外侧)"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     30,
+     12.0
+    ],
+    [
+     329,
+     12.0
+    ]
+   ],
+   "force": false,
+   "piers": 6,
+   "note": "北侧围栏"
+  },
+  {
+   "kind": "prop",
+   "prop": "lampGold",
+   "pts": [
+    [
+     165,
+     184.2
+    ],
+    [
+     197.5,
+     184.2
+    ]
+   ],
+   "spacing": 7,
+   "minS": 2,
+   "note": "广场灯行"
+  },
+  {
+   "kind": "prop",
+   "prop": "lampGold",
+   "pts": [
+    [
+     165,
+     189.6
+    ],
+    [
+     197.5,
+     189.6
+    ]
+   ],
+   "spacing": 7,
+   "minS": 2,
+   "note": "广场灯行"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     165.5,
+     186.8
+    ],
+    [
+     197,
+     186.8
+    ]
+   ],
+   "spacing": 4.2,
+   "minS": 2,
+   "note": "广场长椅行"
+  },
+  {
+   "kind": "prop",
+   "prop": "bin",
+   "pts": [
+    [
+     166,
+     187.8
+    ],
+    [
+     197,
+     187.8
+    ]
+   ],
+   "spacing": 8,
+   "minS": 2
+  },
+  {
+   "kind": "prop",
+   "prop": "flowerbed",
+   "pts": [
+    [
+     166.5,
+     183.2
+    ],
+    [
+     196,
+     183.2
+    ]
+   ],
+   "spacing": 6.5,
+   "minS": 2,
+   "note": "台阶两侧花坛列"
+  },
+  {
+   "kind": "prop",
+   "prop": "lampGold",
+   "pts": [
+    [
+     165,
+     210
+    ],
+    [
+     197.5,
+     210
+    ]
+   ],
+   "spacing": 7,
+   "minS": 2,
+   "note": "南缘灯行"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     165.5,
+     210.6
+    ],
+    [
+     197,
+     210.6
+    ]
+   ],
+   "spacing": 4.6,
+   "minS": 2,
+   "note": "南缘长椅行"
+  },
+  {
+   "kind": "prop",
+   "prop": "lampGold",
+   "pts": [
+    [
+     169.4,
+     217
+    ],
+    [
+     169.4,
+     231
+    ]
+   ],
+   "spacing": 5,
+   "minS": 2
+  },
+  {
+   "kind": "prop",
+   "prop": "lampGold",
+   "pts": [
+    [
+     191.2,
+     217
+    ],
+    [
+     191.2,
+     231
+    ]
+   ],
+   "spacing": 5,
+   "minS": 2
+  },
+  {
+   "kind": "cars",
+   "rect": [
+    217.4,
+    216.6,
+    17.3,
+    13.8
+   ],
+   "occupancy": 0.7,
+   "minS": 2
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "blossom": 1
+   },
+   "poly": [
+    [
+     196,
+     232.6
+    ],
+    [
+     216,
+     232.6
+    ],
+    [
+     216,
+     238
+    ],
+    [
+     196,
+     238
+    ]
+   ],
+   "density": 3,
+   "minS": 2,
+   "note": "会议中心门前绿化"
+  },
+  {
+   "kind": "cluster",
+   "species": {
+    "oakS": 3,
+    "bush": 3,
+    "blossom": 1
+   },
+   "poly": [
+    [
+     147,
+     231.4
+    ],
+    [
+     168,
+     231.4
+    ],
+    [
+     168,
+     238
+    ],
+    [
+     147,
+     238
+    ]
+   ],
+   "density": 3,
+   "minS": 2,
+   "note": "服务中心门前绿化"
+  },
+  {
+   "kind": "prop",
+   "prop": "wallH",
+   "pts": [
+    [
+     170.5,
+     240.9
+    ],
+    [
+     175.5,
+     240.9
+    ]
+   ],
+   "spacing": 1,
+   "note": "南门西侧砖墙（对接门卫亭）"
+  },
+  {
+   "kind": "prop",
+   "prop": "wallH",
+   "pts": [
+    [
+     184.5,
+     240.9
+    ],
+    [
+     189.5,
+     240.9
+    ]
+   ],
+   "spacing": 1,
+   "note": "南门东侧砖墙（对接门卫亭）"
+  },
+  {
+   "kind": "at",
+   "x": 179.3,
+   "y": 229.7,
+   "species": "oakS"
+  },
+  {
+   "kind": "at",
+   "x": 181.7,
+   "y": 229.5,
+   "species": "oakS"
+  },
+  {
+   "kind": "at",
+   "x": 180.5,
+   "y": 228.7,
+   "species": "oakS"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     171.2,
+     214
+    ],
+    [
+     171.2,
+     238
+    ]
+   ],
+   "spacing": 4.2,
+   "minS": 2,
+   "note": "车道外侧行道树"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     189.2,
+     214
+    ],
+    [
+     189.2,
+     238
+    ]
+   ],
+   "spacing": 4.2,
+   "minS": 2
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     135,
+     245.4
+    ],
+    [
+     166,
+     245.4
+    ]
+   ],
+   "spacing": 2.3,
+   "minS": 2,
+   "note": "校门外杨树带"
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     135,
+     247.6
+    ],
+    [
+     166,
+     247.6
+    ]
+   ],
+   "spacing": 2.3,
+   "minS": 2
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     135,
+     249.8
+    ],
+    [
+     166,
+     249.8
+    ]
+   ],
+   "spacing": 2.3,
+   "minS": 2
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     193,
+     245.4
+    ],
+    [
+     224,
+     245.4
+    ]
+   ],
+   "spacing": 2.3,
+   "minS": 2
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     193,
+     247.6
+    ],
+    [
+     224,
+     247.6
+    ]
+   ],
+   "spacing": 2.3,
+   "minS": 2
+  },
+  {
+   "kind": "row",
+   "species": "poplar",
+   "pts": [
+    [
+     193,
+     249.8
+    ],
+    [
+     224,
+     249.8
+    ]
+   ],
+   "spacing": 2.3,
+   "minS": 2
+  },
+  {
+   "kind": "at",
+   "x": 173.8,
+   "y": 245.4,
+   "prop": "oak",
+   "species": "oak"
+  },
+  {
+   "kind": "at",
+   "x": 173.8,
+   "y": 247.8,
+   "prop": "oak",
+   "species": "oak"
+  },
+  {
+   "kind": "at",
+   "x": 186.6,
+   "y": 245.4,
+   "prop": "oak",
+   "species": "oak"
+  },
+  {
+   "kind": "at",
+   "x": 186.6,
+   "y": 247.8,
+   "prop": "oak",
+   "species": "oak"
+  },
+  {
+   "kind": "prop",
+   "prop": "bollard",
+   "pts": [
+    [
+     176.5,
+     244.6
+    ],
+    [
+     176.5,
+     249.3
+    ],
+    [
+     183.9,
+     249.3
+    ],
+    [
+     183.9,
+     244.6
+    ]
+   ],
+   "spacing": 2.7,
+   "minS": 2,
+   "note": "校名石岛石球墩：直角（U 形，朝门一侧敞开，实景图）"
+  },
+  {
+   "kind": "prop",
+   "prop": "bollard",
+   "pts": [
+    [
+     171.9,
+     244.8
+    ],
+    [
+     171.9,
+     250.0
+    ],
+    [
+     175.7,
+     250.0
+    ],
+    [
+     175.7,
+     244.8
+    ]
+   ],
+   "spacing": 2.7,
+   "minS": 2,
+   "note": "小岛石球墩（直角 U 形，朝门一侧敞开；顶端留出留言板前的互动区）"
+  },
+  {
+   "kind": "prop",
+   "prop": "bollard",
+   "pts": [
+    [
+     184.7,
+     244.8
+    ],
+    [
+     184.7,
+     250.0
+    ],
+    [
+     188.5,
+     250.0
+    ],
+    [
+     188.5,
+     244.8
+    ]
+   ],
+   "spacing": 2.7,
+   "minS": 2
+  },
+  {
+   "kind": "at",
+   "x": 177.8,
+   "y": 215.0,
+   "species": "oakS"
+  },
+  {
+   "kind": "at",
+   "x": 180.4,
+   "y": 215.0,
+   "species": "oakS"
+  },
+  {
+   "kind": "at",
+   "x": 183.0,
+   "y": 215.0,
+   "species": "oakS"
+  },
+  {
+   "kind": "at",
+   "x": 180.4,
+   "y": 217.6,
+   "species": "oakS"
+  },
+  {
+   "kind": "at",
+   "x": 178.3,
+   "y": 220.2,
+   "species": "oakS"
+  },
+  {
+   "kind": "at",
+   "x": 182.5,
+   "y": 220.2,
+   "species": "oakS"
+  }
+ ],
+ "blocks": []
+}

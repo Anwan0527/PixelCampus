@@ -1,0 +1,16 @@
+# 美术风格（"春日校园"）
+
+所有美术由 `tools/art/` 程序化生成，**只从 `palette.ts` 取色**。规则：
+- 暗部偏冷紫、亮部偏暖黄；每种材质 4–5 阶；轮廓用材质深色（人物用"彩色柔和描边"）而不是纯黑。
+- **斜投影**：地面 1:1 俯视，立面朝南；建筑 = 屋顶（俯视）+ 南立面，深度排序基线 = 平面南缘。
+- 草地低对比（主要在 2/3 两阶）+ 零星草丛/成片小花；广场石板几乎同色、仅缝线与极少色块；水面 4 帧循环波光。
+- 建筑风格 7 种：`civic`（红砖 + 深青玻璃带 + 石柱通高门廊，图书馆/服务中心/门卫亭）、`hall`（会议中心：civic + 银灰立缝屋面）、`brick`（橙砖，鸟瞰图主色）、`brickPale`、`sand`（图书馆/会议中心）、`white`、`glass`；屋顶 flat/hip/solar。
+- 人物与小猫：Rig 驱动 + 分层合成（发型、发色、服装、配饰、手持物可自定义；12 个预置造型、多种动作；小猫 20 种毛色），颜色自动派生 4 阶明暗，脚下带柔和投影。设计、取舍与进度见 [ART_CHARACTER_CAT_DESIGN.md](ART_CHARACTER_CAT_DESIGN.md)。
+- UI：木框 + 米色纸面（CSS 像素边框）；字体 Ark Pixel 12px（OFL）。
+- 昼夜：整张世界的 MULTIPLY 叠色（黎明/正午/黄昏/夜）+ 路灯 ADD 光晕。
+
+预览：`npx tsx tools/art/preview-*.ts`（nature / buildings / characters / cats / rig / cat-rig / plaza…）→ `.cache/preview/`。
+- 大型建筑小品（校园商店、校园墙）在 `tools/art/plaza.ts`：16 格宽、红瓦/条纹遮阳篷/软木板，牌面文字由客户端叠上。
+
+- 广场材质：`plaza`（石灰岩，16px 大缝 + 8px 极淡细缝）、`plazaDark`（中央石面）、`plazaWarm`（暖色铺装）、`steps`（台阶，每 5px 一级）。
+- 金色多头路灯 `lampGold`（灯头离地 54px，夜里发光）与黑色单头灯 `lamp` 区分：前者用于南门—图书馆中轴，后者用于其他区域。

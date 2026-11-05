@@ -1,0 +1,28 @@
+# 每个 Pull Request 和 main 的推送都跑一遍：生成资源 → 类型检查 → 全部测试 → 构建。
+# 只做检查，不会部署（部署只由仓库主人在自己电脑上执行 npm run deploy）。
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 地图生成缓存
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: assets-${{ hashFiles('tools/**', 'data/campus/**', 'src/shared/**') }}
+          restore-keys: assets-
+      - run: npm run assets      # 地面块、图集等生成物不入库，测试要用；首次约 2 分钟
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npx vite build

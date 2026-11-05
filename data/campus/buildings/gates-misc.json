@@ -1,0 +1,166 @@
+[
+ {
+  "id": "civil-3",
+  "name": "土木工程学院综合楼",
+  "kind": "teaching",
+  "style": "brick",
+  "f": 5,
+  "wings": [
+   {
+    "x": 242.1,
+    "y": 48.1,
+    "w": 9.5,
+    "d": 6.6,
+    "door": {
+     "tx": 3.5,
+     "tw": 2.5,
+     "main": true
+    }
+   }
+  ],
+  "roofTone": 0
+ },
+ {
+  "id": "ne-garage",
+  "name": "配套车库",
+  "kind": "service",
+  "style": "white",
+  "f": 2,
+  "wings": [
+   {
+    "x": 280.3,
+    "y": 81.5,
+    "w": 5,
+    "d": 8.4
+   }
+  ]
+ },
+ {
+  "id": "gate-s-w",
+  "name": "南门门卫室",
+  "kind": "misc",
+  "style": "civic",
+  "f": 1,
+  "wings": [
+   {
+    "x": 175,
+    "y": 239,
+    "w": 3,
+    "d": 2,
+    "windows": "band"
+   }
+  ],
+  "ground": true,
+  "fixed": true
+ },
+ {
+  "id": "gate-s-e",
+  "name": "南门门卫室",
+  "kind": "misc",
+  "style": "civic",
+  "f": 1,
+  "wings": [
+   {
+    "x": 182,
+    "y": 239,
+    "w": 3,
+    "d": 2,
+    "windows": "band"
+   }
+  ],
+  "ground": true,
+  "fixed": true
+ },
+ {
+  "id": "gate-w-n",
+  "name": "西门门卫室",
+  "kind": "misc",
+  "style": "civic",
+  "f": 1,
+  "wings": [
+   {
+    "x": 26,
+    "y": 121,
+    "w": 3,
+    "d": 2,
+    "windows": "band"
+   }
+  ],
+  "ground": true,
+  "fixed": true
+ },
+ {
+  "id": "gate-w-s",
+  "name": "西门门卫室",
+  "kind": "misc",
+  "style": "civic",
+  "f": 1,
+  "wings": [
+   {
+    "x": 26,
+    "y": 125,
+    "w": 3,
+    "d": 2,
+    "windows": "band"
+   }
+  ],
+  "ground": true,
+  "fixed": true
+ },
+ {
+  "id": "gate-e-n",
+  "name": "东门立柱",
+  "kind": "misc",
+  "style": "civic",
+  "f": 1,
+  "wings": [
+   {
+    "x": 330,
+    "y": 165,
+    "w": 3,
+    "d": 2,
+    "windows": "none"
+   }
+  ],
+  "ground": true,
+  "fixed": true
+ },
+ {
+  "id": "gate-e-s",
+  "name": "东门立柱",
+  "kind": "misc",
+  "style": "civic",
+  "f": 1,
+  "wings": [
+   {
+    "x": 330,
+    "y": 174,
+    "w": 3,
+    "d": 2,
+    "windows": "none"
+   }
+  ],
+  "ground": true,
+  "fixed": true
+ },
+ {
+  "id": "gate-e-booth",
+  "name": "东门岗亭",
+  "kind": "misc",
+  "style": "civic",
+  "f": 1,
+  "roofTone": 2,
+  "wings": [
+   {
+    "x": 330,
+    "y": 171,
+    "w": 3,
+    "d": 3,
+    "roof": "hip",
+    "windows": "band"
+   }
+  ],
+  "ground": true,
+  "fixed": true
+ }
+]

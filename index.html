@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- 像素校园 · 河北工程大学新校区 © 2026 EXIST-D（https://github.com/EXIST-D）。保留所有权利；仅限个人学习的非商业使用，未经许可不得商用、转载或删除署名，详见 LICENSE。 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="author" content="EXIST-D" />
+  <meta name="copyright" content="© 2026 EXIST-D. 保留所有权利 · 仅限个人学习的非商业使用，详见 LICENSE" />
+  <meta name="description" content="像素校园 · 河北工程大学新校区 —— 星露谷风格的像素校园网页游戏。作者 EXIST-D" />
+  <link rel="author" href="https://github.com/EXIST-D" />
+  <title>像素校园 · 河北工程大学新校区</title>
+  <link rel="stylesheet" href="/src/ui/style.css" />
+</head>
+<body>
+  <div id="game"></div>
+  <div id="hud">
+    <div id="banner" class="box hidden"><div id="banner-title"></div><div id="banner-sub"></div></div>
+    <div id="clock" class="box"><div id="clock-day">第 1 天</div><div id="clock-time">08:00</div><div id="clock-phase"></div><div id="clock-place"></div></div>
+    <div id="coin-pill" class="box" title="校园币"><span class="coin-ico"></span><span id="coin-n">0</span></div>
+    <div id="hint" class="box hidden"></div>
+    <div id="controls">WASD / 方向键 移动 · Shift 奔跑 · E 互动 · I 背包 · J 成就 · Q 任务 · T 组队 · X 表情 · P 拍照 · Enter 聊天 · C 学生证 · M 地图 · +/- 缩放</div>
+    <div id="minimap" class="box"><div id="minimap-img"></div><div id="minimap-dot"></div><div id="minimap-n">北 ↑</div></div>
+    <div id="dialog" class="box hidden">
+      <div id="dialog-title"></div>
+      <div id="dialog-body"></div>
+      <div id="dialog-foot">按 E 或 Esc 关闭</div>
+    </div>
+    <div id="loading"><div id="loading-title">像素校园</div><div id="loading-bar"><div id="loading-fill"></div></div><div id="loading-text">加载中…</div><div id="loading-credit">© 2026 EXIST-D · github.com/EXIST-D</div></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+node_modules/
+dist/
+.cache/
+.DS_Store
+*.log
+# 生成物可由 `npm run assets` 重建；默认不入库（需要时可去掉下一行）
+public/assets/generated/
+# 5 m/格 对照版，`npm run assets:s1` 可重建
+public/assets/generated-s1/
+
+# 联机服务器的玩家档案（含玩家填写的内容）
+data/server/
+
+# 部署产物（deploy.sh 生成）
+deploy/out/
+
+# 上一个 agent 的旧版归档（只读、已废弃，约 95 MB / 4000+ 文件），留在磁盘上但不进版本库
+archive/legacy-handoff-*/
+
+# 本地预览配置
+.claude/
+
+data/mons/packs/local-*/
+data/mons/packs/local-*/

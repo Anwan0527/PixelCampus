@@ -1,0 +1,1243 @@
+{
+ "_doc": "运动场围栏（留口）、灯杆、看台、长椅、垃圾桶；体育中心前广场。",
+ "shapes": [],
+ "scatter": [
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     306.4,
+     46.2
+    ],
+    [
+     315,
+     46.2
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "田径场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     319.6,
+     46.2
+    ],
+    [
+     328.9,
+     46.2
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "田径场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     306.4,
+     82.6
+    ],
+    [
+     315,
+     82.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "田径场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     319.6,
+     82.6
+    ],
+    [
+     328.9,
+     82.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "田径场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     306.4,
+     46.2
+    ],
+    [
+     306.4,
+     62.5
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "田径场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     306.4,
+     66.5
+    ],
+    [
+     306.4,
+     82.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "田径场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     328.9,
+     46.2
+    ],
+    [
+     328.9,
+     82.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "田径场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     314.1,
+     21.7
+    ],
+    [
+     328.8,
+     21.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "网球/篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     314.1,
+     44.0
+    ],
+    [
+     319.6,
+     44.0
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "网球/篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     323.6,
+     44.0
+    ],
+    [
+     328.8,
+     44.0
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "网球/篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     314.1,
+     21.7
+    ],
+    [
+     314.1,
+     24.5
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "网球/篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     314.1,
+     27.5
+    ],
+    [
+     314.1,
+     36
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "网球/篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     314.1,
+     39
+    ],
+    [
+     314.1,
+     44.0
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "网球/篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     328.8,
+     21.7
+    ],
+    [
+     328.8,
+     44.0
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "网球/篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     320.6,
+     83
+    ],
+    [
+     323,
+     83
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     326,
+     83
+    ],
+    [
+     328.8,
+     83
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     320.6,
+     98.2
+    ],
+    [
+     328.8,
+     98.2
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     320.6,
+     83
+    ],
+    [
+     320.6,
+     89.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     320.6,
+     91.4
+    ],
+    [
+     320.6,
+     98.2
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     328.8,
+     83
+    ],
+    [
+     328.8,
+     98.2
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区篮球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.7,
+     132
+    ],
+    [
+     35.5,
+     132
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西区运动场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     39.5,
+     132
+    ],
+    [
+     48.3,
+     132
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西区运动场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.7,
+     170.5
+    ],
+    [
+     48.3,
+     170.5
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西区运动场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     26.7,
+     132
+    ],
+    [
+     26.7,
+     170.5
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西区运动场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     48.3,
+     132
+    ],
+    [
+     48.3,
+     149
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西区运动场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     48.3,
+     153
+    ],
+    [
+     48.3,
+     170.5
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西区运动场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     40.5,
+     31
+    ],
+    [
+     50.5,
+     31
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     40.5,
+     48.7
+    ],
+    [
+     50.5,
+     48.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     40.5,
+     31
+    ],
+    [
+     40.5,
+     38.5
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     40.5,
+     41.2
+    ],
+    [
+     40.5,
+     48.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     50.5,
+     31
+    ],
+    [
+     50.5,
+     38.5
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     50.5,
+     41.2
+    ],
+    [
+     50.5,
+     48.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     67,
+     49.8
+    ],
+    [
+     75.6,
+     49.8
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "红色球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     77.4,
+     49.8
+    ],
+    [
+     86.5,
+     49.8
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "红色球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     67,
+     62
+    ],
+    [
+     75.6,
+     62
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "红色球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     77.4,
+     62
+    ],
+    [
+     86.5,
+     62
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "红色球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     67,
+     49.8
+    ],
+    [
+     67,
+     62
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "红色球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     86.5,
+     49.8
+    ],
+    [
+     86.5,
+     62
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "红色球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     290.3,
+     82.7
+    ],
+    [
+     297.6,
+     82.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区网球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     290.3,
+     86.7
+    ],
+    [
+     293,
+     86.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区网球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     295,
+     86.7
+    ],
+    [
+     297.6,
+     86.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区网球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     290.3,
+     82.7
+    ],
+    [
+     290.3,
+     86.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区网球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     297.6,
+     82.7
+    ],
+    [
+     297.6,
+     86.7
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "东区网球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     96.2,
+     218
+    ],
+    [
+     108,
+     218
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西南球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     112.5,
+     218
+    ],
+    [
+     123.2,
+     218
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西南球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     96.2,
+     247.6
+    ],
+    [
+     123.2,
+     247.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西南球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     96.2,
+     218
+    ],
+    [
+     96.2,
+     247.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西南球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     123.2,
+     218
+    ],
+    [
+     123.2,
+     229
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西南球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     123.2,
+     232.5
+    ],
+    [
+     123.2,
+     247.6
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "西南球场围栏"
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 307.3,
+   "y": 47.4
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 328.0,
+   "y": 81.8
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 314.9,
+   "y": 22.6
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 328.0,
+   "y": 43.2
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 321.0,
+   "y": 84.2
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 27.6,
+   "y": 133.2
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 47.6,
+   "y": 169.4
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 41.2,
+   "y": 31.8
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 49.9,
+   "y": 48.0
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 65.6,
+   "y": 26.2
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 76.0,
+   "y": 41.2
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 67.6,
+   "y": 50.8
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 85.8,
+   "y": 61.2
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 97.0,
+   "y": 219.2
+  },
+  {
+   "kind": "at",
+   "prop": "floodlight",
+   "x": 122.4,
+   "y": 246.8
+  },
+  {
+   "kind": "at",
+   "prop": "bleacher",
+   "x": 37.5,
+   "y": 131.2,
+   "note": "西区运动场看台"
+  },
+  {
+   "kind": "at",
+   "prop": "bleacher",
+   "x": 110.2,
+   "y": 217.4,
+   "note": "西南足球场看台"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     308,
+     84.4
+    ],
+    [
+     326,
+     84.4
+    ]
+   ],
+   "spacing": 6,
+   "note": "田径场南缘长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     28,
+     171.8
+    ],
+    [
+     47,
+     171.8
+    ]
+   ],
+   "spacing": 7,
+   "note": "西区运动场南缘长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     98,
+     249
+    ],
+    [
+     122,
+     249
+    ]
+   ],
+   "spacing": 7,
+   "note": "西南球场南缘长椅"
+  },
+  {
+   "kind": "prop",
+   "prop": "bench",
+   "pts": [
+    [
+     66,
+     43.2
+    ],
+    [
+     76,
+     43.2
+    ]
+   ],
+   "spacing": 6,
+   "note": "北区草地球场南缘长椅"
+  },
+  {
+   "kind": "at",
+   "prop": "bin",
+   "x": 309.6,
+   "y": 84.6
+  },
+  {
+   "kind": "at",
+   "prop": "bin",
+   "x": 327.8,
+   "y": 84.8
+  },
+  {
+   "kind": "at",
+   "prop": "bin",
+   "x": 28.6,
+   "y": 172.4
+  },
+  {
+   "kind": "at",
+   "prop": "bin",
+   "x": 124,
+   "y": 232
+  },
+  {
+   "kind": "at",
+   "prop": "bin",
+   "x": 77.6,
+   "y": 44
+  },
+  {
+   "kind": "at",
+   "prop": "bin",
+   "x": 87.4,
+   "y": 63.6
+  },
+  {
+   "kind": "at",
+   "prop": "bin",
+   "x": 49.6,
+   "y": 50
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 325.5,
+   "y": 47.6
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 307.4,
+   "y": 85.2
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 318.4,
+   "y": 45.2
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     28,
+     172.8
+    ],
+    [
+     47,
+     172.8
+    ]
+   ],
+   "spacing": 4,
+   "note": "西区运动场南缘树列"
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     97,
+     249.8
+    ],
+    [
+     122,
+     249.8
+    ]
+   ],
+   "spacing": 4
+  },
+  {
+   "kind": "row",
+   "species": "oakS",
+   "pts": [
+    [
+     307,
+     87.2
+    ],
+    [
+     327,
+     87.2
+    ]
+   ],
+   "spacing": 4.4,
+   "note": "田径场南缘树列"
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 44,
+   "y": 234.4
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 52,
+   "y": 234.4
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 66,
+   "y": 234.4
+  },
+  {
+   "kind": "at",
+   "prop": "lampGold",
+   "x": 74,
+   "y": 234.4
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 47,
+   "y": 240.4
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 56,
+   "y": 240.4
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 63,
+   "y": 240.4
+  },
+  {
+   "kind": "at",
+   "prop": "bench",
+   "x": 71,
+   "y": 240.4
+  },
+  {
+   "kind": "at",
+   "species": "oakS",
+   "x": 41,
+   "y": 243.6
+  },
+  {
+   "kind": "at",
+   "species": "oakS",
+   "x": 77,
+   "y": 243.6
+  },
+  {
+   "kind": "at",
+   "prop": "flowerbed",
+   "x": 50,
+   "y": 245.4
+  },
+  {
+   "kind": "at",
+   "prop": "flowerbed",
+   "x": 58,
+   "y": 245.4
+  },
+  {
+   "kind": "at",
+   "prop": "flowerbed",
+   "x": 68,
+   "y": 245.4
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 43.4,
+   "y": 237
+  },
+  {
+   "kind": "at",
+   "prop": "bikeRack",
+   "x": 75.8,
+   "y": 237
+  },
+  {
+   "kind": "at",
+   "prop": "fountain",
+   "x": 59.4,
+   "y": 238.6,
+   "note": "体育中心前广场喷泉（游戏化设计，卫星图无法确认）"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     64.7,
+     25
+    ],
+    [
+     76.7,
+     25
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区草地球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     64.7,
+     42
+    ],
+    [
+     76.7,
+     42
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区草地球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     64.7,
+     25
+    ],
+    [
+     64.7,
+     42
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区草地球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     76.7,
+     25
+    ],
+    [
+     76.7,
+     30
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区草地球场围栏"
+  },
+  {
+   "kind": "fence",
+   "pts": [
+    [
+     76.7,
+     33.5
+    ],
+    [
+     76.7,
+     42
+    ]
+   ],
+   "force": true,
+   "piers": 5,
+   "note": "北区草地球场围栏"
+  }
+ ],
+ "blocks": []
+}
