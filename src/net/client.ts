@@ -54,6 +54,8 @@ export interface NetHandlers {
   admChatlog?: (items: AdminChatItem[], more: boolean) => void;
   admDmlog?: (m: Extract<ServerMsg, { t: 'adm_dmlog' }>) => void;
   admInfo?: (i: AdminInfo) => void;
+  /** 重发身份备份码的结果（只显示一次） */
+  admCode?: (m: Extract<ServerMsg, { t: 'adm_code' }>) => void;
   /** 管理员：找人的结果 / 玩家档案 */
   admHits?: (m: Extract<ServerMsg, { t: 'adm_hits' }>) => void;
   admDossier?: (d: AdminDossier) => void;
@@ -245,6 +247,7 @@ export class NetClient implements ChatTransport {
       case 'adm_chatlog': this.handlers.admChatlog?.(m.items, m.more); break;
       case 'adm_dmlog': this.handlers.admDmlog?.(m); break;
       case 'adm_info': this.handlers.admInfo?.(m.info); break;
+      case 'adm_code': this.handlers.admCode?.(m); break;
       case 'adm_hits': this.handlers.admHits?.(m); break;
       case 'adm_dossier': this.handlers.admDossier?.(m.d); break;
       case 'adm_bans': this.handlers.admBans?.(m.items); break;

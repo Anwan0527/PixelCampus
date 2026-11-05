@@ -32,15 +32,21 @@ export class AdminDossier {
   readonly el = el('div', 'dos');
   private head = el('div', 'dos-head'); private subs = el('div', 'seg-row dos-subs'); private msg = el('div', 'board-msg'); private body = el('div', 'dos-body');
   private uid = 0; private d: Dossier | null = null; private sub: Sub = 'overview';
+  /** 刚重发的身份备份码（只显示一次：关掉或换人就清掉，服务器也不保存） */
+  private code: { uid: number; name: string; code: string } | null = null;
 
   constructor(private net: NetClient, private hooks: DossierHooks) {
     this.el.append(this.head, this.subs, this.msg, this.body);
   }
   get current() { return this.uid; }
   /** 打开某位玩家的档案（切到「概览」） */
-  show(uid: number) { this.uid = uid; this.d = null; this.sub = 'overview'; this.msg.textContent = ''; this.render(); this.refresh(); }
+  show(uid: number) { if (this.code?.uid !== uid) this.code = null; this.uid = uid; this.d = null; this.sub = 'overview'; this.msg.textContent = ''; this.render(); this.refresh(); }
   refresh() { if (this.uid) this.net.adm({ op: 'dossier', uid: this.uid }); }
   setData(d: Dossier) { if (d.info.uid !== this.uid) return; this.d = d; if (!this.editing()) this.render(); }
+  /** 离开档案页 / 关闭面板时清掉（新备份码只显示一次） */
+  clearCode() { this.code = null; }
+  /** 服务器回的新身份备份码：显示在概览页顶部，直到你点「已复制，关闭」 */
+  showCode(m: { uid: number; name: string; code: string }) { this.code = m; this.sub = 'overview'; if (m.uid === this.uid) this.render(); }
   result(ok: boolean, text: string) { this.msg.textContent = text; this.msg.classList.toggle('bad', !ok); if (ok) this.refresh(); }
   /** 正在输入框里打字时不重绘（会把没写完的字清掉） */
   private editing() { const a = document.activeElement; return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') && this.el.contains(a); }
@@ -69,6 +75,15 @@ export class AdminDossier {
   // ------------------------------------------------------------ 概览与处置
   private renderOverview(d: Dossier) {
     const b = this.body, i = d.info, uid = i.uid, name = i.name, net = this.net;
+    if (this.code && this.code.uid === uid) { // 刚生成的新身份备份码：只显示一次
+      const box = el('div', 'dos-code');
+      const val = el('div', 'dos-code-val', this.code.code); val.title = '点一下选中';
+      val.addEventListener('click', () => { const r = document.createRange(); r.selectNodeContents(val); const s = window.getSelection(); s?.removeAllRanges(); s?.addRange(r); });
+      const copy = this.btn('复制', () => { void navigator.clipboard?.writeText(this.code!.code).then(() => this.result(true, '已复制新备份码'), () => this.result(false, '复制失败，请手动选中复制')); }, { primary: true });
+      const done = this.btn('我已复制，关闭', () => { this.code = null; this.render(); });
+      box.append(el('div', 'adm-bar-title', `🔑 ${this.code.name}（#${uid}）的新身份备份码`), val, this.row('', copy, done), el('div', 'create-sub', '只显示这一次，服务器不保存、日志里也没有。请私下发给本人（别发到群里）：让他在新浏览器的「恢复身份」里输入。旧的身份码已经作废。'));
+      b.append(box);
+    }
     // 位置 / 世界
     const loc: HTMLElement[] = [];
     if (i.online) {
@@ -90,6 +105,13 @@ export class AdminDossier {
     act.push(k);
     b.append(this.section('处置', ...act));
 
+    // 重发身份备份码（站长）：同学丢了号 / 清了浏览器，核对身份后给他一个新码
+    if (net.can('reissue_code') && !i.mod) {
+      b.append(this.section('身份备份码（找回账号）', this.row('', this.btn('重发身份备份码…', () => {
+        if (!confirm(`给 ${name}（#${uid}）重发身份备份码？\n\n· 请先核对对方身份（学生证号、学院专业、好友等）。\n· 旧的身份码立刻作废：如果这个号不是他本人在用，原主人就进不去了。\n· TA 在线的话会被踢下线。\n· 新备份码只显示一次。`)) return;
+        net.adm({ op: 'reissue_code', uid });
+      }, { danger: true })), el('div', 'create-sub', '同学丢了身份码 / 换了浏览器找不回号时用：他的校园号、好友、背包、校园币都不变，只是换一个新的钥匙。')));
+    }
     // 任命协管员（站长）：协管员没有口令，任命后下次进游戏（在线的当场）自动生效，随时可撤销
     if (net.can('mod_set')) {
       b.append(this.section('协管员', this.row('', i.mod ? this.btn('撤销协管员身份', () => { if (confirm(`撤销 ${name} 的协管员身份？`)) net.adm({ op: 'mod_set', uid, on: false }); }, { danger: true }) : this.btn('任命为协管员', () => { if (confirm(`任命 ${name} 为协管员？TA 能禁言（≤1 天）、踢人、撤回、处理举报、看玩家档案，但不能封禁、改资料、发物品或币、看私聊。随时可以撤销。`)) net.adm({ op: 'mod_set', uid, on: true }); }, { primary: true })), el('div', 'create-sub', i.mod ? `${name} 现在是协管员（没有口令，用自己的账号进游戏就有「管理」按钮）。` : '协管员由你任命，没有自己的口令；只任命你信得过的人。')));

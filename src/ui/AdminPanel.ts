@@ -60,7 +60,7 @@ export class AdminPanel {
   /** hooks.openMap：关掉控制台并打开大地图（管理员在大地图上点哪里就传送到哪里） */
   constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private hooks: { openMap(): void; showCard(uid: number): void }) {
     this.menu = new AdminUserMenu(net, { showCard: (u) => hooks.showCard(u), openLogs: (u) => this.openLogs(u), openDm: (u) => this.openDm(u), openDossier: (u) => this.openDossier(u) });
-    this.dossier = new AdminDossier(net, { back: () => { this.dosUid = 0; this.render(); this.fetch(); }, open: (u) => this.openDossier(u), openLogs: (u) => this.openLogs(u), openDm: (u) => this.openDm(u), showCard: (u) => hooks.showCard(u), openReports: () => { this.dosUid = 0; this.tab = 'reports'; this.fetchReports(); this.render(); } });
+    this.dossier = new AdminDossier(net, { back: () => { this.dossier.clearCode(); this.dosUid = 0; this.render(); this.fetch(); }, open: (u) => this.openDossier(u), openLogs: (u) => this.openLogs(u), openDm: (u) => this.openDm(u), showCard: (u) => hooks.showCard(u), openReports: () => { this.dosUid = 0; this.tab = 'reports'; this.fetchReports(); this.render(); } });
     const panel = el('div', 'box adm');
     const head = el('div', 'board-head');
     const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭管理'); close.addEventListener('click', () => this.close());
@@ -77,6 +77,7 @@ export class AdminPanel {
     h.admCats = (items) => { this.cats = items; if (this.tab === 'cats' && !this.editing()) this.render(); };
     h.admHits = (m) => this.onHits(m);
     h.admDossier = (d) => this.dossier.setData(d);
+    h.admCode = (m) => { if (!this.isOpen) this.open(); this.dosUid = m.uid; this.dossier.showCode(m); this.render(); };
     h.admFilter = (f) => { this.flt = f; if (this.tab === 'filter' && !this.editing()) this.render(); };
     h.admChatlog = (items, more) => { this.logItems = this.logPaging ? [...this.logItems, ...items] : items; this.logMore = more; this.logPaging = false; if (this.tab === 'logs' && this.isOpen) this.render(); };
     h.admDmlog = (m) => {
@@ -107,7 +108,7 @@ export class AdminPanel {
   open() { if (!this.net.isAdmin) return; this.root.classList.remove('hidden'); this.msg.textContent = ''; this.titleEl.textContent = `🛡 管理员控制台（${ROLE_NAMES[this.net.adminRole ?? 'mod']}）`; this.fetch(); this.render(); window.clearInterval(this.timer); this.timer = window.setInterval(() => { if ((this.tab === 'players' && !this.dosUid) || this.tab === 'worlds') this.fetch(); }, 5000); }
   /** 打开某位玩家的完整档案（点名字菜单的「完整档案」、搜索结果、好友列表都走这里） */
   openDossier(uid: number) { if (!this.net.isAdmin) return; if (!this.isOpen) this.open(); this.tab = 'players'; this.dosUid = uid; this.dossier.show(uid); this.msg.textContent = ''; this.render(); }
-  close() { this.root.classList.add('hidden'); window.clearInterval(this.timer); }
+  close() { this.root.classList.add('hidden'); window.clearInterval(this.timer); this.dossier.clearCode(); }
   toggle() { this.isOpen ? this.close() : this.open(); }
   private fetch() { this.net.adm({ op: 'players', offline: this.withOffline }); this.net.adm({ op: 'cats' }); if (this.tab === 'filter') this.net.adm({ op: 'filter_get' }); if (this.tab === 'worlds') this.net.adm({ op: 'worlds' }); if (this.tab === 'reports') this.fetchReports(); }
   private fetchReports(before?: number) { this.repPaging = before !== undefined; this.net.adm({ op: 'reports', open: this.repOnlyOpen, ...(before ? { before } : {}) }); }

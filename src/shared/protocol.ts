@@ -372,6 +372,8 @@ export type ServerMsg =
   | { t: 'adm_chatlog'; items: AdminChatItem[]; more: boolean }
   | { t: 'adm_dmlog'; uid: number; name: string; peers?: AdminDmPeer[]; peer?: number; peerName?: string; items?: AdminDm[]; more?: boolean }
   | { t: 'adm_info'; info: AdminInfo }
+  /** 重发身份备份码的结果：只发给操作的站长，只这一次（服务器不保存） */
+  | { t: 'adm_code'; uid: number; name: string; code: string }
   /** 找人的结果（q 是搜的什么，界面用它丢掉过期的结果） */
   | { t: 'adm_hits'; q: string; items: AdminHit[]; /** 还有更多没列出来 */ more: boolean }
   | { t: 'adm_dossier'; d: AdminDossier }

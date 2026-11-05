@@ -62,6 +62,8 @@ export type AdminOp =
   | { op: 'coins_adj'; uid: number; delta: number; reason?: string }
   /** 收走背包里的物品 */
   | { op: 'item_take'; uid: number; item: string; n: number }
+  /** 重发身份备份码（站长专属）：给这个校园号生成一个新的身份码并把档案换到它名下，旧身份码作废；新备份码只在回复里给这位站长看一次，不存、不记日志 */
+  | { op: 'reissue_code'; uid: number }
   /** 任命 / 撤销协管员（只有站长）：协管员没有口令，被任命的玩家下次进游戏（在线的当场）自动成为协管员；站长在玩家档案里操作 */
   | { op: 'mod_set'; uid: number; on: boolean }
   /** 协管员名单（返回 adm_hits） */
@@ -86,7 +88,7 @@ export type AdminRole = 'owner' | 'mod';
 export const ROLE_NAMES: Record<AdminRole, string> = { owner: '站长', mod: '协管员' };
 export const OWNER_ONLY_OPS: ReadonlySet<AdminOp['op']> = new Set<AdminOp['op']>([
   'ban', 'unban', 'profile_set', 'give', 'title', 'title_custom', 'title_take', 'coins_adj', 'item_take', 'cat_name',
-  'mod_set', 'mods', 'say', 'lock', 'announce', 'filter_get', 'filter_toggle', 'filter_cat', 'word_add', 'word_del', 'white_add', 'white_del', 'filter_reload', 'log_dm',
+  'mod_set', 'mods', 'reissue_code', 'say', 'lock', 'announce', 'filter_get', 'filter_toggle', 'filter_cat', 'word_add', 'word_del', 'white_add', 'white_del', 'filter_reload', 'log_dm',
 ]);
 export const canOp = (role: AdminRole | null | undefined, op: AdminOp['op']): boolean => role === 'owner' || (role === 'mod' && !OWNER_ONLY_OPS.has(op));
 /** 协管员名单结果的 q 标记（adm_hits.q） */
@@ -171,7 +173,7 @@ export const MUTE_PRESETS: { label: string; min: number }[] = [
 export const OP_NAMES: Record<string, string> = {
   mute: '禁言', kick: '踢出', ban: '封禁', unban: '解封', goto: '传送到他身边', bring: '叫他过来', give: '赠送物品', title: '授予称号', title_custom: '授予专属称号', title_take: '收回称号',
   profile_set: '改资料', recall: '撤回消息', recall_user: '撤回他的发言', log_chat: '查公屏记录', log_dm: '查私聊', player_info: '看资料', dossier: '看档案',
-  coins_adj: '调整校园币', mod_set: '任命/撤销协管员', item_take: '收走物品', notify: '发通知', world_enter: '进入世界', world_leave: '离开世界', rep_handle: '处理举报',
+  coins_adj: '调整校园币', mod_set: '任命/撤销协管员', reissue_code: '重发身份备份码', item_take: '收走物品', notify: '发通知', world_enter: '进入世界', world_leave: '离开世界', rep_handle: '处理举报',
   say: '全服广播', lock: '公屏开关', announce: '进出提示开关', cat_name: '小猫改名', filter_toggle: '敏感词总开关', filter_cat: '敏感词类别', word_add: '加敏感词', word_del: '删敏感词', white_add: '加白名单', white_del: '删白名单',
 };
 
