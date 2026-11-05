@@ -363,8 +363,292 @@ function catBed(): Img {
   return i;
 }
 
+// ================= 钓鱼 2.0 新增图标 =================
+const CLAM = art([
+  '................', '................', '................',
+  '......pppp......',
+  '....ppPPPPpp....',
+  '...pPPwPPPPPp...',
+  '..pPPPPPPwPPPp..',
+  '..pPwPPPPPPPPp..',
+  '..dpPPPwPPPPpd..',
+  '..dddpppppppdd..',
+  '...ddddddddddd..',
+  '....dddddddd....',
+  '......dddd......',
+  '................', '................', '................',
+], { p: '#a89888', P: '#d8c8b4', w: '#f4ece0', d: '#6a5848' });
+const CRAB = art([
+  '................',
+  '.cc..........cc.',
+  'cCCc........cCCc',
+  'cC.c........c.Cc',
+  '.c..a......a..c.',
+  '.....aeeeea.....',
+  '...rrrrrrrrrr...',
+  '..rRrrRrrrRrrr..',
+  '.lrrrrrrrrrrrrl.',
+  '..lrRrrrrrRrrl..',
+  '...lrrrrrrrrl...',
+  '..l.l.l..l.l.l..',
+  '................', '................', '................', '................',
+], { c: '#7a5a2a', C: '#b88a3a', r: '#8a6a3a', R: '#b08a4e', a: '#8a6a3a', e: '#2a1f2e', l: '#5a4220' });
+const XUANGUI = art([
+  '................', '.......gg.......',
+  '.....ggGGgg.....',
+  '...ggGgGgGGgg...',
+  '..gGGgGGgGgGGg..',
+  '..gGgGGgGGgGgg.h',
+  '.tgGGgGgGGgGGghh',
+  '..gGgGGgGgGGgghe',
+  '..gGGgGgGGgGgg.h',
+  '...ggGGgGgGggg..',
+  '...lll.gggg.lll.',
+  '..lll......lll..',
+  '................', '................', '................', '................',
+], { g: '#2a5a4a', G: '#4a8a6a', h: '#7aa088', e: '#f4d070', t: '#7aa088', l: '#7aa088' });
+const BOTTLE_BOX = art([
+  '................', '......ccc.......',
+  '......cCc.......',
+  '......bBb.......',
+  '.....bBBBb......',
+  '....bBwwwBb.....',
+  '....bBwpwBb.....',
+  '....bBwpwBb.....',
+  '....bBwwwBb.....',
+  '....bBBBBBb.....',
+  '....bBBBBBb.....',
+  '.....bbbbb......',
+  '................', '................', '................', '................',
+], { c: '#b89060', C: '#d8b078', b: '#3a9a8a', B: '#8adccc', w: '#f4ecd8', p: '#c8503a' });
+const CRATE = art([
+  '................', '................',
+  '..dddddddddddd..',
+  '..dWWWWWWWWWWd..',
+  '..dWWWWWWWWWWd..',
+  '..dDDDDDDDDDDd..',
+  '..dWWWWgWWWWWd..',
+  '..dWWWgggWWWWd..',
+  '..dWWWWgWWWWWd..',
+  '..dDDDDDDDDDDd..',
+  '..dWWWWWWWWWWd..',
+  '..dddddddddddd..',
+  '..m..........m..',
+  '................', '................', '................',
+], { d: '#4a3220', W: '#9a7040', D: '#6a4a2a', g: '#d8b84a', m: '#3a8a4a' });
+const WRECK = art([
+  '................', '................',
+  '...gggggggggg...',
+  '..gGGGGGGGGGGg..',
+  '..gGgggggggGGg..',
+  '..ggggGGggggggg.',
+  '..gDDDDggDDDDDg.',
+  '..gDwwwDDDwwwDg.',
+  '..gDDDDDDDDDDDg.',
+  '..gDDDDDDDDDDDg.',
+  '..gDDDDDDDDDDDg.',
+  '...gggggggggg...',
+  '..a.a..a..a.a...',
+  '................', '................', '................',
+], { g: '#2a4a5a', G: '#5a8a9a', D: '#3a6a7a', w: '#e0c050', a: '#4a8a5a' });
+const SCALE = art([
+  '................', '................',
+  '......ggg.......',
+  '....ggGGGgg.....',
+  '...gGGYYGGGg....',
+  '..gGGYyyYGGGg...',
+  '..gGYyYYyYGGg...',
+  '..gGYyYYyYGGg...',
+  '..gGGYyyYGGGg...',
+  '...gGGYYGGGg....',
+  '....ggGGGgg.....',
+  '......ggg.......',
+  '................', '................', '................', '................',
+], { g: '#8a6a1a', G: '#e0b030', Y: '#fff0a0', y: '#ffd84a' });
+const PEARL = art([
+  '................', '................', '................',
+  '......wwww......',
+  '....wwWWWWww....',
+  '...wWWHHWWWWw...',
+  '...wWHHWWWWWp...',
+  '...wWWWWWWWpp...',
+  '...wWWWWWWpp....',
+  '....wppWWpp.....',
+  '.....pppppp.....',
+  '................', '................', '................', '................', '................',
+], { w: '#c8c8d8', W: '#f4f4fa', H: '#ffffff', p: '#a8a8c0' });
+const RELIC_BADGE = art([
+  '................', '................',
+  '.....rrrrrr.....',
+  '....rRRRRRRr....',
+  '...rRRyyyyRRr...',
+  '...rRyYYYYyRr...',
+  '...rRyYggYyRr...',
+  '...rRyYggYyRr...',
+  '...rRyYYYYyRr...',
+  '...rRRyyyyRRr...',
+  '....rRRRRRRr....',
+  '.....rrrrrr.....',
+  '................', '................', '................', '................',
+], { r: '#8a5a2a', R: '#b08040', y: '#8a7a40', Y: '#b8a860', g: '#6a5a20' });
+const RELIC_CARD = art([
+  '................', '................',
+  '..yyyyyyyyyyyy..',
+  '..yYYYYYYYYYYy..',
+  '..yYbbbbbYYYYy..',
+  '..yYYYYYYYYYYy..',
+  '..yYrrYrrYrrYy..',
+  '..yYYYYYYYYYYy..',
+  '..yYrrYrrYYYYy..',
+  '..yYYYYYYYYYYy..',
+  '..yyyyyyyyyyyy..',
+  '................', '................', '................', '................', '................',
+], { y: '#a8905a', Y: '#e4d4a0', b: '#5a4a2a', r: '#9a6a5a' });
+const RELIC_MEAL = art([
+  '................', '................',
+  '..cccccccccccc..',
+  '..cGGGGGGGGGGc..',
+  '..cGoooGGGGGGc..',
+  '..cGoooGGGGGGc..',
+  '..cGGGGGGGGGGc..',
+  '..cdddddddddGc..',
+  '..cdDDDDDDDdGc..',
+  '..cdddddddddGc..',
+  '..cccccccccccc..',
+  '................', '................', '................', '................', '................',
+], { c: '#5a6a5a', G: '#8a9a7a', o: '#c8b040', d: '#3a3a3a', D: '#5a5a5a' });
+const RELIC_HISTORY = art([
+  '................',
+  '...wwwwwwwwww...',
+  '..wWWWWWWWWWWw..',
+  '..wWkkkkkkWWWw..',
+  '..wWWWWWWWWWWw..',
+  '..wWkkkWkkkkWw..',
+  '..wWWWWWWWWWWw..',
+  '..wWkkWkkkWWWw..',
+  '..wWWWWWWWWWWw..',
+  '..wWkkkkWkkkWw..',
+  '..wWWWWsWWWWWw..',
+  '...wwwwwssswww..',
+  '................', '................', '................', '................',
+], { w: '#b8a880', W: '#eee2c0', k: '#7a6a50', s: '#8a9aa8' });
+
+/** 鱼饵罐：和 bait / bait_pro 同一个罐子形状，换盖子颜色和里面的东西 */
+function baitJar(lidC: string, lidD: string, content: 'glow' | 'leaf' | 'grub' | 'magnet' | 'any' | 'name' | 'myth'): () => Img {
+  return () => {
+    const i = new Img(16, 16);
+    const glass = hex('#cfe4ee'), glassD = hex('#8fb0c0'), lid = hex(lidC), lidDk = hex(lidD), soil = hex('#5a3a20');
+    i.rect(3, 5, 10, 9, glass); i.vline(3, 5, 9, hex('#ffffff')); i.vline(12, 5, 9, glassD); i.hline(3, 13, 10, glassD);
+    i.rect(3, 2, 10, 3, lid); i.hline(3, 4, 10, lidDk); i.set(4, 2, hex('#ffffff'));
+    i.rect(4, 7, 8, 6, soil);
+    if (content === 'glow') { for (const [x, y] of [[5, 8], [8, 10], [10, 8], [6, 11], [9, 12]]) { i.set(x, y, hex('#e8ff6a')); i.set(x + 1, y, hex('#9ae04a')); } }
+    if (content === 'leaf') { for (const [x, y] of [[5, 8], [7, 10], [9, 8], [10, 11]]) { i.set(x, y, hex('#e08a3a')); i.set(x + 1, y, hex('#f4c860')); } i.set(8, 12, hex('#6aa04a')); }
+    if (content === 'grub') { for (const [x, y] of [[5, 8], [6, 9], [8, 8], [9, 9], [6, 11], [8, 11]]) { i.rect(x, y, 2, 1, hex('#f4ecc0')); i.set(x, y, hex('#b89a50')); } }
+    if (content === 'magnet') { i.rect(5, 8, 2, 4, hex('#d6405c')); i.rect(9, 8, 2, 4, hex('#d6405c')); i.hline(5, 8, 6, hex('#d6405c')); i.set(5, 11, hex('#e8eef2')); i.set(6, 11, hex('#e8eef2')); i.set(9, 11, hex('#e8eef2')); i.set(10, 11, hex('#e8eef2')); }
+    if (content === 'any') { for (const [x, y, c] of [[5, 8, '#e8584a'], [7, 10, '#4a9ae8'], [9, 8, '#f2c230'], [10, 11, '#6ac04a'], [6, 12, '#c06ae0']] as [number, number, string][]) { i.set(x, y, hex(c)); i.set(x + 1, y, hex(c)); } }
+    if (content === 'name') { i.set(8, 8, hex('#fff6d8')); i.vline(8, 9, 3, hex('#fff6d8')); i.set(7, 8, hex('#fff6d8')); i.set(9, 8, hex('#fff6d8')); i.set(7, 12, hex('#fff6d8')); i.set(9, 12, hex('#fff6d8')); i.set(5, 10, hex('#f2c230')); i.set(11, 10, hex('#f2c230')); }
+    if (content === 'myth') { for (const [x, y] of [[5, 8], [8, 9], [10, 8], [6, 11], [9, 11]]) { i.set(x, y, hex('#ffd84a')); i.set(x + 1, y, hex('#ff6a4a')); } i.set(11, 6, hex('#ffe08a')); i.set(10, 5, hex('#fff6d8')); }
+    return i;
+  };
+}
+/** 配件小图：长浮漂 / 铅坠 / 倒刺钩 / 缓冲浮标 / 声呐浮标 / 寻宝钩 */
+const TK_FLOAT = art([
+  '.......r........', '.......R........', '.......R........',
+  '......rRr.......',
+  '......wWw.......',
+  '......rRr.......',
+  '......wWw.......',
+  '......rRr.......',
+  '.......w........',
+  '.......l........', '.......l........', '.......l........', '................', '................', '................', '................',
+], { r: '#d6405c', R: '#ff8a9a', w: '#f4f4f0', W: '#ffffff', l: '#e8eef2' });
+const TK_LEAD = art([
+  '................', '.......l........', '.......l........',
+  '......lll.......',
+  '.....sSSSs......',
+  '....sSSSSSs.....',
+  '....sSSSSSds....',
+  '....sSSSSddds...',
+  '.....sddddds....',
+  '......sssss.....',
+  '.......l........', '.......l........', '................', '................', '................', '................',
+], { l: '#e8eef2', s: '#4a5058', S: '#8a929a', d: '#2e3238' });
+const TK_BARB = art([
+  '................', '.......l........', '.......l........', '.......l........',
+  '.......k........',
+  '.......k........',
+  '.......k........',
+  '.......k........',
+  '......kk........',
+  '.....kk..k......',
+  '.....k...kk.....',
+  '.....kk.kk......',
+  '......kkk.......', '................', '................', '................',
+], { l: '#e8eef2', k: '#b8c4cc' });
+const TK_BUFFER = art([
+  '................', '.......l........',
+  '.....bbbbb......',
+  '....bBBBBBb.....',
+  '...bBBwwBBBb....',
+  '...bBBwBBBBb....',
+  '...bBBBBBBBb....',
+  '...rrrrrrrrr....',
+  '...rRRRRRRRr....',
+  '....rrrrrrr.....',
+  '.....rrrrr......',
+  '.......l........', '................', '................', '................', '................',
+], { l: '#e8eef2', b: '#2a7ab8', B: '#6ac0f0', w: '#ffffff', r: '#c84a3a', R: '#f08a6a' });
+const TK_SONAR = art([
+  '................', '.......l........',
+  '.....y.y.y......',
+  '....y.yyy.y.....',
+  '.....gggggg.....',
+  '....gGGGGGGg....',
+  '...gGGdddGGGg...',
+  '...gGdGGGdGGg...',
+  '...gGGdddGGGg...',
+  '....gGGGGGGg....',
+  '.....gggggg.....',
+  '.......l........', '................', '................', '................', '................',
+], { l: '#e8eef2', y: '#7ae8a8', g: '#2a4a3a', G: '#4a8a6a', d: '#9affc8' });
+const TK_TREASURE = art([
+  '................', '.......l........', '.......l........',
+  '.......k........',
+  '......kk........',
+  '.....kk.........',
+  '.....k..yyy.....',
+  '.....kk.yYy.....',
+  '......kkyyy.....',
+  '.......kk.......',
+  '.......k........', '................', '................', '................', '................', '................',
+], { l: '#e8eef2', k: '#d8a82a', y: '#f2c230', Y: '#fff0a0' });
+
+const RODS2: Record<string, () => Img> = {
+  rod_glow: () => rodTier('#2a3a6a', '#141c3a', '#e8e060', '#fffcb0', '#c8f06a'),
+  rod_rain: () => rodTier('#3a7a8a', '#1e4a58', '#6ab0e8', '#cfe8ff', '#a8e0f0'),
+  rod_frost: () => rodTier('#a8d4ec', '#6a98b8', '#e8f4fc', '#ffffff', '#ffffff'),
+  rod_pickup: () => rodTier('#7a5a32', '#4a321a', '#6aa04a', '#b8e090', '#e0c070'),
+  rod_twin: () => rodTier('#c86a9a', '#8a3a68', '#e8c0d8', '#ffe8f4', '#f4a8d0'),
+  rod_bone: () => rodTier('#ece4d0', '#a89878', '#c4402e', '#ff8a6a', '#fff6e0'),
+};
+
 export const ICONS: Record<string, () => Img> = {
   rod_carbon: () => rodTier('#3a4250', '#1e242c', '#b8c4cc', '#f0f6fa', '#7a8ca0'), rod_golden: () => rodTier('#e8b83a', '#a8741a', '#d6405c', '#ff9aa8', '#fff0a0'),
+  ...RODS2,
+  bait_glow: baitJar('#3a5aa8', '#243a78', 'glow'), bait_season: baitJar('#4a9a4a', '#2e6a2e', 'leaf'), bait_wild: baitJar('#b87a3a', '#7a4e1e', 'grub'),
+  bait_magnet: baitJar('#c8c8d0', '#8a8a98', 'magnet'), bait_any: baitJar('#e8e0f0', '#a89cc0', 'any'), bait_name: baitJar('#f2c230', '#b8861a', 'name'), bait_myth: baitJar('#7a2ab8', '#4a1a78', 'myth'),
+  tk_float: TK_FLOAT, tk_lead: TK_LEAD, tk_barb: TK_BARB, tk_buffer: TK_BUFFER, tk_sonar: TK_SONAR, tk_treasure: TK_TREASURE,
+  box_bottle: BOTTLE_BOX, box_crate: CRATE, box_wreck: WRECK, dragon_scale: SCALE, pearl: PEARL,
+  relic_badge: RELIC_BADGE, relic_card: RELIC_CARD, relic_meal: RELIC_MEAL, relic_history: RELIC_HISTORY,
+  fish_bitterling: fish('#a8b8c0', '#f4c0d0', '#e8708a', 'dots', 0.6), fish_whitebait: fish('#dce6ec', '#ffffff', '#9aa8b4', 'long', 0.7), fish_clam: CLAM,
+  fish_yellowcat: fish('#b89a4a', '#ecdca0', '#5a4a1e', 'whisker'), fish_bass: fish('#6a7a4a', '#d8dcb0', '#3e4a2a', 'stripe'), fish_wuchang: fish('#9aa4a8', '#e0e4e4', '#6a7478', 'flat'),
+  fish_goby: fish('#8a6a50', '#d8c0a0', '#5a4230', 'dots', 0.7), fish_crab: CRAB, fish_yellowcarp: fish('#e8a830', '#fce8a0', '#c8741a', 'scale'), fish_silverling: fish('#e8f4f8', '#ffffff', '#b8d4e0', 'ice', 0.7),
+  fish_ganoid: fish('#6a7a6a', '#d0d8cc', '#3e4a3e', 'long'), fish_sucker: fish('#d8707a', '#f4c0c0', '#a8404e', 'big'), fish_gar: fish('#6a7a4a', '#c8c89a', '#3a4a22', 'long'),
+  fish_paddlefish: fish('#7a8490', '#d8dce0', '#4a5460', 'long'), fish_dragongate: fish('#ffe07a', '#fff6c0', '#e8841a', 'gold'),
+  fish_hegongjin: fish('#fff6d8', '#ffffff', '#e8c850', 'koi'), fish_xuangui: XUANGUI,
+  fish_yinglong: serpent('#e8b830', '#fff0a0', { from: 1, to: 15, thick: 3, amp: 3.2, period: 3, head: '#f4d050', whisk: true, horn: true, spine: '#e0602a' }),
+  fish_guppy: fish('#e87a3a', '#ffd8a0', '#4a9ae8', 'dots', 0.6), fish_neon: fish('#2a3a6a', '#c8d8f0', '#3a9af0', 'stripe', 0.55), fish_oranda: fish('#f4f0e8', '#ffffff', '#e8483a', 'fat'),
+  fish_butterfly: fish('#e87a4a', '#fff0d8', '#4a6ad8', 'koi'), fish_discus: fish('#e89a3a', '#fce8b0', '#2a8a9a', 'flat'),
   bait_pro: baitPro, cat_bed: catBed,
   cat_food: catFood, cat_treat: catTreat, mon_ball: monBall, ginkgo_leaf: ginkgoLeaf, cat_badge: catBadge,
   fishing_rod: rod, bait, junk_boot: boot, junk_weed: weed,
