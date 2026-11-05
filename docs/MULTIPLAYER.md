@@ -139,3 +139,10 @@
 - 公屏：服务端限频、屏蔽词、禁言/踢人（管理员命令）、举报。
 - 好友、点击他人查看学生证、私聊。
 - 地标打卡与称号（显示在学生证背面）、新生任务线。
+
+## 钓鱼 2.0（2026-11-05，协议版本 10）
+**共享规则**（`src/shared/`）：`fishing.ts`（48 种鱼、`TIER_TOTAL` 档内归一化、`fishWeight` / `rollFish` 的 `mul` / `ignoreEnv` / `only` / `mythic`）、`gear.ts`（竿 / 饵 / 配件、`Equip`、`resolveGear`）、`mythic.ts`（神话条件与首奖）、`boxes.ts`（盲盒、`rollBox` / `rollBoxDrop`）、`craft.ts`（合成）、`fishdex.ts`（册页、里程碑、`GearLog`）、`fishfight.ts`（`FightGear`、`burst`）。
+**服务端**（`server/`）：`fishCast` 用 `resolveGear` 定下这一杆的装备（鱼饵此刻扣、`p.fish.gear`）；`fishTick` 在**咬钩时**抽鱼（`p.fish.pre`，声呐浮标要提前告诉玩家）；`fishReel` 用预抽的鱼开拉鱼、`fishCatch` 处理双钓 / 珍珠 / 顺带盲盒 / 神话首奖与全服公告 / 里程碑成就；`Progress.openBox / craft / claimBundle / claimMythic / setEquip(tackle|target)`；档案 `gd`（`GearLog`）与 `eq.tackle/target`。
+**消息**：客户端→服务器 `equip_set {slot: rod|bait|tackle|target}`、`box_open {id}`、`craft {recipe, param?}`、`geardex_get`、`bundle_claim {id}`；服务器→客户端 `equip`（带 `tackle` / `target`）、`box_result`、`craft_result`、`geardex {gd}`、`bundle_result`；`fish_state`：fight 带 `bar/sink/cling/drop/burst/crown`，bite 带 `sonar`（鱼 id，没钓过的是 `'?'`），catch 带 `twin/box/pearl/first`。
+**校验**：装备必须在背包里、配件数不超过竿的槽数、指名目标必须是图鉴里已有的常见 / 少见 / 稀有鱼；开盲盒 / 合成 / 领册页都由服务器扣东西；合成要站在商店旁；神话条件服务器按自己的时间判断；交易禁令（`UNTRADABLE` + 盲盒 / 配件类型）在服务器的交易校验里同样生效。
+**界面**：`BackpackPanel`（装备栏 + 盲盒详情）、`BoxPanel`（开盲盒）、`ShopPanel`（钓具分栏 + 合成页）、`CodexPanel`（四个子页）、`fishData.ts`（图鉴记录 / 装备图鉴 / 当前环境的共享存储）、`fishdexModel.ts`（纯逻辑）。
