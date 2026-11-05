@@ -239,9 +239,10 @@ export class Character {
     this.syncSprite();
   }
   /** 头顶说话气泡（聊天内容短暂显示在头上） */
-  say(text: string, ms = 6000) {
+  say(text: string, ms = 6000, style: 'normal' | 'party' = 'normal') {
     this.bubble?.destroy();
-    this.bubble = this.sprite.scene.add.text(0, 0, text, { fontFamily: 'ArkPixel', fontSize: '12px', color: '#3b2412', backgroundColor: '#fbf3dc', padding: { x: 4, y: 2 }, wordWrap: { width: 132, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5, 1);
+    const party = style === 'party'; // 队伍的话：绿色气泡，只有队友看得到
+    this.bubble = this.sprite.scene.add.text(0, 0, text, { fontFamily: 'ArkPixel', fontSize: '12px', color: party ? '#1f3d10' : '#3b2412', backgroundColor: party ? '#d9efc4' : '#fbf3dc', padding: { x: 4, y: 2 }, wordWrap: { width: 132, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5, 1);
     this.bubbleUntil = this.sprite.scene.time.now + ms;
     this.syncSprite();
   }

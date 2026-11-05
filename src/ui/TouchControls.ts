@@ -28,6 +28,7 @@ export class TouchControls {
   state: JoyState = JOY_IDLE;
   private zone = el('div'); private base = el('div'); private knob = el('div'); private menu = el('div');
   private more = el('div', 'tm-more', '▼ 上滑还有更多');
+  private chatBtn!: HTMLButtonElement;
   private pid = -1; private ox = 0; private oy = 0; private t0 = 0;
 
   constructor(private a: TouchActions) {
@@ -49,7 +50,7 @@ export class TouchControls {
       grid.append(b); return b;
     };
     small('＋', '放大', () => this.a.zoom(1)); small('－', '缩小', () => this.a.zoom(-1));
-    small('聊天', '公屏聊天', () => this.a.chat());
+    this.chatBtn = small('聊天', '聊天', () => this.a.chat());
     const more = small('☰', '更多', () => { this.menu.classList.toggle('open'); this.hint(); });
     // 「更多」菜单：地图、学生证、留言板、公告、好友……全部来自注册表，新功能注册后自动出现
     this.menu.id = 'touch-menu';
@@ -75,6 +76,12 @@ export class TouchControls {
     act.addEventListener('pointerdown', (e) => { e.preventDefault(); this.a.act(); }); // 互动要即时响应，用 pointerdown
     box.append(wrap, act);
     hud.append(this.zone, box);
+  }
+
+  /** 「聊天」按钮上的未读角标（n = 没静音的频道的未读总数；0 = 不显示） */
+  setChatBadge(n: number) {
+    this.chatBtn.querySelector('.badge')?.remove();
+    if (n > 0) this.chatBtn.append(el('span', 'badge', n > 99 ? '99+' : String(n)));
   }
 
   /** 菜单里的功能多到放不下时，底部显示「上滑还有更多」；滑到底就隐藏 */

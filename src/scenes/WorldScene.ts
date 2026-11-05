@@ -16,6 +16,7 @@ import { RemotePlayer } from '@/entities/RemotePlayer';
 import { eggAdvance, EGG_FOUND_MSG } from '@/world/egg';
 import { ProfilePanel } from '@/ui/ProfilePanel';
 import { ChatPanel } from '@/ui/ChatPanel';
+import { ChannelPanel } from '@/ui/ChannelPanel';
 import { ReportDialog } from '@/ui/ReportDialog';
 import { TouchControls, isTouchDevice } from '@/ui/TouchControls';
 import { mountOrientation } from '@/ui/Orientation';
@@ -109,6 +110,7 @@ export class WorldScene extends Phaser.Scene {
   private profileUi!: ProfilePanel;
   private aboutUi!: AboutPanel;
   private chatUi!: ChatPanel;
+  private chatUnread = 0;
   private reportUi!: ReportDialog;
   private boardUi!: BoardPanel;
   private shopUi!: ShopPanel;
@@ -257,6 +259,8 @@ export class WorldScene extends Phaser.Scene {
     this.net = new NetClient(defaultWsUrl(), getToken(), () => this.profileUi.profile);
     this.reportUi = new ReportDialog(this.net); // 举报弹窗：公屏 / 私聊 / 留言板 / 校园墙 / 玩家资料共用
     this.chatUi = new ChatPanel(this.net);
+    new ChannelPanel(this.net, this.chatUi); // 聊天窗口的 ⚙ 和菜单里的「聊天频道」
+    this.chatUi.onUnread = (n) => { this.chatUnread = n; this.touchUi?.setChatBadge(n); }; // 手机底部「聊天」按钮的未读角标（只算没静音的频道）
     this.chatUi.onFocus = () => this.input.keyboard!.resetKeys();
     this.boardUi = new BoardPanel(this.net, (uid, ctx) => this.adminUi.openUserMenu(uid, ctx));
     this.wallUi = new WallPanel(this.net);
@@ -355,10 +359,11 @@ export class WorldScene extends Phaser.Scene {
     mountSideButtons();
     this.net.onMessage((m) => {
       if (m.kind !== 'chat') return;
+      const style = this.chatUi.bubbleOf(m); if (!style) return; // 静音 / 关闭的频道不冒气泡
       (this.registry.get('roomSay') as ((pid: number, text: string) => void) | null | undefined)?.(m.pid as number, m.text); // 人在宿舍里时，话冒泡在宿舍里的人头上
-      if (m.pid !== undefined && m.pid === this.net.selfId) this.player.say(m.text);
-      else if (m.pid !== undefined) this.remotes.get(m.pid)?.say(m.text);
-      else if (m.from === this.profileUi.profile.name) this.player.say(m.text); // 离线回显
+      if (m.pid !== undefined && m.pid === this.net.selfId) this.player.say(m.text, undefined, style);
+      else if (m.pid !== undefined) this.remotes.get(m.pid)?.say(m.text, undefined, style);
+      else if (m.from === this.profileUi.profile.name) this.player.say(m.text, undefined, style); // 离线回显
     });
     const h = this.net.handlers;
     h.welcome = (_id, x, y) => {
@@ -497,6 +502,7 @@ export class WorldScene extends Phaser.Scene {
         tap: (cx, cy) => { if (this.anyOverlay()) return; const r = this.game.canvas.getBoundingClientRect(); const w = this.cameras.main.getWorldPoint(cx - r.left, cy - r.top); this.pickPlayerAt(w.x, w.y); },
       });
       mountOrientation();
+      this.touchUi.setChatBadge(this.chatUnread);
       const tap = () => this.pressTouch();
       document.getElementById('hint')?.addEventListener('pointerdown', tap);   // 点提示 = 按 E
       document.getElementById('dialog')?.addEventListener('pointerdown', tap); // 点对话框 = 翻页/关闭
