@@ -1,5 +1,6 @@
 import { REPORT_KIND_NAMES, REPORT_NOTE_MAX, REPORT_REASONS, type ReportKind } from '@/shared/report';
 import type { NetClient } from '@/net/client';
+import type { ChannelId } from '@/shared/channels';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -14,6 +15,8 @@ export interface ReportTarget {
   ref: number;
   /** 校园墙的评论编号 */
   cid?: number;
+  /** 聊天举报：被举报的话所在的频道（不写 = 世界） */
+  ch?: ChannelId;
   /** 弹窗里给举报人看的内容摘要（谁说了什么） */
   preview: string;
 }
@@ -74,7 +77,7 @@ export class ReportDialog {
     const t = this.target; if (!t) return;
     if (this.net.status !== 'online') { this.msg.textContent = '没连上服务器，现在没法举报'; this.msg.className = 'tp-msg bad'; return; }
     this.send.disabled = true; this.msg.textContent = '提交中…'; this.msg.className = 'tp-msg ok';
-    this.net.report(t.kind, t.ref, this.reason, this.note.value.trim(), t.cid);
+    this.net.report(t.kind, t.ref, this.reason, this.note.value.trim(), t.cid, t.ch);
     window.setTimeout(() => { if (this.isOpen && !this.closeTimer) this.send.disabled = false; }, 4000); // 兜底：没收到回执也别一直卡着
   }
 }
