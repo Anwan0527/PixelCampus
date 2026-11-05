@@ -9,6 +9,8 @@ import { FISH_TIERS, LAKE_FISH, fishDef } from '@/shared/fishing';
 import { isNamedFish } from '@/shared/craft';
 import { fishData } from './fishData';
 import { gearSummary } from './fishdexModel';
+import { PROTECTED, isProtected } from '@/shared/release';
+import { barBonus, routeBonus, type Route } from '@/shared/fishlevel';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -32,6 +34,8 @@ export class BackpackPanel {
   private eq: Equip = { rod: '', bait: '', tackle: [], target: '' };
   /** 点盲盒的「打开」时调用（由场景接到开盒面板） */
   onOpenBox: (id: string) => void = () => {};
+  /** 点等级那一行：跳到图鉴的等级页 */
+  openLevel: () => void = () => {};
   private items: Inv = {};
   private picked: string | null = null;
   private loaded = false;
@@ -109,12 +113,15 @@ export class BackpackPanel {
       row.append(el('span', 'bag-equip-label', '🎯 指名'), sel, el('span', 'bag-equip-now', this.eq.bait === 'bait_name' ? (this.eq.target ? `只咬${fishDef(this.eq.target)?.name}` : '要先选一种鱼才能抛竿') : '（饵选「指名饵」时才用）'));
       this.equipBar.append(row);
     }
+    // 钓鱼等级：一行小字（点一下跳到图鉴的「等级」页）
+    const fx = fishData.fx;
+    if (fx) { const lvl = el('button', 'bag-lv', `⭐ 钓鱼 Lv.${fx.lv}　${fx.need ? `${Math.round((fx.into / fx.need) * 100)}%` : '满级'}`); lvl.type = 'button'; lvl.addEventListener('click', () => this.openLevel()); this.equipBar.append(lvl); }
     // 此刻的效果
-    const g = resolveGear(inv, this.eq, env), sum = gearSummary(g);
+    const g = resolveGear(inv, this.eq, env, fx ? { bar: barBonus(fx.lv), treasure: routeBonus(fx.rt as Route[], fx.lv).treasure } : undefined), sum = gearSummary(g);
     this.equipBar.append(el('div', 'bag-equip-sum', sum.length ? `现在这套：${sum.join(' · ')}` : '现在这套没有额外加成。'));
   }
   /** 这次抛竿实际会用的竿 / 饵（和服务器、场景的规则一样） */
-  private using() { const g = resolveGear(this.items, this.eq, fishData.env()); return { rod: g.rod?.id ?? '', bait: g.bait?.id ?? '' }; }
+  private using() { const g = resolveGear(this.items, this.eq, fishData.env(), fishData.fx ? { bar: barBonus(fishData.fx.lv), treasure: routeBonus(fishData.fx.rt as Route[], fishData.fx.lv).treasure } : undefined); return { rod: g.rod?.id ?? '', bait: g.bait?.id ?? '' }; }
 
   /** 盲盒的详情：打开按钮、保底进度、"可能开出什么"（掉落表公开） */
   private renderBoxDetail(id: BoxId) {
@@ -151,6 +158,11 @@ export class BackpackPanel {
       top.append(el('span', 'bag-detail-name', `${d.name} ×${this.items[d.id]}`), el('span', 'board-tag', KIND[d.kind]));
       this.detail.append(top, el('div', 'bag-detail-desc', d.desc));
       if (d.kind === 'box') this.renderBoxDetail(d.id as BoxId);
+      if (isProtected(d.id)) {
+        const b = el('button', 'btn', '🌊 放生'); b.type = 'button'; b.disabled = this.net.status !== 'online';
+        b.addEventListener('click', () => this.net.fishRelease(d.id));
+        this.detail.append(el('div', 'bag-detail-desc', PROTECTED[d.id]), b);
+      }
     } else this.detail.append(el('div', 'bag-detail-desc dim', list.length ? '点一个物品看说明。' : '背包是空的。'));
     this.note.textContent = this.net.status !== 'online' ? '现在没有连上服务器，背包暂时无法更新。' : this.loaded ? '' : '读取中…';
   }

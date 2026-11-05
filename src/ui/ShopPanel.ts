@@ -1,10 +1,13 @@
 import type Phaser from 'phaser';
 import { COIN_NAME, BULK_RARITIES, SHOP, marketMul, sellList, EXTRA_SELL, type ShopItem } from '@/shared/economy';
+import { fishData } from './fishData';
+import { FISH_GEAR_IDS } from '@/shared/economy';
 import { JUNK_GROUP, RARE_GROUP, RECIPES, SMALL_GROUP, craftWhy, isNamedFish, type Recipe } from '@/shared/craft';
 import { RARITY_COLORS, RARITY_NAMES, fishDef } from '@/shared/fishing';
 import { TREASURE_ID, isTrashItem } from '@/shared/trash';
 import { itemDef, type Inv } from '@/shared/items';
 import type { NetClient } from '@/net/client';
+import type { CommView } from '@/shared/protocol';
 import { drawItem } from './sprites';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -23,8 +26,12 @@ export class ShopPanel {
   private body = el('div', 'shop-body');
   private coinEl = el('span', 'shop-coins', '0');
   private msg = el('div', 'shop-msg');
-  private tabs: HTMLButtonElement[] = [];
-  private tab: 'buy' | 'sell' | 'craft' = 'sell';
+  private tabRow = el('div', 'seg-row');
+  private titleEl = el('div', 'board-title', '校园商店');
+  private subEl = el('div', 'create-sub');
+  /** shop = 图书馆广场的校园商店；stall = 精工湖的钓具摊（只卖钓鱼用品、不收鱼，另有委托） */
+  private mode: 'shop' | 'stall' = 'shop';
+  private tab: 'buy' | 'sell' | 'craft' | 'comm' = 'sell';
   private craftParam = '';
   private coins = 0; private inv: Inv = {};
 
@@ -35,24 +42,36 @@ export class ShopPanel {
     const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭商店');
     close.addEventListener('click', () => this.close());
     const wallet = el('div', 'shop-wallet'); wallet.append(el('span', 'coin-ico'), this.coinEl, el('span', 'shop-unit', COIN_NAME));
-    head.append(el('div', 'board-title', '校园商店'), wallet, close);
-    const tabRow = el('div', 'seg-row');
-    ([['sell', '卖鱼'], ['buy', '买东西'], ['craft', '合成']] as const).forEach(([k, name], idx) => {
-      const b = el('button', 'seg' + (k === this.tab ? ' on' : ''), name); b.type = 'button';
-      b.addEventListener('click', () => { this.tab = k; this.tabs.forEach((t, i) => t.classList.toggle('on', i === idx)); this.render(); });
-      this.tabs.push(b); tabRow.append(b);
-    });
-    panel.append(head, el('div', 'create-sub', '钓上来的鱼、翻垃圾桶翻出来的东西都可以在这里卖钱；赚到的校园币能买鱼饵、猫粮、猫条、猫窝和更好的鱼竿。'), tabRow, this.msg, this.body);
+    head.append(this.titleEl, wallet, close);
+    panel.append(head, this.subEl, this.tabRow, this.msg, this.body);
     this.root.append(panel);
     this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
     (document.getElementById('hud') ?? document.body).append(this.root);
     net.handlers.shopResult = (ok, text) => this.say(text, ok);
     net.handlers.craftResult = (ok, text) => this.say(text, ok);
+    net.handlers.wqResult = (ok, text) => this.say(text, ok);
+    fishData.listeners.add(() => { if (this.isOpen) this.render(); });
+  }
+
+  /** 标签页：校园商店 = 卖鱼 / 买东西 / 合成；钓具摊 = 委托 / 买钓具 / 合成 */
+  private buildTabs() {
+    const defs: [typeof this.tab, string][] = this.mode === 'stall' ? [['comm', '委托'], ['buy', '买钓具'], ['craft', '合成']] : [['sell', '卖鱼'], ['buy', '买东西'], ['craft', '合成']];
+    if (!defs.some(([k]) => k === this.tab)) this.tab = defs[0][0];
+    this.tabRow.replaceChildren(...defs.map(([k, name]) => {
+      const b = el('button', 'seg' + (k === this.tab ? ' on' : ''), name); b.type = 'button';
+      b.addEventListener('click', () => { this.tab = k; this.buildTabs(); this.render(); });
+      return b;
+    }));
   }
 
   get isOpen() { return !this.root.classList.contains('hidden'); }
-  open() { this.root.classList.remove('hidden'); this.msg.textContent = ''; this.net.getInv(); this.net.getCoins(); this.render(); }
+  open(mode: 'shop' | 'stall' = 'shop') {
+    this.mode = mode; this.root.classList.remove('hidden'); this.msg.textContent = '';
+    this.titleEl.textContent = mode === 'stall' ? '钓具摊 · 钓具老板' : '校园商店';
+    this.subEl.textContent = mode === 'stall' ? '「钓鱼的人，装备和耐心一样要紧。」摊子卖全套钓鱼用品、能合成，每天和每周有委托；卖鱼要去图书馆广场的校园商店。' : '钓上来的鱼、翻垃圾桶翻出来的东西都可以在这里卖钱；赚到的校园币能买鱼饵、猫粮、猫条、猫窝和更好的鱼竿。';
+    this.buildTabs(); this.net.getInv(); this.net.getCoins(); this.net.getFx(); if (mode === 'stall') this.net.getWq(); this.render();
+  }
   close() { this.root.classList.add('hidden'); }
   setCoins(n: number) { this.coins = n; this.coinEl.textContent = String(n); if (this.isOpen) this.render(); }
   setInv(inv: Inv) { this.inv = inv; if (this.isOpen) this.render(); }
@@ -63,14 +82,14 @@ export class ShopPanel {
     this.body.replaceChildren();
     const online = this.net.status === 'online';
     if (!online) this.body.append(el('div', 'board-empty', '没连上服务器，现在不能买卖。'));
-    else if (this.tab === 'buy') this.renderBuy(); else if (this.tab === 'craft') this.renderCraft(); else this.renderSell();
+    else if (this.tab === 'buy') this.renderBuy(); else if (this.tab === 'craft') this.renderCraft(); else if (this.tab === 'comm') this.renderComm(); else this.renderSell();
   }
 
   private renderBuy() {
     const list = el('div', 'shop-list');
     const group = (id: string) => (id.startsWith('rod_') || id === 'fishing_rod' ? '🎣 鱼竿' : id.startsWith('tk_') ? '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）' : id.startsWith('bait') ? '🪱 鱼饵' : '🐱 其他');
     let last = '';
-    for (const s of [...SHOP].sort((a, b) => ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(a.id)) - ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(b.id)))) {
+    for (const s of [...SHOP].filter((x) => this.mode === 'shop' || FISH_GEAR_IDS.has(x.id)).sort((a, b) => ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(a.id)) - ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(b.id)))) {
       const g = group(s.id); if (g !== last) { list.append(el('div', 'shop-group', g)); last = g; }
       list.append(this.buyRow(s));
     }
@@ -90,7 +109,7 @@ export class ShopPanel {
     }).concat(r.coins ? [`${r.coins} 校园币`] : []).join('　');
     for (const r of RECIPES) {
       const row = el('div', 'shop-row'), info = el('div', 'shop-info'), out = itemDef(r.out.id)!;
-      info.append(el('div', 'shop-name', `${out.name}${r.out.n > 1 ? ` ×${r.out.n}` : ''}`), el('div', 'shop-note', r.desc), el('div', 'shop-have', `材料：${need(r)}`));
+      info.append(el('div', 'shop-name', `${out.name}${r.out.n > 1 ? ` ×${r.out.n}` : ''}${r.minLevel > 1 ? `　（钓鱼 ${r.minLevel} 级）` : ''}`), el('div', 'shop-note', r.desc), el('div', 'shop-have', `材料：${need(r)}${fishData.level < r.minLevel ? `　·　还差 ${r.minLevel - fishData.level} 级` : ''}`));
       if (r.needs.some((n) => 'group' in n && n.group === 'same')) {
         const sel = el('select'); sel.setAttribute('aria-label', '选一种鱼'); sel.append(new Option('选一种鱼（背包里有 3 条以上的）', ''));
         for (const [id, n] of Object.entries(inv)) if (isNamedFish(id) && n >= 3) sel.append(new Option(`${fishDef(id)?.name} ×${n}`, id));
@@ -98,7 +117,7 @@ export class ShopPanel {
         sel.addEventListener('change', () => { this.craftParam = sel.value; this.render(); });
         info.append(sel);
       }
-      const why = craftWhy(inv, this.coins, r, this.craftParam || undefined);
+      const why = craftWhy(inv, this.coins, r, this.craftParam || undefined, fishData.level);
       const b = el('button', 'btn' + (why ? '' : ' primary'), '合成'); b.type = 'button'; b.disabled = !!why; b.title = why ?? '';
       b.addEventListener('click', () => { b.disabled = true; this.net.craft(r.id, this.craftParam || undefined); });
       row.append(this.icon(r.out.id), info, b);
@@ -119,8 +138,28 @@ export class ShopPanel {
     return row;
   }
 
+  /** 钓具老板的委托：今日委托（简单）+ 本周委托（3 个，较难）；做完回这里领 */
+  private renderComm() {
+    const wq = fishData.wq, list = el('div', 'shop-list');
+    if (!wq) { this.body.append(el('div', 'board-empty', '读取中…')); return; }
+    const card = (c: CommView, label: string) => {
+      const row = el('div', 'shop-row'), info = el('div', 'shop-info');
+      const nm = el('div', 'shop-name'); nm.append(document.createTextNode(`${label}${c.name}`), el('span', 'cx-gnote', `　${c.prog} / ${c.goal}`));
+      const bar = el('div', 'cx-pbar'), fill = el('div', 'cx-pfill'); fill.style.width = `${(c.prog / Math.max(1, c.goal)) * 100}%`; bar.append(fill);
+      info.append(nm, el('div', 'shop-note', c.desc), bar, el('div', 'shop-have', `奖励：${c.reward.coins} 校园币${c.reward.items.map((g) => `、${itemDef(g.id)?.name ?? g.id} ×${g.n}`).join('')}、${c.reward.xp} 钓鱼经验`));
+      const b = el('button', 'btn' + (c.done && !c.claimed ? ' primary' : ''), c.claimed ? '已领取' : c.done ? '领取' : '进行中'); b.type = 'button'; b.disabled = !c.done || c.claimed;
+      b.addEventListener('click', () => { b.disabled = true; this.net.wqClaim(c.id); });
+      row.append(info, b); return row;
+    };
+    list.append(el('div', 'shop-group', '📅 今日委托（简单，今天 0 点之前有效）'), card(wq.daily, ''));
+    list.append(el('div', 'shop-group', '📋 本周委托（较难，下周一 0 点换新；没领的作废）'));
+    const names: Record<string, string> = { mid: '【中等】', hard: '【困难】', extreme: '【极难】' };
+    for (const c of wq.list) list.append(card(c, names[c.tier] ?? ''));
+    this.body.append(list, el('div', 'shop-tip', `三个周委托全部领完有额外奖励：旧木箱 ×2 + 150 钓鱼经验（本周${wq.allClaimed ? '已领' : wq.allDone ? '可以领了' : '还没做完'}）。进度自动累计，不用交鱼。`));
+  }
+
   private renderSell() {
-    const day = this.day(), rows = sellList(this.inv, day);
+    const day = this.day(), bonus = fishData.sellBonus, rows = sellList(this.inv, day, bonus);
     const list = el('div', 'shop-list');
     if (!rows.length) list.append(el('div', 'board-empty', '背包里没有东西可以卖。去精工湖边钓几条鱼，或者翻翻校园里的垃圾桶吧！'));
     for (const r of rows) {

@@ -114,6 +114,11 @@ export interface NetHandlers {
   craftResult?: (ok: boolean, msg: string) => void;
   geardex?: (gd: GearLog) => void;
   bundleResult?: (ok: boolean, msg: string, id: string) => void;
+  /** 钓鱼 3.0：等级信息 / 钓具老板的委托 / 领委托结果 / 放生结果 */
+  fx?: (m: Extract<ServerMsg, { t: 'fx' }>) => void;
+  wq?: (m: Extract<ServerMsg, { t: 'wq' }>) => void;
+  wqResult?: (ok: boolean, msg: string, id: string) => void;
+  releaseResult?: (m: Extract<ServerMsg, { t: 'release_result' }>) => void;
   tradeInvite?: (tid: number, uid: number, name: string) => void;
   tradeWait?: (tid: number, name: string) => void;
   tradeState?: (m: Extract<ServerMsg, { t: 'trade_state' }>) => void;
@@ -320,6 +325,10 @@ export class NetClient implements ChatTransport {
       case 'craft_result': this.handlers.craftResult?.(m.ok, m.msg); break;
       case 'geardex': this.handlers.geardex?.(m.gd); break;
       case 'bundle_result': this.handlers.bundleResult?.(m.ok, m.msg, m.id); break;
+      case 'fx': this.handlers.fx?.(m); break;
+      case 'wq': this.handlers.wq?.(m); break;
+      case 'wq_result': this.handlers.wqResult?.(m.ok, m.msg, m.id); break;
+      case 'release_result': this.handlers.releaseResult?.(m); break;
       case 'trade_invite': this.handlers.tradeInvite?.(m.tid, m.uid, m.name); break;
       case 'trade_wait': this.handlers.tradeWait?.(m.tid, m.name); break;
       case 'trade_state': this.handlers.tradeState?.(m); break;
@@ -384,6 +393,11 @@ export class NetClient implements ChatTransport {
   craft(recipe: string, param?: string) { this.tx({ t: 'craft', recipe, ...(param ? { param } : {}) }); }
   getGeardex() { this.tx({ t: 'geardex_get' }); }
   bundleClaim(id: string) { this.tx({ t: 'bundle_claim', id }); }
+  getFx() { this.tx({ t: 'fx_get' }); }
+  fxRoute(slot: number, route: string) { this.tx({ t: 'fx_route', slot, route }); }
+  getWq() { this.tx({ t: 'wq_get' }); }
+  wqClaim(id: string) { this.tx({ t: 'wq_claim', id }); }
+  fishRelease(id: string) { this.tx({ t: 'fish_release', id }); }
   tradeInvite(uid: number) { this.tx({ t: 'trade_invite', uid }); }
   tradeAccept(tid: number) { this.tx({ t: 'trade_accept', tid }); }
   tradeCancel(tid: number) { this.tx({ t: 'trade_cancel', tid }); }

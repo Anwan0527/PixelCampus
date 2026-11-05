@@ -968,3 +968,11 @@ body.immersive.touch #touch-menu { display: none !important; }
 .fish-card.mythic { box-shadow: inset 0 0 0 3px #ff6f61, 0 0 0 4px var(--wood-d), 0 0 26px 10px rgba(255, 111, 97, .75); }
 .fc-tag.r-mythic { color: #d0384a; }
 body.touch .cx-gcard canvas { width: 34px; }
+
+/* ---------------- 钓鱼 3.0（2026-11-05）：等级页、路线、放生、钓具摊 ---------------- */
+.cx-pbar.big { height: 12px; margin: 4px 0; }
+.cx-routes { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 4px; }
+.cx-route { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cx-route-t { font-size: 13px; font-weight: bold; min-width: 108px; }
+.bag-lv { align-self: flex-start; padding: 1px 8px; border: 2px solid var(--wood); background: #fff1c8; font-family: inherit; font-size: 12px; color: var(--ink); cursor: pointer; }
+.fc-release { margin-top: 4px; padding: 3px 12px; font-size: 14px; pointer-events: auto; }

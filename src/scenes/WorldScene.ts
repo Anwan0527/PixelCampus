@@ -62,6 +62,8 @@ import { FishFightUi } from '@/ui/FishFightUi';
 import { FishCard } from '@/ui/FishCard';
 import { BoxPanel } from '@/ui/BoxPanel';
 import { fishData } from '@/ui/fishData';
+/** 钓具老板的人物外观编号（preset look，取余） */
+const KEEPER_LOOK = 5;
 import { PAX_NEAR, PAX_REACH } from '@/shared/party';
 import { GATES, RUN, inStartZone } from '@/shared/run';
 import { castTarget, fishDef, fmtKg, isFish, sizeTier, FISH, FISHING } from '@/shared/fishing';
@@ -108,6 +110,8 @@ export class WorldScene extends Phaser.Scene {
   private lastPlace = '';
   private nearBuilding: BuildingOut | null = null;
   private npcs: Npc[] = [];
+  /** 精工湖钓具摊旁的固定 NPC「钓具老板」+ 名字牌 + 头顶的「！」（有委托奖励可以领时） */
+  private keeper: Npc | null = null; private keeperTag: Phaser.GameObjects.Text | null = null; private keeperMark: Phaser.GameObjects.Text | null = null;
   private entering = false;
   private enterPos: { x: number; y: number } | null = null;
   private rand = Math.random;
@@ -240,6 +244,7 @@ export class WorldScene extends Phaser.Scene {
     this.buildTrackMarks();
     this.spawnNpcs();
     this.spawnCats();
+    this.spawnKeeper();
     this.buildBikes();
     this.events.on('wake', () => {
       this.entering = false; this.touchPress = false; this.registry.set('touchPress', false); // 室内里按过的互动键别带回外面（否则一出来又"进入"了）
@@ -291,9 +296,18 @@ export class WorldScene extends Phaser.Scene {
     }, () => this.codexUi.open('fish'));
     this.boxUi = new BoxPanel(this.net, this.textures, () => this.backpackUi.inv);
     this.backpackUi.onOpenBox = (id) => this.boxUi.open(id);
+    this.backpackUi.openLevel = () => { this.backpackUi.close(); this.codexUi.openFishSub('level'); };
+    this.net.handlers.releaseResult = (m) => { this.hud.banner(m.ok ? '🌊 放生' : '放生失败', m.msg); this.net.system(m.ok ? `🌊 ${m.msg}` : m.msg); if (m.ok) sfx('pickup'); };
+    // 钓鱼升级：横幅 + 系统消息；升到 5 / 10 级提示去选路线
+    fishData.onLevelUp = (m) => {
+      const up = m.up!, text = `Lv.${up.from} → Lv.${up.to}：${up.coins} 校园币${up.items.map((g) => `、${itemDef(g.id)?.name ?? g.id} ×${g.n}`).join('')}`;
+      this.hud.banner('🎣 钓鱼升级！', text); this.net.system(`🎣 钓鱼升到 Lv.${up.to}（${text}）`); sfx('achieve');
+      if ((up.from < 5 && up.to >= 5) || (up.from < 10 && up.to >= 10)) window.setTimeout(() => { this.hud.banner('🎣 解锁了新的路线槽', '在图鉴的「等级」页选择：渔夫（卖鱼价 +10%）或寻宝（盲盒 ×1.3）'); }, 3200);
+    };
     this.shopUi = new ShopPanel(this.net, this.textures, () => marketDay(Date.now() + this.clock.offset));
     this.fightUi = new FishFightUi();
     this.fishCard = new FishCard(this.textures);
+    this.fishCard.onRelease = (id) => this.net.fishRelease(id);
     this.monUi = new MonPanel(this.net);
     this.battleUi = new BattleUi(this.net);
     this.handUi = new HandUi(this.net);
@@ -697,6 +711,23 @@ export class WorldScene extends Phaser.Scene {
       this.npcs.push(new Npc(this, tx * TILE, ty * TILE, look, '同学', [l1, l2], true, 'down'));
     }
   }
+  /** 钓具老板：站在摊子右边（摊子是地图里的 fishStall 道具），不游走；没有摊子的世界不生成 */
+  private spawnKeeper() {
+    const o = this.wf.objects.find((x) => x.k === 'fishStall'); if (!o) return;
+    const count = (this.cache.json.get('charsMeta') as { count: number }).count;
+    const n = new Npc(this, o.x + 62, o.y - 3, KEEPER_LOOK % count, '钓具老板', ['来啦？钓鱼的人，装备和耐心一样要紧。'], false, 'down');
+    this.keeper = n;
+    const st = { fontFamily: 'ArkPixel, monospace', fontSize: '12px', color: '#ffe9a0', stroke: '#2e1a10', strokeThickness: 3 };
+    this.keeperTag = this.add.text(n.x, n.y - 44, '钓具老板', st).setOrigin(0.5, 1).setDepth(n.y + 2000);
+    this.keeperMark = this.add.text(n.x, n.y - 58, '！', { ...st, fontSize: '18px', color: '#ffd35a' }).setOrigin(0.5, 1).setDepth(n.y + 2001).setVisible(false);
+  }
+  /** 每帧：钓具老板静止 / 头顶的「！」在有可领的委托奖励时上下跳 */
+  private updateKeeper(dt: number, now: number) {
+    const k = this.keeper; if (!k) return;
+    k.update(dt, this.world, this.rand);
+    const wq = fishData.wq, can = !!wq && ((wq.daily.done && !wq.daily.claimed) || wq.list.some((c) => c.done && !c.claimed));
+    this.keeperMark?.setVisible(can).setY(k.y - 58 + Math.sin(now / 220) * 2);
+  }
   /** 校园小猫：家和毛色、名字由 shared/cats 按固定种子从行人出生点里挑（服务器和所有玩家一致） */
   private spawnCats() {
     for (const d of allCats(this.wf.npcSpawns)) this.cats.push(new Cat(this, d));
@@ -803,6 +834,7 @@ export class WorldScene extends Phaser.Scene {
     const k = this.keys;
     const joy = this.touchUi?.state;
     this.runNow = this.player.moving && !this.player.riding && (k.shift.isDown || (joy?.run ?? false));
+    this.updateKeeper(dt, _t);
     { const c = this.cameras.main, rx = c.width / c.zoom / 2 + 900, ry = c.height / c.zoom / 2 + 900; // 远处的行人、小猫不更新
       for (const n of this.npcs) { if (Math.abs(n.x - c.midPoint.x) > rx || Math.abs(n.y - c.midPoint.y) > ry) continue; n.update(dt, this.world, this.rand); }
       const visitor = { x: this.player.x, y: this.player.y, fast: this.player.riding || this.runNow };
@@ -1082,7 +1114,7 @@ export class WorldScene extends Phaser.Scene {
     this.fightUi.close(); this.stopFishing();
     if (m.s === 'catch' && m.id) {
       const d = fishDef(m.id), name = d?.name ?? '东西', kg = m.kg ?? 0;
-      this.playCatch(m.id, bobber, d?.rarity ?? 'common', !!m.junk, () => this.fishCard.show({ id: m.id!, cm: m.cm ?? 0, kg, isNew: m.isNew, record: m.record, junk: m.junk, perfect: m.perfect, msg: m.msg, twin: m.twin, box: m.box, pearl: m.pearl, first: m.first }));
+      this.playCatch(m.id, bobber, d?.rarity ?? 'common', !!m.junk, () => this.fishCard.show({ id: m.id!, cm: m.cm ?? 0, kg, isNew: m.isNew, record: m.record, junk: m.junk, perfect: m.perfect, msg: m.msg, twin: m.twin, box: m.box, pearl: m.pearl, first: m.first, xp: m.xp, lv: m.lv }));
       if (m.junk) { sfx('splash'); this.net.system(`🎣 钓上来一个${name}……`); }
       else {
         sfx(d?.rarity === 'legendary' || d?.rarity === 'epic' || d?.rarity === 'mythic' ? 'achieve' : 'catch');
@@ -1208,6 +1240,7 @@ export class WorldScene extends Phaser.Scene {
       this.hud.hint(egg.hint);
       if (press && egg.action === 'board') this.boardUi.open();
       else if (press && egg.action === 'shop') this.shopUi.open();
+      else if (press && egg.action === 'fishshop') this.shopUi.open('stall');
       else if (press && egg.action === 'wall') this.wallUi.open();
       else if (press) {
         const st = this.egg.get(egg.id) ?? this.egg.set(egg.id, { step: 0 }).get(egg.id)!;

@@ -6,6 +6,11 @@ import { BOX_FISH, FISH_TIERS, LAKE_FISH, MYTHIC_FISH, RARITY_COLORS, RARITY_NAM
 import { BAITS, RODS, TACKLES, perkActive, type Gear, type GearEnv } from '@/shared/gear';
 import { BUNDLES, MILESTONES, bundleDone, bundleProgress, speciesCount, type GearLog } from '@/shared/fishdex';
 import { mythicProgress, type MythicCheck } from '@/shared/mythic';
+import { MAX_LEVEL, barBonus, cumXp, levelReward, routeSlots } from '@/shared/fishlevel';
+import { RECIPES } from '@/shared/craft';
+import { ACHIEVEMENTS } from '@/shared/achievements';
+import { achCoins } from '@/shared/economy';
+import { itemDef } from '@/shared/items';
 
 export type FishGroupId = Rarity | 'box';
 export interface FishRow { def: FishDef; rec?: FishLog; /** 钓到过 */ known: boolean }
@@ -87,5 +92,21 @@ export function gearSummary(g: Gear): string[] {
   if (g.ignoreEnv) out.push('无视季节 / 天气 / 昼夜');
   if (g.only) out.push('只钓指定的鱼');
   if (g.mythicBait) out.push('神话饵');
+  return out;
+}
+
+// ------------------------------------------------------------ 钓鱼等级页（钓鱼 3.0）
+export interface LevelRow { lv: number; /** 到这一级需要的累计经验 */ cum: number; /** 每级奖励（币 + 饵） */ reward: string; /** 这一级新解锁的东西：绿条、配方、路线槽、称号 */ perks: string[]; reached: boolean }
+export function levelRows(cur: number): LevelRow[] {
+  const out: LevelRow[] = [];
+  for (let lv = 2; lv <= MAX_LEVEL; lv++) {
+    const rw = levelReward(lv), perks: string[] = [];
+    if (barBonus(lv) > barBonus(lv - 1)) perks.push(`拉鱼绿条 +${Math.round(barBonus(lv) * 100)}%（累计）`);
+    for (const r of RECIPES) if (r.minLevel === lv) perks.push(`解锁合成「${r.name}」`);
+    if (routeSlots(lv) > routeSlots(lv - 1)) perks.push(lv === 5 ? '解锁第 1 个「路线」槽' : '解锁第 2 个「路线」槽');
+    const a = rw.ach ? ACHIEVEMENTS.find((x) => x.id === rw.ach) : undefined;
+    if (a) perks.push(`称号「${a.name}」+ ${achCoins(a.id)} 币`);
+    out.push({ lv, cum: cumXp(lv), reward: `${rw.coins} 币 + ${rw.items.map((g) => `${itemDef(g.id)?.name ?? g.id} ×${g.n}`).join('')}`, perks, reached: cur >= lv });
+  }
   return out;
 }

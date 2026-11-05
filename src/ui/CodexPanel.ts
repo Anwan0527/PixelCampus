@@ -4,7 +4,8 @@ import { REAL_FISH, RARITY_COLORS, RARITY_NAMES, RARITY_ORDER, MOVE_NAMES, diffS
 import { fishPrice } from '@/shared/economy';
 import { boxDef } from '@/shared/boxes';
 import { fishData } from './fishData';
-import { availableNow, bundleViews, fishGroups, fishHint, gearRows, milestoneViews, mythicChecks, type FishFilter, type GearRow } from './fishdexModel';
+import { availableNow, bundleViews, fishGroups, fishHint, gearRows, levelRows, milestoneViews, mythicChecks, type FishFilter, type GearRow } from './fishdexModel';
+import { ROUTES, ROUTE_NAMES, XP_OVER_RATE, XP_SOFT_CAP, barBonus, routeBonus, routeSlots, type Route } from '@/shared/fishlevel';
 import { itemDef, type Inv } from '@/shared/items';
 import { tierProgress } from '@/shared/fishdex';
 import { COAT_LABELS, COAT_RARITY, LEVEL_NAMES, catLevel, type CatDef } from '@/shared/cats';
@@ -32,7 +33,7 @@ export class CodexPanel {
   private tab: CodexTab = 'animals';
   private pickedFish: string | null = null;
   /** 钓鱼图鉴的子页：鱼类 / 鱼竿 / 饵料与配件 / 册页；鱼类页的视图（全部 / 现在能钓到什么）和筛选 */
-  private fishSub: 'fish' | 'rods' | 'baits' | 'bundles' = 'fish';
+  private fishSub: 'fish' | 'rods' | 'baits' | 'bundles' | 'level' = 'fish';
   private fishView: 'all' | 'now' = 'all';
   private filter: FishFilter = {};
   private bundleMsg = '';
@@ -58,7 +59,9 @@ export class CodexPanel {
   }
 
   get isOpen() { return !this.root.classList.contains('hidden'); }
-  open(tab?: CodexTab) { if (tab) this.tab = tab; this.root.classList.remove('hidden'); this.net.getFishdex(); this.net.getGeardex(); this.net.getInv(); this.render(); }
+  /** 直接打开钓鱼图鉴的某个子页（背包里点等级那一行用） */
+  openFishSub(sub: 'fish' | 'rods' | 'baits' | 'bundles' | 'level') { this.fishSub = sub; this.open('fish'); }
+  open(tab?: CodexTab) { if (tab) this.tab = tab; this.root.classList.remove('hidden'); this.net.getFishdex(); this.net.getGeardex(); this.net.getFx(); this.net.getInv(); this.render(); }
   close() { this.root.classList.add('hidden'); }
   toggle() { this.isOpen ? this.close() : this.open(); }
   /** 数据变了（小猫好感度、钓鱼记录）就刷新 */
@@ -118,12 +121,13 @@ export class CodexPanel {
   // ------------------------------------------------------------ 钓鱼图鉴
   /** 钓鱼图鉴：四个子页——鱼类（含"现在能钓到什么"和筛选）、鱼竿、饵料与配件、册页与里程碑 */
   private renderFish(box: HTMLElement) {
-    const subs: [typeof this.fishSub, string][] = [['fish', '🐟 鱼类'], ['rods', '🎣 鱼竿'], ['baits', '🪱 饵料与配件'], ['bundles', '📒 册页']];
+    const subs: [typeof this.fishSub, string][] = [['fish', '🐟 鱼类'], ['rods', '🎣 鱼竿'], ['baits', '🪱 饵料与配件'], ['bundles', '📒 册页'], ['level', `⭐ 等级 Lv.${fishData.level}`]];
     const row = el('div', 'cx-subtabs');
     for (const [id, label] of subs) { const b = el('button', 'cx-sub-tab' + (id === this.fishSub ? ' on' : ''), label); b.type = 'button'; b.addEventListener('click', () => { this.fishSub = id; this.render(); }); row.append(b); }
     box.append(row);
     if (this.fishSub === 'fish') this.renderFishList(box);
     else if (this.fishSub === 'bundles') this.renderBundles(box);
+    else if (this.fishSub === 'level') this.renderLevel(box);
     else this.renderGear(box, this.fishSub);
   }
 
@@ -239,6 +243,43 @@ export class CodexPanel {
     else box.append(el('div', 'cx-dim', '饵每抛一次竿用掉一个；配件不消耗，要装在带配件槽的鱼竿上。万能饵、指名饵、神话饵要靠合成或盲盒。'));
     const boxes = el('div', 'cx-dim', `盲盒：${(['box_bottle', 'box_crate', 'box_wreck'] as const).map((id) => `${boxDef(id)?.name} 开过 ${fishData.gd.boxes[id] ?? 0} 个`).join('　')}`);
     if (kind === 'baits') box.append(boxes);
+  }
+
+  /** 钓鱼等级：经验条、今日经验（软上限）、路线槽、当前加成、30 级奖励一览 */
+  private renderLevel(box: HTMLElement) {
+    const fx = fishData.fx;
+    if (!fx) { box.append(el('div', 'cx-dim', '读取中…')); return; }
+    box.append(el('div', 'cx-sum', `钓鱼等级　Lv.${fx.lv}${fx.lv >= 30 ? '（满级）' : ''}`));
+    const bar = el('div', 'cx-pbar big'), fill = el('div', 'cx-pfill'); fill.style.width = `${fx.need ? (fx.into / fx.need) * 100 : 100}%`; bar.append(fill);
+    box.append(bar, el('div', 'cx-dim', fx.need ? `本级 ${fx.into} / ${fx.need}　·　总经验 ${fx.xp}` : `总经验 ${fx.xp}`));
+    const soft = Math.min(fx.today, XP_SOFT_CAP);
+    box.append(el('div', 'cx-d-line', `今日经验：${soft} / ${XP_SOFT_CAP}${fx.today > XP_SOFT_CAP ? `（已超出软上限，之后按 ${Math.round(XP_OVER_RATE * 100)}% 计）` : '（超过后按 40% 计，每天 0 点重置）'}`));
+    const rt = fx.rt as Route[], b = routeBonus(rt, fx.lv);
+    box.append(el('div', 'cx-d-line', `现在的加成：卖鱼价 +${Math.round(b.sell * 100)}%　·　盲盒概率 ×${b.treasure.toFixed(1).replace(/\.0$/, '')}　·　拉鱼绿条 +${Math.round(barBonus(fx.lv) * 100)}%`));
+    // 路线槽
+    const slots = el('div', 'cx-routes');
+    for (let slot = 0; slot < 2; slot++) {
+      const row = el('div', 'cx-route'), open = slot < routeSlots(fx.lv);
+      row.append(el('span', 'cx-route-t', `路线 ${slot + 1}（${slot === 0 ? 5 : 10} 级）`));
+      if (!open) { row.append(el('span', 'cx-dim', '还没解锁')); slots.append(row); continue; }
+      for (const r of ['', ...ROUTES] as Route[]) {
+        const btn = el('button', 'cx-sub-tab' + (rt[slot] === r ? ' on' : ''), r === '' ? '不选' : ROUTE_NAMES[r]); btn.type = 'button';
+        btn.addEventListener('click', () => this.net.fxRoute(slot, r)); row.append(btn);
+      }
+      slots.append(row);
+    }
+    box.append(slots, el('div', 'cx-dim', '路线随时可以免费切换。渔夫：卖鱼价 +10%（两个槽都选 +20%）；寻宝：盲盒概率 ×1.3（两个槽都选 ×1.6）。'));
+    box.append(el('div', 'cx-d-line', `放生：已放生 ${fx.rel} 条保护动物（5 / 20 / 50 条有称号）　·　周委托全勤：${fx.wk} 周`));
+    // 奖励一览
+    box.append(el('div', 'cx-group', '等级奖励'));
+    const list = el('div', 'cx-gear');
+    for (const r of levelRows(fx.lv)) {
+      const card = el('div', 'cx-gcard' + (r.reached ? ' got' : '')), info = el('div', 'cx-ginfo');
+      info.append(el('div', 'cx-gname', `${r.reached ? '✔ ' : ''}Lv.${r.lv}　需要 ${r.cum} 经验`), el('div', 'cx-geff', `升级奖励：${r.reward}`));
+      for (const p of r.perks) info.append(el('div', 'cx-ghow', p));
+      card.append(info); list.append(card);
+    }
+    box.append(list);
   }
 
   /** 钓鱼册页：集齐一组领一次奖励；里程碑 */

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { availableNow, bundleViews, fishGroups, fishHint, gearRows, gearSummary, milestoneViews, mythicChecks } from '../src/ui/fishdexModel';
+import { availableNow, bundleViews, fishGroups, fishHint, gearRows, gearSummary, levelRows, milestoneViews, mythicChecks } from '../src/ui/fishdexModel';
 import { emptyGearLog } from '../src/shared/fishdex';
 import { fishDef } from '../src/shared/fishing';
 import { resolveGear } from '../src/shared/gear';
@@ -70,5 +70,17 @@ describe('图鉴数据整理：神话条件、装备图鉴、册页、里程碑�
     const s = gearSummary(resolveGear({ rod_bone: 1, bait_wild: 1, tk_float: 1, tk_sonar: 1, tk_buffer: 1 }, { bait: 'bait_wild', tackle: ['tk_float', 'tk_sonar'] }, day));
     expect(s.join(' ')).toContain('咬钩'); expect(s.join(' ')).toContain('绿条 +22%'); expect(s).toContain('声呐'); expect(s.join(' ')).toContain('双钓 12%'); expect(s.join(' ')).toContain('盲盒 ×1.3');
     expect(gearSummary(resolveGear({ fishing_rod: 1, bait_name: 1 }, { bait: 'bait_name', target: 'fish_carp' }, day))).toContain('只钓指定的鱼');
+  });
+});
+
+describe('图鉴数据整理：钓鱼等级页', () => {
+  it('29 行（2–30 级）；关键级的新解锁：配方、路线槽、绿条、称号；已达到的标 reached', () => {
+    const rows = levelRows(10);
+    expect(rows.length).toBe(29); expect(rows[0].lv).toBe(2); expect(rows[rows.length - 1].lv).toBe(30);
+    expect(rows.filter((r) => r.reached).length).toBe(9); expect(rows.find((r) => r.lv === 10)!.reached).toBe(true); expect(rows.find((r) => r.lv === 11)!.reached).toBe(false);
+    const perks = (lv: number) => rows.find((r) => r.lv === lv)!.perks.join('|');
+    expect(perks(5)).toContain('指名饵'); expect(perks(5)).toContain('第 1 个「路线」槽'); expect(perks(5)).toContain('湖边学徒'); expect(perks(10)).toContain('神话饵'); expect(perks(10)).toContain('第 2 个「路线」槽');
+    expect(perks(4)).toContain('绿条 +2%'); expect(perks(22)).toContain('绿条 +5%'); expect(perks(12)).toContain('龙骨竿'); expect(perks(7)).toContain('香饵自制'); expect(perks(30)).toContain('渔圣');
+    expect(rows.find((r) => r.lv === 2)!.reward).toContain('40 币'); expect(rows.find((r) => r.lv === 30)!.cum).toBe(94200);
   });
 });
