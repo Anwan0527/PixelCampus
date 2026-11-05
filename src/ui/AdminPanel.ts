@@ -47,6 +47,8 @@ export class AdminPanel {
   private reports: ReportEntry[] = []; private repMore = false; private repOpen = 0; private repOnlyOpen = true; private repPaging = false;
   private worlds: AdminWorld[] = []; private worldMine = '';
   private logWorld = '';
+  /** 公屏记录的频道筛选（'' = 全部） */
+  private logCh: '' | 'world' | 'near' | 'party' = '';
   /** 玩家档案（点某位玩家后整页换成它）、找人的结果 */
   private dossier: AdminDossier; private dosUid = 0;
   private hits: AdminHit[] | null = null; private hitsMore = false; private findQ = ''; private findTimer = 0; private findEnter = false;
@@ -100,7 +102,7 @@ export class AdminPanel {
   openDm(uid: number) { this.root.classList.remove('hidden'); this.tab = 'dm'; this.dmUidText = String(uid); this.dm = null; this.dmItems = []; this.net.adm({ op: 'log_dm', uid }); this.render(); }
   private queryLogs(before?: number) {
     this.logPaging = before !== undefined;
-    this.net.adm({ op: 'log_chat', ...(Number(this.logUid) > 0 ? { uid: Number(this.logUid) } : {}), ...(this.logQ ? { q: this.logQ } : {}), ...(this.logWorld ? { world: this.logWorld } : {}), ...(before ? { before } : {}), n: 50 });
+    this.net.adm({ op: 'log_chat', ...(Number(this.logUid) > 0 ? { uid: Number(this.logUid) } : {}), ...(this.logQ ? { q: this.logQ } : {}), ...(this.logWorld ? { world: this.logWorld } : {}), ...(this.logCh ? { ch: this.logCh } : {}), ...(before ? { before } : {}), n: 50 });
   }
   open() { if (!this.net.isAdmin) return; this.root.classList.remove('hidden'); this.msg.textContent = ''; this.titleEl.textContent = `🛡 管理员控制台（${ROLE_NAMES[this.net.adminRole ?? 'mod']}）`; this.fetch(); this.render(); window.clearInterval(this.timer); this.timer = window.setInterval(() => { if ((this.tab === 'players' && !this.dosUid) || this.tab === 'worlds') this.fetch(); }, 5000); }
   /** 打开某位玩家的完整档案（点名字菜单的「完整档案」、搜索结果、好友列表都走这里） */
@@ -214,6 +216,7 @@ export class AdminPanel {
     const card = el('div', 'rep-item' + (r.done ? ' done' : ''));
     const top = el('div', 'rep-top');
     top.append(el('span', 'rep-tag', REPORT_KIND_NAMES[r.kind]), el('span', 'rep-tag n', REPORT_REASONS[r.reason] ?? '其他'));
+    if (r.ch) top.append(el('span', 'rep-tag', r.ch === 'near' ? '📍附近' : r.ch === 'party' ? '👥队伍' : r.ch));
     if (r.same > 1) top.append(el('span', 'rep-tag n', `${r.same} 人举报`));
     if (r.w) top.append(el('span', 'rep-tag', worldTag(r.w)));
     top.append(el('span', 'adm-uid', `#${r.id} · ${when(r.ts)}`));
@@ -269,9 +272,11 @@ export class AdminPanel {
     const wsel = el('select'); for (const [v, t] of [['', '所有世界'], ['public', '只看公共世界'], ['solo', '所有个人世界'], ['group', '所有好友世界']]) { const o = el('option', undefined, t); o.value = v; wsel.append(o); }
     if (this.logWorld && !['public', 'solo', 'group'].includes(this.logWorld)) { const o = el('option', undefined, `指定：${worldTag(this.logWorld)} ${this.logWorld.split(':')[1]}`); o.value = this.logWorld; wsel.append(o); }
     wsel.value = this.logWorld; wsel.addEventListener('change', () => { this.logWorld = wsel.value; this.queryLogs(); });
+    const csel = el('select'); for (const [v, t] of [['', '所有频道'], ['world', '🌍 世界'], ['near', '📍 附近'], ['party', '👥 队伍']]) { const o = el('option', undefined, t); o.value = v; csel.append(o); }
+    csel.value = this.logCh; csel.addEventListener('change', () => { this.logCh = csel.value as typeof this.logCh; this.queryLogs(); });
     const go = () => { this.logUid = uid.value.trim(); this.logQ = q.value.trim(); this.queryLogs(); };
     for (const i of [uid, q]) i.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
-    const bar = el('div', 'adm-actions'); bar.append(uid, q, wsel, this.btn('查询', go, true), this.btn('清除条件', () => { this.logUid = ''; this.logQ = ''; this.logWorld = ''; this.queryLogs(); this.render(); }), el('span', 'adm-uid', `共存了 ${this.logItems.length}${this.logMore ? '+' : ''} 条（从新到旧）`));
+    const bar = el('div', 'adm-actions'); bar.append(uid, q, wsel, csel, this.btn('查询', go, true), this.btn('清除条件', () => { this.logUid = ''; this.logQ = ''; this.logWorld = ''; this.logCh = ''; this.queryLogs(); this.render(); }), el('span', 'adm-uid', `共存了 ${this.logItems.length}${this.logMore ? '+' : ''} 条（从新到旧）`));
     b.append(bar);
     if (!this.logItems.length) b.append(el('div', 'board-empty', '没有符合条件的记录。'));
     const list = el('div', 'adm-list');
@@ -279,7 +284,7 @@ export class AdminPanel {
       const row = el('div', 'adm-row adm-log' + (it.del ? ' off' : ''));
       const who = el('span', 'chat-who clickable', `${it.from}（${it.uid ?? '?'}）`); if (it.uid) who.addEventListener('click', () => this.menu.open(it.uid!, { name: it.from, mid: it.mid, text: it.text }));
       const txt = el('span', it.del ? 'adm-del' : undefined, ` ${it.text}`);
-      row.append(el('span', 'chat-time', `#${it.mid} ${when(it.ts)} `)); if (it.w) { const wt = el('span', 'rep-tag', worldTag(it.w)); wt.title = it.w; wt.style.cursor = 'pointer'; wt.addEventListener('click', () => { this.logWorld = it.w!; this.queryLogs(); }); row.append(wt, document.createTextNode(' ')); } row.append(who, txt);
+      row.append(el('span', 'chat-time', `#${it.mid} ${when(it.ts)} `)); if (it.ch) { const ct = el('span', 'rep-tag', it.ch === 'near' ? '📍附近' : it.ch === 'party' ? '👥队伍' : it.ch); row.append(ct, document.createTextNode(' ')); } if (it.w) { const wt = el('span', 'rep-tag', worldTag(it.w)); wt.title = it.w; wt.style.cursor = 'pointer'; wt.addEventListener('click', () => { this.logWorld = it.w!; this.queryLogs(); }); row.append(wt, document.createTextNode(' ')); } row.append(who, txt);
       if (it.del) row.append(el('span', 'adm-uid', ` 已撤回（${it.by ?? ''}）`)); else row.append(this.btn('撤回', () => this.net.adm({ op: 'recall', mid: it.mid })));
       list.append(row);
     }
