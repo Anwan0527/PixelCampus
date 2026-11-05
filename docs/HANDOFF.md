@@ -85,6 +85,7 @@ PixelGame/
 | [ECONOMY.md](ECONOMY.md) | 货币、商店、校园墙的设计 |
 | [WORLDS_PLAN.md](WORLDS_PLAN.md) | 个人 / 公共 / 好友世界的设计 |
 | [CHAT_CHANNELS_PLAN.md](CHAT_CHANNELS_PLAN.md) | 聊天频道系统方案（世界/附近/队伍/群聊/系统，开关静音，管理）：设计稿，已拍板（先 P1 再 P2），待开工 |
+| [CHAT_P1_TASKS.md](CHAT_P1_TASKS.md) | 聊天频道 **P1 任务拆分**：协议契约、共享 / 客户端 / 服务端任务、联调验收清单 |
 | [MAP_EDITOR.md](MAP_EDITOR.md) | **地图编辑器**：主人手动微调地图的小工具、手动层格式 |
 | [MAP_PIPELINE.md](MAP_PIPELINE.md) / [SCALE.md](SCALE.md) | 地图数据来源与校验、**已知偏差**；比例约定 |
 | [ART_STYLE.md](ART_STYLE.md) / [ART_CHARACTER_CAT_DESIGN.md](ART_CHARACTER_CAT_DESIGN.md) / [ASSETS_AND_LICENSES.md](ASSETS_AND_LICENSES.md) | 美术风格；人物小猫 Rig 设计；素材许可 |
