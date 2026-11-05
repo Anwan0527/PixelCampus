@@ -131,7 +131,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 body.touch { touch-action: none; -webkit-user-select: none; user-select: none; }
 body.touch input { -webkit-user-select: text; user-select: text; }
 body.touch .screen, body.touch .screen * { touch-action: pan-y; }   /* 创建角色/学生证里允许上下滑动 */
-#chat-peek, .chat-close { display: none; }
+.chat-close { display: none; }
 body.touch .chat-close { display: inline-block; border: 2px solid var(--wood); background: var(--paper-d); color: var(--ink); font-family: inherit; padding: 0 8px; margin-left: 8px; }
 
 body.touch #touch-zone { position: absolute; left: 0; bottom: 0; width: 56vw; height: 72vh; z-index: 1; pointer-events: auto; touch-action: none; }
@@ -174,8 +174,6 @@ body.touch #chat { display: none; }
 body.touch #chat.open { display: block; position: fixed; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; opacity: 1; z-index: 8; }
 body.touch .chat-log { height: min(36vh, 220px); font-size: 14px; }
 body.touch #chat input { font-size: 16px; }   /* iOS 输入框字号小于 16px 会自动放大页面 */
-body.touch #chat-peek { display: block; position: absolute; left: calc(10px + env(safe-area-inset-left)); top: calc(66px + env(safe-area-inset-top)); max-width: 72vw; pointer-events: none; font-size: 13px; line-height: 1.35; z-index: 2; }
-#chat-peek .chat-line { background: rgba(255,250,240,.85); border: 2px solid var(--wood-l); padding: 2px 6px; margin-bottom: 3px; word-break: break-all; }
 
 /* ---------- 留言板 ---------- */
 
@@ -802,7 +800,6 @@ body.touch #profile-chip { padding-right: 28px; }
 .chat-note { display: none; margin-top: 4px; padding: 2px 6px; font-size: 12px; color: #b02a1a; background: #fbe3dc; border: 1px solid #c4503c; }
 .chat-note.on { display: block; }
 .chat-ch { display: none; margin-right: 3px; font-size: 11px; }
-#chat-peek .chat-ch { display: inline; }
 .chat-line.ch-party .chat-text { color: #1f5a10; }
 .chat-line.ch-near .chat-text { color: #1f4f6a; }
 #chat[data-ch="party"] input:not(:disabled) { border-color: #3f7a24; }
@@ -818,6 +815,37 @@ body.touch .chat-tab { padding: 4px 10px; font-size: 14px; }
 .chans-sws { display: flex; gap: 18px; }
 .chans-sw { font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; }
 .chans-sw input { width: 18px; height: 18px; }
+
+/* ---------- 手机竖屏紧凑布局（窄屏）：头像 / 金币 / 世界 / 时钟 / 小地图都缩小，给画面多留地方 ---------- */
+@media (orientation: portrait) and (max-width: 480px) {
+  body.touch #profile-chip { top: calc(8px + env(safe-area-inset-top)); padding: 3px 24px 3px 4px; gap: 6px; max-width: 56vw; }
+  body.touch .chip-avatar { width: 32px; height: 32px; } body.touch .chip-avatar canvas { width: 24px; height: 24px; }
+  body.touch .chip-name { font-size: 14px; } body.touch .chip-sub { font-size: 10px; }
+  body.touch #coin-pill { top: calc(54px + env(safe-area-inset-top)); left: calc(8px + env(safe-area-inset-left)); font-size: 12px; padding: 1px 7px; }
+  body.touch .world-chip { top: calc(54px + env(safe-area-inset-top)); left: calc(88px + env(safe-area-inset-left)); padding: 2px 8px; font-size: 12px; border-width: 3px; }
+  body.touch #clock { top: calc(8px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right)); min-width: 0; max-width: 40vw; padding: 2px 8px; }
+  body.touch #clock-day { font-size: 10px; } body.touch #clock-time { font-size: 16px; letter-spacing: 1px; } body.touch #clock-phase { font-size: 10px; }
+  body.touch #clock-place { font-size: 10px; margin-top: 1px; padding-top: 1px; }
+  body.touch #minimap:not(.big) { top: calc(96px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right)); width: 80px; height: 62px; }
+  body.touch #banner { top: calc(100px + env(safe-area-inset-top)); max-width: 60vw; }
+  body.touch #touch-btns { gap: 8px; right: calc(8px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+  body.touch .tb-grid { grid-template-columns: 42px 42px; gap: 6px; } body.touch .tb { min-height: 40px; font-size: 14px; }
+  body.touch .tb-act { width: 72px; height: 72px; font-size: 18px; }
+  body.touch #hint { bottom: calc(150px + env(safe-area-inset-bottom)); }
+  body.touch #touch-menu { right: calc(8px + 90px + 8px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+
+/* ---------- 沉浸模式（body.immersive）：藏起所有界面，只剩画面 ---------- */
+#imm-exit { display: none; position: absolute; right: calc(10px + env(safe-area-inset-right)); top: calc(10px + env(safe-area-inset-top)); z-index: 9; width: 34px; height: 34px; padding: 0; font-family: inherit; font-size: 18px; line-height: 30px; color: #fff; background: rgba(40, 20, 12, .45); border: 2px solid rgba(255, 255, 255, .55); border-radius: 50%; opacity: .45; cursor: pointer; pointer-events: auto; }
+#imm-exit:hover, #imm-exit:active { opacity: 1; }
+body.immersive #imm-exit { display: block; }
+body.immersive #profile-chip, body.immersive #clock, body.immersive #coin-pill, body.immersive .world-chip, body.immersive #side-btns, body.immersive #menu-btn, body.immersive #menu-pop,
+body.immersive #minimap:not(.big), body.immersive #minimap-show, body.immersive #controls, body.immersive #banner, body.immersive #rotate-tip { display: none !important; }   /* 作者水印 #wm 不藏：截图 / 录屏要带署名（见 LICENSE） */
+body.immersive #chat:not(.pop):not(.open) { display: none !important; }
+body.immersive.touch .tb-wrap { display: none; }   /* 手机：只留「互动」键，+ − 聊天 ☰ 都藏起来 */
+body.immersive.touch #touch-menu { display: none !important; }
+#imm-toast { position: absolute; left: 50%; top: calc(18px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 9; padding: 6px 12px; font-size: 14px; color: #fff4d4; background: rgba(40, 20, 12, .8); border: 2px solid #e8c070; opacity: 0; pointer-events: none; transition: opacity .3s; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
+#imm-toast.on { opacity: 1; }
 
 /* 管理员：玩家档案 + 找人 */
 .adm-find { flex: 1; min-width: 220px; padding: 6px 10px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 15px; color: var(--ink); border-radius: 0; outline: none; box-sizing: border-box; }
@@ -873,7 +901,6 @@ body.touch .chat-tab { padding: 4px 10px; font-size: 14px; }
   body.touch .chat-log { height: 56px; }
   body.touch .chat-tab { padding: 2px 8px; font-size: 13px; }
   body.touch .chat-head { margin-bottom: 2px; }
-  body.touch #chat-peek { top: calc(126px + env(safe-area-inset-top)); max-width: 40vw; }
   /* 各种面板：边距收小、里面的列表可以用到整个屏幕高度（面板本身整体也能上下滑） */
   body.touch .screen { padding: 6px calc(8px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left)); }
   body.touch .box { padding: 6px 10px; }

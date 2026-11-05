@@ -20,6 +20,7 @@ import { ChannelPanel } from '@/ui/ChannelPanel';
 import { ReportDialog } from '@/ui/ReportDialog';
 import { TouchControls, isTouchDevice } from '@/ui/TouchControls';
 import { mountOrientation } from '@/ui/Orientation';
+import { mountImmersive } from '@/ui/Immersive';
 import { BoardPanel } from '@/ui/BoardPanel';
 import { ShopPanel } from '@/ui/ShopPanel';
 import { WallPanel } from '@/ui/WallPanel';
@@ -357,6 +358,7 @@ export class WorldScene extends Phaser.Scene {
     ui.add({ id: 'minimap', label: '小地图', desktop: false, run: () => this.hud.setMiniMap(!this.hud.miniMapOn) });
     ui.add({ id: 'card', label: '学生证', desktop: false, run: () => this.profileUi.toggle() });
     mountSideButtons();
+    mountImmersive(); // 沉浸模式：藏起所有界面，只剩画面（菜单「沉浸模式」/ Z / 右上角 ⤢）
     this.net.onMessage((m) => {
       if (m.kind !== 'chat') return;
       const style = this.chatUi.bubbleOf(m); if (!style) return; // 静音 / 关闭的频道不冒气泡
@@ -429,7 +431,7 @@ export class WorldScene extends Phaser.Scene {
       this.net.system('欢迎来到河北工程大学！左半屏按住拖动 = 走路（推到边缘奔跑），点右下角「互动」「聊天」「证」「地图」。');
     } else {
       this.net.system('欢迎来到河北工程大学！按 Enter 说话，Esc 退出输入。');
-      this.net.system('WASD 移动 · Shift 奔跑 · E 互动 · I 背包 · R 精灵 · Y 传送 · Q 任务 · X 表情 · V 手持物 · P 拍照 · C 学生证 · M 地图 · +/- 缩放');
+      this.net.system('WASD 移动 · Shift 奔跑 · E 互动 · I 背包 · R 精灵 · Y 传送 · Q 任务 · X 表情 · V 手持物 · P 拍照 · Z 沉浸 · C 学生证 · M 地图 · +/- 缩放');
     }
     // ?offline 可关掉联机（开发调试：传送等操作会被服务器校验拉回）
     if (!new URLSearchParams(location.search).has('offline')) this.net.connect();

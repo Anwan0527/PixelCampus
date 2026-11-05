@@ -30,9 +30,8 @@ export class ChatPanel {
   private status = el('span', 'chat-status');
   private lastSent = 0;
   private noteTimer = 0;
+  private popTimer = 0;
 
-  /** 手机上聊天框收起时，左上角短暂显示最新几条 */
-  private peek = el('div');
   /** 点聊天里别人的名字（有校园号才能点）：弹出资料卡，可以加好友 */
   onNameClick: (uid: number, ctx: { name: string; mid?: number; text: string }) => void = () => {};
   /** 现在是不是管理员（管理员点自己的名字也能弹出管理菜单，比如撤回自己的话） */
@@ -52,18 +51,18 @@ export class ChatPanel {
     const closeBtn = el('button', 'chat-close', '✕'); closeBtn.type = 'button'; closeBtn.setAttribute('aria-label', '收起聊天');
     closeBtn.addEventListener('click', () => this.close());
     head.append(el('span', undefined, '聊天'), this.status, closeBtn);
-    this.peek.id = 'chat-peek';
     for (const id of CHANNEL_IDS) { const l = el('div', 'chat-log'); l.dataset.ch = id; this.logOf.set(id, l); this.logs.append(l); }
     this.input.type = 'text'; this.input.maxLength = CHAT_MAX + 20; this.input.autocomplete = 'off'; this.input.spellcheck = false;
-    this.input.addEventListener('focus', () => { this.root.classList.add('typing'); this.onFocus(); });
-    this.input.addEventListener('blur', () => this.root.classList.remove('typing'));
+    this.input.addEventListener('focus', () => { window.clearTimeout(this.popTimer); this.root.classList.add('typing', 'pop'); this.onFocus(); });
+    // pop：沉浸模式下聊天框默认藏着，说话时临时冒出来，说完 6 秒后自己收起（方便看别人的回复）
+    this.input.addEventListener('blur', () => { this.root.classList.remove('typing'); window.clearTimeout(this.popTimer); this.popTimer = window.setTimeout(() => this.root.classList.remove('pop'), 6000); });
     this.input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); this.submit(); }
       else if (e.key === 'Escape') this.input.blur();
       else if (e.key === 'Tab') { e.preventDefault(); this.select(this.state.nextSendable()); }
     });
     this.root.append(head, this.tabs, this.logs, this.note, this.input);
-    (document.getElementById('hud') ?? document.body).append(this.root, this.peek);
+    (document.getElementById('hud') ?? document.body).append(this.root);
     net.onMessage((m) => this.onMessage(m));
     net.onStatus(() => this.renderStatus());
     net.onChannels((items) => this.applyChannels(items));
@@ -74,10 +73,15 @@ export class ChatPanel {
 
   get typing() { return document.activeElement === this.input; }
   /** 聚焦输入框；当前频道不能发言（系统 / 已关闭）就先切到第一个能发言的频道 */
-  focus() { this.ensureSendable(); this.input.focus(); }
+  focus() {
+    this.ensureSendable();
+    window.clearTimeout(this.popTimer); this.root.classList.add('pop'); // 沉浸模式下聊天框是藏着的：先让它显示出来，输入框才能聚焦
+    this.input.focus();
+    if (document.activeElement !== this.input) this.popTimer = window.setTimeout(() => this.root.classList.remove('pop'), 3000); // 没聚焦上（输入框被禁用）：过一会儿再收起
+  }
   /** 手机：展开/收起聊天（展开时让出摇杆和按钮的位置，并聚焦输入框） */
   get isOpen() { return this.root.classList.contains('open'); }
-  open() { this.root.classList.add('open'); document.body.classList.add('chat-open'); this.peek.replaceChildren(); this.state.markActiveRead(); this.renderTabs(); this.scrollEnd(); this.ensureSendable(); this.input.focus(); }
+  open() { this.root.classList.add('open'); document.body.classList.add('chat-open'); this.state.markActiveRead(); this.renderTabs(); this.scrollEnd(); this.ensureSendable(); this.input.focus(); }
   close() { this.input.blur(); this.root.classList.remove('open'); document.body.classList.remove('chat-open'); }
   toggle() { this.isOpen ? this.close() : this.open(); }
 
@@ -91,11 +95,10 @@ export class ChatPanel {
     this.renderAll(); this.scrollEnd(); this.emitUnread();
   }
 
-  /** 清空世界和附近（切换世界时）：队伍、系统保留；已经冒出来的小条也去掉 */
+  /** 清空世界和附近（切换世界时）：队伍、系统保留 */
   clear() {
     this.state.clearWorldScoped();
     for (const id of ['world', 'near'] as const) this.logOf.get(id)!.replaceChildren();
-    this.peek.replaceChildren();
     for (const [k, v] of this.byMid) if (!v.isConnected) this.byMid.delete(k);
     this.renderTabs(); this.emitUnread();
   }
@@ -196,13 +199,7 @@ export class ChatPanel {
     const own = m.kind === 'chat' && (m.uid === undefined || m.uid === this.net.selfUid); // 自己发的（含离线回显）：不算未读
     const r = this.state.receive(m, collapsed, own);
     if (!r.accepted) return;
-    const line = this.append(r.ch, m, false);
-    if (!r.muted && collapsed) { // 收起状态（手机）：在左上角冒出这一条，8 秒后消失，最多留 3 条
-      const pk = line.cloneNode(true) as HTMLElement;
-      this.peek.append(pk);
-      while (this.peek.childElementCount > 3) this.peek.firstElementChild!.remove();
-      window.setTimeout(() => pk.remove(), 8000);
-    }
+    this.append(r.ch, m, false); // 手机上聊天框收起时不再弹小条打扰：只在标签 / 「聊天」按钮上留未读数，要看就点开聊天框
     if (r.ch === this.state.active && this.isOpen) this.state.markActiveRead();
     this.renderTabs(); this.emitUnread();
   }
