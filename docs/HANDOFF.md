@@ -84,7 +84,7 @@ PixelGame/
 | [MULTIPLAYER.md](MULTIPLAYER.md) | 联机需求、协议、各批功能设计 |
 | [ECONOMY.md](ECONOMY.md) | 货币、商店、校园墙的设计 |
 | [WORLDS_PLAN.md](WORLDS_PLAN.md) | 个人 / 公共 / 好友世界的设计 |
-| [CHAT_CHANNELS_PLAN.md](CHAT_CHANNELS_PLAN.md) | 聊天频道系统方案（世界/附近/队伍/群聊/系统，开关静音，管理）：P1 已完成（未部署），P2 群聊待做 |
+| [CHAT_CHANNELS_PLAN.md](CHAT_CHANNELS_PLAN.md) | 聊天频道系统方案（世界/附近/队伍/群聊/系统，开关静音，管理）：P1 已完成并部署，P2 群聊待做 |
 | [CHAT_P1_TASKS.md](CHAT_P1_TASKS.md) | 聊天频道 **P1 任务拆分**：协议契约、共享 / 客户端 / 服务端任务、联调验收清单 |
 | [MAP_EDITOR.md](MAP_EDITOR.md) | **地图编辑器**：主人手动微调地图的小工具、手动层格式 |
 | [MAP_PIPELINE.md](MAP_PIPELINE.md) / [SCALE.md](SCALE.md) | 地图数据来源与校验、**已知偏差**；比例约定 |

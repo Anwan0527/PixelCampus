@@ -59,7 +59,7 @@ export interface ChannelState { id: ChannelId; on: boolean; mute: boolean; /** �
 **依赖**：S1、S2 先做完（契约）→ 客户端 C* 和服务端 V* **可以并行** → 联调（§5）→ 文档与部署。尺寸：S 小（≈半天内）、M 中（≈1 天）、L 大（≈2 天）。
 
 ### 共享（S）
-> **P1 全部完成（2026-11-05，未部署）**：S1–S3（共享契约）、C1–C8（客户端：`NetClient`、`ChatPanel` + `chatState.ts`、`ChannelPanel`、场景接线、样式横屏、举报、管理面板筛选、`tests/chat-state.test.ts`）、V1–V6（服务端，19 项集成测试）；联调验收清单（第 5 节）里的主要场景已用真服务器 + 浏览器验证。待办：部署（D2）。
+> **P1 全部完成并已部署（2026-11-05）**：S1–S3（共享契约）、C1–C8（客户端：`NetClient`、`ChatPanel` + `chatState.ts`、`ChannelPanel`、场景接线、样式横屏、举报、管理面板筛选、`tests/chat-state.test.ts`）、V1–V6（服务端，19 项集成测试）；联调验收清单（第 5 节）里的主要场景已用真服务器 + 浏览器验证。D2 部署已完成。
 
 | # | 任务 | 内容与验收 | 尺寸 | 谁 |
 |---|---|---|---|---|
