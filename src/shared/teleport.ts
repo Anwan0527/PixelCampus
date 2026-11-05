@@ -3,7 +3,7 @@
  * 地点按"地标 id"或"建筑名"从世界数据里解析（不写死坐标），所以地图编辑器改了地图也不会传到墙里；
  * 服务器再在目标附近找一个真能站的位置，并限制冷却与状态（骑车/坐着/钓鱼/战斗中不能传）。
  */
-export type TeleportGroup = '大门' | '教学' | '食堂' | '宿舍' | '其他';
+export type TeleportGroup = '大门' | '教学' | '食堂' | '宿舍' | '湖边' | '其他';
 export interface TeleportDef {
   id: string; name: string; group: TeleportGroup;
   /** 地标 id（world.json 的 pois） */
@@ -28,8 +28,9 @@ export const TELEPORTS: readonly TeleportDef[] = [
   { id: 'dorm-3', name: '三社区', group: '宿舍', poi: 'dorm-3' },
   { id: 'dorm-4', name: '四社区', group: '宿舍', poi: 'dorm-4' },
   { id: 'intl', name: '留学生公寓', group: '宿舍', building: '留学生公寓' },
+  { id: 'fish-stall', name: '精工湖钓具摊', group: '湖边', poi: 'fish-stall' },
 ];
-export const TELEPORT_GROUPS: readonly TeleportGroup[] = ['大门', '教学', '食堂', '宿舍'];
+export const TELEPORT_GROUPS: readonly TeleportGroup[] = ['大门', '教学', '食堂', '宿舍', '湖边'];
 
 /** 传送冷却（毫秒，每个人） */
 export const TP_COOLDOWN_MS = 8000;

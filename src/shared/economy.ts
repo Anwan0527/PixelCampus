@@ -33,13 +33,14 @@ export function marketMul(day: number, id: string): number {
 /** 盲盒里开出来的小东西：珍珠和校园小宝物也能卖（没有行情，固定价） */
 export const EXTRA_SELL: Readonly<Record<string, number>> = { pearl: 120, relic_badge: 60, relic_card: 45, relic_meal: 30, relic_history: 90 };
 /** 今天卖一条这个物品能得多少币；不收的东西返回 0 */
-export function sellPrice(id: string, day: number): number {
+export function sellPrice(id: string, day: number, bonus = 0): number {
   if (EXTRA_SELL[id]) return EXTRA_SELL[id];
   const tp = trashPrice(id); // 翻垃圾桶翻出来的东西：垃圾 1 币、U 盘 999 币，没有行情
   if (tp) return tp;
   const d = fishDef(id);
   if (!d) return 0;
-  return Math.max(1, Math.round(fishPrice(d) * (d.rarity === 'junk' ? 1 : marketMul(day, id))));
+  // 钓鱼「渔夫」路线的卖价加成：只算鱼和钓上来的杂物（不含垃圾桶翻出来的东西、珍珠等固定价的）
+  return Math.max(1, Math.round(fishPrice(d) * (d.rarity === 'junk' ? 1 : marketMul(day, id)) * (1 + Math.max(0, bonus))));
 }
 /** 一天里在商店卖东西累计赚到这么多校园币，解锁成就「日进九百九」 */
 export const DAILY_SALE_GOAL = 999;
@@ -56,7 +57,7 @@ export const QUEST_COINS: Record<string, number> = {
 export const ALL_QUESTS_BONUS = 30;
 /** 成就的币奖励：默认 30，个别重量级的更多（第一次解锁时发一次） */
 export const ACH_COINS_DEFAULT = 30;
-export const ACH_COINS: Record<string, number> = { fish_giant: 120, fish_legend: 300, fish_master: 300, fish_10: 30, fish_25: 80, fish_40: 200, fish_all: 1000, myth_hegongjin: 1200, myth_xuangui: 1500, myth_yinglong: 2000, myth_all: 1500, box_first: 20, box_10: 60, gear_rods: 500, gear_baits: 100, cat_bestie: 150, diligent: 100, angler: 60 };
+export const ACH_COINS: Record<string, number> = { fish_giant: 120, fish_legend: 300, fish_master: 300, fish_10: 30, fish_25: 80, fish_40: 200, fish_all: 1000, myth_hegongjin: 1200, myth_xuangui: 1500, myth_yinglong: 2000, myth_all: 1500, box_first: 20, box_10: 60, gear_rods: 500, gear_baits: 100, fishlv_5: 50, fishlv_10: 150, fishlv_15: 300, fishlv_20: 600, fishlv_25: 900, fishlv_30: 1500, release_5: 40, release_20: 120, release_50: 300, cat_bestie: 150, diligent: 100, angler: 60 };
 export const achCoins = (id: string) => ACH_COINS[id] ?? ACH_COINS_DEFAULT;
 /** 校园跑：跑完一次 / 刷新纪录 / 比赛拿第一 */
 export const RUN_COINS = { finish: 8, record: 15, win: 20 } as const;
@@ -96,10 +97,12 @@ export const CAT_BED_GAIN = 20;
 export const sellable = (id: string): boolean => !!fishDef(id) || trashPrice(id) > 0 || (EXTRA_SELL[id] ?? 0) > 0;
 /** 一键卖出收的东西：杂物、常见、少见的鱼，和翻出来的垃圾（U 盘舍不得，要卖手动点） */
 export const bulkSellable = (id: string): boolean => { const d = fishDef(id); return d ? BULK_RARITIES.includes(d.rarity) : TRASH_ONLY.includes(id); };
-export function sellList(inv: Record<string, number>, day: number): { id: string; name: string; n: number; price: number; rarity: Rarity }[] {
-  const out: { id: string; name: string; n: number; price: number; rarity: Rarity }[] = FISH.filter((f) => (inv[f.id] ?? 0) > 0).map((f) => ({ id: f.id, name: f.name, n: inv[f.id], price: sellPrice(f.id, day), rarity: f.rarity }));
+export function sellList(inv: Record<string, number>, day: number, bonus = 0): { id: string; name: string; n: number; price: number; rarity: Rarity }[] {
+  const out: { id: string; name: string; n: number; price: number; rarity: Rarity }[] = FISH.filter((f) => (inv[f.id] ?? 0) > 0).map((f) => ({ id: f.id, name: f.name, n: inv[f.id], price: sellPrice(f.id, day, bonus), rarity: f.rarity }));
   for (const id of [...Object.keys(EXTRA_SELL), ...TRASH_ONLY, TREASURE_ID]) if ((inv[id] ?? 0) > 0) out.push({ id, name: itemDef(id)?.name ?? id, n: inv[id], price: sellPrice(id, day), rarity: id === TREASURE_ID || EXTRA_SELL[id] ? 'rare' : 'junk' });
   return out;
 }
+/** 钓具摊（精工湖边）卖的东西：商店里所有钓鱼相关的商品（鱼竿 / 鱼饵 / 配件）；图书馆广场的商店照旧卖全部 */
+export const FISH_GEAR_IDS: ReadonlySet<string> = new Set(SHOP.filter((s) => s.id === 'fishing_rod' || s.id.startsWith('rod_') || s.id.startsWith('bait') || s.id.startsWith('tk_')).map((s) => s.id));
 /** 校验用：商店里的商品必须是真实物品 */
 export const shopItemsValid = () => SHOP.every((s) => !!itemDef(s.id) && s.n >= 1 && s.price >= 1);

@@ -16,6 +16,7 @@ import type { AchEvent } from './achievements';
 import type { QuestState } from './quests';
 import type { FishLog } from './fishing';
 import type { GearLog } from './fishdex';
+import type { CommReward, CommTier } from './commissions';
 import type { RunMsg } from './run';
 import type { FriendLoc } from './where';
 import type { AdminCat, AdminChatItem, AdminDm, AdminDmPeer, AdminDossier, AdminFilter, AdminHit, AdminInfo, AdminOp, AdminPlayer, AdminRole, AdminWorld, AuditEntry, BanEntry } from './admin';
@@ -34,8 +35,12 @@ import type { DexEntry } from './monbox';
  * 2：精灵系统上线（服务器会下发客户端不认识的新物种等内容，旧页面必须刷新）
  * 9：聊天频道（chat 带 ch、channels、ch_set；队伍 / 附近的话不能漏进旧页面的公屏）
  * 10：钓鱼 2.0（神话鱼、配件、盲盒、合成、册页；装备栏多了配件和指名目标，旧页面不认识）
+ * 11：钓鱼 3.0（钓鱼等级与路线、钓具老板的每日 / 每周委托、放生）
  */
-export const PROTOCOL_VERSION = 10;
+export const PROTOCOL_VERSION = 11;
+
+/** 一个委托给客户端看的样子 */
+export interface CommView { id: CommTier; tier: CommTier; name: string; desc: string; goal: number; prog: number; done: boolean; claimed: boolean; reward: CommReward }
 
 /** 宿舍里的一位玩家（和 spawn 消息同一套字段，位置是屋里的坐标） */
 export interface RoomWho { id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; held?: number }
@@ -192,6 +197,12 @@ export type ClientMsg =
   | { t: 'craft'; recipe: string; param?: string }
   | { t: 'geardex_get' }
   | { t: 'bundle_claim'; id: string }
+  /** 钓鱼 3.0：取等级信息 / 切换路线槽（slot 0 = 5 级的、1 = 10 级的；route 'fisher' | 'finder' | ''）/ 取委托 / 领委托（id = 'mid' | 'hard' | 'extreme' | 'daily'）/ 放生 */
+  | { t: 'fx_get' }
+  | { t: 'fx_route'; slot: number; route: string }
+  | { t: 'wq_get' }
+  | { t: 'wq_claim'; id: string }
+  | { t: 'fish_release'; id: string }
   /** 玩家交易：邀请 / 接受 / 拒绝或取消 / 修改自己的报价 / 确认（on=false 取消确认） */
   | { t: 'trade_invite'; uid: number }
   | { t: 'trade_accept'; tid: number }
@@ -334,6 +345,12 @@ export type ServerMsg =
   /** 装备图鉴：拥有过的竿 / 配件、用过的饵、开过的盲盒、保底、已领的册页和神话首奖 */
   | { t: 'geardex'; gd: GearLog }
   | { t: 'bundle_result'; ok: boolean; msg: string; id: string }
+  /** 钓鱼等级：xp 总经验、lv 等级、into / need 本级进度、rt 两个路线槽、rel 放生次数、wk 周委托全勤周数、today 今天已算过的基础经验（软上限）；up = 刚升级（from → to，奖励） */
+  | { t: 'fx'; xp: number; lv: number; into: number; need: number; rt: string[]; rel: number; wk: number; today: number; up?: { from: number; to: number; coins: number; items: Gain[] } }
+  /** 委托：本周三个 + 今日一个；allDone = 三个周委托都完成了；allClaimed = 全勤奖励已领 */
+  | { t: 'wq'; week: number; list: CommView[]; daily: CommView; allDone: boolean; allClaimed: boolean }
+  | { t: 'wq_result'; ok: boolean; msg: string; id: string }
+  | { t: 'release_result'; ok: boolean; msg: string; id: string; coins?: number; xp?: number; rel?: number }
   /** 翻垃圾桶的结果：翻出了什么（id、treasure = 是不是好东西）、今天还能翻几次 */
   | { t: 'bin_result'; ok: boolean; msg: string; id?: string; treasure?: boolean; left?: number }
   | ({ t: 'hall' } & HallData)
@@ -366,7 +383,7 @@ export type ServerMsg =
    * 钓鱼状态：wait 抛竿成功在等鱼（x/y = 浮漂位置）；bite 鱼咬钩了，赶紧收竿；
    * catch 钓到了（id 鱼/物品、cm 尺寸、isNew 图鉴新种类、record 新纪录、junk 是杂物）；miss 没钓到（msg 说明）；idle 收线/被打断
    */
-  | { t: 'fish_state'; s: 'idle' | 'wait' | 'bite' | 'fight' | 'catch' | 'miss'; msg?: string; x?: number; y?: number; id?: string; cm?: number; kg?: number; isNew?: boolean; record?: boolean; junk?: boolean; perfect?: boolean; /** fight：拉鱼小游戏的参数（鱼是什么要等拉上来才知道） */ seed?: number; diff?: number; move?: 'smooth' | 'mixed' | 'dart'; /** fight：配件给的拉鱼加成、神话鱼的皇冠 / 中途发力 */ bar?: number; sink?: number; cling?: number; drop?: number; burst?: boolean; crown?: boolean; /** bite：声呐浮标告诉你是什么鱼（只发图鉴里已有的） */ sonar?: string; /** catch：双钓（钓到两条）、顺带钓上来的盲盒、河蚌里的珍珠、神话鱼首次的奖励 */ twin?: boolean; box?: string; pearl?: boolean; first?: boolean }
+  | { t: 'fish_state'; s: 'idle' | 'wait' | 'bite' | 'fight' | 'catch' | 'miss'; msg?: string; x?: number; y?: number; id?: string; cm?: number; kg?: number; isNew?: boolean; record?: boolean; junk?: boolean; perfect?: boolean; /** fight：拉鱼小游戏的参数（鱼是什么要等拉上来才知道） */ seed?: number; diff?: number; move?: 'smooth' | 'mixed' | 'dart'; /** fight：配件给的拉鱼加成、神话鱼的皇冠 / 中途发力 */ bar?: number; sink?: number; cling?: number; drop?: number; burst?: boolean; crown?: boolean; /** bite：声呐浮标告诉你是什么鱼（只发图鉴里已有的） */ sonar?: string; /** catch：双钓（钓到两条）、顺带钓上来的盲盒、河蚌里的珍珠、神话鱼首次的奖励 */ twin?: boolean; box?: string; pearl?: boolean; first?: boolean; /** catch：钓鱼经验（分项）和升级后的等级 */ xp?: { total: number; base: number; perfect: number; isNew: number; capped?: boolean }; lv?: number }
   | RunMsg
   | PartyMsg
   /** 留在原地的共享单车：整份列表（进来时）/ 新停下一辆 / 一辆没了（被骑走或超时消失） */
