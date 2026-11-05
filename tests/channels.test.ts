@@ -92,7 +92,7 @@ describe('频道偏好 cleanChannelPrefs / applyChannelSet', () => {
 });
 
 describe('协议：频道消息（编译期 + 版本）', () => {
-  it('协议版本是 9（聊天频道上线，旧页面必须刷新）', () => { expect(PROTOCOL_VERSION).toBe(9); });
+  it('协议版本 ≥ 9（聊天频道上线后旧页面必须刷新；钓鱼 2.0 升到 10）', () => { expect(PROTOCOL_VERSION).toBeGreaterThanOrEqual(9); });
   it('新消息的类型：chat 带 ch、ch_get、ch_set；服务器的 chat 带 ch、channels、ch_result；举报带 ch', () => {
     const toServer: ClientMsg[] = [
       { t: 'chat', text: '你好' }, { t: 'chat', text: '你好', ch: 'party' }, { t: 'ch_get' },

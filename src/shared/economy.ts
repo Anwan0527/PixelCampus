@@ -4,6 +4,7 @@
  * 客户端只显示：价格表和"今日行情"都是这里的纯函数，客户端和服务器算出来一样（以服务器结算为准）。
  */
 import { FISH, fishDef, type FishDef, type Rarity } from './fishing';
+import { TACKLES } from './gear';
 import { itemDef } from './items';
 import { TREASURE_ID, TRASH_ONLY, trashPrice } from './trash';
 
@@ -15,7 +16,7 @@ export const cleanCoins = (v: unknown): number => (typeof v === 'number' && Numb
 
 // ------------------------------------------------------------ 收入：卖鱼
 /** 各稀有度的基础收购价（校园币/条） */
-export const FISH_BASE: Record<Rarity, number> = { common: 6, uncommon: 16, rare: 45, epic: 130, legendary: 420, junk: 1 };
+export const FISH_BASE: Record<Rarity, number> = { common: 6, uncommon: 16, rare: 45, epic: 130, legendary: 420, mythic: 1400, junk: 1 };
 /** 一条鱼的"标准收购价"：同稀有度里，个头大的物种略贵（0.85 ~ 1.15 倍） */
 export function fishPrice(def: FishDef): number {
   if (def.rarity === 'junk' || def.maxKg === undefined) return FISH_BASE.junk;
@@ -29,8 +30,11 @@ export function marketMul(day: number, id: string): number {
   h ^= h >>> 15; h = Math.imul(h, 2246822519); h ^= h >>> 13;
   return 0.85 + ((h >>> 0) / 4294967296) * 0.4;
 }
+/** 盲盒里开出来的小东西：珍珠和校园小宝物也能卖（没有行情，固定价） */
+export const EXTRA_SELL: Readonly<Record<string, number>> = { pearl: 120, relic_badge: 60, relic_card: 45, relic_meal: 30, relic_history: 90 };
 /** 今天卖一条这个物品能得多少币；不收的东西返回 0 */
 export function sellPrice(id: string, day: number): number {
+  if (EXTRA_SELL[id]) return EXTRA_SELL[id];
   const tp = trashPrice(id); // 翻垃圾桶翻出来的东西：垃圾 1 币、U 盘 999 币，没有行情
   if (tp) return tp;
   const d = fishDef(id);
@@ -52,51 +56,36 @@ export const QUEST_COINS: Record<string, number> = {
 export const ALL_QUESTS_BONUS = 30;
 /** 成就的币奖励：默认 30，个别重量级的更多（第一次解锁时发一次） */
 export const ACH_COINS_DEFAULT = 30;
-export const ACH_COINS: Record<string, number> = { fish_giant: 120, fish_legend: 300, fish_master: 500, cat_bestie: 150, diligent: 100, angler: 60 };
+export const ACH_COINS: Record<string, number> = { fish_giant: 120, fish_legend: 300, fish_master: 300, fish_10: 30, fish_25: 80, fish_40: 200, fish_all: 1000, myth_hegongjin: 1200, myth_xuangui: 1500, myth_yinglong: 2000, myth_all: 1500, box_first: 20, box_10: 60, gear_rods: 500, gear_baits: 100, cat_bestie: 150, diligent: 100, angler: 60 };
 export const achCoins = (id: string) => ACH_COINS[id] ?? ACH_COINS_DEFAULT;
 /** 校园跑：跑完一次 / 刷新纪录 / 比赛拿第一 */
 export const RUN_COINS = { finish: 8, record: 15, win: 20 } as const;
 
-// ------------------------------------------------------------ 鱼竿与鱼饵（加成）
-export interface RodDef { id: string; name: string; /** 拉鱼难度减去这么多（绿条更长、鱼更慢） */ ease: number; /** 咬钩等待时间倍率 */ wait: number; /** 稀有及以上的鱼权重倍率 */ luck: number }
-/** 从差到好；背包里有多根时用最好的 */
-export const RODS: readonly RodDef[] = [
-  { id: 'fishing_rod', name: '竹节鱼竿', ease: 0, wait: 1, luck: 1 },
-  { id: 'rod_carbon', name: '碳素鱼竿', ease: 0.1, wait: 0.8, luck: 1.25 },
-  { id: 'rod_golden', name: '金龙鱼竿', ease: 0.2, wait: 0.62, luck: 1.6 },
-];
-export const bestRod = (inv: Record<string, number>): RodDef | undefined => [...RODS].reverse().find((r) => (inv[r.id] ?? 0) > 0);
-/** 高级鱼饵：咬钩更快、稀有鱼更多 */
-export const PRO_BAIT = { id: 'bait_pro', wait: 0.75, luck: 1.25 } as const;
-/** 鱼饵从低级到高级 */
-export const BAIT_IDS = ['bait', 'bait_pro'] as const;
-/**
- * 钓鱼装备栏：鱼竿和鱼饵各一格，选了哪件就用哪件（背包里要有）；'' = 自动，默认用背包里**最低级**的
- * （2026-11-03：之前是"有最好的就用最好的"，香饵、金龙竿会在你不知情时被用掉）。
- */
-export interface Equip { rod: string; bait: string }
-export const NO_EQUIP: Equip = { rod: '', bait: '' };
-export function cleanEquip(raw: unknown): Equip {
-  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
-  return { rod: typeof r.rod === 'string' && RODS.some((x) => x.id === r.rod) ? r.rod : '', bait: typeof r.bait === 'string' && (BAIT_IDS as readonly string[]).includes(r.bait) ? r.bait : '' };
-}
-/** 这次抛竿用哪根竿：装备栏选的（背包里有才算）；没选/没有就用背包里最低级的 */
-export const pickRod = (inv: Record<string, number>, eq?: Partial<Equip>): RodDef | undefined => RODS.find((r) => r.id === eq?.rod && (inv[r.id] ?? 0) > 0) ?? RODS.find((r) => (inv[r.id] ?? 0) > 0);
-/** 这次抛竿用哪种饵（同上） */
-export const pickBait = (inv: Record<string, number>, eq?: Partial<Equip>): (typeof BAIT_IDS)[number] | undefined => BAIT_IDS.find((b) => b === eq?.bait && (inv[b] ?? 0) > 0) ?? BAIT_IDS.find((b) => (inv[b] ?? 0) > 0);
+// ------------------------------------------------------------ 鱼竿、鱼饵、配件
+// 装备表和"合成一组最终参数"都在 gear.ts；这里转出，旧的引用不用改
+export { RODS, BAITS, TACKLES, BAIT_IDS, PRO_BAIT, NO_EQUIP, bestRod, cleanEquip, pickBait, pickRod, resolveGear } from './gear';
+export type { Equip, RodDef, BaitDef, TackleDef } from './gear';
 
 // ------------------------------------------------------------ 商店：买
 export interface ShopItem { id: string; /** 一次买到几个 */ n: number; /** 这一份的价格 */ price: number; note: string }
 export const SHOP: readonly ShopItem[] = [
   { id: 'bait', n: 5, price: 10, note: '一份 5 个鱼饵（每天登录也会送）' },
   { id: 'bait_pro', n: 5, price: 30, note: '香饵 5 个：咬钩更快、稀有鱼更多，抛竿时优先用掉' },
+  { id: 'bait_glow', n: 5, price: 40, note: '夜光饵 5 个：夜里咬钩更快、夜行鱼更多' },
+  { id: 'bait_season', n: 5, price: 40, note: '应季饵 5 个：当季的鱼更多' },
+  { id: 'bait_wild', n: 5, price: 60, note: '野饵 5 个：12% 的概率一次钓上两条' },
+  { id: 'bait_magnet', n: 5, price: 60, note: '磁铁饵 5 个：更容易钓到盲盒' },
   { id: 'mon_ball', n: 5, price: 15, note: '5 个零食包：战斗里用来收服野生精灵（领了初始精灵后每天登录也会补到 5 包）' },
   { id: 'cat_food', n: 5, price: 12, note: '一份 5 包猫粮（每天第一次登录补到 5 包）' },
   { id: 'cat_treat', n: 2, price: 30, note: '2 根猫条，小猫最爱，好感涨得多' },
   { id: 'cat_bed', n: 1, price: 150, note: '送给一只小猫：它有了自己的窝（只有你看得到），好感 +20' },
   { id: 'fishing_rod', n: 1, price: 40, note: '备用的竹节鱼竿' },
-  { id: 'rod_carbon', n: 1, price: 420, note: '拉鱼更轻松、咬钩更快、稀有鱼更多' },
-  { id: 'rod_golden', n: 1, price: 1800, note: '最好的鱼竿：拉鱼大幅放宽、咬钩最快、稀有鱼显著增多' },
+  { id: 'rod_carbon', n: 1, price: 420, note: '拉鱼更轻松、咬钩更快、稀有鱼更多，带 1 个配件槽' },
+  { id: 'rod_glow', n: 1, price: 900, note: '萤火竿：夜里咬钩快、夜行鱼多（白天没有加成）' },
+  { id: 'rod_rain', n: 1, price: 900, note: '听雨竿：雨天咬钩快、雨天的鱼多（晴天没有加成）' },
+  { id: 'rod_pickup', n: 1, price: 1500, note: '拾遗竿：更容易钓到盲盒' },
+  { id: 'rod_golden', n: 1, price: 1800, note: '金龙鱼竿：拉鱼大幅放宽、咬钩最快、稀有鱼显著增多' },
+  ...TACKLES.map((t) => ({ id: t.id, n: 1, price: t.price, note: `${t.eff}（配件，不消耗；要有带配件槽的鱼竿才能装）` })),
 ];
 const SHOP_BY_ID = new Map(SHOP.map((s) => [s.id, s]));
 export const shopItem = (id: unknown): ShopItem | undefined => (typeof id === 'string' ? SHOP_BY_ID.get(id) : undefined);
@@ -104,12 +93,12 @@ export const shopItem = (id: unknown): ShopItem | undefined => (typeof id === 's
 export const CAT_BED_GAIN = 20;
 
 /** 该件东西在背包里能不能卖（收鱼、杂物，和翻垃圾桶翻出来的东西） */
-export const sellable = (id: string): boolean => !!fishDef(id) || trashPrice(id) > 0;
+export const sellable = (id: string): boolean => !!fishDef(id) || trashPrice(id) > 0 || (EXTRA_SELL[id] ?? 0) > 0;
 /** 一键卖出收的东西：杂物、常见、少见的鱼，和翻出来的垃圾（U 盘舍不得，要卖手动点） */
 export const bulkSellable = (id: string): boolean => { const d = fishDef(id); return d ? BULK_RARITIES.includes(d.rarity) : TRASH_ONLY.includes(id); };
 export function sellList(inv: Record<string, number>, day: number): { id: string; name: string; n: number; price: number; rarity: Rarity }[] {
   const out: { id: string; name: string; n: number; price: number; rarity: Rarity }[] = FISH.filter((f) => (inv[f.id] ?? 0) > 0).map((f) => ({ id: f.id, name: f.name, n: inv[f.id], price: sellPrice(f.id, day), rarity: f.rarity }));
-  for (const id of [...TRASH_ONLY, TREASURE_ID]) if ((inv[id] ?? 0) > 0) out.push({ id, name: itemDef(id)?.name ?? id, n: inv[id], price: sellPrice(id, day), rarity: id === TREASURE_ID ? 'rare' : 'junk' });
+  for (const id of [...Object.keys(EXTRA_SELL), ...TRASH_ONLY, TREASURE_ID]) if ((inv[id] ?? 0) > 0) out.push({ id, name: itemDef(id)?.name ?? id, n: inv[id], price: sellPrice(id, day), rarity: id === TREASURE_ID || EXTRA_SELL[id] ? 'rare' : 'junk' });
   return out;
 }
 /** 校验用：商店里的商品必须是真实物品 */

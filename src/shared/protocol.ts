@@ -15,6 +15,7 @@ import type { CatResult } from './cats';
 import type { AchEvent } from './achievements';
 import type { QuestState } from './quests';
 import type { FishLog } from './fishing';
+import type { GearLog } from './fishdex';
 import type { RunMsg } from './run';
 import type { FriendLoc } from './where';
 import type { AdminCat, AdminChatItem, AdminDm, AdminDmPeer, AdminDossier, AdminFilter, AdminHit, AdminInfo, AdminOp, AdminPlayer, AdminRole, AdminWorld, AuditEntry, BanEntry } from './admin';
@@ -32,8 +33,9 @@ import type { DexEntry } from './monbox';
  * 协议版本：服务器和客户端必须一致，不一致的旧页面会被要求刷新。
  * 2：精灵系统上线（服务器会下发客户端不认识的新物种等内容，旧页面必须刷新）
  * 9：聊天频道（chat 带 ch、channels、ch_set；队伍 / 附近的话不能漏进旧页面的公屏）
+ * 10：钓鱼 2.0（神话鱼、配件、盲盒、合成、册页；装备栏多了配件和指名目标，旧页面不认识）
  */
-export const PROTOCOL_VERSION = 9;
+export const PROTOCOL_VERSION = 10;
 
 /** 宿舍里的一位玩家（和 spawn 消息同一套字段，位置是屋里的坐标） */
 export interface RoomWho { id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; held?: number }
@@ -183,8 +185,13 @@ export type ClientMsg =
   /** 翻第 bin 号垃圾桶（编号 = 世界文件里垃圾桶列表的下标）；名人堂：取三张榜 */
   | { t: 'bin_search'; bin: number }
   | { t: 'hall_get' }
-  /** 钓鱼装备栏：给某一格选一件（id = '' 表示自动，用背包里最低级的） */
-  | { t: 'equip_set'; slot: 'rod' | 'bait'; id: string }
+  /** 钓鱼装备栏：给某一格选一件（id = '' 表示自动，用背包里最低级的）；slot 'tackle' = 配件（点一下装上、再点取下，id '' = 全部取下）、'target' = 指名饵要咬的那种鱼 */
+  | { t: 'equip_set'; slot: 'rod' | 'bait' | 'tackle' | 'target'; id: string }
+  /** 钓鱼 2.0：打开背包里的一个盲盒；合成（recipe 见 craft.ts，param = 指名饵选的鱼）；装备图鉴；领钓鱼册页的奖励 */
+  | { t: 'box_open'; id: string }
+  | { t: 'craft'; recipe: string; param?: string }
+  | { t: 'geardex_get' }
+  | { t: 'bundle_claim'; id: string }
   /** 玩家交易：邀请 / 接受 / 拒绝或取消 / 修改自己的报价 / 确认（on=false 取消确认） */
   | { t: 'trade_invite'; uid: number }
   | { t: 'trade_accept'; tid: number }
@@ -320,7 +327,13 @@ export type ServerMsg =
   | { t: 'coins'; n: number; gain?: number }
   | { t: 'shop_result'; ok: boolean; msg: string }
   /** 我的钓鱼装备栏（'' = 自动） */
-  | { t: 'equip'; rod: string; bait: string }
+  | { t: 'equip'; rod: string; bait: string; tackle: string[]; target: string }
+  /** 开盲盒的结果：币、物品、盲盒限定鱼（带尺寸）、重复的东西折成的币（dup）、保底进度（pity / 保底次数 need） */
+  | { t: 'box_result'; id: string; ok: boolean; msg?: string; coins?: number; items?: Gain[]; fish?: { id: string; cm: number; kg: number; isNew: boolean }; dup?: number; gem?: boolean; pity?: number; need?: number }
+  | { t: 'craft_result'; ok: boolean; msg: string }
+  /** 装备图鉴：拥有过的竿 / 配件、用过的饵、开过的盲盒、保底、已领的册页和神话首奖 */
+  | { t: 'geardex'; gd: GearLog }
+  | { t: 'bundle_result'; ok: boolean; msg: string; id: string }
   /** 翻垃圾桶的结果：翻出了什么（id、treasure = 是不是好东西）、今天还能翻几次 */
   | { t: 'bin_result'; ok: boolean; msg: string; id?: string; treasure?: boolean; left?: number }
   | ({ t: 'hall' } & HallData)
@@ -353,7 +366,7 @@ export type ServerMsg =
    * 钓鱼状态：wait 抛竿成功在等鱼（x/y = 浮漂位置）；bite 鱼咬钩了，赶紧收竿；
    * catch 钓到了（id 鱼/物品、cm 尺寸、isNew 图鉴新种类、record 新纪录、junk 是杂物）；miss 没钓到（msg 说明）；idle 收线/被打断
    */
-  | { t: 'fish_state'; s: 'idle' | 'wait' | 'bite' | 'fight' | 'catch' | 'miss'; msg?: string; x?: number; y?: number; id?: string; cm?: number; kg?: number; isNew?: boolean; record?: boolean; junk?: boolean; perfect?: boolean; /** fight：拉鱼小游戏的参数（鱼是什么要等拉上来才知道） */ seed?: number; diff?: number; move?: 'smooth' | 'mixed' | 'dart' }
+  | { t: 'fish_state'; s: 'idle' | 'wait' | 'bite' | 'fight' | 'catch' | 'miss'; msg?: string; x?: number; y?: number; id?: string; cm?: number; kg?: number; isNew?: boolean; record?: boolean; junk?: boolean; perfect?: boolean; /** fight：拉鱼小游戏的参数（鱼是什么要等拉上来才知道） */ seed?: number; diff?: number; move?: 'smooth' | 'mixed' | 'dart'; /** fight：配件给的拉鱼加成、神话鱼的皇冠 / 中途发力 */ bar?: number; sink?: number; cling?: number; drop?: number; burst?: boolean; crown?: boolean; /** bite：声呐浮标告诉你是什么鱼（只发图鉴里已有的） */ sonar?: string; /** catch：双钓（钓到两条）、顺带钓上来的盲盒、河蚌里的珍珠、神话鱼首次的奖励 */ twin?: boolean; box?: string; pearl?: boolean; first?: boolean }
   | RunMsg
   | PartyMsg
   /** 留在原地的共享单车：整份列表（进来时）/ 新停下一辆 / 一辆没了（被骑走或超时消失） */

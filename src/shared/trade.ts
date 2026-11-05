@@ -19,8 +19,10 @@ export interface TradeOffer { items: Gain[]; coins: number }
 /** 一方的报价 + 确认状态（给界面显示） */
 export interface TradeSide extends TradeOffer { ready: boolean }
 
-/** 钥匙类的东西（爱猫徽章这类"证明"）不能交易；其余的背包物品都可以 */
-export const tradable = (id: string): boolean => { const d = itemDef(id); return !!d && d.kind !== 'key'; };
+/** 钓鱼 2.0：这些东西不能交易（防倒卖和"代开箱"）：特殊鱼竿、龙骨竿、万能饵、神话饵、龙鳞（盲盒和配件按种类判断，见 tradable） */
+export const UNTRADABLE: ReadonlySet<string> = new Set(['rod_glow', 'rod_rain', 'rod_frost', 'rod_pickup', 'rod_twin', 'rod_bone', 'bait_any', 'bait_myth', 'dragon_scale']);
+/** 钥匙类的东西（爱猫徽章这类"证明"）、盲盒、配件、上面那几样不能交易；其余的背包物品（含饵和鱼）都可以 */
+export const tradable = (id: string): boolean => { const d = itemDef(id); return !!d && d.kind !== 'key' && d.kind !== 'box' && d.kind !== 'tackle' && !UNTRADABLE.has(id); };
 
 /** 清洗网络来的报价：只留可交易的、数量 1..堆叠上限、种类不重复、不超过 TRADE_MAX_ITEMS；校园币 0..TRADE_COIN_MAX */
 export function cleanOffer(raw: unknown): TradeOffer {

@@ -41,7 +41,7 @@ const LINE: { types: [string] | [string, string]; arche: Arche; blurb: string }[
   { types: ['超能力', '妖精'], arche: 'glass', blurb: '一蓝一黄的异色瞳，盯着你看时世界都慢了半拍。' },
   { types: ['一般'], arche: 'tank', blurb: '胖橘：能躺着绝不坐着，一顿能吃三顿的量。' },
 ];
-const RARITY_BONUS = { common: 0, uncommon: 15, rare: 30, epic: 40, legendary: 50, junk: 0 } as const;
+const RARITY_BONUS = { common: 0, uncommon: 15, rare: 30, epic: 40, legendary: 50, mythic: 60, junk: 0 } as const;
 const STAGE_BST = [300, 400, 500] as const;
 const STAGE_CATCH = [0.2, 0.1, 0.04] as const;
 

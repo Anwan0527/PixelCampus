@@ -4,11 +4,14 @@
  * 将来的物品交互、彩蛋触发（"背包里有 X 才能触发"）也都由服务器判断，不信任客户端。
  * 背包的数据形态很简单：物品 id → 数量。格子的排列由 ITEMS 的顺序决定，不存位置。
  */
-export type ItemKind = 'food' | 'collect' | 'key' | 'tool' | 'fish';
+import { FISH } from './fishing';
+import { BAITS, RODS, TACKLES } from './gear';
+
+export type ItemKind = 'food' | 'collect' | 'key' | 'tool' | 'fish' | 'tackle' | 'box';
 export interface ItemDef { id: string; name: string; desc: string; kind: ItemKind; stack: number }
 
 /** 物品目录。新增物品：在这里加一项，并在 tools/art/items.ts 里画同名图标 */
-export const ITEMS = [
+const BASE_ITEMS: readonly ItemDef[] = [
   { id: 'cat_food', name: '猫粮', desc: '一小袋猫咪爱吃的猫粮。走近校园里的小猫，按 E 就能投喂。每天第一次进入校园会补到 5 包。', kind: 'food', stack: 99 },
   { id: 'cat_treat', name: '猫条', desc: '小猫最爱的零食，投喂时好感度涨得更多。和小猫熟悉起来之后，它们会回赠给你。', kind: 'food', stack: 99 },
   { id: 'ginkgo_leaf', name: '银杏叶', desc: '一片金黄的银杏叶，是小猫叼来送你的。也许哪天能派上用场。', kind: 'collect', stack: 99 },
@@ -55,14 +58,34 @@ export const ITEMS = [
   { id: 'trash_chopsticks', name: '一次性筷子', desc: '用过的一次性筷子，没什么用处。', kind: 'collect', stack: 99 },
   { id: 'trash_peel', name: '香蕉皮', desc: '一张香蕉皮。小心，别踩上去。', kind: 'collect', stack: 99 },
   { id: 'bin_usb', name: 'U盘', desc: '垃圾桶底下摸出来的 U 盘，贴着"毕业论文·终稿·真的终稿"的标签。居然是好东西，拿去校园商店能卖 999 校园币。', kind: 'collect', stack: 99 },
-] as const satisfies readonly ItemDef[];
+];
 
-export type ItemId = (typeof ITEMS)[number]['id'];
+/** 钓鱼 2.0 新增：特殊鱼竿 / 新饵 / 配件的说明取自 gear.ts，新鱼的说明取自 fishing.ts 的 blurb（只写一份） */
+const NEW_RODS = RODS.filter((r) => !['fishing_rod', 'rod_carbon', 'rod_golden'].includes(r.id));
+const NEW_BAITS = BAITS.filter((b) => b.id !== 'bait' && b.id !== 'bait_pro');
+const FISH2_ITEMS: ItemDef[] = [
+  ...NEW_RODS.map((r): ItemDef => ({ id: r.id, name: r.name, desc: `${r.eff}。${r.slots ? `${r.slots} 个配件槽。` : ''}获得：${r.how}。`, kind: 'tool', stack: 1 })),
+  ...NEW_BAITS.map((b): ItemDef => ({ id: b.id, name: b.name, desc: `${b.eff}。获得：${b.how}。`, kind: 'tool', stack: 99 })),
+  ...TACKLES.map((t): ItemDef => ({ id: t.id, name: t.name, desc: `${t.eff}。配件不会消耗，要装在带配件槽的鱼竿上（在背包的钓鱼装备栏里选）。获得：${t.how}。`, kind: 'tackle', stack: 1 })),
+  { id: 'box_bottle', name: '漂流瓶', desc: '从湖里漂来的玻璃瓶，里面好像有东西。在背包里点「打开」才知道是什么。', kind: 'box', stack: 99 },
+  { id: 'box_crate', name: '旧木箱', desc: '泡得发胀的旧木箱，锁已经锈了。里面可能有好饵、配件，甚至是别处冲来的观赏鱼。', kind: 'box', stack: 99 },
+  { id: 'box_wreck', name: '沉船箱', desc: '不知道哪年沉在湖底的箱子，沉甸甸的。里面可能有特殊鱼竿、龙鳞和神话饵。', kind: 'box', stack: 99 },
+  { id: 'dragon_scale', name: '龙鳞', desc: '一片带着金光的鳞，摸上去温热。合成龙骨竿和神话饵都要用它。', kind: 'collect', stack: 99 },
+  { id: 'pearl', name: '珍珠', desc: '河蚌里开出来的一颗珍珠，圆润发亮。可以卖钱，也是合成神话饵的材料。', kind: 'collect', stack: 99 },
+  { id: 'relic_badge', name: '旧校徽', desc: '一枚生了点锈的旧校徽，不知道是哪一届的同学掉进湖里的。', kind: 'collect', stack: 99 },
+  { id: 'relic_card', name: '泛黄的借书卡', desc: '图书馆早年用的借书卡，上面盖满了日期章，最后一行是一个再也没还的书名。', kind: 'collect', stack: 99 },
+  { id: 'relic_meal', name: '生锈的饭卡', desc: '磁条都锈了的饭卡，余额大概是 0.5 元。', kind: 'collect', stack: 99 },
+  { id: 'relic_history', name: '校史残页', desc: '一页被水泡过的校史，字迹模糊，只能看清"一九……"几个字。', kind: 'collect', stack: 99 },
+  ...FISH.filter((f) => f.blurb).map((f): ItemDef => ({ id: f.id, name: f.name, desc: f.blurb!, kind: 'fish', stack: 99 })),
+];
+export const ITEMS: readonly ItemDef[] = [...BASE_ITEMS, ...FISH2_ITEMS];
+
+export type ItemId = string;
 export type Inv = Record<string, number>;
 export interface Gain { id: string; n: number }
 
 /** 背包界面的格子数（物品种类不会超过它） */
-export const INV_SLOTS = 48;
+export const INV_SLOTS = 128;
 
 const BY_ID = new Map<string, ItemDef>(ITEMS.map((i) => [i.id, i]));
 export const itemDef = (id: string): ItemDef | undefined => BY_ID.get(id);
