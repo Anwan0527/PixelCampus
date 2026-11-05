@@ -24,7 +24,7 @@ import { mountImmersive } from '@/ui/Immersive';
 import { BoardPanel } from '@/ui/BoardPanel';
 import { ShopPanel } from '@/ui/ShopPanel';
 import { WallPanel } from '@/ui/WallPanel';
-import { marketDay, pickBait, pickRod } from '@/shared/economy';
+import { marketDay, pickBait, pickRod, resolveGear } from '@/shared/economy';
 import { inPlaza, PLAZA_BUILDINGS } from '@/shared/plaza';
 import { NoticePanel } from '@/ui/NoticePanel';
 import { SocialUi } from '@/ui/SocialUi';
@@ -60,6 +60,8 @@ import { TradePanel } from '@/ui/TradePanel';
 import { nearestBin } from '@/shared/trash';
 import { FishFightUi } from '@/ui/FishFightUi';
 import { FishCard } from '@/ui/FishCard';
+import { BoxPanel } from '@/ui/BoxPanel';
+import { fishData } from '@/ui/fishData';
 import { PAX_NEAR, PAX_REACH } from '@/shared/party';
 import { GATES, RUN, inStartZone } from '@/shared/run';
 import { castTarget, fishDef, fmtKg, isFish, sizeTier, FISH, FISHING } from '@/shared/fishing';
@@ -76,7 +78,8 @@ import { CAT_REACH, allCats } from '@/shared/cats';
 import { HELD_MAX, heldDef } from '@/shared/held';
 import { gateBikes } from '@/shared/bikes';
 import { itemDef } from '@/shared/items';
-import { SEASON_NAME, seasonAt, type Season, type WeatherState } from '@/shared/season';
+import { SEASON_NAME, seasonAt, weatherAt, type Season, type WeatherState } from '@/shared/season';
+import { isNightAt } from '@/shared/clock';
 import { WeatherFx } from '@/systems/weather';
 import { whereIs } from '@/shared/where';
 
@@ -153,6 +156,7 @@ export class WorldScene extends Phaser.Scene {
   /** 今天还能翻几次垃圾桶（-1 = 还没翻过，不知道） */
   private binLeft = -1;
   private fightUi!: FishFightUi;
+  private boxUi!: BoxPanel;
   private fishCard!: FishCard;
   /** 浮漂落点（世界像素）：钓上来的鱼从这里飞出水面 */
   private bobber: { x: number; y: number } | null = null;
@@ -279,10 +283,14 @@ export class WorldScene extends Phaser.Scene {
       beep: (k) => sfx(k === 'count' ? 'count' : k === 'go' ? 'go' : k === 'finish' ? 'finish' : 'notify'),
       note: (title, text) => { this.hud.banner(title, text); this.net.system(`${title}：${text}`); },
     });
+    fishData.attach(this.net); // 钓鱼图鉴记录 / 装备图鉴：几个面板共用
+    fishData.env = () => { const t = Date.now() + this.clock.offset; return { night: isNightAt(t), rain: weatherAt(t).kind === 'rain', season: seasonAt(t) }; };
     this.backpackUi = new BackpackPanel(this.net, this.textures, (gains) => {
       const text = gains.map((g) => `${itemDef(g.id)?.name ?? g.id} ×${g.n}`).join('、');
       this.hud.banner('🎒 获得物品', text); this.net.system(`🎒 获得：${text}`); sfx('pickup');
     }, () => this.codexUi.open('fish'));
+    this.boxUi = new BoxPanel(this.net, this.textures, () => this.backpackUi.inv);
+    this.backpackUi.onOpenBox = (id) => this.boxUi.open(id);
     this.shopUi = new ShopPanel(this.net, this.textures, () => marketDay(Date.now() + this.clock.offset));
     this.fightUi = new FishFightUi();
     this.fishCard = new FishCard(this.textures);
@@ -317,7 +325,7 @@ export class WorldScene extends Phaser.Scene {
     this.socialUi.onTrade = (uid) => this.tradeUi.invite(uid);
     this.socialUi.onHand = (uid) => this.net.handInvite(uid);
     this.socialUi.onDorm = (uid, kind) => (kind === 'invite' ? this.net.dormInvite(uid) : this.net.dormKnock(uid));
-    this.codexUi = new CodexPanel(this.net, this.textures, { cats: () => ({ defs: allCats(this.wf.npcSpawns), aff: this.catAff, nicks: this.catNick }) });
+    this.codexUi = new CodexPanel(this.net, this.textures, { cats: () => ({ defs: allCats(this.wf.npcSpawns), aff: this.catAff, nicks: this.catNick }), inv: () => this.backpackUi.inv, gear: () => { const g = resolveGear(this.backpackUi.inv, this.backpackUi.equip, fishData.env()); return { rod: g.rod?.id ?? '', bait: g.bait?.id ?? '' }; } });
     this.achUi = new AchievementPanel(this.net, {
       onNew: (ids) => { for (const id of ids) { const a = achDef(id); if (!a) continue; this.hud.banner('🏆 成就达成', a.name); this.net.system(`🏆 成就达成：${a.name}`); sfx('achieve'); } },
       onCount: (n) => this.profileUi.setAch(n, ACH_TOTAL),
@@ -439,7 +447,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /** 有没有面板/弹窗盖在游戏上（有的话点击不该穿透到场景） */
-  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.soundUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
+  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.soundUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
 
   /** 点中的位置（世界坐标）有没有别的玩家：有就弹出资料卡；多个重叠时取最靠前（y 最大）的 */
   private pickPlayerAt(wx: number, wy: number) {
@@ -1064,22 +1072,22 @@ export class WorldScene extends Phaser.Scene {
   private onFishState(m: Extract<ServerMsg, { t: 'fish_state' }>) {
     const p = this.player;
     if (m.s === 'wait') { this.fishPhase = 'wait'; if (m.x !== undefined && m.y !== undefined) this.bobber = { x: m.x, y: m.y }; p.setFishing(true, this.bobber ?? undefined); sfx('cast'); return; }
-    if (m.s === 'bite') { this.fishPhase = 'bite'; p.setFishing(true, this.bobber ?? undefined, true); sfx('bite'); this.hud.banner('🎣 咬钩了！', `快按 E 提竿（${(FISHING.REEL_WINDOW_MS / 1000).toFixed(1)} 秒内）`); return; }
+    if (m.s === 'bite') { this.fishPhase = 'bite'; p.setFishing(true, this.bobber ?? undefined, true); sfx('bite'); this.hud.banner('🎣 咬钩了！', `${m.sonar === undefined ? '' : m.sonar === '?' ? '声呐：一条没见过的鱼　' : `声呐：${fishDef(m.sonar)?.name ?? '？'}　`}快按 E 提竿（${(FISHING.REEL_WINDOW_MS / 1000).toFixed(1)} 秒内）`); return; }
     if (m.s === 'fight' && m.seed !== undefined && m.diff !== undefined) {
       this.fishPhase = 'fight'; p.setFishing(true, this.bobber ?? undefined, true); sfx('reel');
-      this.fightUi.start({ seed: m.seed, diff: m.diff, move: m.move ?? 'mixed' }, (win, perfect) => { this.net.fishEnd(win, perfect); sfx(win ? 'reel' : 'fail'); });
+      this.fightUi.start({ seed: m.seed, diff: m.diff, move: m.move ?? 'mixed', bar: m.bar, sink: m.sink, cling: m.cling, drop: m.drop, burst: m.burst }, (win, perfect) => { this.net.fishEnd(win, perfect); sfx(win ? 'reel' : 'fail'); }, !!m.crown);
       return;
     }
     const bobber = this.bobber;
     this.fightUi.close(); this.stopFishing();
     if (m.s === 'catch' && m.id) {
       const d = fishDef(m.id), name = d?.name ?? '东西', kg = m.kg ?? 0;
-      this.playCatch(m.id, bobber, d?.rarity ?? 'common', !!m.junk, () => this.fishCard.show({ id: m.id!, cm: m.cm ?? 0, kg, isNew: m.isNew, record: m.record, junk: m.junk, perfect: m.perfect, msg: m.msg }));
+      this.playCatch(m.id, bobber, d?.rarity ?? 'common', !!m.junk, () => this.fishCard.show({ id: m.id!, cm: m.cm ?? 0, kg, isNew: m.isNew, record: m.record, junk: m.junk, perfect: m.perfect, msg: m.msg, twin: m.twin, box: m.box, pearl: m.pearl, first: m.first }));
       if (m.junk) { sfx('splash'); this.net.system(`🎣 钓上来一个${name}……`); }
       else {
-        sfx(d?.rarity === 'legendary' || d?.rarity === 'epic' ? 'achieve' : 'catch');
+        sfx(d?.rarity === 'legendary' || d?.rarity === 'epic' || d?.rarity === 'mythic' ? 'achieve' : 'catch');
         const tier = d ? sizeTier(d, m.cm ?? 0).name : '';
-        const tags = [tier, m.perfect ? '完美拉鱼' : '', m.isNew ? '图鉴新种类！' : '', m.record ? '新纪录！' : ''].filter(Boolean).join(' ');
+        const tags = [tier, m.perfect ? '完美拉鱼' : '', m.twin ? '双钓！' : '', m.isNew ? '图鉴新种类！' : '', m.record ? '新纪录！' : '', m.box ? `顺带钓到一个${itemDef(m.box)?.name ?? '盲盒'}` : ''].filter(Boolean).join(' ');
         this.net.system(`🎣 钓到一条${name}（${m.cm} cm${kg ? ` · ${fmtKg(kg)}` : ''}）${tags ? ` · ${tags}` : ''}`);
       }
     } else if (m.msg) { sfx(m.s === 'miss' ? 'fail' : 'lock'); this.hud.banner('🎣 钓鱼', m.msg); }
@@ -1089,7 +1097,7 @@ export class WorldScene extends Phaser.Scene {
   private playCatch(id: string, from: { x: number; y: number } | null, rarity: string, junk: boolean, done: () => void) {
     const frame = `item_${id}`, P = this.player, start = from ?? { x: P.x, y: P.y - 30 };
     if (!this.textures.get('items').has(frame)) { done(); return; }
-    const big = rarity === 'legendary' || rarity === 'epic';
+    const big = rarity === 'legendary' || rarity === 'epic' || rarity === 'mythic';
     const depth = 900000, tint = big ? 0xffe27a : 0xbfe4ff;
     // 水花：一圈涟漪 + 向上溅起的水滴
     const ring = this.add.graphics().setDepth(depth);
@@ -1234,6 +1242,7 @@ export class WorldScene extends Phaser.Scene {
       const inv = this.backpackUi.inv, eq = this.backpackUi.equip, rod = pickRod(inv, eq), bait = pickBait(inv, eq); // 装备栏选的；没选就是最低级的（香饵不会在你不知情时被用掉）
       if (!rod) this.hud.hint('这里可以钓鱼（需要鱼竿：每天登录会送）');
       else if (!bait) this.hud.hint('鱼饵用完了（明天登录、做每日任务会送，商店也有卖）');
+      else if (bait === 'bait_name' && !eq.target) this.hud.hint('指名饵要先在背包的装备栏里指定一种鱼');
       else { this.hud.hint(`E  抛竿钓鱼（${itemDef(rod.id)?.name}，${itemDef(bait)?.name} ×${inv[bait]}）`); if (press) this.net.fishCast(); }
     } else if (npc) {
       this.hud.hint('E  和同学聊聊');

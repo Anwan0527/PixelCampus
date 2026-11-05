@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
-import { COIN_NAME, BULK_RARITIES, SHOP, marketMul, sellList, type ShopItem } from '@/shared/economy';
+import { COIN_NAME, BULK_RARITIES, SHOP, marketMul, sellList, EXTRA_SELL, type ShopItem } from '@/shared/economy';
+import { JUNK_GROUP, RARE_GROUP, RECIPES, SMALL_GROUP, craftWhy, isNamedFish, type Recipe } from '@/shared/craft';
 import { RARITY_COLORS, RARITY_NAMES, fishDef } from '@/shared/fishing';
 import { TREASURE_ID, isTrashItem } from '@/shared/trash';
 import { itemDef, type Inv } from '@/shared/items';
@@ -23,7 +24,8 @@ export class ShopPanel {
   private coinEl = el('span', 'shop-coins', '0');
   private msg = el('div', 'shop-msg');
   private tabs: HTMLButtonElement[] = [];
-  private tab: 'buy' | 'sell' = 'sell';
+  private tab: 'buy' | 'sell' | 'craft' = 'sell';
+  private craftParam = '';
   private coins = 0; private inv: Inv = {};
 
   /** day() 返回今天的日期编号（东八区，和服务器一致），用来算今日行情 */
@@ -35,9 +37,9 @@ export class ShopPanel {
     const wallet = el('div', 'shop-wallet'); wallet.append(el('span', 'coin-ico'), this.coinEl, el('span', 'shop-unit', COIN_NAME));
     head.append(el('div', 'board-title', '校园商店'), wallet, close);
     const tabRow = el('div', 'seg-row');
-    ([['sell', '卖鱼'], ['buy', '买东西']] as const).forEach(([k, name]) => {
+    ([['sell', '卖鱼'], ['buy', '买东西'], ['craft', '合成']] as const).forEach(([k, name], idx) => {
       const b = el('button', 'seg' + (k === this.tab ? ' on' : ''), name); b.type = 'button';
-      b.addEventListener('click', () => { this.tab = k; this.tabs.forEach((t, i) => t.classList.toggle('on', i === (k === 'sell' ? 0 : 1))); this.render(); });
+      b.addEventListener('click', () => { this.tab = k; this.tabs.forEach((t, i) => t.classList.toggle('on', i === idx)); this.render(); });
       this.tabs.push(b); tabRow.append(b);
     });
     panel.append(head, el('div', 'create-sub', '钓上来的鱼、翻垃圾桶翻出来的东西都可以在这里卖钱；赚到的校园币能买鱼饵、猫粮、猫条、猫窝和更好的鱼竿。'), tabRow, this.msg, this.body);
@@ -46,6 +48,7 @@ export class ShopPanel {
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
     (document.getElementById('hud') ?? document.body).append(this.root);
     net.handlers.shopResult = (ok, text) => this.say(text, ok);
+    net.handlers.craftResult = (ok, text) => this.say(text, ok);
   }
 
   get isOpen() { return !this.root.classList.contains('hidden'); }
@@ -60,13 +63,48 @@ export class ShopPanel {
     this.body.replaceChildren();
     const online = this.net.status === 'online';
     if (!online) this.body.append(el('div', 'board-empty', '没连上服务器，现在不能买卖。'));
-    else if (this.tab === 'buy') this.renderBuy(); else this.renderSell();
+    else if (this.tab === 'buy') this.renderBuy(); else if (this.tab === 'craft') this.renderCraft(); else this.renderSell();
   }
 
   private renderBuy() {
     const list = el('div', 'shop-list');
-    for (const s of SHOP) list.append(this.buyRow(s));
-    this.body.append(list);
+    const group = (id: string) => (id.startsWith('rod_') || id === 'fishing_rod' ? '🎣 鱼竿' : id.startsWith('tk_') ? '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）' : id.startsWith('bait') ? '🪱 鱼饵' : '🐱 其他');
+    let last = '';
+    for (const s of [...SHOP].sort((a, b) => ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(a.id)) - ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(b.id)))) {
+      const g = group(s.id); if (g !== last) { list.append(el('div', 'shop-group', g)); last = g; }
+      list.append(this.buyRow(s));
+    }
+    this.body.append(list, el('div', 'shop-tip', '万能饵、指名饵、神话饵、龙骨竿、寒江竿、并蒂竿不在商店卖：要靠合成或钓鱼时的盲盒。'));
+  }
+
+  /** 合成：杂物换鱼饵、小鱼做饵、指名饵、神话饵、龙骨竿（规则在 shared/craft.ts，服务器扣材料和币） */
+  private renderCraft() {
+    const list = el('div', 'shop-list'), inv = this.inv;
+    const count = (ids: readonly string[]) => ids.reduce((a, id) => a + (inv[id] ?? 0), 0);
+    const need = (r: Recipe) => r.needs.map((n) => {
+      if ('id' in n) return `${itemDef(n.id)?.name} ${Math.min(inv[n.id] ?? 0, n.n)}/${n.n}`;
+      if (n.group === 'junk') return `杂物 ${Math.min(count(JUNK_GROUP), n.n)}/${n.n}`;
+      if (n.group === 'small') return `小鱼 ${Math.min(count(SMALL_GROUP), n.n)}/${n.n}`;
+      if (n.group === 'rare') return `稀有鱼 ${Math.min(count(RARE_GROUP), n.n)}/${n.n}`;
+      return `同种鱼 ${this.craftParam ? Math.min(inv[this.craftParam] ?? 0, n.n) : 0}/${n.n}`;
+    }).concat(r.coins ? [`${r.coins} 校园币`] : []).join('　');
+    for (const r of RECIPES) {
+      const row = el('div', 'shop-row'), info = el('div', 'shop-info'), out = itemDef(r.out.id)!;
+      info.append(el('div', 'shop-name', `${out.name}${r.out.n > 1 ? ` ×${r.out.n}` : ''}`), el('div', 'shop-note', r.desc), el('div', 'shop-have', `材料：${need(r)}`));
+      if (r.needs.some((n) => 'group' in n && n.group === 'same')) {
+        const sel = el('select'); sel.setAttribute('aria-label', '选一种鱼'); sel.append(new Option('选一种鱼（背包里有 3 条以上的）', ''));
+        for (const [id, n] of Object.entries(inv)) if (isNamedFish(id) && n >= 3) sel.append(new Option(`${fishDef(id)?.name} ×${n}`, id));
+        sel.value = this.craftParam && (inv[this.craftParam] ?? 0) >= 3 ? this.craftParam : '';
+        sel.addEventListener('change', () => { this.craftParam = sel.value; this.render(); });
+        info.append(sel);
+      }
+      const why = craftWhy(inv, this.coins, r, this.craftParam || undefined);
+      const b = el('button', 'btn' + (why ? '' : ' primary'), '合成'); b.type = 'button'; b.disabled = !!why; b.title = why ?? '';
+      b.addEventListener('click', () => { b.disabled = true; this.net.craft(r.id, this.craftParam || undefined); });
+      row.append(this.icon(r.out.id), info, b);
+      list.append(row);
+    }
+    this.body.append(list, el('div', 'shop-tip', '龙鳞来自神话鱼和沉船箱，珍珠来自河蚌。垃圾不会白捡：杂物也能换鱼饵。'));
   }
   private buyRow(s: ShopItem) {
     const d = itemDef(s.id)!, row = el('div', 'shop-row');
@@ -89,7 +127,7 @@ export class ShopPanel {
       const row = el('div', 'shop-row'), info = el('div', 'shop-info');
       const mul = r.rarity === 'junk' || !fishDef(r.id) ? 1 : marketMul(day, r.id), trend = mul >= 1.1 ? '行情好 ↑' : mul <= 0.93 ? '行情差 ↓' : '';
       const name = el('div', 'shop-name', `${r.name} ×${r.n}`); name.style.color = r.rarity === 'common' || r.rarity === 'junk' ? '' : RARITY_COLORS[r.rarity];
-      const sub = el('div', 'shop-note', isTrashItem(r.id) ? (r.id === TREASURE_ID ? '垃圾桶里翻出来的好东西' : '垃圾桶里翻出来的') : `${RARITY_NAMES[r.rarity]}${trend ? ` · ${trend}` : ''}`);
+      const sub = el('div', 'shop-note', isTrashItem(r.id) ? (r.id === TREASURE_ID ? '垃圾桶里翻出来的好东西' : '垃圾桶里翻出来的') : (EXTRA_SELL[r.id] ? '盲盒、河蚌里得到的小东西' : `${RARITY_NAMES[r.rarity]}${trend ? ` · ${trend}` : ''}`));
       info.append(name, sub);
       const price = el('div', 'shop-price'); price.append(el('span', 'coin-ico'), document.createTextNode(`${r.price} / 条`));
       const one = el('button', 'btn', '卖 1'), all = el('button', 'btn primary', `全卖 (${r.price * r.n})`);

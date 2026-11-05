@@ -17,6 +17,7 @@ export class FishFightUi {
   private track = el('div', 'ff-track');
   private bar = el('div', 'ff-bar');
   private fishEl = el('div', 'ff-fish', '🐟');
+  private crownEl = el('div', 'ff-crown', '👑');
   private prog = el('div', 'ff-prog');
   private progFill = el('div', 'ff-prog-fill');
   private tip = el('div', 'ff-tip');
@@ -27,7 +28,7 @@ export class FishFightUi {
 
   constructor() {
     this.btn.type = 'button';
-    this.track.append(this.bar, this.fishEl); this.prog.append(this.progFill);
+    this.fishEl.append(this.crownEl); this.track.append(this.bar, this.fishEl); this.prog.append(this.progFill);
     const row = el('div', 'ff-row'); row.append(this.track, this.prog);
     this.root.append(el('div', 'ff-title', '拉！'), row, this.tip, this.btn);
     const down = (e: Event) => { e.preventDefault(); this.held = true; this.boost = 0.09; };
@@ -41,7 +42,9 @@ export class FishFightUi {
   /** 界面是不是还开着（结束后等服务器回话的那一小会儿也算） */
   get open() { return !this.root.classList.contains('hidden'); }
 
-  start(p: FightParams, onEnd: (win: boolean, perfect: boolean) => void) {
+  /** crown = 传说 / 神话鱼：头顶戴皇冠（鱼是什么还不告诉你，皇冠是个暗示） */
+  start(p: FightParams, onEnd: (win: boolean, perfect: boolean) => void, crown = false) {
+    this.crownEl.style.display = crown ? '' : 'none'; this.root.classList.toggle('crowned', crown);
     this.sim = new FightSim(p); this.onEnd = onEnd; this.held = false; this.boost = 0;
     this.root.classList.remove('hidden', 'won', 'lost');
     this.tip.textContent = document.body.classList.contains('touch') ? '按住下面的按钮上浮，松开下沉；让鱼待在绿条里' : '按住 空格 上浮，松开下沉；让鱼待在绿条里（Esc 放弃）';

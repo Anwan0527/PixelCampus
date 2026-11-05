@@ -10,6 +10,8 @@ import type { CatResult } from '@/shared/cats';
 import type { AchEvent } from '@/shared/achievements';
 import type { QuestState } from '@/shared/quests';
 import type { FishLog } from '@/shared/fishing';
+import type { Equip } from '@/shared/gear';
+import type { GearLog } from '@/shared/fishdex';
 import type { RunMsg } from '@/shared/run';
 import type { FriendLoc } from '@/shared/where';
 import type { DroppedBike } from '@/shared/bikes';
@@ -106,7 +108,12 @@ export interface NetHandlers {
   /** 翻垃圾桶的结果；名人堂三张榜；玩家交易：有人邀请我 / 我在等对方 / 报价状态 / 结束 / 一条提示 */
   binResult?: (m: Extract<ServerMsg, { t: 'bin_result' }>) => void;
   hall?: (m: Extract<ServerMsg, { t: 'hall' }>) => void;
-  equip?: (rod: string, bait: string) => void;
+  equip?: (eq: Equip) => void;
+  /** 钓鱼 2.0：开盲盒的结果 / 合成结果 / 装备图鉴 / 册页奖励结果 */
+  boxResult?: (m: Extract<ServerMsg, { t: 'box_result' }>) => void;
+  craftResult?: (ok: boolean, msg: string) => void;
+  geardex?: (gd: GearLog) => void;
+  bundleResult?: (ok: boolean, msg: string, id: string) => void;
   tradeInvite?: (tid: number, uid: number, name: string) => void;
   tradeWait?: (tid: number, name: string) => void;
   tradeState?: (m: Extract<ServerMsg, { t: 'trade_state' }>) => void;
@@ -308,7 +315,11 @@ export class NetClient implements ChatTransport {
       case 'shop_result': this.handlers.shopResult?.(m.ok, m.msg); break;
       case 'bin_result': this.handlers.binResult?.(m); break;
       case 'hall': this.handlers.hall?.(m); break;
-      case 'equip': this.handlers.equip?.(m.rod, m.bait); break;
+      case 'equip': this.handlers.equip?.({ rod: m.rod, bait: m.bait, tackle: m.tackle ?? [], target: m.target ?? '' }); break;
+      case 'box_result': this.handlers.boxResult?.(m); break;
+      case 'craft_result': this.handlers.craftResult?.(m.ok, m.msg); break;
+      case 'geardex': this.handlers.geardex?.(m.gd); break;
+      case 'bundle_result': this.handlers.bundleResult?.(m.ok, m.msg, m.id); break;
       case 'trade_invite': this.handlers.tradeInvite?.(m.tid, m.uid, m.name); break;
       case 'trade_wait': this.handlers.tradeWait?.(m.tid, m.name); break;
       case 'trade_state': this.handlers.tradeState?.(m); break;
@@ -368,7 +379,11 @@ export class NetClient implements ChatTransport {
   getCoins() { this.tx({ t: 'coins_get' }); }
   binSearch(bin: number) { this.tx({ t: 'bin_search', bin }); }
   hallGet() { this.tx({ t: 'hall_get' }); }
-  equipSet(slot: 'rod' | 'bait', id: string) { this.tx({ t: 'equip_set', slot, id }); }
+  equipSet(slot: 'rod' | 'bait' | 'tackle' | 'target', id: string) { this.tx({ t: 'equip_set', slot, id }); }
+  boxOpen(id: string) { this.tx({ t: 'box_open', id }); }
+  craft(recipe: string, param?: string) { this.tx({ t: 'craft', recipe, ...(param ? { param } : {}) }); }
+  getGeardex() { this.tx({ t: 'geardex_get' }); }
+  bundleClaim(id: string) { this.tx({ t: 'bundle_claim', id }); }
   tradeInvite(uid: number) { this.tx({ t: 'trade_invite', uid }); }
   tradeAccept(tid: number) { this.tx({ t: 'trade_accept', tid }); }
   tradeCancel(tid: number) { this.tx({ t: 'trade_cancel', tid }); }
