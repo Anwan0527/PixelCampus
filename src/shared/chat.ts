@@ -1,4 +1,6 @@
 /** 公共聊天频道（公屏）的消息格式与清洗。客户端、服务器共用。 */
+import type { ChannelId } from './channels';
+
 export const CHAT_MAX = 80;
 export const CHAT_COOLDOWN_MS = 800;
 
@@ -18,6 +20,8 @@ export interface ChatMessage {
   mid?: number;
   /** 毫秒时间戳 */
   ts: number;
+  /** 所在频道；不写 = world（系统消息客户端会标成 sys） */
+  ch?: ChannelId;
 }
 
 /** 与 profile.cleanText 同一套规则：去控制/零宽字符，折叠空白，按字截断；清洗后为空则返回 '' */

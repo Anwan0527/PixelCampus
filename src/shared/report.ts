@@ -1,5 +1,6 @@
 /** 举报：能举报什么、理由、限制。客户端、服务器共用。 */
 import { cleanText } from './profile';
+import type { ChannelId } from './channels';
 
 /** 能举报的东西：公屏消息 / 私聊消息 / 留言板留言 / 校园墙帖子或评论 / 玩家本人（昵称、签名不合适） */
 export const REPORT_KINDS = ['chat', 'dm', 'board', 'wall', 'user'] as const;
@@ -20,6 +21,7 @@ export interface ReportLine { from: string; text: string; ts: number; /** 是被
 /** 管理员看到的一条举报 */
 export interface ReportEntry {
   id: number; ts: number; kind: ReportKind;
+  /** kind = chat 时被举报的话所在的频道（world 不写） */ ch?: ChannelId;
   /** 举报人 */ by: number; byName: string;
   /** 被举报的人（校园号；找不到是 0）和他当时的名字 */ target: number; targetName: string;
   /** 被举报内容的编号：公屏 = mid，私聊 = 私聊消息 id，留言板 = 留言 id，校园墙 = 帖子 id（评论 = 帖子 id + cid），玩家 = 校园号 */ ref: number; cid?: number;

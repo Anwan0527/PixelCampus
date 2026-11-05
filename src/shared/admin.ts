@@ -3,6 +3,8 @@
  * 所有操作都由服务器校验"这条连接是不是管理员"（口令登录或令牌恢复），普通玩家发来的一律拒绝。
  * 管理员能做的：看谁在线与大致位置、禁言/解除、踢出、传送（去找他/拉他过来）、赠送物品/称号、给小猫改名、全服广播、全员禁言开关。
  */
+import type { ChannelId } from './channels';
+
 export type AdminOp =
   | { op: 'players'; offline?: boolean }
   | { op: 'cats' }
@@ -39,7 +41,7 @@ export type AdminOp =
   | { op: 'recall'; mid: number }
   | { op: 'recall_user'; uid: number; min: number }
   /** 查公屏历史记录：全部都存着。uid = 只看某人；q = 关键词；before = 翻页（这条 mid 之前的）；n ≤ 100 */
-  | { op: 'log_chat'; uid?: number; q?: string; before?: number; n?: number; /** 只看某个世界：'public' = 公共世界；'solo' / 'group' = 所有个人 / 好友世界；也可以直接给某个世界的编号 */ world?: string }
+  | { op: 'log_chat'; uid?: number; q?: string; before?: number; n?: number; /** 只看某个世界：'public' = 公共世界；'solo' / 'group' = 所有个人 / 好友世界；也可以直接给某个世界的编号 */ world?: string; /** 只看某个频道（不写 = 全部；world = 世界里的话，包括没写频道的老记录） */ ch?: ChannelId }
   /** 查私聊记录（查看会被记进操作记录）：只给 uid = 这个人所有的会话列表；再给 peer = 他和 peer 的聊天内容 */
   | { op: 'log_dm'; uid: number; peer?: number; before?: number }
   /** 封禁：hours > 0 = 封多少小时，-1 = 永久（十年）；被封的人当场被踢下线、不能再进来。unban = 解封 */
@@ -121,7 +123,7 @@ export interface AdminWorld {
 }
 
 /** 一条公屏记录（mid = 记录编号；del = 已被撤回，by = 谁撤回的） */
-export interface AdminChatItem { mid: number; ts: number; uid?: number; from: string; text: string; del?: boolean; by?: string; /** 在哪个世界说的（公共世界没有这个字段） */ w?: string }
+export interface AdminChatItem { mid: number; ts: number; uid?: number; from: string; text: string; del?: boolean; by?: string; /** 在哪个世界说的（公共世界没有这个字段） */ w?: string; /** 在哪个频道说的（world 不写） */ ch?: ChannelId }
 /** 一条私聊记录 */
 export interface AdminDm { id: number; from: number; to: number; text: string; ts: number }
 /** 某人的私聊会话列表里的一项 */

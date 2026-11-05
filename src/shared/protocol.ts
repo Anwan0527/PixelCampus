@@ -23,12 +23,17 @@ import type { DroppedBike } from './bikes';
 import type { PartyMsg } from './party';
 import type { HallData } from './hall';
 import type { TradeOffer, TradeSide } from './trade';
+import type { ChannelId, ChannelState } from './channels';
 import type { Mon } from './mons';
 import type { BEvent } from './battle';
 import type { DexEntry } from './monbox';
 
-/** 2：精灵系统上线（服务器会下发客户端不认识的新物种等内容，旧页面必须刷新） */
-export const PROTOCOL_VERSION = 8;
+/**
+ * 协议版本：服务器和客户端必须一致，不一致的旧页面会被要求刷新。
+ * 2：精灵系统上线（服务器会下发客户端不认识的新物种等内容，旧页面必须刷新）
+ * 9：聊天频道（chat 带 ch、channels、ch_set；队伍 / 附近的话不能漏进旧页面的公屏）
+ */
+export const PROTOCOL_VERSION = 9;
 
 /** 宿舍里的一位玩家（和 spawn 消息同一套字段，位置是屋里的坐标） */
 export interface RoomWho { id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; held?: number }
@@ -111,7 +116,12 @@ export const toPublic = (p: Profile): PublicProfile => ({ name: p.name, gender: 
 
 export type ClientMsg =
   | { t: 'hello'; v: number; token: string; profile: Profile }
-  | { t: 'chat'; text: string }
+  /** ch 不写 = world；sys 不能发言 */
+  | { t: 'chat'; text: string; ch?: ChannelId }
+  /** 要我的频道状态（服务器在 welcome 之后会主动发一次，一般不用主动要） */
+  | { t: 'ch_get' }
+  /** 改某个频道的开关 / 静音：on:false = 关闭（不收也不能发）；服务器清洗、存档后回 channels */
+  | { t: 'ch_set'; ch: ChannelId; on?: boolean; mute?: boolean }
   | { t: 'profile'; profile: Profile }
   | { t: 'board_get' }
   | { t: 'board_post'; cat: number; text: string }
@@ -121,7 +131,8 @@ export type ClientMsg =
   | { t: 'board_del'; id: number }
   | { t: 'board_del_by'; by: string }
   /** 举报：kind = chat / dm / board / wall / user；ref = 内容编号（见 ReportEntry.ref），校园墙评论再给 cid */
-  | { t: 'report'; kind: ReportKind; ref: number; cid?: number; reason: number; note?: string }
+  /** kind = chat 时 ch 是被举报的话所在的频道（不写 = world） */
+  | { t: 'report'; kind: ReportKind; ref: number; cid?: number; reason: number; note?: string; ch?: ChannelId }
   /** 管理员控制台操作（服务器只认管理员连接） */
   | ({ t: 'adm' } & AdminOp)
   | { t: 'notice_publish'; title: string; body: string }
@@ -269,7 +280,12 @@ export type ServerMsg =
   /** ttl = 这个玩家佩戴的称号 id（服务器认定的，没戴就没有这个字段） */
   | { t: 'spawn'; id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; /** 手持物（没拿就没有这个字段） */ held?: number }
   | { t: 'despawn'; id: number }
-  | { t: 'chat'; pid: number; uid: number; from: string; hue: number; text: string; ts: number; /** 记录编号（管理员撤回用） */ mid?: number }
+  /** ch 不写 = world；party 的话客户端用不同颜色的气泡 */
+  | { t: 'chat'; pid: number; uid: number; from: string; hue: number; text: string; ts: number; /** 记录编号（管理员撤回用） */ mid?: number; ch?: ChannelId }
+  /** 我现在有哪些频道和各自的状态：登录、组队 / 退队、切世界、ch_set 之后都会发。world / near / sys 永远在；party 只在有队伍时才有 */
+  | { t: 'channels'; items: ChannelState[] }
+  /** 频道操作失败的提示（如「先把这个频道打开」「你还没有队伍」） */
+  | { t: 'ch_result'; ok: boolean; msg: string }
   /** 管理员撤回了这几条公屏消息（按记录编号） */
   | { t: 'chat_recall'; mids: number[] }
   | { t: 'sys'; text: string; ts: number }

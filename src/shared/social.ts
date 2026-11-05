@@ -1,4 +1,5 @@
 import { cleanText } from './profile';
+import type { ChannelId } from './channels';
 /** 好友 / 私聊：消息格式与限制。客户端、服务器共用。身份用服务器分配的"校园号"(uid)，不用客户端自己填的任何东西。 */
 export const FRIEND_MAX = 100;       // 好友上限
 export const INCOMING_MAX = 50;      // 待处理的好友申请上限（再多的忽略）
@@ -31,6 +32,6 @@ export function cleanFriendNotes(raw: unknown): Record<string, string> | undefin
   return Object.keys(out).length ? out : undefined;
 }
 export interface DmMsg { id: number; from: number; to: number; text: string; ts: number }
-export interface ChatHistoryItem { from: string; hue: number; text: string; ts: number; uid?: number; /** 记录编号（第几条公屏消息，从 1 开始；撤回按它找） */ mid?: number; /** 发言所在的世界（公共世界不写这个字段；个人/好友世界是世界编号） */ w?: string }
+export interface ChatHistoryItem { /** 所在频道（world 不写；旧记录没有这个字段 = world） */ ch?: ChannelId; from: string; hue: number; text: string; ts: number; uid?: number; /** 记录编号（第几条公屏消息，从 1 开始；撤回按它找） */ mid?: number; /** 发言所在的世界（公共世界不写这个字段；个人/好友世界是世界编号） */ w?: string }
 
 export const validUid = (u: unknown): u is number => Number.isInteger(u) && (u as number) >= UID_START && (u as number) < 1e9;
