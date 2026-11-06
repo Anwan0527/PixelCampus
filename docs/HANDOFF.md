@@ -30,7 +30,9 @@ PixelGame/
 │  ├─ art/              人物 Rig 渲染（char-rig、skins、held 手持物）
 │  ├─ ui/               各种面板（DOM 叠层）；actions.ts 是入口注册表；style.css（含手机横屏样式）
 │  ├─ systems/ audio/ world/ net/ core/   天气与时钟 / WebAudio 合成 / 流式加载与碰撞 / NetClient / 常量与本地档案
+│  │                       systems/ 里还有节日氛围 festival.ts、宿舍浴缸闪光 bathfx.ts；art/festival.ts 画节日头饰和粒子贴图
 │  └─ shared/           **客户端和（私有的）服务端共用**：协议、规则、价格、目录
+├─ tools/docs/          钓鱼攻略生成器（`npm run guide`：docs/guide 模板 + shared 规则 → docs/FISHING_GUIDE.md）
 ├─ tests/               客户端与共享规则的测试；generated-world 测试要先 npm run assets
 ├─ .github/             CI（PR 自动跑 生成资源 + 类型检查 + 测试 + 构建）+ PR 模板
 └─ docs/

@@ -32,7 +32,7 @@ const needText = (n: CraftNeed) => ('id' in n ? `${name(n.id)} ×${n.n}` : `${{ 
 function tierTable() {
   const sum = Object.values(TIER_TOTAL).reduce((a, b) => a + b, 0);
   return table(['稀有度', '每杆出这一档的概率*', '这一档共几种', '收购价（基础）', '钓到得经验', '喂猫好感', '难度'],
-    (['common', 'uncommon', 'rare', 'epic', 'legendary'] as Rarity[]).map((r) => [RARITY_NAMES[r], pct(TIER_TOTAL[r] / sum), LAKE_FISH.filter((f) => f.rarity === r).length, `${FISH_BASE[r]} 币`, `${XP_BASE[r]}`, `+${FISH_FEED_GAIN[r as Exclude<Rarity, 'junk'>]}`, stars({ common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 }[r as 'common'])])
+    (['common', 'uncommon', 'rare', 'epic', 'legendary'] as const).map((r) => [RARITY_NAMES[r], pct(TIER_TOTAL[r] / sum), LAKE_FISH.filter((f) => f.rarity === r).length, `${FISH_BASE[r]} 币`, `${XP_BASE[r]}`, `+${FISH_FEED_GAIN[r]}`, stars({ common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 }[r])])
       .concat([['杂物', pct(TIER_TOTAL.junk / sum), '4 种', '1 币', '0', '—', '—'], [RARITY_NAMES.mythic, '条件满足才会出现', MYTHIC_FISH.length, `${FISH_BASE.mythic} 币`, `${XP_BASE.mythic}`, `+${FISH_FEED_GAIN.mythic}`, stars(5)]]));
 }
 function envOf(season: (typeof SEASONS)[number]) { return { night: false, rain: false, season }; }
