@@ -166,9 +166,11 @@ export class DormPanel {
         row.append(el('span', 'dorm-item-name', `${def.name} ×${n}`));
         const one = el('button', 'btn sm', op === 'put' ? '放1' : '取1'); one.type = 'button';
         one.addEventListener('click', () => this.net.dormChest(op, id, 1));
+        const ten = el('button', 'btn sm', op === 'put' ? '放10' : '取10'); ten.type = 'button'; ten.disabled = n < 10;
+        ten.addEventListener('click', () => this.net.dormChest(op, id, 10));
         const all = el('button', 'btn sm', op === 'put' ? '全放' : '全取'); all.type = 'button';
         all.addEventListener('click', () => this.net.dormChest(op, id, n));
-        row.append(one, all); c.append(row);
+        row.append(one, ten, all); c.append(row);
       }
       return c;
     };

@@ -976,3 +976,12 @@ body.touch .cx-gcard canvas { width: 34px; }
 .cx-route-t { font-size: 13px; font-weight: bold; min-width: 108px; }
 .bag-lv { align-self: flex-start; padding: 1px 8px; border: 2px solid var(--wood); background: #fff1c8; font-family: inherit; font-size: 12px; color: var(--ink); cursor: pointer; }
 .fc-release { margin-top: 4px; padding: 3px 12px; font-size: 14px; pointer-events: auto; }
+
+/* 数量拉条（商店买卖、开盲盒共用） */
+.qty-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.qty-row.hidden, .qty-row .hidden { display: none; }
+.qty-range { flex: 1 1 120px; min-width: 90px; max-width: 220px; accent-color: #5a9e32; }
+.qty-num { width: 62px; padding: 2px 4px; border: 2px solid var(--wood-l); background: #fff; font: inherit; font-size: 14px; }
+.qty-row .btn { padding: 3px 10px; font-size: 14px; }
+.qty-hint { font-size: 12px; opacity: .65; }
+.bx-sum { font-size: 14px; line-height: 1.6; }

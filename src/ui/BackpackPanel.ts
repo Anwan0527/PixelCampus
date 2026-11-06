@@ -1,4 +1,6 @@
 import type Phaser from 'phaser';
+import { qtyPicker } from './qty';
+import { BOX_BATCH_MAX } from '@/shared/boxes';
 import { INV_SLOTS, invList, itemDef, type Gain, type Inv, type ItemKind } from '@/shared/items';
 import type { NetClient } from '@/net/client';
 import { drawItem } from './sprites';
@@ -33,7 +35,8 @@ export class BackpackPanel {
   private equipBar = el('div', 'bag-equip');
   private eq: Equip = { rod: '', bait: '', tackle: [], target: '' };
   /** 点盲盒的「打开」时调用（由场景接到开盒面板） */
-  onOpenBox: (id: string) => void = () => {};
+  private boxQty = 5;
+  onOpenBox: (id: string, n: number) => void = () => {};
   /** 点等级那一行：跳到图鉴的等级页 */
   openLevel: () => void = () => {};
   private items: Inv = {};
@@ -126,9 +129,10 @@ export class BackpackPanel {
   /** 盲盒的详情：打开按钮、保底进度、"可能开出什么"（掉落表公开） */
   private renderBoxDetail(id: BoxId) {
     const def = boxDef(id); if (!def) return;
-    const open = el('button', 'btn primary', '打开'); open.type = 'button'; open.disabled = this.net.status !== 'online';
-    open.addEventListener('click', () => this.onOpenBox(id));
-    this.detail.append(open);
+    const have = this.items[id] ?? 0, max = Math.min(have, BOX_BATCH_MAX), online = this.net.status === 'online';
+    if (max >= 2) this.detail.append(qtyPicker({ max, value: Math.min(this.boxQty, max), onChange: (n) => { this.boxQty = n; }, label: (n) => `打开 ${n} 个`, primary: true, disabled: !online, onGo: (n) => this.onOpenBox(id, n) }));
+    else { const open = el('button', 'btn primary', '打开'); open.type = 'button'; open.disabled = !online; open.addEventListener('click', () => this.onOpenBox(id, 1)); this.detail.append(open); }
+    if (have > BOX_BATCH_MAX) this.detail.append(el('div', 'bag-detail-desc dim', `一次最多连开 ${BOX_BATCH_MAX} 个。`));
     if (def.pity > 0) this.detail.append(el('div', 'bag-detail-desc', `保底：连续 ${def.pity - 1} 次没开出珍品，下一个必出（现在 ${fishData.gd.pity[id] ?? 0} 次）。`));
     const det = el('details', 'bag-odds'); det.append(el('summary', '', '可能开出什么？'));
     for (const o of boxOdds(id)) { const li = el('div', 'bag-odds-row' + (o.gem ? ' gem' : ''), `${o.gem ? '★ ' : ''}${o.label}　${o.pct}%`); det.append(li); }

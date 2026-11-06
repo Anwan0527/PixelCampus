@@ -8,6 +8,9 @@ import { fishPrice, EXTRA_SELL } from './economy';
 import { baitDef, rodDef, tackleDef } from './gear';
 import { itemDef, type Gain } from './items';
 
+/** 一次最多连开几个盲盒（背包里点「打开」时拉条选数量） */
+export const BOX_BATCH_MAX = 100;
+
 export type BoxId = 'box_bottle' | 'box_crate' | 'box_wreck';
 type Loot = { w: number; /** 珍品：保底会从这些里面出 */ gem?: boolean } & ({ coins: readonly [number, number] } | { item: string; n?: number } | { fish: string });
 export interface BoxDef { id: BoxId; name: string; /** 每次钓上鱼时多钓到它的基础概率 */ rate: number; /** 连续这么多次没开出珍品，下一次必出；0 = 没有保底 */ pity: number; loot: readonly Loot[]; hint: string }

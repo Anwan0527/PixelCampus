@@ -389,7 +389,7 @@ export class NetClient implements ChatTransport {
   binSearch(bin: number) { this.tx({ t: 'bin_search', bin }); }
   hallGet() { this.tx({ t: 'hall_get' }); }
   equipSet(slot: 'rod' | 'bait' | 'tackle' | 'target', id: string) { this.tx({ t: 'equip_set', slot, id }); }
-  boxOpen(id: string) { this.tx({ t: 'box_open', id }); }
+  boxOpen(id: string, n = 1) { this.tx({ t: 'box_open', id, ...(n > 1 ? { n } : {}) }); }
   craft(recipe: string, param?: string) { this.tx({ t: 'craft', recipe, ...(param ? { param } : {}) }); }
   getGeardex() { this.tx({ t: 'geardex_get' }); }
   bundleClaim(id: string) { this.tx({ t: 'bundle_claim', id }); }

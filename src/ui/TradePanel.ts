@@ -121,7 +121,7 @@ export class TradePanel {
       if (!tradable(def.id)) continue;
       const row = el('div', 'trade-bagrow'), c = el('canvas', 'shop-ico'); drawItem(c, this.textures, def.id, 2);
       const q = this.mine.get(def.id) ?? 0;
-      row.append(c, el('div', 'trade-name', `${def.name}（有 ${n}）`), this.btn('−', () => this.setQty(def.id, q - 1), false, q <= 0), el('span', 'trade-q', String(q)), this.btn('+', () => this.setQty(def.id, q + 1), false, q >= n), this.btn('全部', () => this.setQty(def.id, n), false, q >= n));
+      row.append(c, el('div', 'trade-name', `${def.name}（有 ${n}）`), this.btn('−10', () => this.setQty(def.id, q - 10), false, q <= 0), this.btn('−', () => this.setQty(def.id, q - 1), false, q <= 0), el('span', 'trade-q', String(q)), this.btn('+', () => this.setQty(def.id, q + 1), false, q >= n), this.btn('+10', () => this.setQty(def.id, q + 10), false, q >= n), this.btn('全部', () => this.setQty(def.id, n), false, q >= n));
       bag.append(row);
     }
     if (!bag.children.length) bag.append(el('div', 'board-empty', '背包里没有可以交易的东西。'));

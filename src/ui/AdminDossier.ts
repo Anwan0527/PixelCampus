@@ -168,7 +168,7 @@ export class AdminDossier {
     b.append(this.section(`背包（${d.inv.length} 种）`, inv));
     if (net.can('give')) {
       const item = el('select'); for (const it of ITEMS) item.append(new Option(it.name, it.id));
-      const n = el('input'); n.type = 'number'; n.min = '1'; n.max = '99'; n.value = '1'; n.className = 'adm-n';
+      const n = el('input'); n.type = 'number'; n.min = '1'; n.max = '999'; n.value = '1'; n.className = 'adm-n';
       b.append(this.section('赠送物品', this.row('', item, n, this.btn('发送', () => net.adm({ op: 'give', uid, item: item.value, n: Number(n.value) }), { primary: true }))));
     } else b.append(this.ownerNote('调整校园币、收走或赠送物品'));
   }

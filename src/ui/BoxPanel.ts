@@ -5,6 +5,8 @@ import { fishDef, fmtKg, RARITY_COLORS } from '@/shared/fishing';
 import { itemDef, type Inv } from '@/shared/items';
 import type { ServerMsg } from '@/shared/protocol';
 import { drawItem } from './sprites';
+import { qtyPicker } from './qty';
+import { BOX_BATCH_MAX } from '@/shared/boxes';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -23,7 +25,7 @@ export class BoxPanel {
   private root = el('div', 'screen hidden');
   private stage = el('div', 'bx-stage');
   private foot = el('div', 'bx-foot');
-  private startedAt = 0; private pending: BoxResult | null = null; private timer = 0; private cur = '';
+  private again = 5; private startedAt = 0; private pending: BoxResult | null = null; private timer = 0; private cur = '';
 
   constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private inv: () => Inv) {
     const panel = el('div', 'box bx');
@@ -42,14 +44,14 @@ export class BoxPanel {
   close() { window.clearTimeout(this.timer); this.pending = null; this.root.classList.add('hidden'); }
 
   /** 打开一个盲盒（背包点「打开」）：先显示抖动的盒子，再向服务器要结果 */
-  open(id: string) {
+  open(id: string, n = 1) {
     const d = boxDef(id); if (!d || this.net.status !== 'online') return;
     this.cur = id; this.pending = null; this.startedAt = Date.now();
     this.root.classList.remove('hidden');
     const c = el('canvas', 'bx-box shake'); drawItem(c, this.textures, id, 8);
-    this.stage.replaceChildren(c, el('div', 'bx-name', `正在打开「${d.name}」…`));
+    this.stage.replaceChildren(c, el('div', 'bx-name', `正在打开「${d.name}」${n > 1 ? ` ×${n}` : ''}…`));
     this.foot.textContent = '';
-    this.net.boxOpen(id);
+    this.net.boxOpen(id, n);
     window.clearTimeout(this.timer); this.timer = window.setTimeout(() => this.reveal(), 3500); // 服务器没回话就别一直抖
   }
   private onResult(m: BoxResult) {
@@ -69,14 +71,18 @@ export class BoxPanel {
     };
     if (m.coins) { const r = el('div', 'bx-item'); r.append(el('span', 'coin-ico'), el('span', 'bx-text', `${m.coins} 校园币`)); list.append(r); }
     for (const g of m.items ?? []) row(g.id, `${itemDef(g.id)?.name ?? g.id}${g.n > 1 ? ` ×${g.n}` : ''}`, undefined, !!m.gem);
-    if (m.fish) { const f = fishDef(m.fish.id); row(m.fish.id, `${f?.name ?? '鱼'}　${m.fish.cm} cm · ${fmtKg(m.fish.kg)}${m.fish.isNew ? '　图鉴新种类！' : ''}`, f ? RARITY_COLORS[f.rarity] : undefined, true); }
+    if (m.n && m.n > 1) { // 一次开了多个：把鱼按种类合并成一行
+      const by = new Map<string, { n: number; best: number; bestKg: number; isNew: boolean }>();
+      for (const f of m.fishes ?? []) { const e = by.get(f.id) ?? { n: 0, best: 0, bestKg: 0, isNew: false }; e.n++; if (f.cm > e.best) { e.best = f.cm; e.bestKg = f.kg; } e.isNew ||= f.isNew; by.set(f.id, e); }
+      for (const [id, e] of by) { const f = fishDef(id); row(id, `${f?.name ?? '鱼'} ×${e.n}　最大 ${e.best} cm · ${fmtKg(e.bestKg)}${e.isNew ? '　图鉴新种类！' : ''}`, f ? RARITY_COLORS[f.rarity] : undefined, true); }
+    } else if (m.fish) { const f = fishDef(m.fish.id); row(m.fish.id, `${f?.name ?? '鱼'}　${m.fish.cm} cm · ${fmtKg(m.fish.kg)}${m.fish.isNew ? '　图鉴新种类！' : ''}`, f ? RARITY_COLORS[f.rarity] : undefined, true); }
     if (m.dup) { const r = el('div', 'bx-item dim'); r.append(el('span', 'coin-ico'), el('span', 'bx-text', `已经有了，折成 ${m.dup} 校园币`)); list.append(r); }
     if (!list.childElementCount) list.append(el('div', 'bx-item dim', '空的……'));
     const c = el('canvas', 'bx-box open'); drawItem(c, this.textures, m.id, 5);
-    this.stage.replaceChildren(c, el('div', 'bx-name', `${d?.name ?? '盲盒'}里有：`), list);
+    this.stage.replaceChildren(c, el('div', 'bx-name', m.n && m.n > 1 ? `一共开了 ${m.n} 个「${d?.name ?? '盲盒'}」，其中 ${m.gems ?? 0} 个珍品：` : `${d?.name ?? '盲盒'}里有：`), list);
     const more = this.inv()[this.cur] ?? 0;
     this.foot.replaceChildren();
-    if (more > 0) { const b = el('button', 'btn primary', `再开一个（还有 ${more} 个）`); b.type = 'button'; b.addEventListener('click', () => this.open(this.cur)); this.foot.append(b); }
+    if (more > 0) this.foot.append(qtyPicker({ max: Math.min(more, BOX_BATCH_MAX), value: Math.min(this.again, Math.min(more, BOX_BATCH_MAX)), onChange: (n) => { this.again = n; }, label: (n) => `再开 ${n} 个（还有 ${more} 个）`, primary: true, onGo: (n) => this.open(this.cur, n) }));
     if (d && d.pity > 0 && m.pity !== undefined) this.foot.append(el('div', 'bx-pity', m.gem ? `开出了珍品！保底重新计数（连续 ${d.pity - 1} 次没出珍品，下一个必出）。` : `保底：已经连续 ${m.pity} 次没开出珍品，累计到 ${d.pity - 1} 次，下一个必出珍品。`));
   }
 }

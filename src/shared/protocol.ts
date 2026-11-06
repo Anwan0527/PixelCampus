@@ -193,7 +193,7 @@ export type ClientMsg =
   /** 钓鱼装备栏：给某一格选一件（id = '' 表示自动，用背包里最低级的）；slot 'tackle' = 配件（点一下装上、再点取下，id '' = 全部取下）、'target' = 指名饵要咬的那种鱼 */
   | { t: 'equip_set'; slot: 'rod' | 'bait' | 'tackle' | 'target'; id: string }
   /** 钓鱼 2.0：打开背包里的一个盲盒；合成（recipe 见 craft.ts，param = 指名饵选的鱼）；装备图鉴；领钓鱼册页的奖励 */
-  | { t: 'box_open'; id: string }
+  | { t: 'box_open'; id: string; /** 一次开几个（缺省 1，最多 BOX_BATCH_MAX） */ n?: number }
   | { t: 'craft'; recipe: string; param?: string }
   | { t: 'geardex_get' }
   | { t: 'bundle_claim'; id: string }
@@ -340,7 +340,7 @@ export type ServerMsg =
   /** 我的钓鱼装备栏（'' = 自动） */
   | { t: 'equip'; rod: string; bait: string; tackle: string[]; target: string }
   /** 开盲盒的结果：币、物品、盲盒限定鱼（带尺寸）、重复的东西折成的币（dup）、保底进度（pity / 保底次数 need） */
-  | { t: 'box_result'; id: string; ok: boolean; msg?: string; coins?: number; items?: Gain[]; fish?: { id: string; cm: number; kg: number; isNew: boolean }; dup?: number; gem?: boolean; pity?: number; need?: number }
+  | { t: 'box_result'; id: string; ok: boolean; msg?: string; coins?: number; items?: Gain[]; fish?: { id: string; cm: number; kg: number; isNew: boolean }; dup?: number; gem?: boolean; pity?: number; need?: number; /** 一次开了几个（批量开；缺省 1） */ n?: number; /** 批量里开出几个珍品 */ gems?: number; /** 批量开出的鱼（单开时用 fish） */ fishes?: { id: string; cm: number; kg: number; isNew: boolean }[] }
   | { t: 'craft_result'; ok: boolean; msg: string }
   /** 装备图鉴：拥有过的竿 / 配件、用过的饵、开过的盲盒、保底、已领的册页和神话首奖 */
   | { t: 'geardex'; gd: GearLog }

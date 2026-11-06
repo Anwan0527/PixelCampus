@@ -207,11 +207,11 @@ describe('钓鱼 2.0：合成', () => {
   it('配方：产出和材料都是真物品；杂物 5 → 鱼饵；材料不够不动背包；币不够会说', () => {
     for (const r of RECIPES) { expect(itemDef(r.out.id), r.id).toBeTruthy(); for (const n of r.needs) if ('id' in n) expect(itemDef(n.id), n.id).toBeTruthy(); }
     const inv = { junk_boot: 2, junk_weed: 2 }; expect(typeof craftPlan(inv, recipeDef('junk_bait')!)).toBe('string'); expect(applyCraft(inv, recipeDef('junk_bait')!)).toBeNull(); expect(inv).toEqual({ junk_boot: 2, junk_weed: 2 });
-    const inv2 = { junk_boot: 2, junk_weed: 2, trash_cup: 3, bait: 98 }; expect(craftWhy(inv2, 0, recipeDef('junk_bait')!)).toContain('校园币'); expect(craftWhy(inv2, 1, recipeDef('junk_bait')!)).toBeNull();
-    expect(applyCraft(inv2, recipeDef('junk_bait')!)).toBeTruthy(); expect(inv2.bait).toBe(99); expect(Object.values(inv2).reduce((a, b) => a + b, 0)).toBe(99 + 2); // 7 件杂物里扣 5，剩 2
+    const inv2 = { junk_boot: 2, junk_weed: 2, trash_cup: 3, bait: 998 }; expect(craftWhy(inv2, 0, recipeDef('junk_bait')!)).toContain('校园币'); expect(craftWhy(inv2, 1, recipeDef('junk_bait')!)).toBeNull();
+    expect(applyCraft(inv2, recipeDef('junk_bait')!)).toBeTruthy(); expect(inv2.bait).toBe(999); expect(Object.values(inv2).reduce((a, b) => a + b, 0)).toBe(999 + 2); // 7 件杂物里扣 5，剩 2
   });
   it('产出放不下（背包里已有 99 个鱼饵 / 已有龙骨竿）就不能合成', () => {
-    expect(craftWhy({ junk_boot: 5, bait: 99 }, 10, recipeDef('junk_bait')!)).toContain('放不下');
+    expect(craftWhy({ junk_boot: 5, bait: 999 }, 10, recipeDef('junk_bait')!)).toContain('放不下');
     expect(craftWhy({ rod_golden: 1, dragon_scale: 4, rod_bone: 1 }, 5000, recipeDef('bone_rod')!)).toContain('放不下');
     expect(craftWhy({ rod_golden: 1, dragon_scale: 4 }, 5000, recipeDef('bone_rod')!)).toBeNull(); expect(craftWhy({ rod_golden: 1, dragon_scale: 3 }, 5000, recipeDef('bone_rod')!)).toContain('龙鳞');
   });
@@ -266,7 +266,7 @@ describe('钓鱼 2.0：神话鱼的条件、册页、里程碑、记录清洗', 
 describe('钓鱼 2.0：物品、商店、交易、成就', () => {
   it('物品目录：新东西都有物品和图标；背包格子够；盲盒和配件有自己的类型', () => {
     for (const id of ['box_bottle', 'box_crate', 'box_wreck', 'dragon_scale', 'pearl', 'relic_badge', 'relic_card', 'relic_meal', 'relic_history']) { expect(itemDef(id), id).toBeTruthy(); expect(ICONS[id], id).toBeTruthy(); }
-    expect(itemDef('box_crate')!.kind).toBe('box'); expect(itemDef('tk_float')!.kind).toBe('tackle'); expect(itemDef('rod_bone')!.stack).toBe(1); expect(itemDef('bait_any')!.stack).toBe(99);
+    expect(itemDef('box_crate')!.kind).toBe('box'); expect(itemDef('tk_float')!.kind).toBe('tackle'); expect(itemDef('rod_bone')!.stack).toBe(1); expect(itemDef('bait_any')!.stack).toBe(999);
     expect(ITEMS.length).toBeLessThanOrEqual(INV_SLOTS); expect(new Set(ITEMS.map((i) => i.id)).size).toBe(ITEMS.length);
     for (const id of Object.keys(ICONS)) expect(itemDef(id) || ['junk_can', 'junk_bottle'].includes(id), id).toBeTruthy();
   });

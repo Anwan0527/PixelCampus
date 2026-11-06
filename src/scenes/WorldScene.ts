@@ -295,7 +295,7 @@ export class WorldScene extends Phaser.Scene {
       this.hud.banner('🎒 获得物品', text); this.net.system(`🎒 获得：${text}`); sfx('pickup');
     }, () => this.codexUi.open('fish'));
     this.boxUi = new BoxPanel(this.net, this.textures, () => this.backpackUi.inv);
-    this.backpackUi.onOpenBox = (id) => this.boxUi.open(id);
+    this.backpackUi.onOpenBox = (id, n) => this.boxUi.open(id, n);
     this.backpackUi.openLevel = () => { this.backpackUi.close(); this.codexUi.openFishSub('level'); };
     this.net.handlers.releaseResult = (m) => { this.hud.banner(m.ok ? '🌊 放生' : '放生失败', m.msg); this.net.system(m.ok ? `🌊 ${m.msg}` : m.msg); if (m.ok) sfx('pickup'); };
     // 钓鱼升级：横幅 + 系统消息；升到 5 / 10 级提示去选路线

@@ -44,8 +44,8 @@ export function sellPrice(id: string, day: number, bonus = 0): number {
 }
 /** 一天里在商店卖东西累计赚到这么多校园币，解锁成就「日进九百九」 */
 export const DAILY_SALE_GOAL = 999;
-/** 一次最多卖多少件（防一条消息处理过久；背包堆叠上限本来就是 99） */
-export const SELL_MAX = 99;
+/** 一次最多卖多少件（防一条消息处理过久；和背包堆叠上限一样 999） */
+export const SELL_MAX = 999;
 /** "一键卖出"只收这些稀有度的鱼（稀有及以上舍不得，要卖请手动点） */
 export const BULK_RARITIES: readonly Rarity[] = ['junk', 'common', 'uncommon'];
 

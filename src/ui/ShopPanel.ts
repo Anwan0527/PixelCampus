@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { COIN_NAME, BULK_RARITIES, SHOP, marketMul, sellList, EXTRA_SELL, type ShopItem } from '@/shared/economy';
 import { fishData } from './fishData';
+import { qtyPicker } from './qty';
 import { FISH_GEAR_IDS } from '@/shared/economy';
 import { JUNK_GROUP, RARE_GROUP, RECIPES, SMALL_GROUP, craftWhy, isNamedFish, type Recipe } from '@/shared/craft';
 import { RARITY_COLORS, RARITY_NAMES, fishDef } from '@/shared/fishing';
@@ -26,6 +27,7 @@ export class ShopPanel {
   private body = el('div', 'shop-body');
   private coinEl = el('span', 'shop-coins', '0');
   private msg = el('div', 'shop-msg');
+  private buyQty = new Map<string, number>(); private sellQty = new Map<string, number>();
   private tabRow = el('div', 'seg-row');
   private titleEl = el('div', 'board-title', '校园商店');
   private subEl = el('div', 'create-sub');
@@ -134,6 +136,14 @@ export class ShopPanel {
     const b = el('button', 'btn' + (can ? ' primary' : ''), owned ? '已拥有' : '购买'); b.type = 'button'; b.disabled = !can;
     b.title = can || owned ? '' : `还差 ${s.price - this.coins} 校园币`;
     b.addEventListener('click', () => { b.disabled = true; this.net.shopBuy(s.id, 1); });
+    // 能堆叠的东西：拉条一次买多份（受校园币和背包上限限制）
+    if (d.stack > 1) {
+      const max = Math.min(Math.floor(this.coins / s.price), Math.floor((d.stack - (this.inv[s.id] ?? 0)) / s.n), 999);
+      if (max >= 2) info.append(qtyPicker({
+        max, value: Math.min(this.buyQty.get(s.id) ?? 5, max), onChange: (n) => this.buyQty.set(s.id, n),
+        label: (n) => `买 ${n} 份`, hint: (n) => `共 ${n * s.price} 币${s.n > 1 ? `（${n * s.n} 个）` : ''}`, onGo: (n) => this.net.shopBuy(s.id, n),
+      }));
+    }
     row.append(this.icon(s.id), info, price, b);
     return row;
   }
@@ -173,6 +183,10 @@ export class ShopPanel {
       for (const b of [one, all]) b.type = 'button';
       one.addEventListener('click', () => this.net.shopSell(r.id, 1));
       all.addEventListener('click', () => this.net.shopSell(r.id, r.n));
+      if (r.n >= 3) info.append(qtyPicker({
+        max: r.n, value: Math.min(this.sellQty.get(r.id) ?? Math.max(1, Math.floor(r.n / 2)), r.n), onChange: (n) => this.sellQty.set(r.id, n),
+        label: (n) => `卖 ${n} 件`, hint: (n) => `共 ${r.price * n} 币`, onGo: (n) => this.net.shopSell(r.id, n),
+      }));
       const btns = el('div', 'shop-btns'); btns.append(one, all);
       row.append(this.icon(r.id), info, price, btns);
       list.append(row);
