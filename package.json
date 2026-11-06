@@ -19,6 +19,7 @@
     "ref:fetch": "tsx tools/reference/fetch-satellite.ts",
     "ref:view": "tsx tools/reference/render-views.ts",
     "assets": "tsx tools/build-assets.ts",
+    "guide": "tsx tools/docs/gen-fishing-guide.ts",
     "assets:art": "tsx tools/art/index.ts",
     "assets:world": "tsx tools/world/compile.ts",
     "assets:interiors": "tsx tools/world/interiors.ts",

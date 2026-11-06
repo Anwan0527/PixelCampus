@@ -14,6 +14,7 @@
 ## 快速开始
 ```bash
 npm ci
+npm run guide      # 重新生成钓鱼攻略 docs/FISHING_GUIDE.md（改了鱼表/装备/等级/价格后运行）
 npm run assets     # 生成地面块 / 图集 / 世界数据（生成物不入库；首次约 2 分钟，之后有缓存）
 npm run dev        # http://127.0.0.1:5173/?offline （离线单人预览；?touch 强制手机界面，把窗口调矮就是横屏布局）
 npm test           # 客户端与共享规则的测试
@@ -42,6 +43,7 @@ archive/            上一版（只读，已废弃，不入库）
 ## 文档
 - **[docs/HANDOFF.md](docs/HANDOFF.md) — 项目交接：现状、约定、待办、调试手册（新会话/新协作者先读这个）**
 - [docs/FEATURES.md](docs/FEATURES.md) 现有功能 · [docs/CHANGELOG.md](docs/CHANGELOG.md) 更新记录
+- [docs/FISHING_GUIDE.md](docs/FISHING_GUIDE.md) 钓鱼攻略（玩家手册，表格由 `npm run guide` 从真实规则生成）
 - [docs/COLLABORATION.md](docs/COLLABORATION.md) 协作流程（fork + PR）
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 架构 · [docs/MULTIPLAYER.md](docs/MULTIPLAYER.md) 联机协议与各批功能设计 · [docs/ECONOMY.md](docs/ECONOMY.md) 货币/商店/校园墙设计
 - [docs/MAP_PIPELINE.md](docs/MAP_PIPELINE.md) 地图管线与已知偏差（改地图前先读）· [docs/SCALE.md](docs/SCALE.md) 比例约定

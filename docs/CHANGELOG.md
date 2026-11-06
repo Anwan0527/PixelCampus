@@ -42,6 +42,10 @@
 - **闪光**：缸里有少见 / 稀有 / 史诗 / 传说 / 神话的鱼，水面就飘起对应颜色的闪光（少见绿、稀有蓝、史诗紫、传说金、神话彩虹），发光的鱼越多越密；有传说鱼时浴缸上方多一道金色光柱，有神话鱼光柱变彩虹色；缸里最多 6 种鱼按稀有度的颜色在水里游。常见的鱼只会游，不发光。**来做客的好友也看得到**。
 - 协议（additive）：`dorm_bath`（放 / 取），`dorm_data.bt / bv`，`room_state.bv`，`dorm_visit.bv`；档案 `Saved.dm.bt`。宿舍房间 `dorm.json` 新增 `dbath`（act `bath`）；新美术 `tools/art/furniture-dorm.ts: dbath`（要 `npm run assets` 重新生成）。
 - 测试：`tests/dorm.test.ts` 新增 2 项（规则、服务器：不在自己宿舍不能放 / 放进去背包里没了卖不掉 / 重连还在 / 取回）。
+**新增：钓鱼攻略（玩家手册）**
+- `docs/FISHING_GUIDE.md`：完整的钓鱼玩家手册——一分钟上手、怎么钓与拉鱼、环境（昼夜 / 天气 / 季节 / 预报 / 节日）、全部鱼的概率表（按季节、夜里、雨天）、神话鱼条件与攻略、鱼竿 / 鱼饵 / 配件、推荐搭配、盲盒掉落与保底、合成、1–30 级经验与奖励、路线、委托、赚钱（行情 / 渔夫路线 / 浴缸）、册页与里程碑、进阶技巧、常见问题。
+- **表格由脚本生成**：叙述写在 `docs/guide/FISHING_GUIDE.template.md`，里面的 `{{table:xxx}}` / `{{v:xxx}}` 由 `tools/docs/fishing-guide.ts` 按 `src/shared` 的真实规则填充；改了鱼表、装备、配方、等级、价格后运行 `npm run guide` 重新生成。`tests/fishing-guide.test.ts` 会检查手册是不是最新的（过期了测试会红）。
+
 - 新文件：`src/shared/calendar.ts`（游戏日历与节日表，前后端共用）、`src/ui/CalendarPanel.ts`；`src/shared/season.ts` 新增 `skyAt / forecast / nextWet`。测试：`tests/weather-calendar.test.ts`（10 项）。
 
 ## 2026.11.5（「关于」加入地图参考致谢，已部署 2026-11-05）更新内容
