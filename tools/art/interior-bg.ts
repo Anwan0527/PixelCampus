@@ -38,6 +38,7 @@ export const DORM_FLOOR_STYLES: readonly FloorStyle[] = [
  * 画室内底图。宿舍的皮肤：opts.wall / opts.floor 选墙纸 / 地板样式；opts.layer = 'wall' 只留墙（北墙、侧墙、南墙，窗和窗帘），
  * 'floor' 只留地板（含门洞、门垫、画在地上的地毯），另一层透明——客户端把两层叠起来，墙纸和地板就能各自独立地换。
  */
+const isDorm = (id: string) => id === 'dorm' || id === 'dorm-2' || id === 'dorm-3';
 export function paintInterior(s: InteriorSpec, opts: { wall?: number; floor?: number; layer?: 'wall' | 'floor' } = {}): Img {
   const base = THEMES[s.theme];
   const ws = DORM_WALL_STYLES[opts.wall ?? 0], fs = DORM_FLOOR_STYLES[opts.floor ?? 0];
@@ -119,8 +120,8 @@ export function paintInterior(s: InteriorSpec, opts: { wall?: number; floor?: nu
       img.set(x, y, edge ? [Math.min(255, c[0] + 50), Math.min(255, c[1] + 40), Math.min(255, c[2] + 30), 255] : (x + y) % 8 < 1 ? [Math.min(255, c[0] + 18), Math.min(255, c[1] + 14), Math.min(255, c[2] + 12), 255] : c);
     }
   }
-  // 门垫
-  img.rect(ex0 + 2, img.h - 14, ex1 - ex0 - 4, 10, hex('#5a3a28')); img.rect(ex0 + 4, img.h - 12, ex1 - ex0 - 8, 6, hex('#7a5233'));
+  // 门垫（宿舍的门垫是可以挪、可以换的家具，不画在底图里）
+  if (!isDorm(s.id)) { img.rect(ex0 + 2, img.h - 14, ex1 - ex0 - 4, 10, hex('#5a3a28')); img.rect(ex0 + 4, img.h - 12, ex1 - ex0 - 8, 6, hex('#7a5233')); }
   if (opts.layer) { // 只留一层：墙 = 北墙 + 左右侧墙 + 南墙（门洞除外）；其余是地板层
     for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) {
       const wall = y < WALL_H || x < 16 || x >= img.w - 16 || (y >= img.h - 16 && (x < ex0 || x >= ex1));

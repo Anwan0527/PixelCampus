@@ -58,10 +58,10 @@ export class DormPanel {
 
     const bp = el('div', 'box tp dorm bath');
     const bh = el('div', 'board-head');
-    const bc = el('button', 'btn', '✕'); bc.type = 'button'; bc.setAttribute('aria-label', '关闭浴缸');
+    const bc = el('button', 'btn', '✕'); bc.type = 'button'; bc.setAttribute('aria-label', '关闭鱼缸');
     bc.addEventListener('click', () => this.closeBath());
-    bh.append(el('div', 'board-title', '🛁 浴缸（养鱼）'), bc);
-    bp.append(bh, el('div', 'create-sub', `把钓上来的鱼放进浴缸养着：最多 ${DORM.BATH_KINDS} 种、每种 ${DORM.BATH_STACK} 条。放进去的鱼就不在背包里了，**不能卖也不能交易**（随时可以取回来）；稀有度越高、数量越多，缸里越闪，来做客的好友也看得到。`.replace(/\*\*/g, '')), this.bathMsg, this.bathBody);
+    bh.append(el('div', 'board-title', '🐟 鱼缸（养鱼）'), bc);
+    bp.append(bh, el('div', 'create-sub', `把钓上来的鱼放进鱼缸养着：最多 ${DORM.BATH_KINDS} 种、每种 ${DORM.BATH_STACK} 条。放进去的鱼就不在背包里了，**不能卖也不能交易**（随时可以取回来）；稀有度越高、数量越多，缸里越闪，来做客的好友也看得到。`.replace(/\*\*/g, '')), this.bathMsg, this.bathBody);
     this.bathRoot.append(bp);
     this.bathRoot.addEventListener('mousedown', (e) => { if (e.target === this.bathRoot) this.closeBath(); });
 

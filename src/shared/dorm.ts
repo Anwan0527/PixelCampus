@@ -9,13 +9,13 @@
 import { itemDef, type Inv } from './items';
 import { fishDef, type Rarity } from './fishing';
 import { cleanText } from './profile';
-import { cleanLay, decorDef, defaultLay, isRoomLevel, layError, ROOM_SIZES, type Placed, type Rot, type RoomLevel } from './decor';
+import { LEGACY_STARTERS, cleanLay, decorDef, defaultLay, isRoomLevel, layError, ROOM_SIZES, type Placed, type Rot, type RoomLevel } from './decor';
 import { FLOOR_SKINS, ROOM_NAMES, ROOM_PRICES, SKINS, WALL_SKINS, type SkinKind } from './dormskin';
 
 export const DORM = {
   /** 宝箱最多放几种物品 / 每种最多放多少 */
   CHEST_KINDS: 24, CHEST_STACK: 999,
-  /** 浴缸：最多养几种鱼 / 每种最多几条（只是展示用，不是第二个仓库） */
+  /** 鱼缸：最多养几种鱼 / 每种最多几条（只是展示用，不是第二个仓库） */
   BATH_KINDS: 12, BATH_STACK: 99,
   /** 睡觉：从 0 血睡到满血要多久（毫秒）。长椅 4 秒回满、自然恢复 10 分钟回满，这里夹在中间，算"慢慢恢复" */
   SLEEP_FULL_MS: 90000,
@@ -52,10 +52,12 @@ export interface DormSave {
   ch?: Inv;
   /** 门牌：房主给宿舍起的名字（最多 8 个字） */
   n?: string;
-  /** 浴缸：养在里面的鱼（物品 id → 条数）。放进去的鱼不在背包里，所以不能卖、不能交易；随时可以取回 */
+  /** 鱼缸：养在里面的鱼（物品 id → 条数）。放进去的鱼不在背包里，所以不能卖、不能交易；随时可以取回 */
   bt?: Inv;
   /** 家具摆放（装修过才有；没有 = 用原来的默认布局 defaultLay）。摆在房间里的家具不在背包里，收回来才还给背包 */
   lay?: Placed[];
+  /** 2 = 摆放里已经包含固有家具（床、衣柜、宝箱、鱼缸、空调、门牌、窗）；没有这个标记的老存档读取时会把它们补在原来的位置上 */
+  v?: 2;
   /** 点过赞的人（校园号）；最多 DORM.LIKE_MAX 个，赞数 = 人数 */
   lk?: number[];
   /** 1 = 不在资料卡上展示我的宿舍（默认展示） */
@@ -119,7 +121,9 @@ export function cleanDorm(raw: unknown): DormSave | undefined {
   const ch = cleanChest(r.ch); if (Object.keys(ch).length) out.ch = ch;
   if (r.rm === 1 || r.rm === 2) out.rm = r.rm;
   { const sk = cleanSkin(r.sk); if (sk) out.sk = sk; }
-  { const lay = cleanLay(r.lay, out.rm ?? 0); if (lay) out.lay = lay; }
+  if (Array.isArray(r.lay)) { // 老存档（v1）的摆放里没有固有家具：补在原来固定的位置上（和旧规则一致，不会和玩家的摆放冲突）
+    const lay = cleanLay(r.v === 2 ? r.lay : [...LEGACY_STARTERS, ...r.lay], out.rm ?? 0); if (lay) { out.lay = lay; out.v = 2; }
+  }
   { const lk = cleanLikes(r.lk); if (lk.length) out.lk = lk; }
   if (r.hid === 1) out.hid = 1;
   return Object.keys(out).length ? out : undefined;
@@ -177,8 +181,8 @@ export function atDormDoor(name: string, tx: number, ty: number, buildings: read
   return false;
 }
 
-// ------------------------------------------------------------------ 浴缸
-/** 能放进浴缸的：钓上来的鱼（杂物不算）。稀有度越高，缸里越闪 */
+// ------------------------------------------------------------------ 鱼缸
+/** 能放进鱼缸的：钓上来的鱼（杂物不算）。稀有度越高，缸里越闪 */
 export const isBathFish = (id: unknown): id is string => { const d = typeof id === 'string' ? fishDef(id) : undefined; return !!d && d.rarity !== 'junk' && !!itemDef(d.id); };
 /** 会发光的稀有度（常见的鱼只是在缸里游，不发光） */
 export const GLOW_RARITIES = ['uncommon', 'rare', 'epic', 'legendary', 'mythic'] as const satisfies readonly Rarity[];
@@ -197,23 +201,23 @@ export function cleanBath(raw: unknown): Inv {
   return out;
 }
 
-/** 浴缸存取（原地修改 bath 与 inv）：只收鱼；放进去后背包里就没有了（所以不能卖、不能交易），取回才有 */
+/** 鱼缸存取（原地修改 bath 与 inv）：只收鱼；放进去后背包里就没有了（所以不能卖、不能交易），取回才有 */
 export function bathMove(bath: Inv, inv: Inv, op: 'put' | 'take', id: unknown, n: unknown): { ok: boolean; msg: string; moved: number } {
   const d = typeof id === 'string' ? itemDef(id) : undefined;
   if (!d) return { ok: false, msg: '没有这种东西', moved: 0 };
-  if (!isBathFish(d.id)) return { ok: false, msg: `${d.name}不能放进浴缸（只能养钓上来的鱼）`, moved: 0 };
+  if (!isBathFish(d.id)) return { ok: false, msg: `${d.name}不能放进鱼缸（只能养钓上来的鱼）`, moved: 0 };
   if (!Number.isInteger(n) || (n as number) < 1 || (n as number) > 999) return { ok: false, msg: '数量不对', moved: 0 };
   const want = n as number;
   if (op === 'put') {
     const have = inv[d.id] ?? 0; if (have < 1) return { ok: false, msg: `背包里没有${d.name}`, moved: 0 };
-    if (!(d.id in bath) && Object.keys(bath).length >= DORM.BATH_KINDS) return { ok: false, msg: `浴缸里最多养 ${DORM.BATH_KINDS} 种鱼，已经满了`, moved: 0 };
+    if (!(d.id in bath) && Object.keys(bath).length >= DORM.BATH_KINDS) return { ok: false, msg: `鱼缸里最多养 ${DORM.BATH_KINDS} 种鱼，已经满了`, moved: 0 };
     const room = DORM.BATH_STACK - (bath[d.id] ?? 0);
-    const k = Math.min(want, have, room); if (k < 1) return { ok: false, msg: `浴缸里的${d.name}已经够多了（每种最多 ${DORM.BATH_STACK} 条）`, moved: 0 };
+    const k = Math.min(want, have, room); if (k < 1) return { ok: false, msg: `鱼缸里的${d.name}已经够多了（每种最多 ${DORM.BATH_STACK} 条）`, moved: 0 };
     inv[d.id] = have - k; if (inv[d.id] <= 0) delete inv[d.id];
     bath[d.id] = (bath[d.id] ?? 0) + k;
-    return { ok: true, msg: `放进浴缸：${d.name} ×${k}`, moved: k };
+    return { ok: true, msg: `放进鱼缸：${d.name} ×${k}`, moved: k };
   }
-  const have = bath[d.id] ?? 0; if (have < 1) return { ok: false, msg: `浴缸里没有${d.name}`, moved: 0 };
+  const have = bath[d.id] ?? 0; if (have < 1) return { ok: false, msg: `鱼缸里没有${d.name}`, moved: 0 };
   const room = d.stack - (inv[d.id] ?? 0);
   const k = Math.min(want, have, room); if (k < 1) return { ok: false, msg: `背包里的${d.name}已经拿满了`, moved: 0 };
   inv[d.id] = (inv[d.id] ?? 0) + k;
@@ -221,7 +225,7 @@ export function bathMove(bath: Inv, inv: Inv, op: 'put' | 'take', id: unknown, n
   return { ok: true, msg: `取回来：${d.name} ×${k}`, moved: k };
 }
 
-/** 给场景和访客看的浴缸概览：r = 少见/稀有/史诗/传说/神话各有几条；f = 最多 6 种在缸里游的鱼（稀有度高的优先） */
+/** 给场景和访客看的鱼缸概览：r = 少见/稀有/史诗/传说/神话各有几条；f = 最多 6 种在缸里游的鱼（稀有度高的优先） */
 export interface BathView { r: number[]; f: string[] }
 const RANK: Record<string, number> = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
 export function bathView(bath: Inv | undefined): BathView {
@@ -237,7 +241,7 @@ export const glowDensity = (v: BathView): number => Math.min(1, 0.15 + v.r.reduc
 
 // ------------------------------------------------------------------ 装修（家具摆放）
 /** 房间里现在的摆放：装修过就用存档里的，没装修过用原来的默认布局 */
-export const layOf = (d: DormSave | undefined): Placed[] => d?.lay ?? defaultLay();
+export const layOf = (d: DormSave | undefined): Placed[] => d?.lay ?? defaultLay(roomLevel(d));
 
 export type LayOp = { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number };
 const asRot = (r: unknown): Rot | undefined => (r === 90 || r === 180 || r === 270 ? r : undefined);
@@ -272,7 +276,7 @@ export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: 
       inv[def.id] = have + 1;
     }
   }
-  d.lay = next;
+  d.lay = next; d.v = 2;
   return { ok: true, msg: done };
 }
 const STACKCAP = 999;

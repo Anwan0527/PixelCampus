@@ -7,6 +7,7 @@ import { DECOR } from '../../src/shared/decor.ts';
 import { FURNITURE } from './furniture.ts';
 import { OFFICE_FURNITURE } from './furniture-office.ts';
 import { DECOR_FURNITURE } from './furniture-decor.ts';
+import { DORM_FURNITURE } from './furniture-dorm.ts';
 
 const O = hex('#2a1f2e');
 
@@ -687,7 +688,7 @@ export const ICONS: Record<string, () => Img> = {
 
 /** 宿舍家具的背包图标：把家具精灵按面积平均缩进 16×16（保持比例、居中），再和别的图标一样描边 */
 function decorIcon(k: string): Img {
-  const src = ({ ...FURNITURE, ...OFFICE_FURNITURE, ...DECOR_FURNITURE })[k]().img;
+  const src = ({ ...FURNITURE, ...OFFICE_FURNITURE, ...DORM_FURNITURE, ...DECOR_FURNITURE })[k]().img;
   const s = Math.max(1, Math.max(src.w, src.h) / 16), nw = Math.max(1, Math.min(16, Math.round(src.w / s))), nh = Math.max(1, Math.min(16, Math.round(src.h / s)));
   const out = new Img(16, 16), ox = (16 - nw) >> 1, oy = (16 - nh) >> 1;
   for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {

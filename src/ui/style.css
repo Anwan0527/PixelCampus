@@ -1100,3 +1100,11 @@ body.touch .decor-modes .seg { padding: 1px 8px; font-size: 12px; }
 body.touch .decor-skin { width: 80px; }
 
 .hall-note { font-size: 12px; opacity: .75; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* 装修时（手机）：藏起摇杆和互动键，免得误触走路；用托盘里的方向键 + 「放这里」操作 */
+body.decorating #touch-zone, body.decorating #touch-btns { display: none !important; }
+.decor-pad { display: none; gap: 5px; margin-left: auto; align-items: center; }
+body.touch .decor-pad { display: flex; }
+.decor-arrow { padding: 2px 12px; font-size: 16px; min-width: 38px; }
+.decor-put { padding: 2px 12px; font-size: 14px; white-space: nowrap; flex: 0 0 auto; }
+.decor-arrow { flex: 0 0 auto; }

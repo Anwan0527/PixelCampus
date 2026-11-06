@@ -105,7 +105,7 @@ export class Character {
   }
 
   /** 坐下/起身；bench = 长椅锚点（没有就只是原地坐着，不画椅面遮挡） */
-  setSitting(on: boolean, bench?: { bx: number; by: number }) {
+  setSitting(on: boolean, bench?: { bx: number; by: number; /** false = 不画长椅的椅面遮挡（宿舍里的椅子自己带椅面） */ strip?: boolean }) {
     if (on === this.sitting && (!on || (this.seatAt?.bx === bench?.bx && this.seatAt?.by === bench?.by))) return;
     this.sitting = on;
     this.seatStrip?.destroy(); this.seatStrip = undefined; this.seatAt = undefined;
@@ -114,7 +114,7 @@ export class Character {
       if (this.riding) this.setRiding(false);
       this.facing = 'down'; this.moving = false;
       this.seatAt = bench;
-      if (bench) { // 椅面前沿（含椅腿）单独再画一层盖在人物上：人坐在靠背前、腿被椅面挡住
+      if (bench && bench.strip !== false) { // 椅面前沿（含椅腿）单独再画一层盖在人物上：人坐在靠背前、腿被椅面挡住
         const fr = sc.textures.getFrame('props', 'bench');
         this.seatStrip = sc.add.image(bench.bx, bench.by, 'props', 'bench').setOrigin(13 / fr.width, 15 / fr.height).setCrop(0, 4, fr.width, fr.height - 4);
       }

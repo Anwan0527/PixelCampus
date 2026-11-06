@@ -3,6 +3,7 @@
  * 规则在服务器执行（server/trade.ts）：双方都得在线、站得近；摆出去的东西必须真的有；任何一方改了报价，双方的确认都作废；
  * 成交是原子的（要么全换，要么一件不动）；成交不收税、不改价。设计见 docs/ECONOMY.md「玩家交易」。
  */
+import { isStarter } from './decor';
 import { itemDef, type Gain } from './items';
 
 /** 发起交易时，双方最多隔多远（像素）；成交那一刻放宽一点，免得有人晃了一步就失败 */
@@ -22,7 +23,7 @@ export interface TradeSide extends TradeOffer { ready: boolean }
 /** 钓鱼 2.0：这些东西不能交易（防倒卖和"代开箱"）：特殊鱼竿、龙骨竿、万能饵、神话饵、龙鳞（盲盒和配件按种类判断，见 tradable） */
 export const UNTRADABLE: ReadonlySet<string> = new Set(['rod_glow', 'rod_rain', 'rod_frost', 'rod_pickup', 'rod_twin', 'rod_bone', 'bait_any', 'bait_myth', 'dragon_scale']);
 /** 钥匙类的东西（爱猫徽章这类"证明"）、盲盒、配件、上面那几样不能交易；其余的背包物品（含饵和鱼）都可以 */
-export const tradable = (id: string): boolean => { const d = itemDef(id); return !!d && d.kind !== 'key' && d.kind !== 'box' && d.kind !== 'tackle' && !UNTRADABLE.has(id); };
+export const tradable = (id: string): boolean => { const d = itemDef(id); return !!d && d.kind !== 'key' && d.kind !== 'box' && d.kind !== 'tackle' && !UNTRADABLE.has(id) && !isStarter(id); }; // 固有家具（床、衣柜…）每人一份，不能交易
 
 /** 清洗网络来的报价：只留可交易的、数量 1..堆叠上限、种类不重复、不超过 TRADE_MAX_ITEMS；校园币 0..TRADE_COIN_MAX */
 export function cleanOffer(raw: unknown): TradeOffer {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { FIXED_FLOOR, ROOM_SIZES, defaultLay, doorKeep, layError, roomDims, type Placed } from '../src/shared/decor';
+import { ROOM_SIZES, defaultLay, doorKeep, layError, roomDims, type Placed } from '../src/shared/decor';
 import { cleanDorm, cleanSkin, dormInteriorId, dormInteriorLevel, dormRoom, expandApply, isDormInterior, layApply, roomLevel, roomSpawn, skinApply, skinOf, skinOwned, type DormSave } from '../src/shared/dorm';
 import { FLOOR_SKINS, ROOM_NAMES, ROOM_PRICES, WALL_SKINS, skinFile } from '../src/shared/dormskin';
 import { DORM_FLOOR_STYLES, DORM_WALL_STYLES, paintInterior } from '../tools/art/interior-bg';
@@ -17,7 +17,7 @@ describe('房间级别', () => {
     const base = spec('dorm');
     ROOM_SIZES.forEach((r, lv) => {
       const j = spec(dormInteriorId(lv)); expect([j.w, j.h]).toEqual([r.w, r.h]); expect(j.exit).toEqual(base.exit);
-      expect(j.furniture).toEqual(base.furniture); expect(dormRoom(lv)).toMatchObject({ w: r.w, h: r.h, exitX: j.exit.x, exitW: j.exit.w });
+      expect(j.furniture).toEqual([]); // 没有固定家具了：床、窗、地毯、门垫都是摆放数据里的家具 expect(dormRoom(lv)).toMatchObject({ w: r.w, h: r.h, exitX: j.exit.x, exitW: j.exit.w });
       expect(doorKeep(lv)).toMatchObject({ x: j.exit.x, w: j.exit.w }); expect(doorKeep(lv).y + doorKeep(lv).h).toBe(r.h - 1); // 门口留空的区域正好在门洞里面
       expect(roomDims(lv)).toMatchObject({ x1: r.w - 2, y1: r.h - 2 });
     });
@@ -31,16 +31,17 @@ describe('房间级别', () => {
   });
   it('摆放按级别校验：大房间里能放的地方更多；升级后原来的摆放仍然合法；门口保留区随级别下移', () => {
     expect(layError([P('dc_sofa', 17, 5)], 0)).toContain('地面'); expect(layError([P('dc_sofa', 17, 5)], 1)).toBeNull(); expect(layError([P('dc_sofa', 21, 12)], 1)).toContain('地面'); expect(layError([P('dc_sofa', 21, 12)], 2)).toBeNull();
-    const lay = [...defaultLay(), P('dc_sofa', 3, 8), P('dc_rug_red', 5, 5), P('dc_dtable', 4, 5), P('dc_books', 4, 5), P('dc_clock', 4, 3)];
+    const lay = [...defaultLay(), P('dc_sofa', 3, 8), P('dc_dtable', 4, 5), P('dc_books', 4, 5), P('dc_clock', 4, 3)];
     expect(layError(lay, 0)).toBeNull(); expect(layError(lay, 1)).toBeNull(); expect(layError(lay, 2)).toBeNull();
     expect(layError([P('dc_chair', 7, 10)], 1)).toContain('门口'); expect(layError([P('dc_chair', 7, 10)], 0)).toContain('地面'); expect(layError([P('dc_chair', 7, 8)], 1)).toBeNull(); // 小屋的门口在第 8、9 行，中屋的在第 10、11 行
     expect(layError([P('dc_poster', 17, 3)], 1)).toBeNull(); expect(layError([P('dc_poster', 17, 3)], 0)).toContain('北墙'); // 加宽的北墙也能挂画
-    for (const r of FIXED_FLOOR) expect(r.x + r.w).toBeLessThanOrEqual(15); // 固定家具都在小屋范围内，各级房间都放得下
+    for (const lv of [0, 1, 2]) expect(layError(defaultLay(lv), lv)).toBeNull(); // 各级房间的默认布局都合法
   });
   it('cleanDorm 按存档里的级别清洗摆放；layApply 按级别校验', () => {
     const big = [{ d: 'dc_sofa', x: 16, y: 10 }];
-    expect(cleanDorm({ lay: big })).toEqual({ lay: [] }); // 小屋放不下 → 摆放被清空（空房间）
-    expect(cleanDorm({ rm: 1, lay: big })).toEqual({ rm: 1, lay: big }); expect(cleanDorm({ rm: 3 })).toBeUndefined(); expect(cleanDorm({ rm: 0 })).toBeUndefined();
+    expect(cleanDorm({ lay: big })!.lay!.map((p) => p.d)).not.toContain('dc_sofa'); // 小屋放不下 → 丢掉（老存档只剩补上的固有家具）
+    expect(cleanDorm({ rm: 1, lay: big })!.lay!.map((p) => p.d)).toContain('dc_sofa'); expect(cleanDorm({ rm: 1, lay: big, v: 2 })).toEqual({ rm: 1, lay: big, v: 2 });
+    expect(cleanDorm({ rm: 3 })).toBeUndefined(); expect(cleanDorm({ rm: 0 })).toBeUndefined();
     const d: DormSave = { rm: 1 }, inv = { dc_sofa: 1 };
     expect(layApply(d, inv, { op: 'place', d: 'dc_sofa', x: 16, y: 10 }).ok).toBe(true); const d0: DormSave = {}, inv0 = { dc_sofa: 1 }; expect(layApply(d0, inv0, { op: 'place', d: 'dc_sofa', x: 16, y: 10 }).ok).toBe(false);
   });

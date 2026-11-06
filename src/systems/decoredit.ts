@@ -42,6 +42,11 @@ export class DecorEditor {
     for (const b of [this.btnRot, this.btnPick, this.btnCancel]) b.type = 'button';
     this.btnRot.addEventListener('click', () => this.turn()); this.btnPick.addEventListener('click', () => this.pick()); this.btnCancel.addEventListener('click', () => this.cancel());
     acts.append(this.btnRot, this.btnPick, this.btnCancel);
+    // 手机装修专用的方向键：手指点房间只是预览，用这几个键一格一格挪虚影，再点「放这里」；装修时摇杆和互动键是隐藏的（不会误触走路）
+    const pad = el('div', 'decor-pad');
+    for (const [label, dx, dy] of [['◀', -1, 0], ['▲', 0, -1], ['▼', 0, 1], ['▶', 1, 0]] as const) { const b = el('button', 'btn decor-arrow', label); b.type = 'button'; b.setAttribute('aria-label', '挪动虚影'); b.addEventListener('click', () => this.nudge(dx, dy)); pad.append(b); }
+    const put = el('button', 'btn primary decor-put', '放这里'); put.type = 'button'; put.addEventListener('click', () => this.commit()); pad.append(put);
+    acts.append(pad);
     this.root.append(head, this.modesEl, this.tabsEl, this.listEl, acts, this.msgEl);
     (document.getElementById('hud') ?? document.body).append(this.root);
     window.addEventListener('keydown', this.onKey);
@@ -61,6 +66,7 @@ export class DecorEditor {
     this.ghost = this.scene.add.image(0, 0, 'furniture').setOrigin(0).setVisible(false).setAlpha(0.8).setDepth(8600);
     this.scene.input.mouse?.disableContextMenu();
     this.scene.input.on('pointermove', this.onMove); this.scene.input.on('pointerdown', this.onDown);
+    document.body.classList.add('decorating'); // 手机：藏起摇杆和互动键
     this.api.onToggle(true); this.drawGrid(); this.render();
   }
   close() {
@@ -70,7 +76,7 @@ export class DecorEditor {
     this.grid?.destroy(); this.mark?.destroy(); this.ghost?.destroy(); this.grid = this.mark = undefined; this.ghost = undefined;
     if (this.prevInv !== undefined || this.net.handlers.inv) this.net.handlers.inv = this.prevInv;
     this.net.handlers.coins = this.prevCoins;
-    this.api.reserve(0); this.api.onToggle(false);
+    document.body.classList.remove('decorating'); this.api.reserve(0); this.api.onToggle(false);
   }
   /** 摆放或背包变了（服务器回了新数据）：重画列表和虚影；选中的家具如果没了就取消 */
   refresh() {
@@ -210,7 +216,7 @@ export class DecorEditor {
       const d = decorDef(q.d); if (!d) return;
       let on = false, r = 0;
       if (d.kind === 'wall') { const w = wallRect(d, q); on = c.x >= w.x && c.x < w.x + w.w && c.y >= w.y && c.y < w.y + w.h; r = 1; }
-      else { const f = footOf(d, q.r); on = c.x >= q.x && c.x < q.x + f.fw && c.y >= q.y && c.y < q.y + f.fh; r = d.kind === 'top' ? 3 : d.kind === 'rug' ? 0 : 2; }
+      else { const f = footOf(d, q.r); on = c.x >= q.x && c.x < q.x + f.fw && c.y >= q.y && c.y < q.y + f.fh; r = d.kind === 'top' ? 3 : d.kind === 'rug' ? 0 : d.kind === 'mat' ? 0.5 : 2; }
       if (on && r > rank) { best = i; rank = r; }
     });
     if (best < 0) return;
@@ -222,6 +228,14 @@ export class DecorEditor {
     this.busyUntil = now + 900; // 等服务器回话再放下一件（防连点）
     if (this.sel?.kind === 'new') this.net.dormLay({ op: 'place', d: p.d, x: p.x, y: p.y, ...(p.r ? { r: p.r } : {}) });
     else if (this.sel?.kind === 'move') { this.net.dormLay({ op: 'move', i: this.sel.i, x: p.x, y: p.y, ...(p.r ? { r: p.r } : {}) }); this.sel = null; }
+  }
+  /** 方向键：把虚影挪一格（没有预览位置时从房间中间开始） */
+  private nudge(dx: number, dy: number) {
+    if (this.mode !== 'furn') return;
+    const R = roomDims(this.api.level());
+    const cur = this.hover ?? { x: Math.floor((R.x0 + R.x1) / 2), y: Math.floor((R.y0 + R.y1) / 2) };
+    this.hover = { x: Math.max(0, Math.min(R.w - 1, cur.x + dx)), y: Math.max(0, Math.min(R.h - 1, cur.y + dy)) };
+    this.drawGhost();
   }
   private turn() {
     const d = this.selDef(); if (!d?.turn) return;

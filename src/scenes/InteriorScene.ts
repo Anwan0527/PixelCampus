@@ -16,7 +16,8 @@ import { RemotePlayer } from '@/entities/RemotePlayer';
 import { BathFx } from '@/systems/bathfx';
 import { DecorEditor } from '@/systems/decoredit';
 import { spotOf } from '@/systems/decorview';
-import { decorDef, defaultLay, footOf, type Placed } from '@/shared/decor';
+import { topRaise } from '@/shared/decor';
+import { decorDef, defaultLay, footOf, seatsOf, type Placed } from '@/shared/decor';
 import type { BathView } from '@/shared/dorm';
 import { packFlags, type RoomWho, type ServerMsg } from '@/shared/protocol';
 
@@ -51,7 +52,8 @@ export class InteriorScene extends Phaser.Scene {
   private acMode = 0; private acVent = { x: 0, y: 0 }; private acLed?: Phaser.GameObjects.Rectangle; private acLabel?: Phaser.GameObjects.Text; private acTimer?: Phaser.Time.TimerEvent;
   private sleeping = false; private sleepPending = false;
   private sleeper?: Phaser.GameObjects.Sprite; private cover?: Phaser.GameObjects.Image; private dim?: Phaser.GameObjects.Rectangle; private zzTimer?: Phaser.Time.TimerEvent;
-  private bed = { px: 0, py: 0, wx: 0, wy: 0 };
+  private bed: { px: number; py: number; wx: number; wy: number; depth: number } | null = null;
+  private prevFindSeat?: typeof RemotePlayer.findSeat; private hasAc = false; private seats: { x: number; y: number; bx: number; by: number }[] = []; private sitting = false;
   // ---- 做客：visit = 我是访客（房主不是我）；remotes = 屋里的其他人（房主或访客）
   private visit: Extract<ServerMsg, { t: 'dorm_visit' }> | null = null;
   private remotes = new Map<number, RemotePlayer>();
@@ -110,14 +112,9 @@ export class InteriorScene extends Phaser.Scene {
     this.selfId = this.net?.selfId ?? 0;
     if (this.net) this.net.handlers.dormOut = (msg) => { if (msg) this.hud.banner('🏠 宿舍', msg); this.leaveForced(); }; // 在屋里被传走（传送/房主离开…）：直接离开室内，人留在新位置
     if (this.chat) { this.chatFocus = this.chat.onFocus; this.chat.onFocus = () => { this.input.keyboard!.resetKeys(); this.chatFocus?.(); }; } // 公屏：宿舍里也能看、能说
-    const ac = this.def.objects.find((o) => o.k === 'ac'), bed = this.def.objects.find((o) => o.k === 'dbed');
-    if (ac) { this.acVent = { x: ac.x + 18, y: ac.y + 13 }; this.acLed = this.add.rectangle(ac.x + 28.5, ac.y + 5, 5, 2, 0x3f9a58).setDepth(ac.depth + 1); }
-    if (bed) this.bed = { px: bed.x, py: bed.y, wx: bed.x + 17, wy: bed.y + 71 }; // wx/wy = 起床后站的位置（床尾外面，再用 standNear 找个真能站的）
-    const bath = this.def.objects.find((o) => o.k === 'dbath'); if (bath) this.bathFx = new BathFx(this, bath.x, bath.y, bath.depth);
-    const sg = this.def.objects.find((o) => o.k === 'dsign');
-    if (sg) { this.signAt = { x: sg.x + 41, y: sg.y + 11 }; this.signText = this.add.text(this.signAt.x, this.signAt.y, '', { fontFamily: 'ArkPixel', fontSize: '10px', color: '#4a2e14' }).setOrigin(0.5).setDepth(9000); }
+    // 床、空调、鱼缸、门牌都是可以挪的家具：位置来自摆放数据，在 setLay 里绑定（rebindFixtures）
     { const sk = this.visit ? this.visit.sk : this.dormUi?.data?.sk; this.setSkin(sk?.w ?? 0, sk?.f ?? 0); }
-    this.setLay(this.visit ? (this.visit.lay ?? defaultLay()) : (this.dormUi?.data?.lay ?? defaultLay())); // 房里的家具摆放：访客用房主的，自己用自己的（数据还没来就先用默认布局）
+    this.setLay(this.visit ? (this.visit.lay ?? defaultLay(this.level)) : (this.dormUi?.data?.lay ?? defaultLay(this.level))); // 房里的家具摆放：访客用房主的，自己用自己的（数据还没来就先用默认布局）
     this.hostName = this.visit?.hostName ?? ((this.registry.get('profile') as Profile | undefined)?.name ?? '');
     if (this.visit) { // 我是访客：屋里的状态来自房主（空调、门牌、房主睡没睡），屋里已有的人也要画出来
       this.setTitle(this.visit.title); this.setAc(this.visit.ac); this.setBath(this.visit.bv);
@@ -137,7 +134,7 @@ export class InteriorScene extends Phaser.Scene {
     }
     this.registry.set('roomSay', (pid: number, text: string) => { if (pid === this.selfId) this.player.say(text); else this.remotes.get(pid)?.say(text); }); // 公屏的话冒泡在人头上
     if (this.dormUi) {
-      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); this.setSkin(m.sk?.w ?? 0, m.sk?.f ?? 0); if ((m.rm ?? 0) !== this.level) { this.expandTo(m.rm ?? 0); return; } this.setLay(m.lay ?? defaultLay()); this.editor?.refresh(); } };
+      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); this.setSkin(m.sk?.w ?? 0, m.sk?.f ?? 0); if ((m.rm ?? 0) !== this.level) { this.expandTo(m.rm ?? 0); return; } this.setLay(m.lay ?? defaultLay(this.level)); this.editor?.refresh(); } };
       this.dormUi.onResult = (ok, msg, wake) => {
         this.hud.banner(ok ? '🏠 宿舍' : '⚠️ 宿舍', msg);
         if (this.sleepPending) { this.sleepPending = false; if (ok) this.beginSleep(); }
@@ -145,6 +142,7 @@ export class InteriorScene extends Phaser.Scene {
       };
       if (this.isHost) { if (this.dormUi.data) { this.setAc(this.dormUi.data.ac); this.setTitle(this.dormUi.data.title ?? ''); this.setBath(this.dormUi.data.bv); } else this.net?.dormGet(); }
     }
+    this.prevFindSeat = RemotePlayer.findSeat; RemotePlayer.findSeat = (x, y) => { const t = this.seats.find((q) => Math.hypot(q.x - x, q.y - y) < 6); return t ? { bx: t.bx, by: t.by, strip: false } : undefined; }; // 屋里别人坐在哪把椅子上
     if (this.isHost && this.net) this.setupDecorUi(this.net);
     if (this.visit && this.net) this.setupLikeUi(this.net, this.visit);
     this.events.once('shutdown', () => {
@@ -156,6 +154,7 @@ export class InteriorScene extends Phaser.Scene {
       if (this.net) this.net.handlers.dormOut = undefined;
       if (this.dormUi) { this.dormUi.onData = () => {}; this.dormUi.onResult = () => {}; this.dormUi.close(); this.dormUi.closeChest(); }
       this.acTimer?.remove(); this.zzTimer?.remove();
+      RemotePlayer.findSeat = this.prevFindSeat; this.sitting = false;
       this.editor?.destroy(); this.editor = undefined; this.decorBtn?.remove(); this.decorBtn = undefined; this.likeBtn?.remove(); this.likeBtn = undefined;
       if (this.net) this.net.handlers.dormLikes = this.prevLikes;
     });
@@ -168,6 +167,7 @@ export class InteriorScene extends Phaser.Scene {
     if (mode === this.acMode && (this.acTimer || !mode)) return;
     this.acMode = mode;
     this.acTimer?.remove(); this.acTimer = undefined;
+    if (!this.hasAc) return; // 空调现在不在墙上（被收回了）：只记着状态
     this.acLed?.setFillStyle(mode === 1 ? 0x58d0ff : mode === 2 ? 0xff8a3a : 0x3f9a58);
     this.acLabel?.destroy(); this.acLabel = undefined;
     if (!mode) return;
@@ -200,9 +200,10 @@ export class InteriorScene extends Phaser.Scene {
     const sp = who.sprite;
     who.facing = 'down';
     const tex = sp.texture.key, fr = sp.frame.name.replace(/_(up|left|right)_/, '_down_');
-    const pcx = this.bed.px + 17, pcy = this.bed.py + 17.5; // 枕头中心
-    this.sleeper = this.add.sprite(pcx, pcy - 12 + 42, tex, fr).setOrigin(sp.originX, sp.originY).setCrop(0, 0, sp.frame.width, 26).setDepth(96.5);
-    this.cover = this.add.image(this.bed.px, this.bed.py, 'furniture', 'dbed_cover').setOrigin(0).setDepth(97);
+    const bed = this.bed; if (!bed) return;
+    const pcx = bed.px + 17, pcy = bed.py + 17.5; // 枕头中心
+    this.sleeper = this.add.sprite(pcx, pcy - 12 + 42, tex, fr).setOrigin(sp.originX, sp.originY).setCrop(0, 0, sp.frame.width, 26).setDepth(bed.depth + 0.5);
+    this.cover = this.add.image(bed.px, bed.py, 'furniture', 'dbed_cover').setOrigin(0).setDepth(bed.depth + 1);
     sp.setVisible(false); who.tagsHidden = true;
     this.dim = this.add.rectangle(-1500, -1500, 4000, 4000, 0x0a1033, 0).setOrigin(0).setDepth(8999);
     this.tweens.add({ targets: this.dim, fillAlpha: 0.38, duration: 900 });
@@ -220,6 +221,7 @@ export class InteriorScene extends Phaser.Scene {
   /** 房主上床 */
   private beginSleep() {
     if (this.sleeping) return;
+    this.standUp();
     this.sleeping = true; this.hud.hint(null);
     this.player.facing = 'down'; this.player.update(0.016, 0, 0, false, this.map);
     this.showSleeper(this.player);
@@ -236,7 +238,8 @@ export class InteriorScene extends Phaser.Scene {
     this.sleeping = false;
     if (tell) this.net?.dormSleep(false);
     this.hideSleeper();
-    const spot = standNear((px, py) => this.map.boxBlocked(px, py), this.bed.wx, this.bed.wy, 64) ?? { x: this.bed.wx, y: this.bed.wy }; // 起床站的位置要真能站（之前落在墙/垃圾桶里，人动不了）
+    const bw = this.bed ?? { wx: this.player.x, wy: this.player.y };
+    const spot = standNear((px, py) => this.map.boxBlocked(px, py), bw.wx, bw.wy, 64) ?? { x: bw.wx, y: bw.wy }; // 起床站的位置要真能站（之前落在墙/垃圾桶里，人动不了）
     this.player.x = spot.x; this.player.y = spot.y; this.player.facing = 'down';
     this.player.sprite.setVisible(true); this.player.update(0.016, 0, 0, false, this.map);
     this.hud.hint(null);
@@ -259,7 +262,7 @@ export class InteriorScene extends Phaser.Scene {
   /** 屋里有别人时，每 ~100 毫秒把自己的位置报给服务器（没变就不报；一个人在屋里时一条都不发） */
   private reportPos(now: number) {
     if (!this.net || !this.remotes.size || this.net.status !== 'online' || now - this.rt.t < 100) return;
-    const x = Math.round(this.player.x * 4) / 4, y = Math.round(this.player.y * 4) / 4, f = packFlags(this.player.facing, this.player.moving, this.player.running);
+    const x = Math.round(this.player.x * 4) / 4, y = Math.round(this.player.y * 4) / 4, f = packFlags(this.player.facing, this.player.moving, this.player.running, false, this.sitting);
     if (x === this.rt.x && y === this.rt.y && f === this.rt.f) return;
     this.rt = { t: now, x, y, f }; this.net.roomMove(x, y, f);
   }
@@ -279,7 +282,7 @@ export class InteriorScene extends Phaser.Scene {
     else if (act === 'bed') { if (!this.isHost) this.hud.openDialog('单人床', [`这是 ${who} 的床。`]); else if (!this.sleepPending) { this.sleepPending = true; this.net.dormSleep(true); } }
     else if (act === 'bath') {
       if (this.isHost) this.dormUi?.openBath();
-      else { const v = this.bathView, n = v ? v.r.reduce((a, b) => a + b, 0) : 0; this.hud.openDialog('浴缸', [v && v.f.length ? `${who} 的浴缸里养着 ${v.f.length > 1 ? '好几种' : ''}鱼${n ? `，其中有 ${n} 条会发光的稀有鱼` : ''}，水面闪闪的。` : `${who} 的浴缸是空的，水很清。`]); }
+      else { const v = this.bathView, n = v ? v.r.reduce((a, b) => a + b, 0) : 0; this.hud.openDialog('鱼缸', [v && v.f.length ? `${who} 的鱼缸里养着 ${v.f.length > 1 ? '好几种' : ''}鱼${n ? `，其中有 ${n} 条会发光的稀有鱼` : ''}，水面闪闪的。` : `${who} 的鱼缸是空的，水很清。`]); }
     }
     else if (act === 'chest') { if (this.isHost) this.dormUi?.openChest(); else this.hud.openDialog('宝箱', [`${who} 的宝箱，只有主人能打开。`]); }
     else { const edit = this.registry.get('editProfile') as (() => void) | undefined; this.input.keyboard!.resetKeys(); edit?.(); }
@@ -327,19 +330,50 @@ export class InteriorScene extends Phaser.Scene {
     net.handlers.dormLikes = (uid, nn, ll, msg) => { this.prevLikes?.(uid, nn, ll, msg); if (uid !== v.host) return; n = nn; liked = ll; paint(); if (msg) this.hud.banner('🏠 宿舍', msg); };
   }
 
+  /** 坐在椅子 / 沙发上（坐姿只有一个朝向；别人也看得到，位置和坐姿随位置上报一起发） */
+  private sitDown(seat: { x: number; y: number; bx: number; by: number }) {
+    if (this.sleeping) return;
+    this.player.x = seat.x; this.player.y = seat.y; this.player.halt();
+    this.player.setSitting(true, { bx: seat.bx, by: seat.by, strip: false }); this.sitting = true; this.rt.f = -1; this.hud.hint(null);
+  }
+  private standUp() {
+    if (!this.sitting) return;
+    this.player.setSitting(false); this.sitting = false; this.rt.f = -1;
+    const spot = standNear((px, py) => this.map.boxBlocked(px, py), this.player.x, this.player.y, 48); if (spot) { this.player.x = spot.x; this.player.y = spot.y; }
+  }
+
+  /** 床、空调、鱼缸、门牌是可以挪的家具：它们摆在哪儿，睡觉的位置、空调的风、缸里的鱼、门牌上的字就跟到哪儿（家具不在房里 = 对应功能暂时没有） */
+  private rebindFixtures(lay: Placed[]) {
+    this.acLed?.destroy(); this.acLed = undefined; this.hasAc = false; this.bathFx?.destroy(); this.bathFx = undefined; this.signText?.destroy(); this.signText = undefined; this.bed = null;
+    for (const p of lay) {
+      const def = decorDef(p.d); if (!def?.act) continue;
+      const sp = spotOf(this.textures, lay, p); if (!sp) continue;
+      if (def.act === 'ac') { this.hasAc = true; this.acVent = { x: sp.x + 18, y: sp.y + 13 }; this.acLed = this.add.rectangle(sp.x + 28.5, sp.y + 5, 5, 2, 0x3f9a58).setDepth(sp.depth + 1); }
+      else if (def.act === 'bed') this.bed = { px: sp.x, py: sp.y, wx: sp.x + 17, wy: sp.y + 71, depth: sp.depth }; // wx/wy = 起床后站的位置（床尾外面，再用 standNear 找个真能站的）
+      else if (def.act === 'bath') { this.bathFx = new BathFx(this, sp.x, sp.y, sp.depth); this.bathFx.set(this.bathView); }
+      else if (def.act === 'sign') { this.signAt = { x: sp.x + 41, y: sp.y + 11 }; this.signText = this.add.text(this.signAt.x, this.signAt.y, '', { fontFamily: 'ArkPixel', fontSize: '10px', color: '#4a2e14' }).setOrigin(0.5).setDepth(9000); this.setTitle(this.titleRaw); }
+    }
+    const m = this.acMode; this.acMode = -1; this.acTimer?.remove(); this.acTimer = undefined; this.setAc(m); // 空调挪了地方：风从新位置吹出来
+  }
+
   /** 按摆放数据画房里的家具（地毯、桌椅、柜子、小件、墙饰），并更新碰撞：占地的地面家具挡路，地毯、小件、墙饰不挡 */
   private setLay(lay: Placed[]) {
     const key = JSON.stringify(lay); if (key === this.layKey) return; this.layKey = key; this.lay = lay;
+    this.standUp(); // 家具挪动 / 重画了：坐着的人先站起来
     for (const o of this.decorObjs) o.destroy(); this.decorObjs = []; this.decorTalk = [];
     const rows = this.baseCollision.map((r) => r.split(''));
     for (const p of lay) {
       const def = decorDef(p.d), spot = spotOf(this.textures, lay, p); if (!def || !spot) continue;
       this.decorObjs.push(this.add.image(spot.x, spot.y, 'furniture', spot.frame).setOrigin(0).setDepth(spot.depth));
+      if (def.act && def.kind === 'wall') this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + def.fw) * 16 + 8, y0: 0, y1: Math.max((p.y + 3) * 16, 80), title: def.name, text: '', act: def.act }); // 墙上的空调、门牌：走到它下面按 E
+      if (def.kind === 'top' && def.say) { const raise = topRaise(lay, p); this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + 1) * 16 + 8, y0: p.y * 16 - 8 - raise, y1: (p.y + 1) * 16 + 16, title: def.name, text: def.say }); }
       if (def.kind !== 'floor') continue;
       const { fw, fh } = footOf(def, p.r);
       for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) if (rows[p.y + j]?.[p.x + i] !== undefined) rows[p.y + j][p.x + i] = '1';
-      if (def.say) this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + fw) * 16 + 8, y0: p.y * 16 - 8, y1: (p.y + fh) * 16 + 16, title: def.name, text: def.say });
+      if (def.say || def.act) this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + fw) * 16 + 8, y0: p.y * 16 - 8, y1: (p.y + fh) * 16 + 16, title: def.name, text: def.say ?? '', ...(def.act ? { act: def.act } : {}) });
     }
+    this.rebindFixtures(lay);
+    this.seats = lay.flatMap((p) => seatsOf(p));
     this.map = new WorldMap({ width: this.def.w, height: this.def.h, collision: rows.map((r) => r.join('')) });
     if (this.player && this.map.boxBlocked(this.player.x, this.player.y)) { const s = standNear((px, py) => this.map.boxBlocked(px, py), this.player.x, this.player.y, 64); if (s) { this.player.x = s.x; this.player.y = s.y; } } // 家具摆到了人脚下：把人挪到旁边
   }
@@ -370,6 +404,7 @@ export class InteriorScene extends Phaser.Scene {
     const kx = (k.right.isDown || k.d.isDown ? 1 : 0) - (k.left.isDown || k.a.isDown ? 1 : 0);
     const ky = (k.down.isDown || k.s.isDown ? 1 : 0) - (k.up.isDown || k.w.isDown ? 1 : 0);
     const ix = kx || (joy?.x ?? 0), iy = ky || (joy?.y ?? 0); // 键盘优先，没按键时用手机摇杆（之前室内只读键盘，手机进了 214 室就动不了）
+    if (this.sitting && (ix || iy)) this.standUp(); // 坐着时一推方向就起身
     if (!this.leaving) this.player.update(dt, ix, iy, k.shift.isDown || (joy?.run ?? false), this.map);
 
     const press = Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.space) || tap;
@@ -383,8 +418,12 @@ export class InteriorScene extends Phaser.Scene {
       const dd = Math.hypot((a.x0 + a.x1) / 2 - this.player.x, (a.y0 + a.y1) / 2 - this.player.y);
       if (dd < sd) { sd = dd; spot = a; }
     }
-    const tip = (a: NonNullable<InteriorDef['interacts']>[number]) => a.act === 'sign' ? (this.isHost ? 'E  给宿舍起个名字（改门牌）' : 'E  看门牌') : a.act === 'bed' ? (this.isHost ? 'E  上床睡觉（精灵会慢慢恢复）' : `E  ${this.hostName} 的床`) : a.act === 'ac' ? `E  空调：现在${AC_NAMES[this.acMode as 0 | 1 | 2]}，点一下切换` : a.act === 'wardrobe' ? 'E  打开衣柜（换装）' : a.act === 'bath' ? (this.isHost ? 'E  浴缸：放鱼进去养着（放进去的鱼不能卖）' : 'E  看看浴缸里的鱼') : a.act === 'chest' ? (this.isHost ? 'E  打开宝箱（仓库）' : 'E  宝箱（只有主人能开）') : `E  查看：${a.title}`;
-    this.hud.hint(near ? `E  和「${near.name}」交谈` : spot ? tip(spot) : null);
+    const tip = (a: NonNullable<InteriorDef['interacts']>[number]) => a.act === 'sign' ? (this.isHost ? 'E  给宿舍起个名字（改门牌）' : 'E  看门牌') : a.act === 'bed' ? (this.isHost ? 'E  上床睡觉（精灵会慢慢恢复）' : `E  ${this.hostName} 的床`) : a.act === 'ac' ? `E  空调：现在${AC_NAMES[this.acMode as 0 | 1 | 2]}，点一下切换` : a.act === 'wardrobe' ? 'E  打开衣柜（换装）' : a.act === 'bath' ? (this.isHost ? 'E  鱼缸：放鱼进去养着（放进去的鱼不能卖）' : 'E  看看鱼缸里的鱼') : a.act === 'chest' ? (this.isHost ? 'E  打开宝箱（仓库）' : 'E  宝箱（只有主人能开）') : `E  查看：${a.title}`;
+    // 椅子：靠近按 E 坐下；坐着时按 E 起身
+    let seat: (typeof this.seats)[number] | null = null;
+    if (this.dorm && !near && !spot && !this.sitting) { let sd2 = 26; for (const q of this.seats) { const dd = Math.hypot(q.bx - this.player.x, q.by - this.player.y); if (dd < sd2) { sd2 = dd; seat = q; } } }
+    this.hud.hint(this.sitting ? 'E / 方向键  起身' : near ? `E  和「${near.name}」交谈` : spot ? tip(spot) : seat ? 'E  坐下' : null);
+    if (this.sitting && press) this.standUp(); else if (seat && press) this.sitDown(seat);
     if (spot && press) { if (spot.act) this.dormAct(spot.act); else this.hud.openDialog(spot.title, [spot.text]); }
     if (near && press) {
       this.talking = near;

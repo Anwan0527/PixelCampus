@@ -103,7 +103,7 @@ export const bulkSellable = (id: string): boolean => { const d = fishDef(id); re
 export function sellList(inv: Record<string, number>, day: number, bonus = 0): { id: string; name: string; n: number; price: number; rarity: Rarity }[] {
   const out: { id: string; name: string; n: number; price: number; rarity: Rarity }[] = FISH.filter((f) => (inv[f.id] ?? 0) > 0).map((f) => ({ id: f.id, name: f.name, n: inv[f.id], price: sellPrice(f.id, day, bonus), rarity: f.rarity }));
   for (const id of [...Object.keys(EXTRA_SELL), ...TRASH_ONLY, TREASURE_ID]) if ((inv[id] ?? 0) > 0) out.push({ id, name: itemDef(id)?.name ?? id, n: inv[id], price: sellPrice(id, day), rarity: id === TREASURE_ID || EXTRA_SELL[id] ? 'rare' : 'junk' });
-  for (const d of DECOR) if ((inv[d.id] ?? 0) > 0) out.push({ id: d.id, name: d.name, n: inv[d.id], price: decorRefund(d.id), rarity: 'rare' }); // 宿舍家具：退货（原价的一半）
+  for (const d of DECOR) if ((inv[d.id] ?? 0) > 0 && decorRefund(d.id) > 0) out.push({ id: d.id, name: d.name, n: inv[d.id], price: decorRefund(d.id), rarity: 'rare' }); // 宿舍家具：退货（原价的一半）
   return out;
 }
 /** 钓具摊（精工湖边）卖的东西：商店里所有钓鱼相关的商品（鱼竿 / 鱼饵 / 配件）；图书馆广场的商店照旧卖全部 */

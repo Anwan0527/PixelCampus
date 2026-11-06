@@ -194,12 +194,80 @@ function cactus(): Furn {
   return f(img, 1, 1);
 }
 
+
+// ---- 窗（北墙，三格宽）：白框 + 玻璃（远处楼房的影子）+ 窗台；窗帘向两边伸出去 9 像素（占地仍是三格，ox = 9 像素的偏移在目录里）
+function windowArt(curtain?: { c: string[]; lace?: boolean }): Furn {
+  const cw = curtain ? 9 : 0, wx = cw + 3, ww = 48, W2 = wx + ww + cw + 3, img = new Img(W2, curtain ? 45 : 40);
+  const frame = c('#e8e4d8'), glass = c('#cfe3f2'), far = c('#e6ecef'), sill = c('#d4cfc0');
+  const y0 = curtain ? 5 : 0; // 有窗帘时窗框在窗帘杆下面
+  img.rect(wx - 2, y0, ww + 4, 33, frame); img.rect(wx, y0 + 2, ww, 29, glass);
+  for (let y = 0; y < 29; y++) for (let x = 0; x < ww; x++) if (y > 14 && ((x * 7 + y * 13) % 9 < 3) && ((x >> 2) + (y >> 2)) % 3 === 0) img.set(wx + x, y0 + 2 + y, far);
+  for (let i = 1; i < 3; i++) img.vline(wx + Math.round((ww * i) / 3), y0 + 2, 29, frame);
+  img.hline(wx, y0 + 16, ww, frame); img.rect(wx - 3, y0 + 32, ww + 6, 3, sill);
+  if (curtain) for (const cx of [wx - 12, wx + ww + 4]) {
+    const [base, hi, dark] = curtain.c.map(c);
+    img.rect(cx, 0, 8, 41, base); for (let x = cx + 1; x < cx + 8; x += 2) img.vline(x, 0, 41, hi); img.hline(cx, 0, 8, dark); img.hline(cx, 40, 8, dark);
+    if (curtain.lace) for (let y = 3; y < 40; y += 4) for (let x = cx + (y % 8 ? 1 : 3); x < cx + 8; x += 4) img.set(x, y, c('#d8d2c4'));
+  }
+  return f(img, 3, 0);
+}
+const CURT = { purple: ['#6f607c', '#85768f', '#4f4360'], blue: ['#4f78b0', '#6a92c8', '#385a8a'], pink: ['#c8708a', '#dd8ca4', '#a05068'], green: ['#4f8a5e', '#68a478', '#386644'], lace: ['#f4f0e6', '#ffffff', '#c8c2b4'] };
+
+// ---- 门垫（小地毯，叠在地毯上面）
+function matDoor(): Furn {
+  const img = new Img(32, 16), A = c('#5a3a28'), B = c('#7a5233'), Cc = c('#8a6240');
+  img.rect(0, 0, 32, 16, A); img.rect(2, 2, 28, 12, B); for (let x = 3; x < 29; x += 3) img.vline(x, 3, 10, Cc);
+  return f(img, 2, 1);
+}
+function matWelcome(): Furn {
+  const img = new Img(32, 16), A = c('#6a4a2a'), B = c('#b08a5a'), T = c('#3a2a1a');
+  img.rect(0, 0, 32, 16, A); img.rect(1, 1, 30, 14, B); for (let x = 2; x < 30; x += 2) for (let y = 2; y < 14; y += 4) img.set(x, y, c('#c4a070'));
+  for (let i = 0; i < 7; i++) { const x = 4 + i * 4; img.vline(x, 6, 4, T); img.vline(x + 2, 6, 4, T); img.hline(x, i % 2 ? 6 : 9, 3, T); } // WELCOME 七个字母（小方块示意）
+  return f(img, 2, 1);
+}
+function matPaw(): Furn {
+  const img = new Img(32, 16), A = c('#d8708a'), B = c('#f0a0b8'), W3 = c('#fde0ea');
+  img.rect(0, 0, 32, 16, A); img.rect(1, 1, 30, 14, B);
+  img.ellipse(16, 10, 5, 3.4, W3); for (const [x, y] of [[9, 6], [13, 3.5], [19, 3.5], [23, 6]] as const) img.ellipse(x, y, 2.2, 2.6, W3);
+  return f(img, 2, 1);
+}
+function matStraw(): Furn {
+  const img = new Img(32, 32), S = [c('#a8884a'), c('#c9a864'), c('#e0c888')];
+  img.ellipse(16, 16, 16, 16, S[0]); img.ellipse(16, 16, 14.6, 14.6, S[1]); img.ellipse(16, 16, 11, 11, S[2]); img.ellipse(16, 16, 8.4, 8.4, S[1]); img.ellipse(16, 16, 5, 5, S[2]); img.ellipse(16, 16, 2.4, 2.4, S[0]);
+  return f(img, 2, 2);
+}
+function matTowel(): Furn {
+  const img = new Img(32, 16), B = [c('#2f4f8a'), c('#4a72b4'), c('#cfe0f4')];
+  img.rect(0, 0, 32, 16, B[2]); for (let x = 0; x < 32; x += 8) img.rect(x, 0, 4, 16, B[1]); img.rect(0, 0, 32, 1, B[0]); img.rect(0, 15, 32, 1, B[0]);
+  for (let y = 1; y < 15; y += 3) { img.set(0, y, B[2]); img.set(31, y, B[2]); }
+  return f(img, 2, 1);
+}
+/** 暖橙大地毯（宿舍原来铺在地上的那块）：6×3 格，边缘浅一圈、斜纹 */
+function rugHome(): Furn {
+  const w = 96, h = 48, img = new Img(w, h), C0: RGBA = [200, 133, 106, 255];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const edge = x < 3 || y < 3 || x >= w - 3 || y >= h - 3;
+    img.set(x, y, edge ? [250, 173, 136, 255] : (x + y) % 8 < 1 ? [218, 147, 118, 255] : C0);
+  }
+  return f(img, 6, 3);
+}
+/** 台式电脑（桌面小件）：显示器 + 键盘，屏幕亮着 */
+function pc(): Furn {
+  const img = new Img(16, 14), K = c('#2b2e40');
+  img.rect(2, 0, 12, 9, K); img.rect(3, 1, 10, 7, c('#5f98cc')); img.hline(3, 1, 10, c('#9cc4e8')); img.rect(5, 4, 4, 1, c('#e8e4da')); img.rect(5, 6, 6, 1, c('#e8e4da'));
+  img.rect(7, 9, 2, 2, K); img.rect(4, 11, 8, 1, K);
+  img.rect(1, 11, 14, 3, c('#c9ccd6')); img.hline(1, 11, 14, c('#eef0f4')); for (let x = 2; x < 14; x += 2) img.set(x, 12, c('#8f95a6'));
+  return f(img, 1, 1);
+}
+
 export const DECOR_FURNITURE: Record<string, () => Furn> = {
   dc_dtable: () => cleanTable(2, 2), dc_dtable3: () => cleanTable(3, 2), dc_gamechair: gamechair, dc_beanbag: beanbag, dc_shoebox: shoebox, dc_coatrack: coatrack,
   dc_tv: tv, dc_tank: tank, dc_lamp: lamp, dc_bear: bear, dc_guitar: guitar,
   dc_rug_red: rugRed, dc_rug_blue: rugBlue, dc_rug_round: rugRound, dc_rug_paw: rugPaw,
   dc_clock: clock, dc_paint1: paint1, dc_paint2: paint2, dc_pennant: pennant, dc_poster: poster,
   dc_lamp_desk: lampDesk, dc_cactus: cactus,
+  dc_win_plain: () => windowArt(), dc_win_purple: () => windowArt({ c: CURT.purple }), dc_win_blue: () => windowArt({ c: CURT.blue }), dc_win_pink: () => windowArt({ c: CURT.pink }), dc_win_green: () => windowArt({ c: CURT.green }), dc_win_lace: () => windowArt({ c: CURT.lace, lace: true }),
+  dc_mat_door: matDoor, dc_mat_welcome: matWelcome, dc_mat_paw: matPaw, dc_mat_straw: matStraw, dc_mat_towel: matTowel, dc_rug_home: rugHome, dc_pc: pc,
 };
 /** 地图编辑器里的家具目录用（名字 + 分类；分类沿用编辑器已有的几类） */
 export const DECOR_INFO: Record<string, { name: string; cat: '桌椅' | '柜子电器' | '小件' | '墙面挂件' | '其他' }> = {
@@ -209,4 +277,6 @@ export const DECOR_INFO: Record<string, { name: string; cat: '桌椅' | '柜子�
   dc_rug_red: { name: '红格地毯', cat: '其他' }, dc_rug_blue: { name: '蓝条地毯', cat: '其他' }, dc_rug_round: { name: '圆形地毯', cat: '其他' }, dc_rug_paw: { name: '爪印地毯', cat: '其他' },
   dc_clock: { name: '挂钟', cat: '墙面挂件' }, dc_paint1: { name: '风景画', cat: '墙面挂件' }, dc_paint2: { name: '竖幅画', cat: '墙面挂件' }, dc_pennant: { name: '校旗', cat: '墙面挂件' }, dc_poster: { name: '海报', cat: '墙面挂件' },
   dc_lamp_desk: { name: '台灯', cat: '小件' }, dc_cactus: { name: '仙人掌', cat: '小件' },
+  dc_win_plain: { name: '窗（无窗帘）', cat: '墙面挂件' }, dc_win_purple: { name: '窗（紫窗帘）', cat: '墙面挂件' }, dc_win_blue: { name: '窗（蓝窗帘）', cat: '墙面挂件' }, dc_win_pink: { name: '窗（粉窗帘）', cat: '墙面挂件' }, dc_win_green: { name: '窗（绿窗帘）', cat: '墙面挂件' }, dc_win_lace: { name: '窗（白纱帘）', cat: '墙面挂件' },
+  dc_mat_door: { name: '棕色门垫', cat: '其他' }, dc_mat_welcome: { name: '欢迎门垫', cat: '其他' }, dc_mat_paw: { name: '猫爪门垫', cat: '其他' }, dc_mat_straw: { name: '草编圆垫', cat: '其他' }, dc_mat_towel: { name: '蓝条毛巾垫', cat: '其他' }, dc_rug_home: { name: '暖橙大地毯', cat: '其他' }, dc_pc: { name: '台式电脑', cat: '小件' },
 };

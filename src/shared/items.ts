@@ -83,7 +83,7 @@ const FISH2_ITEMS: ItemDef[] = [
   ...FISH.filter((f) => f.blurb).map((f): ItemDef => ({ id: f.id, name: f.name, desc: f.blurb!, kind: 'fish', stack: STACK_MAX })),
 ];
 /** 宿舍家具：每件家具是一种背包物品（摆上去从背包扣一个，收回来还一个；目录在 decor.ts） */
-const DECOR_ITEMS: ItemDef[] = DECOR.map((d): ItemDef => ({ id: d.id, name: d.name, desc: `${d.note}（${d.cat}${d.kind === 'wall' ? '，挂在北墙上' : d.kind === 'top' ? '，摆在桌面上' : d.kind === 'rug' ? '，铺在地上' : ''}）在宿舍里点「装修」摆放，校园商店有售。`, kind: 'decor', stack: STACK_MAX }));
+const DECOR_ITEMS: ItemDef[] = DECOR.map((d): ItemDef => ({ id: d.id, name: d.name, desc: d.starter ? `${d.note}（固有家具：每人一份，不能交易、不能卖；在宿舍里点「装修」可以收回、再摆）` : `${d.note}（${d.cat}${d.kind === 'wall' ? '，挂在北墙上' : d.kind === 'top' ? '，摆在桌面上' : d.kind === 'rug' ? '，铺在地上' : d.kind === 'mat' ? '，铺在地上、可以叠在地毯上' : ''}）在宿舍里点「装修」摆放，校园商店有售。`, kind: 'decor', stack: d.starter ? 1 : STACK_MAX }));
 export const ITEMS: readonly ItemDef[] = [...BASE_ITEMS, ...FISH2_ITEMS, ...DECOR_ITEMS];
 
 export type ItemId = string;

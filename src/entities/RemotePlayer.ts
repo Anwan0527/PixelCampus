@@ -10,7 +10,7 @@ interface State { t: number; x: number; y: number; flags: number }
 /** 其他在线玩家：昵称牌 + 在两次快照之间插值（落后 INTERP_MS 毫秒渲染，所以走路是平滑的）。 */
 export class RemotePlayer extends Character {
   /** 按位置找长椅（场景设置）：别人坐下时用它找到椅子，画出同样的"坐在椅子上" */
-  static findSeat?: (x: number, y: number) => { bx: number; by: number } | undefined;
+  static findSeat?: (x: number, y: number) => { bx: number; by: number; strip?: boolean } | undefined;
   private buf: State[] = [];
   constructor(scene: Phaser.Scene, readonly id: number, readonly uid: number, public info: PublicProfile, x: number, y: number, flags: number) {
     super(scene, x, y, info.look, info.app);

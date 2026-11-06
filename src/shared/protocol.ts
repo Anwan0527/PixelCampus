@@ -38,8 +38,9 @@ import type { DexEntry } from './monbox';
  * 9：聊天频道（chat 带 ch、channels、ch_set；队伍 / 附近的话不能漏进旧页面的公屏）
  * 10：钓鱼 2.0（神话鱼、配件、盲盒、合成、册页；装备栏多了配件和指名目标，旧页面不认识）
  * 11：钓鱼 3.0（钓鱼等级与路线、钓具老板的每日 / 每周委托、放生）
+ * 12：宿舍第四批（房间里没有固定家具了：床、衣柜、窗…都在摆放数据里；室内底图不再画窗/地毯/门垫；屋里坐姿位；旧页面画不出新宿舍，必须刷新）
  */
-export const PROTOCOL_VERSION = 11;
+export const PROTOCOL_VERSION = 12;
 
 /** 一个委托给客户端看的样子 */
 export interface CommView { id: CommTier; tier: CommTier; name: string; desc: string; goal: number; prog: number; done: boolean; claimed: boolean; reward: CommReward }

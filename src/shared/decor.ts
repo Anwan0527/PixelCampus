@@ -4,24 +4,34 @@
  *   所以不会复制，也能面对面交易。精灵图在家具图集里（k 是图集里的名字，tools/art/furniture-decor.ts 和 furniture*.ts 画的）。
  * - 摆放 Placed：{ d: 物品 id, x, y, r? }，存在 DormSave.lay；没装修过的玩家用 defaultLay()（原来房里的桌椅、盆栽、垃圾桶）。
  * - 校验 layError：服务器不信任客户端，客户端也用它判断"这里能不能放"（绿/红）。规则：
- *   地面家具不出界、不重叠、不压在床/衣柜/宝箱/浴缸上、不挡门口；摆完之后门口到每件功能家具必须还走得通；
- *   小件（书、台灯…）只能放在桌子上；墙饰只能挂北墙、不挡窗户/空调/门牌；地毯铺在地上，可以被家具压着。
- * 房间尺寸、固定家具的位置要和 data/interiors/dorm.json 一致（tests/decor.test.ts 核对）。
+ *   地面家具不出界、不重叠、不挡门口；摆完之后门口到每件功能家具（床、衣柜、宝箱、鱼缸、空调、门牌）必须还走得通；
+ *   小件（书、台灯、电脑…）只能放在桌子上；墙饰（窗、画、空调、门牌…）只能挂北墙、互相不重叠；
+ *   地毯铺在地上、可以被家具压着；门垫是小地毯，可以叠在地毯上。
+ * 2026-11-07 起房间里**没有固定家具了**：床、衣柜、宝箱、鱼缸、空调、门牌、窗、大地毯、门垫都是「固有家具」（starter：不卖、不能交易、不能退货，
+ * 每人一份），和别的家具一样可以收回、挪动。它们的功能（睡觉、换装、仓库、养鱼、空调、改门牌）跟着家具走：摆在哪儿就在哪儿用。
+ * 房间尺寸要和 data/interiors/dorm*.json 一致（tests 核对）。
  */
 
-export type DecorCat = '桌椅' | '柜架' | '电器' | '软装' | '地毯' | '墙饰' | '小件';
-/** floor = 占地的地面家具；rug = 地毯（铺在地上、不挡路）；wall = 北墙上的挂件；top = 摆在桌面上的小件（1×1） */
-export type DecorKind = 'floor' | 'rug' | 'wall' | 'top';
+export type DecorCat = '桌椅' | '柜架' | '电器' | '软装' | '地毯' | '墙饰' | '小件' | '固有';
+/** floor = 占地的地面家具；rug = 地毯（铺在地上、不挡路）；mat = 门垫（小地毯，叠在地毯上面）；wall = 北墙上的挂件（窗、画、空调…）；top = 摆在桌面上的小件（1×1） */
+export type DecorKind = 'floor' | 'rug' | 'mat' | 'wall' | 'top';
+/** 家具的功能：走近按 E 触发，由宿舍场景处理 */
+export type DecorAct = 'bed' | 'ac' | 'wardrobe' | 'chest' | 'sign' | 'bath';
 export interface DecorDef {
   /** 背包物品 id */ id: string;
   /** 家具图集里的精灵名 */ k: string;
   name: string; cat: DecorCat; kind: DecorKind;
   /** 占地（格）；墙饰 fh = 0 */ fw: number; fh: number;
   /** 墙饰：精灵有几格高（挂在墙上占几行） */ wh?: number;
-  /** 商店价（校园币）；0 = 不卖（目前没有） */ price: number;
+  /** 商店价（校园币）；0 = 不卖（固有家具） */ price: number;
   /** 桌子：小件可以放在它上面 */ surface?: boolean;
   /** 地毯可以转 90 度 */ turn?: boolean;
   /** 走近按 E 看到的一句话（可选） */ say?: string;
+  /** 功能（床睡觉、衣柜换装、宝箱仓库、鱼缸养鱼、空调、门牌改名）：摆在哪儿就在哪儿用 */ act?: DecorAct;
+  /** 固有家具：每人一份、不卖、不能交易、不能退货（可以收回背包再摆） */ starter?: boolean;
+  /** 能坐的椅子 / 凳子 / 沙发 */ seat?: boolean;
+  /** 小件摆在这张桌子上时再抬高多少像素（一行深的桌子，桌面比脚印高） */ lift?: number;
+  /** 画的时候向左偏移多少像素（窗帘比窗框宽，向两边伸出去） */ ox?: number;
   note: string;
 }
 
@@ -30,17 +40,17 @@ const D = (id: string, k: string, name: string, cat: DecorCat, kind: DecorKind, 
 
 export const DECOR: readonly DecorDef[] = [
   // ---- 桌椅
-  D('dc_desk', 'desk', '木书桌', '桌椅', 'floor', 2, 1, 60, '朴素的木书桌，带一个抽屉。'),
+  D('dc_desk', 'desk', '木书桌', '桌椅', 'floor', 2, 1, 60, '朴素的木书桌，带一个抽屉；桌面上能摆小件。', { surface: true, lift: 12 }),
   D('dc_deskpc', 'deskpc', '木桌+电脑', '桌椅', 'floor', 2, 1, 120, '带一台电脑的木书桌，宿舍原来就有的那张。', { say: '屏幕亮着：教务系统的课表上写着「今天没课」。右下角弹出一条消息——「河北工程大学新校区欢迎你」。' }),
-  D('dc_table2', 'table2', '小木桌', '桌椅', 'floor', 2, 1, 50, '放点小东西的小木桌。'),
+  D('dc_table2', 'table2', '小木桌', '桌椅', 'floor', 2, 1, 50, '放点小东西的小木桌；桌面上能摆小件。', { surface: true, lift: 12 }),
   D('dc_dtable', 'dc_dtable', '书桌', '桌椅', 'floor', 2, 2, 90, '干净的浅色木书桌，桌面上可以摆书、台灯和小盆栽。', { surface: true }),
   D('dc_dtable3', 'dc_dtable3', '长桌', '桌椅', 'floor', 3, 2, 130, '三格宽的长桌，桌面上能摆好多小东西。', { surface: true }),
-  D('dc_chair', 'chair', '木椅（朝南）', '桌椅', 'floor', 1, 1, 30, '朝南的木椅。'),
-  D('dc_chairup', 'chairup', '木椅（朝北）', '桌椅', 'floor', 1, 1, 30, '朝北的木椅，配书桌用。'),
-  D('dc_stool', 'stool', '蓝凳子', '桌椅', 'floor', 1, 1, 20, '蓝色的小圆凳。'),
-  D('dc_gamechair', 'dc_gamechair', '电竞椅', '桌椅', 'floor', 1, 1, 150, '黑红配色的电竞椅，靠背高高的。'),
-  D('dc_beanbag', 'dc_beanbag', '懒人沙发', '桌椅', 'floor', 1, 1, 90, '软塌塌的橙色懒人沙发，一坐就不想起来。'),
-  D('dc_sofa', 'sofa', '双人沙发', '桌椅', 'floor', 2, 1, 220, '酒红色的双人沙发。'),
+  D('dc_chair', 'chair', '木椅（朝南）', '桌椅', 'floor', 1, 1, 30, '朝南的木椅，可以坐。', { seat: true }),
+  D('dc_chairup', 'chairup', '木椅（朝北）', '桌椅', 'floor', 1, 1, 30, '朝北的木椅，配书桌用，可以坐。', { seat: true }),
+  D('dc_stool', 'stool', '蓝凳子', '桌椅', 'floor', 1, 1, 20, '蓝色的小圆凳，可以坐。', { seat: true }),
+  D('dc_gamechair', 'dc_gamechair', '电竞椅', '桌椅', 'floor', 1, 1, 150, '黑红配色的电竞椅，靠背高高的，可以坐。', { seat: true }),
+  D('dc_beanbag', 'dc_beanbag', '懒人沙发', '桌椅', 'floor', 1, 1, 90, '软塌塌的橙色懒人沙发，一坐就不想起来。', { seat: true }),
+  D('dc_sofa', 'sofa', '双人沙发', '桌椅', 'floor', 2, 1, 220, '酒红色的双人沙发，两个人都能坐。', { seat: true }),
   // ---- 柜架
   D('dc_shelf2', 'shelf2', '书架（2格）', '柜架', 'floor', 2, 1, 120, '塞满书的两格书架。'),
   D('dc_shelf3', 'shelf3', '书架（3格）', '柜架', 'floor', 3, 1, 170, '三格宽的大书架。'),
@@ -62,6 +72,11 @@ export const DECOR: readonly DecorDef[] = [
   D('dc_rug_blue', 'dc_rug_blue', '蓝条地毯', '地毯', 'rug', 4, 2, 120, '蓝白条纹的大地毯。', { turn: true }),
   D('dc_rug_round', 'dc_rug_round', '圆形地毯', '地毯', 'rug', 3, 3, 140, '米色带花边的圆形地毯。'),
   D('dc_rug_paw', 'dc_rug_paw', '爪印地毯', '地毯', 'rug', 2, 2, 100, '粉色底的小猫爪印地毯。'),
+  // ---- 门垫（小地毯，叠在地毯上面；门口也能放）
+  D('dc_mat_welcome', 'dc_mat_welcome', '欢迎门垫', '地毯', 'mat', 2, 1, 40, '写着 WELCOME 的棕色门垫。'),
+  D('dc_mat_paw', 'dc_mat_paw', '猫爪门垫', '地毯', 'mat', 2, 1, 50, '粉色的猫爪印门垫。'),
+  D('dc_mat_straw', 'dc_mat_straw', '草编圆垫', '地毯', 'mat', 2, 2, 70, '草编的圆形垫子，放在地毯上也好看。'),
+  D('dc_mat_towel', 'dc_mat_towel', '蓝条毛巾垫', '地毯', 'mat', 2, 1, 45, '蓝白条纹的软毛巾垫。'),
   // ---- 墙饰（挂在北墙上）
   D('dc_clock', 'dc_clock', '挂钟', '墙饰', 'wall', 1, 0, 60, '圆圆的挂钟，指针不会动。', { wh: 1 }),
   D('dc_paint1', 'dc_paint1', '风景画', '墙饰', 'wall', 2, 0, 120, '一幅湖光山色的风景画。', { wh: 2 }),
@@ -69,24 +84,43 @@ export const DECOR: readonly DecorDef[] = [
   D('dc_pennant', 'dc_pennant', '校旗', '墙饰', 'wall', 1, 0, 90, '红底的三角校旗。', { wh: 2 }),
   D('dc_poster', 'dc_poster', '海报', '墙饰', 'wall', 1, 0, 40, '一张贴着胶带的海报。', { wh: 2 }),
   D('dc_whiteboard', 'whiteboard', '白板', '墙饰', 'wall', 3, 0, 150, '三格宽的白板，空空的。', { wh: 2 }),
+  // 窗：三格宽，窗帘向两边伸出去一点；大屋可以多开几扇
+  D('dc_win_plain', 'dc_win_plain', '窗（无窗帘）', '墙饰', 'wall', 3, 0, 60, '白框窗，外面是校园的天空。', { wh: 3 }),
+  D('dc_win_blue', 'dc_win_blue', '窗（蓝窗帘）', '墙饰', 'wall', 3, 0, 90, '挂着蓝色窗帘的窗。', { wh: 3, ox: 9 }),
+  D('dc_win_pink', 'dc_win_pink', '窗（粉窗帘）', '墙饰', 'wall', 3, 0, 90, '挂着粉色窗帘的窗。', { wh: 3, ox: 9 }),
+  D('dc_win_green', 'dc_win_green', '窗（绿窗帘）', '墙饰', 'wall', 3, 0, 90, '挂着绿色窗帘的窗。', { wh: 3, ox: 9 }),
+  D('dc_win_lace', 'dc_win_lace', '窗（白纱帘）', '墙饰', 'wall', 3, 0, 100, '挂着白色蕾丝纱帘的窗。', { wh: 3, ox: 9 }),
   // ---- 小件（摆在桌面上）
   D('dc_books', 'books', '书堆', '小件', 'top', 1, 1, 20, '一摞书。'),
   D('dc_laptop', 'laptop', '笔记本电脑', '小件', 'top', 1, 1, 200, '合着盖的笔记本电脑。'),
   D('dc_thermos', 'thermos', '保温壶', '小件', 'top', 1, 1, 30, '红色的保温壶。'),
   D('dc_lamp_desk', 'dc_lamp_desk', '台灯', '小件', 'top', 1, 1, 70, '亮着暖光的小台灯。'),
   D('dc_cactus', 'dc_cactus', '仙人掌', '小件', 'top', 1, 1, 25, '一盆圆滚滚的小仙人掌。'),
+  D('dc_pc', 'dc_pc', '台式电脑', '小件', 'top', 1, 1, 220, '显示器、键盘和小主机，放在桌子上就能用。', { say: '屏幕亮着：教务系统的课表上写着「今天没课」。' }),
+  // ---- 固有家具（房间里原来就有的，每人一份：不卖、不能交易、不能退货；可以收回、挪动）
+  D('dc_bed', 'dbed', '单人床', '固有', 'floor', 2, 3, 0, '你的床：靠近按 E 上床睡觉，精灵会慢慢恢复。', { starter: true, act: 'bed' }),
+  D('dc_wardrobe', 'dwardrobe', '衣柜', '固有', 'floor', 2, 1, 0, '你的衣柜：靠近按 E 换装。', { starter: true, act: 'wardrobe' }),
+  D('dc_chest', 'dchest', '宝箱', '固有', 'floor', 1, 1, 0, '你的宝箱（仓库）：只有你能打开。', { starter: true, act: 'chest' }),
+  D('dc_bath', 'dbath', '鱼缸（养鱼）', '固有', 'floor', 3, 2, 0, '你的鱼缸：把钓上来的鱼放进去养着，稀有的会发光。', { starter: true, act: 'bath' }),
+  D('dc_ac', 'ac', '空调', '固有', 'wall', 2, 0, 0, '挂在墙上的空调：靠近按 E 切换 关 / 制冷 / 制热。', { starter: true, act: 'ac', wh: 1 }),
+  D('dc_sign', 'dsign', '门牌', '固有', 'wall', 5, 0, 0, '宿舍的门牌：房主可以改名字。', { starter: true, act: 'sign', wh: 2 }),
+  D('dc_window', 'dc_win_purple', '窗（紫窗帘）', '固有', 'wall', 3, 0, 0, '宿舍原来的窗，挂着紫色窗帘。', { starter: true, wh: 3, ox: 9 }),
+  D('dc_rug_home', 'dc_rug_home', '暖橙大地毯', '固有', 'rug', 6, 3, 0, '宿舍原来铺着的大地毯。', { starter: true }),
+  D('dc_mat_door', 'dc_mat_door', '棕色门垫', '固有', 'mat', 2, 1, 0, '门口原来的门垫。', { starter: true }),
 ];
 const BY_ID = new Map(DECOR.map((d) => [d.id, d]));
 export const decorDef = (id: unknown): DecorDef | undefined => (typeof id === 'string' ? BY_ID.get(id) : undefined);
 export const isDecorId = (id: unknown): id is string => typeof id === 'string' && BY_ID.has(id);
-export const DECOR_CATS: readonly DecorCat[] = ['桌椅', '柜架', '电器', '软装', '地毯', '墙饰', '小件'];
-/** 退货：商店按原价的一半收回 */
+export const DECOR_CATS: readonly DecorCat[] = ['桌椅', '柜架', '电器', '软装', '地毯', '墙饰', '小件', '固有'];
+/** 退货：商店按原价的一半收回（固有家具不卖也不收） */
 export const DECOR_REFUND = 0.5;
-export const decorRefund = (id: string): number => { const d = BY_ID.get(id); return d ? Math.max(1, Math.floor(d.price * DECOR_REFUND)) : 0; };
+export const decorRefund = (id: string): number => { const d = BY_ID.get(id); return d && d.price > 0 ? Math.max(1, Math.floor(d.price * DECOR_REFUND)) : 0; };
+/** 固有家具：每人一份，不卖、不能交易、不能退货 */
+export const isStarter = (id: unknown): boolean => !!decorDef(id)?.starter;
 
-// ------------------------------------------------------------------ 房间与固定家具（和 data/interiors/dorm*.json 一致）
-/** 房间的三个级别（扩建：1500 / 4000 校园币，见 dorm.ts 的 ROOM_PRICES）：小屋 16×11、中屋 20×13、大屋 24×15。
- *  向右、向下扩：北墙一行、床/衣柜/宝箱/浴缸/空调/门牌的位置都不变，门洞仍在 x 7..8，只是随房间变深而下移——所以升级后原来的摆放仍然合法 */
+// ------------------------------------------------------------------ 房间（和 data/interiors/dorm*.json 一致）
+/** 房间的三个级别（扩建：1500 / 4000 校园币，见 dormskin.ts 的 ROOM_PRICES）：小屋 16×11、中屋 20×13、大屋 24×15。
+ *  向右、向下扩：北墙一行、默认家具的位置都不变，门洞仍在 x 7..8，只是随房间变深而下移——所以升级后原来的摆放仍然合法 */
 export const ROOM_SIZES = [{ w: 16, h: 11 }, { w: 20, h: 13 }, { w: 24, h: 15 }] as const;
 export type RoomLevel = 0 | 1 | 2;
 export const isRoomLevel = (v: unknown): v is RoomLevel => v === 0 || v === 1 || v === 2;
@@ -94,18 +128,11 @@ export const isRoomLevel = (v: unknown): v is RoomLevel => v === 0 || v === 1 ||
 export const roomDims = (level: number = 0) => { const r = ROOM_SIZES[isRoomLevel(level) ? level : 0]; return { w: r.w, h: r.h, x0: 1, x1: r.w - 2, y0: 3, y1: r.h - 2 }; };
 export const DECOR_ROOM = roomDims(0);
 export interface Rect { x: number; y: number; w: number; h: number }
-/** 房里原有的、不能动的地面家具：床、衣柜、宝箱、浴缸（各级房间位置相同） */
-export const FIXED_FLOOR: readonly Rect[] = [{ x: 1, y: 3, w: 2, h: 3 }, { x: 12, y: 3, w: 2, h: 1 }, { x: 14, y: 3, w: 1, h: 1 }, { x: 11, y: 6, w: 3, h: 2 }];
-/** 门口要留空（进屋的出生点在这里），随房间变深下移 */
+/** 门口要留空（进屋的出生点在这里），随房间变深下移。只有地面家具不能放在这里；地毯、门垫可以 */
 export const doorKeep = (level: number = 0): Rect => ({ x: 7, y: roomDims(level).h - 3, w: 2, h: 2 });
 export const DOOR_KEEP: Rect = doorKeep(0);
-/** 北墙上不能再挂东西的地方：门牌、窗户、空调，以及衣柜、宝箱（它们的精灵向上挡住了墙面） */
-export const FIXED_WALL: readonly Rect[] = [{ x: 1, y: 0, w: 5, h: 2 }, { x: 6, y: 0, w: 3, h: 3 }, { x: 9, y: 0, w: 3, h: 1 }, { x: 12, y: 0, w: 2, h: 3 }, { x: 14, y: 2, w: 1, h: 1 }];
-/** 摆完之后必须还走得到的地方：床、衣柜、宝箱、浴缸的四周（八个方向都算），门牌和空调下面的地面 */
-const REACH_RECTS: readonly Rect[] = FIXED_FLOOR;
-const REACH_WALL: readonly Rect[] = [{ x: 1, y: 3, w: 5, h: 2 }, { x: 8, y: 3, w: 4, h: 2 }];
 
-export const DECOR_MAX = 60;
+export const DECOR_MAX = 72;
 
 export type Rot = 0 | 90 | 180 | 270;
 export interface Placed { d: string; x: number; y: number; r?: Rot }
@@ -115,8 +142,16 @@ export const footOf = (def: DecorDef, r: number | undefined): { fw: number; fh: 
 /** 墙饰占的格子：列 x..x+fw-1，行 y-wh .. y-1（y 是挂件底边所在的行线） */
 export const wallRect = (def: DecorDef, p: Placed): Rect => ({ x: p.x, y: p.y - (def.wh ?? 1), w: def.fw, h: def.wh ?? 1 });
 
-/** 没装修过的宿舍：原来房里的木桌+电脑、椅子、绿植、垃圾桶 */
-export const defaultLay = (): Placed[] => [{ d: 'dc_deskpc', x: 6, y: 3 }, { d: 'dc_chairup', x: 6, y: 4 }, { d: 'dc_plant', x: 14, y: 8 }, { d: 'dc_bin', x: 1, y: 8 }];
+/** 原来「固定」的七件，在原来的位置上（老存档升级时补进摆放里；位置和旧规则一致，所以不会和玩家原有的摆放冲突） */
+export const LEGACY_STARTERS: readonly Placed[] = [
+  { d: 'dc_bed', x: 1, y: 3 }, { d: 'dc_wardrobe', x: 12, y: 3 }, { d: 'dc_chest', x: 14, y: 3 }, { d: 'dc_bath', x: 11, y: 6 },
+  { d: 'dc_ac', x: 9, y: 1 }, { d: 'dc_sign', x: 1, y: 2 }, { d: 'dc_window', x: 6, y: 3 },
+];
+/** 没装修过的宿舍：固有家具 + 暖橙大地毯 + 门垫 + 原来的木桌电脑、椅子、绿植、垃圾桶（和以前的房间一模一样） */
+export const defaultLay = (level: number = 0): Placed[] => [
+  ...LEGACY_STARTERS.map((p) => ({ ...p })), { d: 'dc_rug_home', x: 5, y: 6 }, { d: 'dc_mat_door', x: 7, y: roomDims(level).h - 2 },
+  { d: 'dc_deskpc', x: 6, y: 3 }, { d: 'dc_chairup', x: 6, y: 4 }, { d: 'dc_plant', x: 14, y: 8 }, { d: 'dc_bin', x: 1, y: 8 },
+];
 
 const hit = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 const within = (x: number, y: number, r: Rect) => x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h;
@@ -127,22 +162,23 @@ const key = (x: number, y: number) => y * KW + x;
 export function layError(lay: readonly Placed[], level: number = 0): string | null {
   if (lay.length > DECOR_MAX) return `最多摆 ${DECOR_MAX} 件`;
   const { x0, x1, y0, y1 } = roomDims(level), DOOR = doorKeep(level);
-  const fixed = new Set<number>(), keep = new Set<number>(), floor = new Set<number>(), rug = new Set<number>(), surf = new Set<number>(), top = new Set<number>();
-  for (const r of FIXED_FLOOR) for (let j = 0; j < r.h; j++) for (let i = 0; i < r.w; i++) fixed.add(key(r.x + i, r.y + j));
+  const keep = new Set<number>(), floor = new Set<number>(), rug = new Set<number>(), mat = new Set<number>(), surf = new Set<number>(), top = new Set<number>();
   for (let j = 0; j < DOOR.h; j++) for (let i = 0; i < DOOR.w; i++) keep.add(key(DOOR.x + i, DOOR.y + j));
-  const walls: Rect[] = [...FIXED_WALL], tops: { def: DecorDef; p: Placed }[] = [];
+  const walls: Rect[] = [], tops: { def: DecorDef; p: Placed }[] = [], acts: { def: DecorDef; p: Placed }[] = [], seenIds = new Set<string>();
   for (const p of lay) {
     const def = decorDef(p?.d);
     if (!def) return '没有这件家具';
     if (!Number.isInteger(p.x) || !Number.isInteger(p.y)) return '位置不对';
     if (p.r !== undefined && !isRot(p.r)) return '方向不对';
     if (p.r && !def.turn) return `${def.name}不能转方向`;
+    if (def.starter) { if (seenIds.has(def.id)) return `${def.name}只有一件`; seenIds.add(def.id); } // 固有家具每人一份
+    if (def.act) acts.push({ def, p });
     const { fw, fh } = footOf(def, p.r);
     if (def.kind === 'wall') {
       const wh = def.wh ?? 1;
       if (p.x < x0 || p.x + fw > x1 + 1 || p.y < wh || p.y > 3) return `${def.name}要挂在北墙上`;
       const rc = wallRect(def, p);
-      for (const w of walls) if (hit(rc, w)) return `${def.name}挂在这里会挡住窗户、空调、门牌或别的挂件`;
+      for (const w of walls) if (hit(rc, w)) return `${def.name}挂在这里会挡住别的墙上的东西（窗、画、空调、门牌）`;
       walls.push(rc);
     } else if (def.kind === 'top') {
       tops.push({ def, p });
@@ -150,8 +186,8 @@ export function layError(lay: readonly Placed[], level: number = 0): string | nu
       if (p.x < x0 || p.y < y0 || p.x + fw > x1 + 1 || p.y + fh > y1 + 1) return `${def.name}要放在房间的地面上`;
       for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) {
         const c = key(p.x + i, p.y + j);
-        if (def.kind === 'rug') { if (rug.has(c)) return '地毯不能叠在另一块地毯上'; rug.add(c); continue; }
-        if (fixed.has(c)) return `${def.name}压在床、衣柜、宝箱或浴缸上了`;
+        if (def.kind === 'rug') { if (rug.has(c)) return '地毯不能叠在另一块地毯上（门垫可以叠）'; rug.add(c); continue; }
+        if (def.kind === 'mat') { if (mat.has(c)) return '门垫不能叠在另一块门垫上'; mat.add(c); continue; }
         if (keep.has(c)) return '门口要留出路来';
         if (floor.has(c)) return '这里已经有家具了';
         floor.add(c); if (def.surface) surf.add(c);
@@ -165,23 +201,24 @@ export function layError(lay: readonly Placed[], level: number = 0): string | nu
     if (top.has(c)) return '这一格桌面上已经有东西了';
     top.add(c);
   }
-  // 摆完之后：从门口出发，必须还能走到床、衣柜、宝箱、浴缸的旁边和门牌/空调下面
+  // 摆完之后：从门口出发，必须还能走到每件功能家具（床、衣柜、宝箱、鱼缸）的旁边，和空调、门牌下面的地面
   const seen = new Set<number>(), q: number[] = [];
   for (const [x, y] of [[DOOR.x, y1], [DOOR.x + 1, y1]]) { seen.add(key(x, y)); q.push(key(x, y)); }
-  const free = (x: number, y: number) => x >= x0 && x <= x1 && y >= y0 && y <= y1 && !fixed.has(key(x, y)) && !floor.has(key(x, y));
+  const free = (x: number, y: number) => x >= x0 && x <= x1 && y >= y0 && y <= y1 && !floor.has(key(x, y));
   while (q.length) {
     const c = q.pop()!, x = c % KW, y = Math.floor(c / KW);
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = key(nx, ny); if (!seen.has(k) && free(nx, ny)) { seen.add(k); q.push(k); } }
   }
-  for (const r of REACH_RECTS) {
+  for (const { def, p } of acts) {
     let ok = false;
-    for (let j = r.y - 1; j <= r.y + r.h && !ok; j++) for (let i = r.x - 1; i <= r.x + r.w && !ok; i++) if (seen.has(key(i, j)) && !within(i, j, r)) ok = true;
-    if (!ok) return '这样摆会把床、衣柜、宝箱或浴缸堵住，人走不过去';
-  }
-  for (const r of REACH_WALL) {
-    let ok = false;
-    for (let j = r.y; j < r.y + r.h && !ok; j++) for (let i = r.x; i < r.x + r.w && !ok; i++) if (seen.has(key(i, j))) ok = true;
-    if (!ok) return '这样摆会把空调和门牌前面的路堵住';
+    if (def.kind === 'wall') { // 墙上的空调、门牌：它下面（第 3、4 行）要有走得到的地面
+      for (let j = y0; j < y0 + 2 && !ok; j++) for (let i = p.x - 1; i <= p.x + def.fw && !ok; i++) if (seen.has(key(i, j))) ok = true;
+      if (!ok) return `这样摆会把${def.name}前面的路堵住`;
+    } else {
+      const { fw, fh } = footOf(def, p.r), r: Rect = { x: p.x, y: p.y, w: fw, h: fh };
+      for (let j = r.y - 1; j <= r.y + r.h && !ok; j++) for (let i = r.x - 1; i <= r.x + r.w && !ok; i++) if (seen.has(key(i, j)) && !within(i, j, r)) ok = true;
+      if (!ok) return `这样摆会把${def.name}堵住，人走不过去`;
+    }
   }
   return null;
 }
@@ -207,8 +244,16 @@ export function cleanLay(raw: unknown, level: number = 0): Placed[] | undefined 
 /** 摆放里每件家具的物品数量（收回时检查背包放得下、统计用） */
 export const layCounts = (lay: readonly Placed[]): Record<string, number> => { const c: Record<string, number> = {}; for (const p of lay) c[p.d] = (c[p.d] ?? 0) + 1; return c; };
 
-/** 小件摆在桌子的第几行上（从桌子最上面一行起数）：下面的行画得往上抬一点，看起来还在桌面上（每行抬 8 像素） */
+/** 小件摆在桌子的第几行上（从桌子最上面一行起数）：下面的行画得往上抬一点，看起来还在桌面上（每行抬 8 像素）；一行深的桌子再按它的 lift 抬高 */
 export function topRaise(lay: readonly Placed[], p: Placed): number {
-  for (const q of lay) { const d = decorDef(q.d); if (d?.surface && p.x >= q.x && p.x < q.x + d.fw && p.y >= q.y && p.y < q.y + d.fh) return (p.y - q.y) * 8; }
+  for (const q of lay) { const d = decorDef(q.d); if (d?.surface && p.x >= q.x && p.x < q.x + d.fw && p.y >= q.y && p.y < q.y + d.fh) return (p.y - q.y) * 8 + (d.lift ?? 0); }
   return 0;
+}
+
+/** 椅子 / 沙发上能坐的位置（格坐标 → 像素）：座位中心的 x、椅面的 y；沙发有两个座位 */
+export function seatsOf(p: Placed): { x: number; y: number; bx: number; by: number }[] {
+  const def = decorDef(p.d); if (!def?.seat) return [];
+  const n = def.fw, out: { x: number; y: number; bx: number; by: number }[] = [];
+  for (let i = 0; i < n; i++) { const bx = (p.x + (i + 0.5) * def.fw / n) * 16, by = (p.y + def.fh) * 16 - 8; out.push({ x: bx, y: (p.y + def.fh) * 16 + 1, bx, by }); }
+  return out;
 }

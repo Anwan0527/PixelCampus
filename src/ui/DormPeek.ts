@@ -28,12 +28,12 @@ export async function drawDormThumb(canvas: HTMLCanvasElement, textures: Phaser.
   const W = def.w * 16, H = def.h * 16; canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d')!; ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, W, H);
   for (const k of [skinTextureKey(lv, 'f', f), skinTextureKey(lv, 'w', w)]) ctx.drawImage(textures.get(k).getSourceImage() as CanvasImageSource, 0, 0); // 地板在下、墙在上
-  const items: { frame: string; x: number; y: number; depth: number }[] = def.objects.map((o) => ({ frame: o.k, x: o.x, y: o.y, depth: o.depth }));
+  const items: { frame: string; x: number; y: number; depth: number }[] = []; // 房里所有东西（床、衣柜、窗、空调、门牌也是摆放数据里的家具）
   for (const p of card.lay) { const s = spotOf(textures, card.lay, p); if (s) items.push({ frame: s.frame, x: s.x, y: s.y, depth: s.depth }); }
   items.sort((a, b) => a.depth - b.depth);
   const tex = textures.get('furniture'), src = tex.getSourceImage() as CanvasImageSource;
   for (const it of items) { const fr = tex.get(it.frame); if (fr) ctx.drawImage(src, fr.cutX, fr.cutY, fr.cutWidth, fr.cutHeight, it.x, it.y, fr.cutWidth, fr.cutHeight); }
-  const sign = def.objects.find((o) => o.k === 'dsign');
+  const sp = card.lay.find((p) => p.d === 'dc_sign'), sign = sp ? spotOf(textures, card.lay, sp) : null;
   if (sign) {
     const text = roomTitle(card.title, hostName, mine); ctx.font = '10px ArkPixel, sans-serif'; ctx.fillStyle = '#4a2e14'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const w = ctx.measureText(text).width, k = Math.min(1, 68 / Math.max(1, w)); ctx.save(); ctx.translate(sign.x + 41, sign.y + 11); ctx.scale(k, 1); ctx.fillText(text, 0, 0); ctx.restore();
