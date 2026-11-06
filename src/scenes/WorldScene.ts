@@ -601,11 +601,17 @@ export class WorldScene extends Phaser.Scene {
       const st = { alpha: 1, rects: [] as { l: number; r: number; t: number; base: number }[], imgs: new Set<Phaser.GameObjects.Image>() };
       this.bld.set(b.id, st);
       b.wings.forEach((w, i) => {
-        const tex = `buildings${w.pg ?? 0}`, fr = this.textures.getFrame(tex, w.k);
-        st.rects.push({ l: w.x, r: w.x + fr.width, t: w.y, base: w.base });
-        this.stream.add({ x: w.x, y: w.y, w: fr.width, h: fr.height, make: () => {
-          const im = this.add.image(w.x, w.y, tex, w.k).setOrigin(0).setDepth(w.base + i * 0.01).setAlpha(st.alpha); st.imgs.add(im);
-          return { destroy: () => { st.imgs.delete(im); im.destroy(); } };
+        const pg = w.pg ?? 0, tex = `buildings${pg}`;
+        // 精灵尺寸优先取 world.json 里记的（这样图集页不用先下载）；老编译产物没有，才从已加载的图集里量
+        const fw = w.w ?? this.textures.getFrame(tex, w.k).width, fh = w.h ?? this.textures.getFrame(tex, w.k).height;
+        st.rects.push({ l: w.x, r: w.x + fw, t: w.y, base: w.base });
+        this.stream.add({ x: w.x, y: w.y, w: fw, h: fh, make: () => {
+          let im: Phaser.GameObjects.Image | undefined, dead = false;
+          this.withBuildingPage(pg, () => {
+            if (dead) return;
+            im = this.add.image(w.x, w.y, tex, w.k).setOrigin(0).setDepth(w.base + i * 0.01).setAlpha(st.alpha); st.imgs.add(im);
+          });
+          return { destroy: () => { dead = true; if (im) { st.imgs.delete(im); im.destroy(); } } };
         } });
       });
     }
@@ -624,6 +630,20 @@ export class WorldScene extends Phaser.Scene {
       this.waterFrame = (this.waterFrame + 1) % this.wf.water.frames;
       for (const arr of this.waterActive.values()) arr.forEach((img, i) => img.setVisible(this.waterFrame === i + 1));
     } });
+  }
+
+  private bldWait = new Map<number, (() => void)[]>();
+  /** 建筑图集按页按需加载：页已在内存就立刻执行，否则加载这一页，到了再执行（同一页的请求合并，失败了下次再试） */
+  private withBuildingPage(pg: number, cb: () => void) {
+    const key = `buildings${pg}`;
+    if (this.textures.exists(key)) { cb(); return; }
+    const waiting = this.bldWait.get(pg);
+    if (waiting) { waiting.push(cb); return; }
+    this.bldWait.set(pg, [cb]);
+    this.load.once(`filecomplete-atlasjson-${key}`, () => { const l = this.bldWait.get(pg) ?? []; this.bldWait.delete(pg); l.forEach((f) => f()); });
+    this.load.on('loaderror', (f: Phaser.Loader.File) => { if (f.key === key) this.bldWait.delete(pg); });   // 失败：清掉登记，下次视野再覆盖到时重试
+    this.load.atlas(key, `${WD}/atlas-buildings-${pg}.webp`, `${WD}/atlas-buildings-${pg}.json`);
+    if (!this.load.isLoading()) this.load.start();
   }
 
   /** 地面块：纹理不在内存就异步加载，销毁时释放纹理 */

@@ -71,7 +71,8 @@ PixelGame/
 - 拉取了别人的美术/地图改动后要重新 `npm run assets`，否则本地看到的是旧地图。
 - **客户端只加载 `.webp`**（图集、地面块、室内底图、小地图）：`npm run assets` 末尾会自动转；只重新生成了 PNG 时手动 `npm run assets:webp`，否则游戏里图 404。新增要加载的图片资源时，加载路径写 `.webp`（`mons/` 精灵例外，仍是 PNG）。
 - **字体是切片的**：游戏文案里出现了新汉字、想让它进首屏那一片时，重新跑 `tools/assets/font-slices.py`（说明在文件头，需要 fonttools）；不跑也正确，只是新字落在后面的片里会多一次下载。别用 `document.fonts.load(font, text)`（会把重叠的大片也一起下），用 `src/ui/glyphs.ts` 里的 `loadGlyphs` / `redrawWhenGlyphsReady`。
-- 看首次访问到底下载多少：浏览器开发者工具 → 网络 → 勾「禁用缓存」刷新；传输大小应在 3 MB 上下。
+- **建筑图集按需加载**：`compile.ts` 按离出生点远近把建筑精灵分成 15 个小页，`world.json` 的翼体带 `pg`、`w`、`h`；`BootScene` 只预载出生点附近的页，`WorldScene.withBuildingPage` 在建筑进入视野时再加载所在页。新增要在世界里按页加载的资源时照这个做；别在启动时读取尚未加载的页的帧尺寸（用 `w/h`）。
+- 看首次访问到底下载多少：浏览器开发者工具 → 网络 → 勾「禁用缓存」刷新；传输大小应在 1.6 MB 上下。
 
 ## 7. 开场建议
 1. 读本文件和 `CLAUDE.md`，`npm ci && npm run assets && npm test` 确认全绿。

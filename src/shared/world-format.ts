@@ -6,6 +6,8 @@ export interface WingOut {
   k: string;
   /** 图集页号（buildings0, buildings1…） */
   pg?: number;
+  /** 精灵宽高（像素）。有了它客户端不用先下载图集就能登记流式加载范围，图集页可以按需再加载；老编译产物没有，退回"全部预载" */
+  w?: number; h?: number;
   /** 精灵左上角世界像素 */
   x: number; y: number;
   /** 深度排序基线（世界像素 y） */

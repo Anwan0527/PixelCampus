@@ -11,7 +11,7 @@ import * as N from '../art/nature.ts';
 import * as P from '../art/props.ts';
 import * as PZ from '../art/plaza.ts';
 import { renderWing, type WingSpec } from '../art/buildings.ts';
-import { pack, packPages, type PackItem } from '../art/pack.ts';
+import { pack, packPagesOrdered, type PackItem } from '../art/pack.ts';
 import { CACHE, ROOT } from '../paths.ts';
 import { scaleTerrain, scaleBuildings, scalePois } from './scale.ts';
 import { MaterialMap, MID, MATS, TILE, paintShapes, renderRegion, waterDistance } from './terrain.ts';
@@ -623,10 +623,16 @@ mkdirSync(CACHE, { recursive: true });
 writeFileSync(hashFile, JSON.stringify(hashes));
 
 // ------------------------------------------------------------ 7. 图集 + 小地图 + world.json
-const bPages = packPages(buildingSprites, 2048, 4096);
+// 建筑图集按"离出生点由近到远"分成很多小页（每页 ≤1024 高），客户端启动时只下载出生点附近用到的页，其余按需加载（世界里走到哪、加载哪页）
+const spawn0 = pois.find((p) => p.kind === 'spawn'), spX = (spawn0?.x ?? TW / 2) * TILE, spY = (spawn0?.y ?? TH / 2) * TILE;
+const wingPos = new Map<string, { x: number; y: number }>();
+for (const bo of buildingsOut) for (const w of bo.wings) wingPos.set(w.k, { x: w.x, y: w.y });
+const spriteDist = (it: PackItem) => { const p = wingPos.get(it.key)!; return Math.hypot(p.x + it.img.w / 2 - spX, p.y + it.img.h / 2 - spY); };
+const bPages = packPagesOrdered([...buildingSprites].sort((a, b) => spriteDist(a) - spriteDist(b)), 2048, 1024);
 for (let i = 0; i < bPages.length; i++) { await bPages[i].img.save(join(OUTDIR, `atlas-buildings-${i}.png`)); writeFileSync(join(OUTDIR, `atlas-buildings-${i}.json`), JSON.stringify(bPages[i].json)); }
 const pageOf: Record<string, number> = Object.assign({}, ...bPages.map((p) => p.pageOf));
-for (const bo of buildingsOut) for (const w of bo.wings) w.pg = pageOf[w.k];
+const spriteSize = new Map(buildingSprites.map((it) => [it.key, it.img] as const));
+for (const bo of buildingsOut) for (const w of bo.wings) { w.pg = pageOf[w.k]; const im = spriteSize.get(w.k)!; w.w = im.w; w.h = im.h; }
 // 道具图集：每个季节一张（树叶/灌木换色），帧名与布局完全相同，所以共用一份 json
 const propsJson = new Map<string, string>();
 for (const season of SEASONS) {

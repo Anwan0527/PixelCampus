@@ -41,8 +41,13 @@ export class BootScene extends Phaser.Scene {
   create() {
     const hud = this.registry.get('hud') as Hud;
     const world = this.cache.json.get('world') as WorldFile;
-    // 建筑图集分页
-    for (let i = 0; i < (world.atlases.buildingPages ?? 1); i++) this.load.atlas(`buildings${i}`, `${WD}/atlas-buildings-${i}.webp`, `${WD}/atlas-buildings-${i}.json`);
+    // 建筑图集分很多小页（按离出生点远近排）：只预载出生点附近要用的页，其余由 WorldScene 走到哪、加载哪页。
+    // 老编译产物（翼体没有 w/h）仍然全部预载
+    const pages = world.atlases.buildingPages ?? 1, sizeKnown = world.buildings.every((b) => b.wings.every((w) => w.w && w.h)), needPages = new Set<number>();
+    const bx = world.spawn.x * TILE, by = world.spawn.y * TILE, BR = 1100;
+    if (!sizeKnown) for (let i = 0; i < pages; i++) needPages.add(i);
+    else for (const b of world.buildings) for (const w of b.wings) if (w.x < bx + BR && w.x + w.w! > bx - BR && w.y < by + BR && w.y + w.h! > by - BR) needPages.add(w.pg ?? 0);
+    for (const i of needPages) this.load.atlas(`buildings${i}`, `${WD}/atlas-buildings-${i}.webp`, `${WD}/atlas-buildings-${i}.json`);
     // 只预载出生点附近的地面块（±800 像素，约 6 块，和 WorldScene 的流式加载范围 700 相当）；其余按视野流式加载/释放。
     // 以前预载 ±1600（12 块），多下载约 0.8 MB，而很多玩家的落点并不在出生点附近
     const sx = world.spawn.x * TILE, sy = world.spawn.y * TILE, px = world.chunk.px, waterSet = new Set(world.water.chunks), R = 800;
