@@ -40,7 +40,7 @@ export class InteriorScene extends Phaser.Scene {
   private leaving = false;
   // ---- 家具摆放（装修）：宿舍里除了床/衣柜/宝箱/浴缸，其余家具都来自摆放数据，客户端按它现画
   private lay: Placed[] = []; private layKey = ''; private decorObjs: Phaser.GameObjects.Image[] = []; private decorTalk: NonNullable<InteriorDef['interacts']> = [];
-  private baseCollision: string[] = []; private editor?: DecorEditor; private decorBtn?: HTMLButtonElement;
+  private baseCollision: string[] = []; private editor?: DecorEditor; private decorBtn?: HTMLButtonElement; private likeBtn?: HTMLButtonElement; private prevLikes?: NetClient['handlers']['dormLikes'];
   private talking: Npc | null = null;
   // ---- 宿舍（id === 'dorm'）
   private dorm = false;
@@ -143,6 +143,7 @@ export class InteriorScene extends Phaser.Scene {
       if (this.isHost) { if (this.dormUi.data) { this.setAc(this.dormUi.data.ac); this.setTitle(this.dormUi.data.title ?? ''); this.setBath(this.dormUi.data.bv); } else this.net?.dormGet(); }
     }
     if (this.isHost && this.net) this.setupDecorUi(this.net);
+    if (this.visit && this.net) this.setupLikeUi(this.net, this.visit);
     this.events.once('shutdown', () => {
       this.registry.set('roomSay', null); this.registry.set('dormVisit', null);
       if (this.net) { const h = this.net.handlers; h.roomJoin = h.roomLeave = h.roomPos = h.roomState = undefined; }
@@ -152,7 +153,8 @@ export class InteriorScene extends Phaser.Scene {
       if (this.net) this.net.handlers.dormOut = undefined;
       if (this.dormUi) { this.dormUi.onData = () => {}; this.dormUi.onResult = () => {}; this.dormUi.close(); this.dormUi.closeChest(); }
       this.acTimer?.remove(); this.zzTimer?.remove();
-      this.editor?.destroy(); this.editor = undefined; this.decorBtn?.remove(); this.decorBtn = undefined;
+      this.editor?.destroy(); this.editor = undefined; this.decorBtn?.remove(); this.decorBtn = undefined; this.likeBtn?.remove(); this.likeBtn = undefined;
+      if (this.net) this.net.handlers.dormLikes = this.prevLikes;
     });
   }
 
@@ -291,6 +293,18 @@ export class InteriorScene extends Phaser.Scene {
       this.editor?.open();
     });
     (document.getElementById('hud') ?? document.body).append(b); this.decorBtn = b;
+  }
+
+  /** 做客时：左边一个「赞」按钮，给这间宿舍点赞 / 取消（规则在服务器：累计在线满 10 分钟、每天 20 次） */
+  private setupLikeUi(net: NetClient, v: Extract<ServerMsg, { t: 'dorm_visit' }>) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn decor-open dorm-like';
+    let n = v.likes ?? 0, liked = !!v.liked;
+    const paint = () => { b.textContent = `${liked ? '❤️ 已赞' : '🤍 赞'} ${n}`; b.classList.toggle('on', liked); };
+    paint(); b.title = `给 ${v.hostName} 的宿舍点个赞（再点一下取消）`;
+    b.addEventListener('click', () => { if (net.status !== 'online') { this.hud.banner('⚠️ 宿舍', '没连上服务器'); return; } net.dormLike(v.host); });
+    (document.getElementById('hud') ?? document.body).append(b); this.likeBtn = b;
+    this.prevLikes = net.handlers.dormLikes;
+    net.handlers.dormLikes = (uid, nn, ll, msg) => { this.prevLikes?.(uid, nn, ll, msg); if (uid !== v.host) return; n = nn; liked = ll; paint(); if (msg) this.hud.banner('🏠 宿舍', msg); };
   }
 
   /** 按摆放数据画房里的家具（地毯、桌椅、柜子、小件、墙饰），并更新碰撞：占地的地面家具挡路，地毯、小件、墙饰不挡 */

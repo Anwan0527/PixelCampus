@@ -6,6 +6,7 @@ import type { WallComment, WallPost } from '@/shared/wall';
 import type { Notice } from '@/shared/notice';
 import type { ChatHistoryItem, DmMsg, FriendInfo, PersonInfo } from '@/shared/social';
 import type { Gain, Inv } from '@/shared/items';
+import type { DormCard } from '@/shared/dorm';
 import type { CatResult } from '@/shared/cats';
 import type { AchEvent } from '@/shared/achievements';
 import type { QuestState } from '@/shared/quests';
@@ -69,7 +70,8 @@ export interface NetHandlers {
   dmHistory?: (withUid: number, items: DmMsg[], more: boolean) => void;
   socialResult?: (ok: boolean, msg: string) => void;
   socialNote?: (text: string) => void;
-  whois?: (uid: number, info: PersonInfo | null, relation: 'none' | 'self' | 'friend' | 'sent' | 'incoming' | 'blocked') => void;
+  whois?: (uid: number, info: PersonInfo | null, relation: 'none' | 'self' | 'friend' | 'sent' | 'incoming' | 'blocked', dorm?: DormCard) => void;
+  dormLikes?: (uid: number, n: number, liked: boolean, msg?: string) => void;
   /** 进入时收到的公屏最近记录 */
   chatHistory?: (items: ChatHistoryItem[]) => void;
   /** 背包（整份）；gain = 这次新得到的东西 */
@@ -294,7 +296,8 @@ export class NetClient implements ChatTransport {
       case 'dm_history': this.handlers.dmHistory?.(m.with, m.items, m.more); break;
       case 'social_result': this.handlers.socialResult?.(m.ok, m.msg); break;
       case 'social_note': this.handlers.socialNote?.(m.text); break;
-      case 'whois': this.handlers.whois?.(m.uid, m.info, m.relation); break;
+      case 'whois': this.handlers.whois?.(m.uid, m.info, m.relation, m.dorm); break;
+      case 'dorm_likes': this.handlers.dormLikes?.(m.uid, m.n, m.liked, m.msg); break;
       case 'chat_history': this.handlers.chatHistory?.(m.items); break;
       case 'notices': this.handlers.notices?.(m.items, m.newId);
         break;
@@ -472,6 +475,8 @@ export class NetClient implements ChatTransport {
   held(h: number) { this.tx({ t: 'held', h }); }
   dormBath(op: 'put' | 'take', id: string, n: number) { this.tx({ t: 'dorm_bath', op, id, n }); }
   /** 装修：place = 摆一件、move = 挪/转、pick = 收回 */
+  dormLike(uid: number) { this.tx({ t: 'dorm_like', uid }); }
+  dormPub(on: boolean) { this.tx({ t: 'dorm_pub', on }); }
   dormLay(m: { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number }) { this.tx({ t: 'dorm_lay', ...m }); }
   fzGet() { this.tx({ t: 'fz_get' }); }
   fzSet(c: number) { this.tx({ t: 'fz_set', c }); }

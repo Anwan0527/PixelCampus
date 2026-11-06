@@ -152,6 +152,12 @@ export class DormPanel {
       ? `空调：${AC_NAMES[d.ac] ?? '关'}。从宿舍出来，就站在${d.b}的门口。在${d.b}门口按 E 也能进屋。`
       : '选你住的社区和楼栋：以后点「回宿舍」就回家，在这栋楼的门口按 E 也能进屋。第一次选可以随便选。'));
     if (d.b && !d.canChange) b.append(el('div', 'tp-msg bad', '今天已经改过楼栋了，明天再来吧（每天只能改一次；改楼栋不影响屋里的东西）。'));
+    if (d.b) { // 资料卡展示与赞数
+      const pub = el('label', 'dorm-pub'), cb = el('input'); cb.type = 'checkbox'; cb.checked = !d.hid;
+      cb.addEventListener('change', () => this.net.dormPub(cb.checked));
+      pub.append(cb, el('span', undefined, ` 在资料卡上展示我的宿舍（别人点你的头像能看到宿舍，还能给你点赞）`));
+      b.append(pub, el('div', 'create-sub', `❤️ 我的宿舍收到了 ${d.likes ?? 0} 个赞。`));
+    }
     for (const g of d.options) {
       b.append(el('div', 'tp-group', g.group));
       const row = el('div', 'tp-row');

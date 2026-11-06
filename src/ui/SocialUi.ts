@@ -7,6 +7,8 @@ import { locText, type FriendLoc } from '@/shared/where';
 import { drawPortrait, PORTRAIT_HEAD } from './sprites';
 import { ui } from './actions';
 import { askReport } from './ReportDialog';
+import { DormPeek } from './DormPeek';
+import type { DormCard } from '@/shared/dorm';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -45,7 +47,7 @@ export class SocialUi {
   /** 每个会话没发出去的草稿（别的事件触发重绘时不能把正在打的字弄丢）、输入法组字中、会话标题的签名（名字/备注/在线点变了才需要重绘）、最后一条消息的日期 */
   private drafts = new Map<number, string>(); private composing = false; private pendingRender = false; private convSig = ''; private convLastDay = '';
   private lookup: { uid: number; info: PersonInfo | null; relation: Relation } | null = null;
-  private popUid = 0; private popPub?: PublicProfile;
+  private popUid = 0; private popPub?: PublicProfile; private popDorm?: DormCard; private peek?: DormPeek;
   private addInput = el('input');
   /** 在线好友的大致位置（服务器每 8 秒推一次）；我是不是对好友隐藏了自己的位置 */
   private locs = new Map<number, FriendLoc>();
@@ -73,7 +75,8 @@ export class SocialUi {
     h.dmHistory = (uid, items, more) => this.onHistory(uid, items, more);
     h.socialResult = (ok, text) => { this.setMsg(text, ok); if (!this.isOpen) this.note(text); this.net.getSocial(); if (this.popUid) this.net.whois(this.popUid); };
     h.socialNote = (text) => { this.note(text); this.net.getSocial(); };
-    h.whois = (uid, info, relation) => this.onWhois(uid, info, relation);
+    h.whois = (uid, info, relation, dorm) => this.onWhois(uid, info, relation, dorm);
+    h.dormLikes = (uid, n, liked, msg) => { if (uid === this.popUid && this.popDorm) { this.popDorm.likes = n; this.popDorm.liked = liked; this.peek?.set(n, liked, msg ?? ''); } }; // 点赞结果：数字和红心更新，失败的原因写在下面
     net.onStatus(() => { if (this.isOpen && !this.conv) this.render(); }); // 在线人数一变就会触发：私聊里不重绘（以前这里会把输入框里刚打的字清掉）
     this.render();
   }
@@ -336,8 +339,8 @@ export class SocialUi {
   }
 
   // ------------------------------------------------------------ whois / 点玩家弹窗
-  private onWhois(uid: number, info: PersonInfo | null, relation: Relation) {
-    if (this.popUid === uid) this.renderPopup(info, relation);
+  private onWhois(uid: number, info: PersonInfo | null, relation: Relation, dorm?: DormCard) {
+    if (this.popUid === uid) { this.popDorm = dorm; this.renderPopup(info, relation); }
     this.lookup = { uid, info, relation };
     if (this.tab === 'add' && !this.conv && !this.root.classList.contains('hidden')) this.render();
   }
@@ -345,21 +348,22 @@ export class SocialUi {
 
   /** 点玩家（场景里的角色、公屏里的名字）弹出资料卡和操作。pub 是附近玩家带来的公开资料（有年级、签名） */
   showPlayer(uid: number, pub?: PublicProfile) {
-    this.popUid = uid; this.popPub = pub;
+    this.popUid = uid; this.popPub = pub; this.popDorm = undefined; this.peek = undefined;
     this.pop.classList.remove('hidden');
     this.renderPopup(null, 'none', true);
     this.net.whois(uid);
   }
-  closePlayer() { this.pop.classList.add('hidden'); this.popUid = 0; }
+  closePlayer() { this.pop.classList.add('hidden'); this.popUid = 0; this.popDorm = undefined; this.peek = undefined; }
   private renderPopup(info: PersonInfo | null, relation: Relation, loading = false) {
     this.pop.replaceChildren();
-    const wrap = el('div', 'card-wrap' + (!loading && info ? ' with-sheet' : '')); // 有操作按钮时横屏里学生证在左、按钮在右
+    const wrap = el('div', 'card-wrap' + (!loading && info ? ' with-sheet' : '') + (!loading && info && this.popDorm ? ' with-dorm' : '')); // 有操作按钮时横屏里学生证在左、按钮在右；有宿舍时多一栏「TA 的宿舍」
     const card = new StudentCard(this.textures);
     const p = this.popPub, uid = this.popUid;
     if (p) card.set({ ...p }, uid); else if (info) card.set({ name: info.name, look: info.look, app: info.app, gender: info.gender, college: info.college, major: info.major }, uid);
     else card.set({ name: loading ? '…' : '找不到这位同学', look: 0 }, uid);
     card.setTitle(info?.title);
     wrap.append(card.el);
+    if (!loading && info && this.popDorm) { this.peek = new DormPeek(this.textures, this.net, uid, info.name, this.popDorm, relation === 'self'); wrap.append(this.peek.el); } else this.peek = undefined;
     if (!loading && info) wrap.append(this.actions(uid, relation, info.name));
     const close = el('button', 'btn', '关闭'); close.type = 'button'; close.addEventListener('click', () => this.closePlayer());
     wrap.append(close); this.pop.append(wrap);

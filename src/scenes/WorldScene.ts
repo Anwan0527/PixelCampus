@@ -35,6 +35,7 @@ import { BackpackPanel } from '@/ui/BackpackPanel';
 import { MonPanel } from '@/ui/MonPanel';
 import { BattleUi } from '@/ui/BattleUi';
 import { TeleportPanel } from '@/ui/TeleportPanel';
+import { setDormDefs } from '@/ui/DormPeek';
 import { DormPanel } from '@/ui/DormPanel';
 import { WorldPanel } from '@/ui/WorldPanel';
 import { HandUi } from '@/ui/HandUi';
@@ -280,6 +281,7 @@ export class WorldScene extends Phaser.Scene {
     this.boardUi = new BoardPanel(this.net, (uid, ctx) => this.adminUi.openUserMenu(uid, ctx));
     this.wallUi = new WallPanel(this.net);
     this.noticeUi = new NoticePanel(this.net, (title) => { this.hud.banner('📢 新公告', title); this.net.system(`📢 新公告：${title}（点「公告」查看）`); });
+    setDormDefs(() => this.cache.json.get('interiors'));
     this.socialUi = new SocialUi(this.net, this.textures, (t) => { if (!t.startsWith('💬')) this.hud.banner('👥 好友', t); this.net.system(t); sfx('notify'); });
     this.chatUi.onNameClick = (uid, ctx) => { if (this.net.isAdmin) this.adminUi.openUserMenu(uid, ctx); else this.socialUi.showPlayer(uid); }; // 管理员点名字：禁言/撤回/封禁菜单；普通玩家：资料卡
     this.chatUi.admin = () => this.net.isAdmin;

@@ -30,6 +30,8 @@ export const DORM = {
   INVITE_MS: 30000,
   /** 牌子上的名字最多几个字 */
   TITLE_MAX: 8,
+  /** 点赞：一间宿舍最多记多少个赞（满了就不能再赞了）/ 每人每天最多赞几次 / 要累计在线满多少秒才能点赞（防小号刷赞） */
+  LIKE_MAX: 500, LIKE_DAILY: 20, LIKE_MIN_PT: 600,
   /** 屋里报位置的最小间隔（毫秒）与最大速度（像素/秒，含余量）：宿舍里的位置只是给别人看，服务器只做范围和速度的粗检查 */
   MOVE_GAP_MS: 60, MAX_SPEED: 220,
 } as const;
@@ -53,6 +55,10 @@ export interface DormSave {
   bt?: Inv;
   /** 家具摆放（装修过才有；没有 = 用原来的默认布局 defaultLay）。摆在房间里的家具不在背包里，收回来才还给背包 */
   lay?: Placed[];
+  /** 点过赞的人（校园号）；最多 DORM.LIKE_MAX 个，赞数 = 人数 */
+  lk?: number[];
+  /** 1 = 不在资料卡上展示我的宿舍（默认展示） */
+  hid?: 1;
 }
 
 /** 宿舍房间的尺寸与门（和 data/interiors/dorm.json 一致，测试里核对）：服务器据此限定屋里的位置范围、给新进屋的人定出生点 */
@@ -100,6 +106,8 @@ export function cleanDorm(raw: unknown): DormSave | undefined {
   if (r.ac === 1 || r.ac === 2) out.ac = r.ac;
   const ch = cleanChest(r.ch); if (Object.keys(ch).length) out.ch = ch;
   { const lay = cleanLay(r.lay); if (lay) out.lay = lay; }
+  { const lk = cleanLikes(r.lk); if (lk.length) out.lk = lk; }
+  if (r.hid === 1) out.hid = 1;
   return Object.keys(out).length ? out : undefined;
 }
 
@@ -254,3 +262,22 @@ export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: 
   return { ok: true, msg: done };
 }
 const STACKCAP = 999;
+
+// ------------------------------------------------------------------ 资料卡上的宿舍与点赞
+/** 资料卡上展示的宿舍：门牌、楼栋、家具摆放（没装修过 = 默认布局）、赞数、我有没有赞过 */
+export interface DormCard { title?: string; b: string; lay: Placed[]; likes: number; liked: boolean }
+export function cleanLikes(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<number>();
+  for (const v of raw) if (Number.isInteger(v) && (v as number) > 0 && seen.size < DORM.LIKE_MAX) seen.add(v as number);
+  return [...seen];
+}
+/** 点赞 / 取消赞（原地修改）：不能赞自己；已满不能再加；再点一次取消。每天上限、在线时长在服务器另外检查 */
+export function likeToggle(d: DormSave, by: number, host: number): { ok: boolean; msg: string; liked: boolean; n: number } {
+  if (by === host) return { ok: false, msg: '不能给自己的宿舍点赞', liked: false, n: d.lk?.length ?? 0 };
+  const lk = (d.lk ??= []), at = lk.indexOf(by);
+  if (at >= 0) { lk.splice(at, 1); if (!lk.length) delete d.lk; return { ok: true, msg: '取消了赞', liked: false, n: lk.length }; }
+  if (lk.length >= DORM.LIKE_MAX) return { ok: false, msg: `这间宿舍的赞已经满啦（${DORM.LIKE_MAX}）`, liked: false, n: lk.length };
+  lk.push(by);
+  return { ok: true, msg: '赞了这间宿舍 ♥', liked: true, n: lk.length };
+}

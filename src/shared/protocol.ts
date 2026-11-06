@@ -6,7 +6,7 @@
  * 坐标单位是世界像素，二进制里按 1/4 像素定点存 u16（世界最大约 11264 px × 4 = 45056，装得下）。
  */
 import type { Profile } from './profile';
-import type { BathView } from './dorm';
+import type { BathView, DormCard } from './dorm';
 import type { Placed } from './decor';
 import type { BoardItem } from './board';
 import type { WallComment, WallPost } from './wall';
@@ -279,6 +279,9 @@ export type ClientMsg =
   /** 浴缸放鱼 / 取回（只有房主在自己宿舍里能用） */
   | { t: 'dorm_bath'; op: 'put' | 'take'; id: string; n: number }
   /** 装修：place = 从背包摆一件（d = 家具物品 id）/ move = 挪动或转向已摆的第 i 件 / pick = 收回第 i 件 */
+  /** 给 TA 的宿舍点赞 / 取消赞；设置我的宿舍要不要在资料卡上展示 */
+  | { t: 'dorm_like'; uid: number }
+  | { t: 'dorm_pub'; on: boolean }
   | { t: 'dorm_lay'; op: 'place' | 'move' | 'pick'; d?: string; i?: number; x?: number; y?: number; r?: number }
   /** 宿舍做客：邀请好友来我的宿舍（我得在自己宿舍里）/ 敲好友宿舍的门（好友得在宿舍里）/ 回应别人的邀请或敲门 / 房主改门牌 / 在宿舍里报自己的位置（屋里的坐标，像素） */
   /** 切换世界：public = 公共世界，solo = 个人世界；remember = 下次登录也默认进这个世界 */
@@ -336,7 +339,9 @@ export type ServerMsg =
   | { t: 'social_result'; ok: boolean; msg: string }
   /** 别人给我的提示（收到好友申请、申请被通过） */
   | { t: 'social_note'; text: string }
-  | { t: 'whois'; uid: number; info: PersonInfo | null; relation: 'none' | 'self' | 'friend' | 'sent' | 'incoming' | 'blocked' }
+  | { t: 'whois'; uid: number; info: PersonInfo | null; relation: 'none' | 'self' | 'friend' | 'sent' | 'incoming' | 'blocked'; /** TA 的宿舍（没有宿舍、或 TA 选了不展示就没有） */ dorm?: DormCard }
+  /** 某间宿舍的赞数变了（我点赞 / 取消之后）：uid = 房主，n = 现在的赞数，liked = 我现在有没有赞 */
+  | { t: 'dorm_likes'; uid: number; n: number; liked: boolean; /** 结果提示（成功或失败的原因） */ msg?: string }
   | { t: 'chat_history'; items: ChatHistoryItem[] }
   | { t: 'admin'; ok: boolean; msg?: string; token?: string; /** 登录成功时：站长还是协管员 */ role?: AdminRole }
   /** 整个背包（物品 id → 数量）；gain 带上"这次新得到的东西"，客户端据此提示 */
@@ -454,7 +459,7 @@ export type ServerMsg =
   | { t: 'mon_result'; ok: boolean; msg: string }
   | { t: 'tp_result'; ok: boolean; msg: string }
   /** 我的宿舍：楼栋（没绑定 = 没有）、今天还能不能改楼栋、空调、宝箱；options = 能选的楼栋（按社区分组） */
-  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; options: { group: string; names: string[] }[] }
+  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 我的宿舍收到的赞数 */ likes?: number; options: { group: string; names: string[] }[] }
   /** 可以进屋了（x、y = 我在宿舍楼门口的位置，像素）/ 宿舍操作的结果 */
   | { t: 'dorm_in'; x: number; y: number }
   /** 服务器把人从宿舍里带走了（传送、队友传送、被管理员传走…）：客户端要离开室内、留在新位置 */
@@ -462,7 +467,7 @@ export type ServerMsg =
   /** 有人邀请我去 TA 的宿舍（kind = invite），或有人想来我的宿舍（kind = knock）；30 秒内回应 */
   | { t: 'dorm_ask'; uid: number; name: string; kind: 'invite' | 'knock'; title?: string }
   /** 我进了好友的宿舍：房主、门牌（房主起的名字，可能为空）、空调、房主是不是在睡觉、屋里已经有的人 */
-  | { t: 'dorm_visit'; host: number; hostName: string; title: string; ac: number; sleeping: boolean; bv?: BathView; lay?: Placed[]; roster: RoomWho[] }
+  | { t: 'dorm_visit'; host: number; hostName: string; title: string; ac: number; sleeping: boolean; bv?: BathView; lay?: Placed[]; /** 这间宿舍的赞数、我有没有赞过 */ likes?: number; liked?: boolean; roster: RoomWho[] }
   /** 屋里有人进来 / 出去 / 动了；屋里的状态变了（空调、门牌、房主睡觉） */
   | { t: 'room_join'; w: RoomWho }
   | { t: 'room_leave'; id: number }

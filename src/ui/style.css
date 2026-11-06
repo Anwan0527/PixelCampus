@@ -1065,3 +1065,25 @@ body.touch .decor-item { width: 62px; }
 body.touch .decor-name { font-size: 10px; max-width: 58px; }
 body.touch .decor-acts { min-height: 26px; }
 body.touch .decor-acts .btn { font-size: 12px; padding: 1px 8px; }
+
+/* 资料卡旁边的「TA 的宿舍」 */
+.dorm-peek { width: min(300px, 92vw); box-sizing: border-box; background: var(--paper); border: 3px solid var(--wood); box-shadow: 0 3px 0 var(--wood-d); padding: 6px 8px 8px; display: flex; flex-direction: column; gap: 5px; }
+.dorm-peek-head { display: flex; flex-direction: column; gap: 1px; }
+.dorm-peek-title { font-weight: bold; font-size: 16px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dorm-peek-sub { font-size: 12px; opacity: .75; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dorm-peek-img { width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--wood-d); background: #17110d; display: block; }
+.dorm-peek-foot { display: flex; align-items: center; gap: 8px; min-height: 30px; }
+.dorm-like { padding: 3px 12px; font-size: 15px; white-space: nowrap; flex: 0 0 auto; }
+.dorm-like.on { background: #ffd9e0; border-color: #c8506a; box-shadow: 0 3px 0 #7a2a3c; }
+.dorm-like:disabled { opacity: .85; cursor: default; }
+.dorm-peek-msg { font-size: 12px; opacity: .85; min-width: 0; }
+.dorm-pub { display: flex; align-items: center; gap: 4px; margin: 8px 0 2px; font-size: 14px; cursor: pointer; }
+.card-wrap.with-dorm { max-height: 94vh; overflow-y: auto; }
+@media (min-width: 761px) and (min-height: 560px) {
+  .card-wrap.with-dorm.with-sheet { display: grid; grid-template-columns: auto minmax(0, 300px); align-items: start; gap: 10px 16px; }
+  .card-wrap.with-dorm.with-sheet > :first-child { grid-row: 1 / span 3; }
+  .card-wrap.with-dorm.with-sheet > .btn { grid-column: 1; justify-self: center; }
+}
+body.touch .card-wrap.with-dorm.with-sheet { grid-template-columns: auto minmax(0, 1fr); }
+body.touch .dorm-peek { width: auto; padding: 4px 6px 6px; }
+.decor-open.dorm-like { padding: 6px 14px; font-size: 15px; }
