@@ -18,7 +18,7 @@ export class HandUi {
   private bar = el('div', 'hand-bar hidden');
   private timer = 0;
   /** 自己在牵手里的角色变化（场景据此让被牵的人跟着走）：role = 牵手的人 / 被牵的人 / 没有；pid = 对方的玩家编号 */
-  onRole: ((role: 'lead' | 'follow' | 'none', pid: number) => void) | null = null;
+  onRole: ((role: 'lead' | 'follow' | 'none', pid: number, side: 1 | -1) => void) | null = null;
   /** 一条提示（横幅 + 聊天栏） */
   onNote: ((title: string, text: string) => void) | null = null;
   role: 'lead' | 'follow' | 'none' = 'none';
@@ -26,7 +26,7 @@ export class HandUi {
   constructor(private net: NetClient) {
     (document.getElementById('hud') ?? document.body).append(this.prompt, this.bar);
     net.handlers.handInvite = (uid, name) => this.showInvite(uid, name);
-    net.handlers.handMe = (role, pid, name, msg) => {
+    net.handlers.handMe = (role, pid, name, msg, side) => {
       this.role = role; this.hidePrompt();
       this.bar.replaceChildren();
       if (role === 'none') this.bar.classList.add('hidden');
@@ -36,7 +36,7 @@ export class HandUi {
         this.bar.append(txt, end); this.bar.classList.remove('hidden');
       }
       if (msg) this.onNote?.('🤝 手拉手', msg);
-      this.onRole?.(role, pid);
+      this.onRole?.(role, pid, side ?? 1);
     };
     net.handlers.handResult = (_ok, msg) => this.onNote?.('🤝 手拉手', msg);
   }

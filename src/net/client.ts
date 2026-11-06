@@ -81,7 +81,7 @@ export interface NetHandlers {
   /** 手拉手：有人想牵我的手 / 全部牵着手的一对（玩家编号）/ 我自己的状态 / 操作结果 */
   handInvite?: (uid: number, name: string) => void;
   handPairs?: (list: { l: number; f: number }[]) => void;
-  handMe?: (role: 'lead' | 'follow' | 'none', pid: number, name: string, msg?: string) => void;
+  handMe?: (role: 'lead' | 'follow' | 'none', pid: number, name: string, msg?: string, side?: 1 | -1) => void;
   handResult?: (ok: boolean, msg: string) => void;
   /** 定点传送的结果 */
   tpResult?: (ok: boolean, msg: string) => void;
@@ -314,7 +314,7 @@ export class NetClient implements ChatTransport {
       case 'dorm_result': this.handlers.dormResult?.(m.ok, m.msg, m.wake); break;
       case 'hand_invite': this.handlers.handInvite?.(m.uid, m.name); break;
       case 'hand_pairs': this.handlers.handPairs?.(m.list); break;
-      case 'hand_me': this.handlers.handMe?.(m.role, m.pid, m.name, m.msg); break;
+      case 'hand_me': this.handlers.handMe?.(m.role, m.pid, m.name, m.msg, m.side); break;
       case 'hand_result': this.handlers.handResult?.(m.ok, m.msg); break;
       case 'mon_enc': this.handlers.monEnc?.(m); break;
       case 'mon_enc_end': this.handlers.monEncEnd?.(); break;

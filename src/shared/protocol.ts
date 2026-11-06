@@ -466,7 +466,7 @@ export type ServerMsg =
   /** 手拉手：有人想牵我的手 / 全部牵着手的一对（玩家编号，l = 牵手的人，f = 被牵的人；画连线用）/ 我自己的状态（role = 我是牵的人/被牵的人/没有；pid、name = 对方）/ 操作结果 */
   | { t: 'hand_invite'; uid: number; name: string }
   | { t: 'hand_pairs'; list: { l: number; f: number }[] }
-  | { t: 'hand_me'; role: 'lead' | 'follow' | 'none'; pid: number; name: string; msg?: string }
+  | { t: 'hand_me'; role: 'lead' | 'follow' | 'none'; pid: number; name: string; /** 被牵的人站在队头的哪一侧（+1 / −1） */ side?: 1 | -1; msg?: string }
   | { t: 'hand_result'; ok: boolean; msg: string }
   /** 草丛里有动静：遇到了哪只（ms 之内不答复算走开）/ 提示已失效 */
   | { t: 'mon_enc'; sp: string; lv: number; sh?: 1; zone: string; ms: number }

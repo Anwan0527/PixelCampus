@@ -38,7 +38,7 @@ import { TeleportPanel } from '@/ui/TeleportPanel';
 import { DormPanel } from '@/ui/DormPanel';
 import { WorldPanel } from '@/ui/WorldPanel';
 import { HandUi } from '@/ui/HandUi';
-import { handOffset } from '@/shared/hand';
+import { HAND, glide, handOffset } from '@/shared/hand';
 import { CatPanel } from '@/ui/CatPanel';
 import { BackupPanel } from '@/ui/BackupPanel';
 import { AchievementPanel } from '@/ui/AchievementPanel';
@@ -152,7 +152,7 @@ export class WorldScene extends Phaser.Scene {
   private worldUi!: WorldPanel;
   private handUi!: HandUi;
   /** 手拉手：我被谁牵着（牵手的人的玩家编号，0 = 没有）；全部牵着手的一对；连线的画布 */
-  private holdPid = 0;
+  private holdPid = 0; private holdSide: 1 | -1 = 1;
   private handPairs: { l: number; f: number }[] = [];
   private handG!: Phaser.GameObjects.Graphics;
   private tradeUi!: TradePanel;
@@ -317,7 +317,7 @@ export class WorldScene extends Phaser.Scene {
     this.battleUi = new BattleUi(this.net);
     this.handUi = new HandUi(this.net);
     this.handUi.onNote = (title, text) => { this.hud.banner(title, text); this.net.system(`${title}：${text}`); };
-    this.handUi.onRole = (role, pid) => { this.holdPid = role === 'follow' ? pid : 0; this.player.led = role === 'follow'; if (role !== 'none') sfx('pickup'); };
+    this.handUi.onRole = (role, pid, side) => { const was = this.holdPid; this.holdPid = role === 'follow' ? pid : 0; this.holdSide = side; this.player.led = role === 'follow'; if (role !== 'none' && !(was && was === this.holdPid)) sfx('pickup'); };
     this.net.handlers.handPairs = (list) => { this.handPairs = list; };
     this.handG = this.add.graphics().setDepth(100000);
     this.tpUi = new TeleportPanel(this.net, () => { this.hud.banner('📍 传送', '到啦'); sfx('go'); });
@@ -929,7 +929,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.player.takeCrash()) this.onBikeCrash(); // 骑车撞墙：镜头抖一下，并告诉服务器（成就「墙是实心的」）
     this.checkDawn();
     if (this.paxPid) { const d = this.remotes.get(this.paxPid); if (d) { this.player.x = d.x; this.player.y = d.y; this.player.facing = d.facing; } } // 后座：跟着车主走
-    if (this.holdPid) { const d = this.remotes.get(this.holdPid); if (d) { const [ox, oy] = handOffset(d.facing); this.player.followMove(d.x + ox, d.y + oy, d.facing, d.moving, d.running); } } // 被牵着：站在牵手的人身边、跟着走
+    if (this.holdPid) { const d = this.remotes.get(this.holdPid); if (d) { const [ox, oy] = handOffset(d.facing, this.holdSide), [gx, gy] = glide(this.player.x, this.player.y, d.x + ox, d.y + oy, HAND.GLIDE_PXS * dt); this.player.followMove(gx, gy, d.facing, d.moving || Math.hypot(gx - d.x - ox, gy - d.y - oy) > 1, d.running); } } // 被牵着：站在牵手的人身边、跟着走
     this.drawHandLinks();
     this.updateNet(dt, k.shift.isDown || (joy?.run ?? false));
     this.updateBuildingFade();
@@ -941,14 +941,24 @@ export class WorldScene extends Phaser.Scene {
     this.touchPress = false;
   }
 
-  /** 手拉手：每一对牵着手的人之间画一条粉色连线（中间一个小白点） */
+  /** 手拉手：每一对牵着手的人之间画「手牵手」——两条胳膊（肤色、带描边）从身体伸向中间，中间是握在一起的手，手上飘一颗小爱心；两个人离得远一点时胳膊会自然下垂 */
   private drawHandLinks() {
     const g = this.handG; g.clear();
+    const t = this.time.now / 1000, SKIN = 0xf4c9a0, SKIN_D = 0xdca37a, INK = 0x3a2418;
+    const HEART = ['01010', '11111', '01110', '00100'];
     for (const { l, f } of this.handPairs) {
       const ent = (pid: number) => (pid === this.net.selfId ? this.player : this.remotes.get(pid));
       const a = ent(l), b = ent(f); if (!a || !b) continue;
-      g.lineStyle(3, 0xff6f91, 1); g.beginPath(); g.moveTo(a.x, a.y - 8); g.lineTo(b.x, b.y - 8); g.strokePath();
-      g.fillStyle(0xffffff, 1); g.fillCircle((a.x + b.x) / 2, (a.y + b.y) / 2 - 8, 2.2);
+      const ay = a.y - 11, by = b.y - 11, d = Math.hypot(b.x - a.x, by - ay); if (d < 1.5) continue;
+      const mx = (a.x + b.x) / 2, my = (ay + by) / 2, sag = Math.min(7, Math.max(0, (d - 15) * 0.18)); // 离远了胳膊下垂
+      const pts: [number, number][] = [];
+      for (let i = 0; i <= 8; i++) { const u = i / 8, w0 = (1 - u) * (1 - u), w1 = 2 * (1 - u) * u, w2 = u * u; pts.push([w0 * a.x + w1 * mx + w2 * b.x, w0 * ay + w1 * (my + sag * 1.6) + w2 * by]); }
+      const line = (w: number, c: number) => { g.lineStyle(w, c, 1); g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (const [x, y] of pts.slice(1)) g.lineTo(x, y); g.strokePath(); };
+      line(4, INK); line(2, SKIN); // 胳膊：深色描边 + 肤色
+      const hx = Math.round(mx), hy = Math.round(my + sag * 0.8);
+      g.fillStyle(INK, 1); g.fillRect(hx - 3, hy - 3, 6, 6); g.fillStyle(SKIN, 1); g.fillRect(hx - 2, hy - 2, 4, 4); g.fillStyle(SKIN_D, 1); g.fillRect(hx - 2, hy + 1, 4, 1); g.fillStyle(0xffffff, 0.55); g.fillRect(hx - 2, hy - 2, 1, 1); // 握在一起的手
+      const by0 = hy - 10 + Math.round(Math.sin(t * 3 + l) * 1); // 小爱心轻轻上下浮
+      HEART.forEach((row, ry) => { for (let rx = 0; rx < 5; rx++) if (row[rx] === '1') { g.fillStyle(ry === 1 && rx === 1 ? 0xffb0c0 : 0xff5a7a, 1); g.fillRect(hx - 2 + rx, by0 + ry, 1, 1); } });
     }
   }
 
