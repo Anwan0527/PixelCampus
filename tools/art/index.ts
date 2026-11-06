@@ -52,7 +52,7 @@ const items: PackItem[] = [];
     for (const a of CAT_ANIMS) a.frames.forEach((p, i) => cats.push({ key: `cat${c}_${a.id}_${i}`, img: renderCat(look, p).img }));
     for (const a of CAT_FRONT_ANIMS) a.frames.forEach((p, i) => cats.push({ key: `cat${c}_${a.id}_${i}`, img: renderCatFront(look, p, a.back).img }));
   }
-  const a = pack(cats, 1024);
+  const a = pack(cats, 2048); // 图集高度要 ≤ 4096（老手机显卡的纹理上限），之前 1024 宽排出来 4142 高，超限的设备上小猫会变成黑方块
   for (let c = 0; c < coats; c++) for (let i = 0; i < 2; i++) a.json.frames[`cat${c}_sleep_${i}`] = a.json.frames[`cat${c}_sleep_curl_${i}`];   // 旧版帧名
   await a.img.save(join(GEN, 'atlas-cats.png'));
   writeFileSync(join(GEN, 'atlas-cats.json'), JSON.stringify(a.json));
