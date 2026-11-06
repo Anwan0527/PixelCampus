@@ -6,12 +6,14 @@
  * - 校验 layError：服务器不信任客户端，客户端也用它判断"这里能不能放"（绿/红）。规则：
  *   地面家具不出界、不重叠、不挡门口；摆完之后门口到每件功能家具（床、衣柜、宝箱、鱼缸、空调、门牌）必须还走得通；
  *   小件（书、台灯、电脑…）只能放在桌子上；墙饰（窗、画、空调、门牌…）只能挂北墙、互相不重叠；
- *   地毯铺在地上、可以被家具压着；门垫是小地毯，可以叠在地毯上。
+ *   地毯铺在地上、可以被家具压着；门垫是小地毯；地毯和门垫都能叠（同一处最多 RUG_LAYERS 层，摆得晚的在上面，门垫总在地毯上面）。
+ * 家具能转向：有设计好四个朝向的（FACE）和地毯门垫（TURN_FLAT），见下面的说明。
  * 2026-11-07 起房间里**没有固定家具了**：床、衣柜、宝箱、鱼缸、空调、门牌、窗、大地毯、门垫都是「固有家具」（starter：不卖、不能交易、不能退货，
  * 每人一份），和别的家具一样可以收回、挪动。它们的功能（睡觉、换装、仓库、养鱼、空调、改门牌）跟着家具走：摆在哪儿就在哪儿用。
  * 房间尺寸要和 data/interiors/dorm*.json 一致（tests 核对）。
  */
 
+export type Rot = 0 | 90 | 180 | 270;
 export type DecorCat = '桌椅' | '柜架' | '电器' | '软装' | '地毯' | '墙饰' | '小件' | '固有';
 /** floor = 占地的地面家具；rug = 地毯（铺在地上、不挡路）；mat = 门垫（小地毯，叠在地毯上面）；wall = 北墙上的挂件（窗、画、空调…）；top = 摆在桌面上的小件（1×1） */
 export type DecorKind = 'floor' | 'rug' | 'mat' | 'wall' | 'top';
@@ -25,7 +27,9 @@ export interface DecorDef {
   /** 墙饰：精灵有几格高（挂在墙上占几行） */ wh?: number;
   /** 商店价（校园币）；0 = 不卖（固有家具） */ price: number;
   /** 桌子：小件可以放在它上面 */ surface?: boolean;
-  /** 地毯可以转 90 度 */ turn?: boolean;
+  /** 地毯 / 门垫：从正上方看，转 90 度就是把图案整个转过来（贴图直接旋转） */ turn?: boolean;
+  /** 有专门画好的四个朝向（r：0 朝南 / 90 朝西 / 180 朝北 / 270 朝东，顺时针转）：每个朝向都是单独设计的贴图（看到的是正面、侧面或背面），不是把图转一下。tools/art/turn-*.ts */ face?: boolean;
+  /** 朝向的起点：这件家具的原图朝哪边（默认朝南 0；「木椅（朝北）」的原图朝北 = 180）。转向时从它出发，四个朝向的贴图共用同一套 */ base?: Rot;
   /** 走近按 E 看到的一句话（可选） */ say?: string;
   /** 功能（床睡觉、衣柜换装、宝箱仓库、鱼缸养鱼、空调、门牌改名）：摆在哪儿就在哪儿用 */ act?: DecorAct;
   /** 固有家具：每人一份、不卖、不能交易、不能退货（可以收回背包再摆） */ starter?: boolean;
@@ -38,7 +42,7 @@ export interface DecorDef {
 const D = (id: string, k: string, name: string, cat: DecorCat, kind: DecorKind, fw: number, fh: number, price: number, note: string, extra: Partial<DecorDef> = {}): DecorDef =>
   ({ id, k, name, cat, kind, fw, fh, price, note, ...extra });
 
-export const DECOR: readonly DecorDef[] = [
+const RAW: readonly DecorDef[] = [
   // ---- 桌椅
   D('dc_desk', 'desk', '木书桌', '桌椅', 'floor', 2, 1, 60, '朴素的木书桌，带一个抽屉；桌面上能摆小件。', { surface: true, lift: 12 }),
   D('dc_deskpc', 'deskpc', '木桌+电脑', '桌椅', 'floor', 2, 1, 120, '带一台电脑的木书桌，宿舍原来就有的那张。', { say: '屏幕亮着：教务系统的课表上写着「今天没课」。右下角弹出一条消息——「河北工程大学新校区欢迎你」。' }),
@@ -68,8 +72,8 @@ export const DECOR: readonly DecorDef[] = [
   D('dc_plant', 'plant', '绿植', '软装', 'floor', 1, 1, 40, '一盆精神的绿植。'),
   D('dc_bin', 'bin', '垃圾桶', '软装', 'floor', 1, 1, 15, '灰色的小垃圾桶。'),
   // ---- 地毯（铺在地上，不挡路）
-  D('dc_rug_red', 'dc_rug_red', '红格地毯', '地毯', 'rug', 3, 2, 80, '红色格纹的长方形地毯。', { turn: true }),
-  D('dc_rug_blue', 'dc_rug_blue', '蓝条地毯', '地毯', 'rug', 4, 2, 120, '蓝白条纹的大地毯。', { turn: true }),
+  D('dc_rug_red', 'dc_rug_red', '红格地毯', '地毯', 'rug', 3, 2, 80, '红色格纹的长方形地毯。'),
+  D('dc_rug_blue', 'dc_rug_blue', '蓝条地毯', '地毯', 'rug', 4, 2, 120, '蓝白条纹的大地毯。'),
   D('dc_rug_round', 'dc_rug_round', '圆形地毯', '地毯', 'rug', 3, 3, 140, '米色带花边的圆形地毯。'),
   D('dc_rug_paw', 'dc_rug_paw', '爪印地毯', '地毯', 'rug', 2, 2, 100, '粉色底的小猫爪印地毯。'),
   // ---- 门垫（小地毯，叠在地毯上面；门口也能放）
@@ -108,6 +112,19 @@ export const DECOR: readonly DecorDef[] = [
   D('dc_rug_home', 'dc_rug_home', '暖橙大地毯', '固有', 'rug', 6, 3, 0, '宿舍原来铺着的大地毯。', { starter: true }),
   D('dc_mat_door', 'dc_mat_door', '棕色门垫', '固有', 'mat', 2, 1, 0, '门口原来的门垫。', { starter: true }),
 ];
+/**
+ * 能转向的家具（贴图见 tools/art/turn-*.ts）：
+ *  - FACE：有四个专门设计的朝向（正面 / 侧面 / 背面），转一下看到的是另一面，不是把图转一下；
+ *  - TURN_FLAT：地毯、门垫，从正上方看，转 90 度就是把图案整个转过来；
+ *  - 其余的（凳子、懒人沙发、落地灯、绿植、垃圾桶、书堆、保温壶、台灯、仙人掌、圆形地毯和草编圆垫）四面一模一样，转了也看不出区别，所以不设转向；
+ *    床和鱼缸的睡觉姿势 / 缸里的鱼是照着现在的朝向做的，这一版先不转；挂在北墙上的东西（窗、画、空调、门牌）只能朝南挂。
+ * 原图朝北的「木椅（朝北）」用 base 记下起点，和「木椅」共用一套四个朝向。
+ */
+const FACE = new Set(['dc_desk', 'dc_deskpc', 'dc_table2', 'dc_dtable', 'dc_dtable3', 'dc_chair', 'dc_chairup', 'dc_gamechair', 'dc_sofa', 'dc_shelf2', 'dc_shelf3', 'dc_cab2', 'dc_shoebox', 'dc_coatrack',
+  'dc_fridge', 'dc_tv', 'dc_tank', 'dc_wardrobe', 'dc_chest', 'dc_bear', 'dc_guitar', 'dc_laptop', 'dc_pc']);
+const TURN_FLAT = new Set(['dc_rug_red', 'dc_rug_blue', 'dc_rug_paw', 'dc_mat_welcome', 'dc_mat_paw', 'dc_mat_towel', 'dc_mat_door', 'dc_rug_home']); // 圆形的（圆形地毯、草编圆垫）转了一样，不设
+const BASE: Record<string, Rot> = { dc_chairup: 180 };
+export const DECOR: readonly DecorDef[] = RAW.map((d) => (FACE.has(d.id) ? { ...d, face: true, ...(BASE[d.id] ? { base: BASE[d.id] } : {}) } : TURN_FLAT.has(d.id) ? { ...d, turn: true } : d));
 const BY_ID = new Map(DECOR.map((d) => [d.id, d]));
 export const decorDef = (id: unknown): DecorDef | undefined => (typeof id === 'string' ? BY_ID.get(id) : undefined);
 export const isDecorId = (id: unknown): id is string => typeof id === 'string' && BY_ID.has(id);
@@ -134,9 +151,14 @@ export const DOOR_KEEP: Rect = doorKeep(0);
 
 export const DECOR_MAX = 72;
 
-export type Rot = 0 | 90 | 180 | 270;
 export interface Placed { d: string; x: number; y: number; r?: Rot }
 export const isRot = (r: unknown): r is Rot => r === 0 || r === 90 || r === 180 || r === 270;
+/** 这件家具能不能转向 */
+export const canTurn = (def: DecorDef): boolean => !!(def.turn || def.face);
+/** 转向时依次经过的朝向：有设计好的朝向的家具一圈四个（顺时针），地毯 / 门垫只在 0 和 90 之间切换（转 180 度图案一样） */
+export const nextRot = (def: DecorDef, r: number | undefined): Rot => (def.face ? ((((r ?? 0) + 90) % 360) as Rot) : r === 90 ? 0 : 90);
+/** 地毯、门垫最多叠几层（同一格上地毯 + 门垫一共几件）：想铺得花哨可以层层叠，但不能无限叠 */
+export const RUG_LAYERS = 3;
 /** 摆完之后占地的宽高（地毯转 90/270 度时宽高互换） */
 export const footOf = (def: DecorDef, r: number | undefined): { fw: number; fh: number } => (r === 90 || r === 270 ? { fw: def.fh, fh: def.fw } : { fw: def.fw, fh: def.fh });
 /** 墙饰占的格子：列 x..x+fw-1，行 y-wh .. y-1（y 是挂件底边所在的行线） */
@@ -162,7 +184,7 @@ const key = (x: number, y: number) => y * KW + x;
 export function layError(lay: readonly Placed[], level: number = 0): string | null {
   if (lay.length > DECOR_MAX) return `最多摆 ${DECOR_MAX} 件`;
   const { x0, x1, y0, y1 } = roomDims(level), DOOR = doorKeep(level);
-  const keep = new Set<number>(), floor = new Set<number>(), rug = new Set<number>(), mat = new Set<number>(), surf = new Set<number>(), top = new Set<number>();
+  const keep = new Set<number>(), floor = new Set<number>(), layers = new Map<number, number>(), surf = new Set<number>(), top = new Set<number>();
   for (let j = 0; j < DOOR.h; j++) for (let i = 0; i < DOOR.w; i++) keep.add(key(DOOR.x + i, DOOR.y + j));
   const walls: Rect[] = [], tops: { def: DecorDef; p: Placed }[] = [], acts: { def: DecorDef; p: Placed }[] = [], seenIds = new Set<string>();
   for (const p of lay) {
@@ -170,7 +192,7 @@ export function layError(lay: readonly Placed[], level: number = 0): string | nu
     if (!def) return '没有这件家具';
     if (!Number.isInteger(p.x) || !Number.isInteger(p.y)) return '位置不对';
     if (p.r !== undefined && !isRot(p.r)) return '方向不对';
-    if (p.r && !def.turn) return `${def.name}不能转方向`;
+    if (p.r && !canTurn(def)) return `${def.name}不能转方向`;
     if (def.starter) { if (seenIds.has(def.id)) return `${def.name}只有一件`; seenIds.add(def.id); } // 固有家具每人一份
     if (def.act) acts.push({ def, p });
     const { fw, fh } = footOf(def, p.r);
@@ -186,8 +208,7 @@ export function layError(lay: readonly Placed[], level: number = 0): string | nu
       if (p.x < x0 || p.y < y0 || p.x + fw > x1 + 1 || p.y + fh > y1 + 1) return `${def.name}要放在房间的地面上`;
       for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) {
         const c = key(p.x + i, p.y + j);
-        if (def.kind === 'rug') { if (rug.has(c)) return '地毯不能叠在另一块地毯上（门垫可以叠）'; rug.add(c); continue; }
-        if (def.kind === 'mat') { if (mat.has(c)) return '门垫不能叠在另一块门垫上'; mat.add(c); continue; }
+        if (def.kind === 'rug' || def.kind === 'mat') { const n = (layers.get(c) ?? 0) + 1; if (n > RUG_LAYERS) return `地毯、门垫一处最多叠 ${RUG_LAYERS} 层`; layers.set(c, n); continue; } // 地毯、门垫可以层层叠：摆得晚的盖在上面
         if (keep.has(c)) return '门口要留出路来';
         if (floor.has(c)) return '这里已经有家具了';
         floor.add(c); if (def.surface) surf.add(c);
@@ -246,14 +267,17 @@ export const layCounts = (lay: readonly Placed[]): Record<string, number> => { c
 
 /** 小件摆在桌子的第几行上（从桌子最上面一行起数）：下面的行画得往上抬一点，看起来还在桌面上（每行抬 8 像素）；一行深的桌子再按它的 lift 抬高 */
 export function topRaise(lay: readonly Placed[], p: Placed): number {
-  for (const q of lay) { const d = decorDef(q.d); if (d?.surface && p.x >= q.x && p.x < q.x + d.fw && p.y >= q.y && p.y < q.y + d.fh) return (p.y - q.y) * 8 + (d.lift ?? 0); }
+  for (const q of lay) { const d = decorDef(q.d); if (!d?.surface) continue; const { fw, fh } = footOf(d, q.r); if (p.x >= q.x && p.x < q.x + fw && p.y >= q.y && p.y < q.y + fh) return (p.y - q.y) * 8 + (d.lift ?? 0); }
   return 0;
 }
 
-/** 椅子 / 沙发上能坐的位置（格坐标 → 像素）：座位中心的 x、椅面的 y；沙发有两个座位 */
+/** 椅子 / 沙发上能坐的位置（格坐标 → 像素）：座位中心的 x、椅面的 y；沙发有两个座位（沿着它长的那一边排，转向后跟着变） */
 export function seatsOf(p: Placed): { x: number; y: number; bx: number; by: number }[] {
   const def = decorDef(p.d); if (!def?.seat) return [];
-  const n = def.fw, out: { x: number; y: number; bx: number; by: number }[] = [];
-  for (let i = 0; i < n; i++) { const bx = (p.x + (i + 0.5) * def.fw / n) * 16, by = (p.y + def.fh) * 16 - 8; out.push({ x: bx, y: (p.y + def.fh) * 16 + 1, bx, by }); }
+  const { fw, fh } = footOf(def, p.r), n = Math.max(fw, fh), out: { x: number; y: number; bx: number; by: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    if (fw >= fh) { const bx = (p.x + (i + 0.5) * fw / n) * 16, by = (p.y + fh) * 16 - 8; out.push({ x: bx, y: (p.y + fh) * 16 + 1, bx, by }); }
+    else { const bx = (p.x + 0.5) * 16, by = (p.y + (i + 1) * fh / n) * 16 - 8; out.push({ x: bx, y: by + 9, bx, by }); }
+  }
   return out;
 }

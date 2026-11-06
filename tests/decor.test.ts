@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DECOR, DECOR_MAX, DOOR_KEEP, LEGACY_STARTERS, cleanLay, decorDef, decorRefund, defaultLay, doorKeep, footOf, isStarter, layCounts, layError, seatsOf, topRaise, wallRect, type Placed } from '../src/shared/decor';
+import { DECOR, DECOR_MAX, canTurn, nextRot, DOOR_KEEP, LEGACY_STARTERS, cleanLay, decorDef, decorRefund, defaultLay, doorKeep, footOf, isStarter, layCounts, layError, seatsOf, topRaise, wallRect, type Placed } from '../src/shared/decor';
 import { cleanDorm, layApply, layOf, type DormSave } from '../src/shared/dorm';
 import { ITEMS, itemDef, STACK_MAX, type Inv } from '../src/shared/items';
 import { SHOP, sellPrice, sellable, shopItem, shopItemsValid, sellList } from '../src/shared/economy';
@@ -39,8 +39,18 @@ describe('家具目录（decor.ts）和美术、物品、商店对得上', () =>
     expect(shopItemsValid()).toBe(true);
     expect(ITEMS.filter((i) => i.kind === 'decor')).toHaveLength(DECOR.length);
   });
-  it('地毯能转方向、别的不能；转 90 度时占地宽高互换', () => {
-    for (const d of DECOR) expect(!!d.turn, d.id).toBe(d.kind === 'rug' && d.fw !== d.fh && !d.starter);
+  it('能转向的：地毯、门垫（贴图直接转，圆的不用转）和一批有专门设计朝向的家具；挂墙的、四面一样的、床和鱼缸不转；转 90 度时占地宽高互换', () => {
+    for (const d of DECOR) {
+      if (d.kind === 'rug' || d.kind === 'mat') { expect(!!d.turn, d.id).toBe(!['dc_rug_round', 'dc_mat_straw'].includes(d.id)); expect(d.face, d.id).toBeFalsy(); }
+      else expect(d.turn, d.id).toBeFalsy();
+      if (d.face) { expect(['floor', 'top']).toContain(d.kind); expect(d.act === 'bed' || d.act === 'bath', d.id).toBe(false); }
+    }
+    for (const id of ['dc_stool', 'dc_beanbag', 'dc_lamp', 'dc_plant', 'dc_bin', 'dc_books', 'dc_thermos', 'dc_lamp_desk', 'dc_cactus', 'dc_bed', 'dc_bath', 'dc_ac', 'dc_clock']) expect(canTurn(decorDef(id)!), id).toBe(false);
+    for (const id of ['dc_sofa', 'dc_desk', 'dc_chair', 'dc_chairup', 'dc_gamechair', 'dc_tv', 'dc_fridge', 'dc_wardrobe', 'dc_chest', 'dc_laptop', 'dc_pc', 'dc_rug_red', 'dc_mat_welcome']) expect(canTurn(decorDef(id)!), id).toBe(true);
+    expect(decorDef('dc_chairup')!.base).toBe(180); expect(decorDef('dc_chair')!.base).toBeUndefined();
+    expect([0, 90, 180, 270, 0].map((_, i, a) => (i ? nextRot(decorDef('dc_sofa')!, a[i - 1] as 0) : 0))).toEqual([0, 90, 180, 270, 0].slice(0, 1).concat([90, 180, 270, 0] as never)); // 家具一圈四个朝向（顺时针）
+    expect(nextRot(decorDef('dc_rug_red')!, 0)).toBe(90); expect(nextRot(decorDef('dc_rug_red')!, 90)).toBe(0); // 地毯只在 0 和 90 之间切（转 180 度图案一样）
+    const sofa = decorDef('dc_sofa')!; expect(footOf(sofa, 90)).toEqual({ fw: 1, fh: 2 }); expect(footOf(sofa, 180)).toEqual({ fw: 2, fh: 1 });
     const rug = decorDef('dc_rug_red')!; expect(footOf(rug, 0)).toEqual({ fw: 3, fh: 2 }); expect(footOf(rug, 90)).toEqual({ fw: 2, fh: 3 }); expect(footOf(rug, 270)).toEqual({ fw: 2, fh: 3 });
   });
   it('rotInfo：不转时占地在精灵左下；转 90 度后宽高互换、占地仍贴着精灵底边', () => {
@@ -76,7 +86,7 @@ describe('摆放规则 layError', () => {
     bad('地面', P('dc_sofa', 0, 8)); bad('地面', P('dc_sofa', 14, 8)); bad('地面', P('dc_sofa', 3, 2)); bad('地面', P('dc_sofa', 3, 10)); // 出界
     bad('已经有家具', P('dc_chair', 1, 3)); bad('已经有家具', P('dc_sofa', 12, 3)); bad('已经有家具', P('dc_chair', 12, 6)); // 床 / 衣柜 / 鱼缸
     bad('门口', P('dc_chair', 7, 9)); bad('门口', P('dc_chair', 8, 8));
-    bad('不能转方向', P('dc_sofa', 3, 8, 90));
+    bad('不能转方向', P('dc_stool', 3, 8, 90)); ok(P('dc_sofa', 3, 8, 90)); ok(P('dc_sofa', 3, 8, 180)); bad('方向不对', { d: 'dc_sofa', x: 3, y: 8, r: 45 as never }); // 沙发能转（占地变成 1×2），凳子四面一样不能转
     expect(layError([P('nope', 1, 1)])).toContain('没有这件家具'); expect(layError([{ d: 'dc_sofa', x: 1.5, y: 3 }])).toContain('位置');
     expect(layError([P('dc_bed', 1, 3), P('dc_bed', 5, 3)])).toContain('只有一件'); // 固有家具每人一份
   });
@@ -85,13 +95,22 @@ describe('摆放规则 layError', () => {
     expect(layError(moved)).toBeNull();
     expect(layError(BASE.filter((p) => p.d !== 'dc_bed'))).toBeNull(); // 床收回背包也行（房间里就没床了）
   });
-  it('地毯铺在地上：能被家具压着、不挡路、两块地毯不能叠；门垫是小地毯，可以叠在地毯上，门口也能放', () => {
+  it('转向后占地跟着变：转过来的家具照新占地检查出界、重叠、挡路', () => {
+    bad('地面', P('dc_sofa', 14, 9, 90)); ok(P('dc_sofa', 3, 7, 90)); bad('地面', P('dc_sofa', 15, 7, 90)); // 竖着的沙发往下伸两行，出了南边界 / 东边界
+    bad('已经有家具', P('dc_sofa', 3, 7, 90), P('dc_chair', 3, 8)); ok(P('dc_sofa', 3, 7, 90), P('dc_chair', 4, 8));
+    bad('桌子上', P('dc_desk', 4, 5, 90), P('dc_books', 5, 5)); ok(P('dc_desk', 4, 5, 90), P('dc_books', 4, 6)); // 书桌转成 1×2 后，桌面是它新的占地
+    const lay = [...BASE, P('dc_desk', 4, 5, 90), P('dc_books', 4, 6)]; expect(topRaise(lay, P('dc_books', 4, 6))).toBe(8 + 12); // 第二行抬 8 + 桌子的 lift
+    expect(seatsOf(P('dc_sofa', 3, 8, 90))).toHaveLength(2); expect(seatsOf(P('dc_sofa', 3, 8, 90)).map((s) => s.bx)).toEqual([56, 56]); expect(seatsOf(P('dc_sofa', 3, 8)).map((s) => s.bx)).toEqual([56, 72]); // 竖着的沙发两个座位沿纵向排
+  });
+  it('地毯铺在地上：能被家具压着、不挡路、能层层叠（最多 3 层）；门垫是小地毯，叠在地毯上面，门口也能放', () => {
     ok(P('dc_rug_red', 5, 5)); ok(P('dc_rug_red', 5, 5), P('dc_sofa', 5, 5)); ok(P('dc_rug_round', 1, 6));
-    bad('地毯', P('dc_rug_red', 5, 5), P('dc_rug_paw', 6, 6)); ok(P('dc_rug_red', 5, 5), P('dc_rug_paw', 8, 5));
+    ok(P('dc_rug_red', 5, 5), P('dc_rug_paw', 6, 6)); ok(P('dc_rug_red', 5, 5), P('dc_rug_paw', 8, 5)); // 地毯压地毯也行
     ok(P('dc_rug_red', 3, 4, 90)); bad('地面', P('dc_rug_red', 13, 8, 90)); bad('地面', P('dc_rug_blue', 12, 3));
     ok(P('dc_rug_red', 5, 5), P('dc_mat_welcome', 5, 5)); ok(P('dc_rug_red', 5, 5), P('dc_mat_welcome', 6, 6)); // 叠放
     ok(P('dc_mat_welcome', 7, 9), P('dc_mat_paw', 7, 8)); ok(P('dc_mat_straw', 7, 8)); // 门口放门垫不算挡路
-    bad('门垫', P('dc_mat_welcome', 5, 5), P('dc_mat_paw', 6, 5)); // 两块门垫不能叠
+    ok(P('dc_mat_welcome', 5, 5), P('dc_mat_paw', 6, 5)); // 门垫压门垫也行
+    ok(P('dc_rug_red', 5, 5), P('dc_rug_blue', 5, 5), P('dc_mat_paw', 5, 5)); bad('最多叠 3 层', P('dc_rug_red', 5, 5), P('dc_rug_blue', 5, 5), P('dc_mat_paw', 5, 5), P('dc_mat_welcome', 5, 5)); // 一处最多 3 层
+    bad('最多叠 3 层', P('dc_mat_paw', 5, 5), P('dc_mat_paw', 5, 5), P('dc_mat_paw', 5, 5), P('dc_mat_paw', 5, 5));
   });
   it('小件只能放在桌子上，一格一件；两行深的桌子两行都能放；一行深的桌子（木书桌、小木桌）也能放，画得抬高一点', () => {
     bad('桌子上', P('dc_books', 4, 5));
@@ -150,6 +169,20 @@ describe('装修一步 layApply（背包 ⇄ 房间，数量守恒）', () => {
     expect(layApply(d, inv, { op: 'place', d: 'dc_tank', x: 3, y: 5 }).msg).toContain('背包里没有');
     expect(layApply(d, inv, { op: 'place', d: 'nope', x: 3, y: 5 }).ok).toBe(false); expect(layApply(d, inv, { op: 'place', d: 'dc_books', x: 3, y: 5 }).msg).toContain('桌子');
     expect(JSON.stringify([d, inv])).toBe(before);
+  });
+  it('地毯、门垫按摆放顺序叠：挪动它等于重新铺，放到最上面；转向（含桌子转过来后桌上有小件的限制）', () => {
+    const d: DormSave = {}, inv: Inv = { dc_rug_red: 1, dc_rug_blue: 1, dc_mat_paw: 1, dc_dtable: 1, dc_books: 1, dc_sofa: 1 };
+    layApply(d, inv, { op: 'place', d: 'dc_rug_red', x: 2, y: 3 }); layApply(d, inv, { op: 'place', d: 'dc_rug_blue', x: 2, y: 3 }); layApply(d, inv, { op: 'place', d: 'dc_mat_paw', x: 2, y: 3 });
+    const names = () => d.lay!.map((p) => p.d).filter((x) => /rug_red|rug_blue|mat_paw/.test(x));
+    expect(names()).toEqual(['dc_rug_red', 'dc_rug_blue', 'dc_mat_paw']);
+    expect(layApply(d, inv, { op: 'move', i: d.lay!.findIndex((p) => p.d === 'dc_rug_red'), x: 2, y: 3 }).ok).toBe(true); expect(names()).toEqual(['dc_rug_blue', 'dc_mat_paw', 'dc_rug_red']); // 红毯被拿起来重铺，到最上面
+    expect(layApply(d, inv, { op: 'move', i: d.lay!.findIndex((p) => p.d === 'dc_rug_red'), x: 2, y: 3, r: 90 }).ok).toBe(true); expect(d.lay!.find((p) => p.d === 'dc_rug_red')!.r).toBe(90); // 地毯转 90 度
+    // 沙发转向：往南转到 180 度再转回 0（r 不存 0）；桌上有小件的桌子收不回
+    layApply(d, inv, { op: 'place', d: 'dc_sofa', x: 3, y: 8 }); const iSofa = d.lay!.findIndex((p) => p.d === 'dc_sofa');
+    expect(layApply(d, inv, { op: 'move', i: iSofa, x: 3, y: 8, r: 180 }).ok).toBe(true); expect(d.lay![iSofa].r).toBe(180);
+    expect(layApply(d, inv, { op: 'move', i: iSofa, x: 3, y: 8, r: 0 }).ok).toBe(true); expect(d.lay![iSofa].r).toBeUndefined();
+    layApply(d, inv, { op: 'place', d: 'dc_dtable', x: 4, y: 5 }); layApply(d, inv, { op: 'place', d: 'dc_books', x: 5, y: 6 });
+    const iT = d.lay!.findIndex((p) => p.d === 'dc_dtable'); expect(layApply(d, inv, { op: 'pick', i: iT }).msg).toContain('桌子上还有东西');
   });
   it('收回 / 挪动：收回还给背包；桌上有小件不能收桌子；挪动不改数量；下标不对被拒；固有家具也一样', () => {
     const d: DormSave = {}, inv = inv0();

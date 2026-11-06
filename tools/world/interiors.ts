@@ -14,6 +14,7 @@ import { dormInteriorLevel, isDormInterior } from '../../src/shared/dorm.ts';
 import { pack, type PackItem } from '../art/pack.ts';
 import { validateInterior, furnitureLabel, rotInfo } from '../../src/shared/interior.ts';
 import { DECOR_FURNITURE, DECOR_INFO } from '../art/furniture-decor.ts';
+import { TURN_VIEWS } from '../art/turn.ts';
 
 const dir = join(ROOT, 'data', 'interiors');
 const specs: InteriorSpec[] = readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')));
@@ -25,14 +26,17 @@ const foot: Record<string, { fw: number; fh: number; w: number; h: number; rots:
 /** 顺时针转 90°：(x,y) → (H-1-y, x) */
 function rotCW(img: Img): Img { const o = new Img(img.h, img.w); for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) { const si = (y * img.w + x) * 4, di = (x * o.w + (img.h - 1 - y)) * 4; for (let c = 0; c < 4; c++) o.data[di + c] = img.data[si + c]; } return o; }
 for (const [k, mk] of Object.entries({ ...FURNITURE, ...OFFICE_FURNITURE, ...DORM_FURNITURE, ...DECOR_FURNITURE })) {
-  const f = mk();
+  const views = TURN_VIEWS[k]; // 能转向的家具：每个朝向都是单独设计的贴图（tools/art/turn*.ts），脚印和精灵尺寸各自带着
+  const f = views?.[0]?.() ?? mk();
   sprites.push({ key: k, img: f.img });
   // 占地矩形在精灵图里的位置（算法在 shared/interior.ts 的 rotInfo，宿舍里摆家具时客户端用同一个）：旋转时跟着转，所以任何朝向占地都对得上格子
   const rots: Record<number, RotInfo> = { 0: rotInfo(f.fw, f.fh, f.img.w, f.img.h, 0) };
   if (f.fh > 0) { // 墙面挂件（fh=0）不能旋转
     let img = f.img;
-    for (const r of [90, 180, 270]) {
-      img = rotCW(img);
+    for (const r of [90, 180, 270] as const) {
+      const v = views?.[r]?.();
+      if (v) { sprites.push({ key: `${k}@${r}`, img: v.img }); rots[r] = rotInfo(v.fw, v.fh, v.img.w, v.img.h, 0); continue; } // 设计好的朝向：占地已经是转向后的，精灵自带
+      img = rotCW(img); // 没有专门设计的（地毯、门垫，室内数据里的老家具）：直接转图
       sprites.push({ key: `${k}@${r}`, img });
       rots[r] = rotInfo(f.fw, f.fh, f.img.w, f.img.h, r);
     }

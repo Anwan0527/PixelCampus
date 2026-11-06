@@ -9,7 +9,7 @@
 import { itemDef, type Inv } from './items';
 import { fishDef, type Rarity } from './fishing';
 import { cleanText } from './profile';
-import { LEGACY_STARTERS, cleanLay, decorDef, defaultLay, isRoomLevel, layError, ROOM_SIZES, type Placed, type Rot, type RoomLevel } from './decor';
+import { LEGACY_STARTERS, cleanLay, decorDef, defaultLay, footOf, isRoomLevel, layError, ROOM_SIZES, type Placed, type Rot, type RoomLevel } from './decor';
 import { FLOOR_SKINS, ROOM_NAMES, ROOM_PRICES, SKINS, WALL_SKINS, type SkinKind } from './dormskin';
 
 export const DORM = {
@@ -266,10 +266,11 @@ export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: 
     const old = cur[op.i], def = decorDef(old.d)!;
     if (op.op === 'move') {
       const p: Placed = { d: old.d, x: op.x, y: op.y }; const r = asRot(op.r); if (r) p.r = r;
-      next = cur.map((q, i) => (i === op.i ? p : q)); done = `挪好了${def.name}`;
+      // 地毯、门垫是按摆放顺序叠的（摆得晚的在上面）：挪动它就是把它拿起来重新铺，所以放到最上面去
+      next = def.kind === 'rug' || def.kind === 'mat' ? [...cur.filter((_, i) => i !== op.i), p] : cur.map((q, i) => (i === op.i ? p : q)); done = `挪好了${def.name}`;
       const err = layError(next, lv); if (err) return bad(err);
     } else {
-      if (def.surface && cur.some((q) => decorDef(q.d)?.kind === 'top' && q.x >= old.x && q.y >= old.y && q.x < old.x + def.fw && q.y < old.y + def.fh)) return bad('桌子上还有东西，先把桌上的小件收起来');
+      if (def.surface) { const { fw, fh } = footOf(def, old.r); if (cur.some((q) => decorDef(q.d)?.kind === 'top' && q.x >= old.x && q.y >= old.y && q.x < old.x + fw && q.y < old.y + fh)) return bad('桌子上还有东西，先把桌上的小件收起来'); }
       const have = inv[def.id] ?? 0; if (have + 1 > STACKCAP) return bad(`背包里的${def.name}放不下了`);
       next = cur.filter((_, i) => i !== op.i); done = `收回了${def.name}`;
       const err = layError(next, lv); if (err) return bad(err);

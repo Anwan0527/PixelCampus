@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { NetClient } from '@/net/client';
-import { DECOR_CATS, doorKeep, decorDef, footOf, layError, roomDims, wallRect, type DecorCat, type DecorDef, type Placed } from '@/shared/decor';
+import { DECOR_CATS, canTurn, doorKeep, decorDef, footOf, layError, nextRot, roomDims, wallRect, type DecorCat, type DecorDef, type Placed, type Rot } from '@/shared/decor';
 import { roomLevel, skinOf, skinOwned, type DormSave } from '@/shared/dorm';
 import { FLOOR_SKINS, ROOM_NAMES, ROOM_PRICES, SKIN_KIND_NAMES, WALL_SKINS, type SkinKind } from '@/shared/dormskin';
 import { dormRoom } from '@/shared/dorm';
@@ -29,13 +29,13 @@ export class DecorEditor {
   private root = el('div', 'decor-tray hidden');
   private listEl = el('div', 'decor-list'); private tabsEl = el('div', 'decor-tabs'); private infoEl = el('div', 'decor-info'); private msgEl = el('div', 'decor-msg');
   private btnRot = el('button', 'btn', '转向 R'); private btnPick = el('button', 'btn', '收回 Del'); private btnCancel = el('button', 'btn', '取消 Esc');
-  private sel: Sel = null; private rot = 0; private cat: DecorCat | '全部' = '全部';
+  private sel: Sel = null; private rot: Rot = 0; private cat: DecorCat | '全部' = '全部';
   private mode: 'furn' | 'w' | 'f' | 'room' = 'furn'; private modesEl = el('div', 'decor-tabs decor-modes'); private armed = ''; private coins = -1; private prevCoins?: NetClient['handlers']['coins'];
   private hover: { x: number; y: number } | null = null; private inv: Inv = {};
   private grid?: Phaser.GameObjects.Graphics; private ghost?: Phaser.GameObjects.Image; private mark?: Phaser.GameObjects.Graphics;
   private busyUntil = 0; private prevInv?: NetClient['handlers']['inv'];
 
-  constructor(private scene: Phaser.Scene, private net: NetClient, private api: { lay: () => Placed[]; /** 房间级别 */ level: () => number; /** 我的宿舍数据（墙纸、地板、级别） */ data: () => Extract<ServerMsg, { t: 'dorm_data' }> | null; banner: (title: string, text: string) => void; onToggle: (on: boolean) => void; /** 托盘占了屏幕底部多少像素（场景据此把房间缩放到托盘上面的空间里） */ reserve: (px: number) => void }) {
+  constructor(private scene: Phaser.Scene, private net: NetClient, private api: { lay: () => Placed[]; /** 房间级别 */ level: () => number; /** 我的宿舍数据（墙纸、地板、级别） */ data: () => Extract<ServerMsg, { t: 'dorm_data' }> | null; banner: (title: string, text: string) => void; onToggle: (on: boolean) => void; /** 托盘占了屏幕底部（竖屏）或右侧（手机横屏）多少像素：场景据此把房间缩放到剩下的空间里 */ reserve: (px: number, side?: number) => void }) {
     const head = el('div', 'decor-head'), done = el('button', 'btn primary', '完成'); done.type = 'button'; done.addEventListener('click', () => this.close());
     head.append(el('div', 'decor-title', '🛋 装修'), this.infoEl, done);
     const acts = el('div', 'decor-acts');
@@ -66,6 +66,7 @@ export class DecorEditor {
     this.ghost = this.scene.add.image(0, 0, 'furniture').setOrigin(0).setVisible(false).setAlpha(0.8).setDepth(8600);
     this.scene.input.mouse?.disableContextMenu();
     this.scene.input.on('pointermove', this.onMove); this.scene.input.on('pointerdown', this.onDown);
+    window.addEventListener('resize', this.onResize); // 手机转屏：托盘换位置，房间重新缩放
     document.body.classList.add('decorating'); // 手机：藏起摇杆和互动键
     this.api.onToggle(true); this.drawGrid(); this.render();
   }
@@ -76,7 +77,8 @@ export class DecorEditor {
     this.grid?.destroy(); this.mark?.destroy(); this.ghost?.destroy(); this.grid = this.mark = undefined; this.ghost = undefined;
     if (this.prevInv !== undefined || this.net.handlers.inv) this.net.handlers.inv = this.prevInv;
     this.net.handlers.coins = this.prevCoins;
-    document.body.classList.remove('decorating'); this.api.reserve(0); this.api.onToggle(false);
+    window.removeEventListener('resize', this.onResize);
+    document.body.classList.remove('decorating'); this.api.reserve(0, 0); this.api.onToggle(false);
   }
   /** 摆放或背包变了（服务器回了新数据）：重画列表和虚影；选中的家具如果没了就取消 */
   refresh() {
@@ -110,12 +112,25 @@ export class DecorEditor {
       this.listEl.append(b);
     }
     const def = this.selDef();
-    this.infoEl.textContent = !this.sel ? `已摆 ${this.api.lay().length} 件 · 点背包里的家具来摆，点房里的家具来挪动/收回` : this.sel.kind === 'new' ? `正在摆：${def?.name}（再点一下房间里的格子放下）` : `选中了：${def?.name}（点别处挪过去，或点「收回」）`;
+    this.infoEl.textContent = !this.sel ? `已摆 ${this.api.lay().length} 件 · 点背包里的家具来摆，点房里的家具来挪动/收回` : this.sel.kind === 'new' ? `正在摆：${def?.name}${this.facing(def)}（再点一下房间里的格子放下）` : `选中了：${def?.name}${this.facing(def)}（点别处挪过去，或点「收回」）`;
     const vis = (b: HTMLElement, on: boolean) => { b.style.visibility = on ? 'visible' : 'hidden'; }; // 用 visibility 不用 display：托盘高度不跟着变，房间不会跳
-    vis(this.btnRot, !!def?.turn); vis(this.btnPick, this.sel?.kind === 'move'); vis(this.btnCancel, !!this.sel);
+    vis(this.btnRot, !!def); vis(this.btnPick, this.sel?.kind === 'move'); vis(this.btnCancel, !!this.sel);
     if (!this.sel) this.say('点背包里的家具来摆；点房里的家具来挪动 / 收回');
-    if (this.active) this.api.reserve(this.root.offsetHeight + 12);
+    this.reserveSpace();
   }
+  /** 当前朝向的说明：能转的家具显示朝哪边，转向前后一眼看得出 */
+  private facing(def?: DecorDef): string {
+    if (!def?.face) return '';
+    const d = (((this.rot + (def.base ?? 0)) % 360) as Rot);
+    return `·朝${d === 0 ? '南' : d === 90 ? '西' : d === 180 ? '北' : '东'}`;
+  }
+  /** 托盘占掉的屏幕空间告诉场景：手机横屏时托盘靠右竖着放（占宽度），其余在底部（占高度） */
+  private reserveSpace() {
+    if (!this.active) return;
+    if (this.sideDocked()) this.api.reserve(0, this.root.offsetWidth + 12); else this.api.reserve(this.root.offsetHeight + 12, 0);
+  }
+  private sideDocked() { return document.body.classList.contains('touch') && window.matchMedia('(orientation: landscape) and (max-height: 520px)').matches; }
+  private onResize = () => { this.reserveSpace(); };
   /** 墙纸 / 地板 / 扩建页：买、换、升级。第一次点「买」只是提示价格，再点一次才真买（防手滑） */
   private renderOther() {
     const data = this.api.data(), lv = data ? roomLevel(data as DormSave) : 0;
@@ -145,7 +160,7 @@ export class DecorEditor {
     this.infoEl.textContent = this.mode === 'room' ? '扩建房间：更大的地板、更长的北墙' : `换${SKIN_KIND_NAMES[this.mode as SkinKind]}：点一种；没买过的要花校园币（买一次永久拥有）`;
     for (const b of [this.btnRot, this.btnPick, this.btnCancel]) b.style.visibility = 'hidden';
     if (!this.armed) this.say(coin);
-    if (this.active) this.api.reserve(this.root.offsetHeight + 12);
+    this.reserveSpace();
   }
   private refreshArmed() { /* 重画后保持提示文字 */ }
   private selDef(): DecorDef | undefined {
@@ -168,11 +183,11 @@ export class DecorEditor {
   /** 指针所在的格子 → 选中的家具要放的位置 */
   private target(): Placed | null {
     const def = this.selDef(), h = this.hover; if (!def || !h) return null;
-    const rot = def.turn && (this.rot === 90 || this.rot === 270) ? this.rot : 0, { fw, fh } = footOf(def, rot);
+    const rot: Rot = canTurn(def) ? this.rot : 0, { fw, fh } = footOf(def, rot);
     const p: Placed = { d: def.id, x: h.x, y: h.y };
     if (def.kind === 'wall') { p.x = h.x - Math.floor((fw - 1) / 2); p.y = Math.min(3, Math.max(def.wh ?? 1, h.y + (def.wh ?? 1))); }
     else if (def.kind !== 'top') { p.x = h.x - Math.floor((fw - 1) / 2); p.y = h.y - Math.floor((fh - 1) / 2); }
-    if (rot) p.r = rot as 90 | 270;
+    if (rot) p.r = rot;
     return p;
   }
   private candidate(p: Placed): Placed[] {
@@ -217,7 +232,7 @@ export class DecorEditor {
       let on = false, r = 0;
       if (d.kind === 'wall') { const w = wallRect(d, q); on = c.x >= w.x && c.x < w.x + w.w && c.y >= w.y && c.y < w.y + w.h; r = 1; }
       else { const f = footOf(d, q.r); on = c.x >= q.x && c.x < q.x + f.fw && c.y >= q.y && c.y < q.y + f.fh; r = d.kind === 'top' ? 3 : d.kind === 'rug' ? 0 : d.kind === 'mat' ? 0.5 : 2; }
-      if (on && r > rank) { best = i; rank = r; }
+      if (on && r >= rank) { best = i; rank = r; } // 叠在一起的地毯 / 门垫：点中最上面（摆得最晚）的那一件
     });
     if (best < 0) return;
     this.sel = { kind: 'move', i: best }; this.rot = lay[best].r ?? 0; this.hover = c; this.render(); this.drawGhost();
@@ -238,8 +253,9 @@ export class DecorEditor {
     this.drawGhost();
   }
   private turn() {
-    const d = this.selDef(); if (!d?.turn) return;
-    this.rot = this.rot === 90 ? 0 : 90; this.drawGhost();
+    const d = this.selDef(); if (!d) return;
+    if (!canTurn(d)) { this.say(d.kind === 'wall' ? `${d.name}挂在北墙上，只能朝南` : d.act === 'bed' || d.act === 'bath' ? `${d.name}暂时不能转向（睡觉的姿势、缸里的鱼都是照现在的朝向做的）` : `${d.name}四面都一样，不用转`); return; }
+    this.rot = nextRot(d, this.rot); this.render(); this.drawGhost();
   }
   private pick() {
     if (this.sel?.kind !== 'move') return;
