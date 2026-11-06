@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { NetClient } from '@/net/client';
-import { roomTitle, type DormCard } from '@/shared/dorm';
+import { dormInteriorId, roomTitle, type DormCard } from '@/shared/dorm';
+import { ensureSkin, skinTextureKey } from '@/systems/dormskin';
 import { spotOf } from '@/systems/decorview';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -10,7 +11,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 };
 
-/** 宿舍室内的数据（编译出来的 interiors.json 里 id = 'dorm' 的那一项）：只用到底图、固定家具和门牌的位置 */
+/** 宿舍室内的数据（编译出来的 interiors.json 里 id = dorm / dorm-2 / dorm-3 的那几项，按房间级别选）：只用到底图、固定家具和门牌的位置 */
 export interface DormDef { id: string; w: number; h: number; bg: string; objects: { k: string; x: number; y: number; depth: number }[] }
 let getDefs: () => DormDef[] | undefined = () => undefined;
 /** 场景启动时告诉资料卡去哪里拿宿舍的室内数据 */
@@ -20,11 +21,13 @@ export const setDormDefs = (fn: () => DormDef[] | undefined) => { getDefs = fn; 
  * 把一间宿舍画成一张小图（底图 + 固定家具 + 房主摆的家具，按层级从后往前，门牌上写门牌名）：和进屋看到的一样，只是不含人和空调的风。
  * 用的是游戏里已经加载好的图集，不用服务器出图；返回 false = 资源还没加载好（画不出来）。
  */
-export function drawDormThumb(canvas: HTMLCanvasElement, textures: Phaser.Textures.TextureManager, card: Pick<DormCard, 'lay' | 'title'>, hostName: string, mine = false): boolean {
-  const def = getDefs()?.find((d) => d.id === 'dorm'); if (!def || !textures.exists(def.bg) || !textures.exists('furniture')) return false;
+export async function drawDormThumb(canvas: HTMLCanvasElement, textures: Phaser.Textures.TextureManager, card: Pick<DormCard, 'lay' | 'title' | 'rm' | 'sk'>, hostName: string, mine = false): Promise<boolean> {
+  const lv = card.rm ?? 0, w = card.sk?.w ?? 0, f = card.sk?.f ?? 0;
+  const def = getDefs()?.find((d) => d.id === dormInteriorId(lv)); if (!def || !textures.exists('furniture')) return false;
+  if (!(await ensureSkin(textures, lv, w, f))) return false; // 墙纸、地板两层图没下载成功
   const W = def.w * 16, H = def.h * 16; canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d')!; ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, W, H);
-  ctx.drawImage(textures.get(def.bg).getSourceImage() as CanvasImageSource, 0, 0);
+  for (const k of [skinTextureKey(lv, 'f', f), skinTextureKey(lv, 'w', w)]) ctx.drawImage(textures.get(k).getSourceImage() as CanvasImageSource, 0, 0); // 地板在下、墙在上
   const items: { frame: string; x: number; y: number; depth: number }[] = def.objects.map((o) => ({ frame: o.k, x: o.x, y: o.y, depth: o.depth }));
   for (const p of card.lay) { const s = spotOf(textures, card.lay, p); if (s) items.push({ frame: s.frame, x: s.x, y: s.y, depth: s.depth }); }
   items.sort((a, b) => a.depth - b.depth);
@@ -49,10 +52,11 @@ export class DormPeek {
   constructor(textures: Phaser.Textures.TextureManager, private net: NetClient, private uid: number, hostName: string, private card: DormCard, private self: boolean) {
     this.n = card.likes; this.liked = card.liked;
     const head = el('div', 'dorm-peek-head'); head.append(el('div', 'dorm-peek-title', `🏠 ${roomTitle(card.title, hostName, self)}`), el('div', 'dorm-peek-sub', `${hostName} · ${card.b}`));
-    const cv = el('canvas', 'dorm-peek-img'); const ok = drawDormThumb(cv, textures, card, hostName, self);
+    const cv = el('canvas', 'dorm-peek-img'), hold = el('div', 'create-sub', '宿舍图加载中…');
     const foot = el('div', 'dorm-peek-foot'); this.btn.type = 'button'; this.btn.addEventListener('click', () => this.net.dormLike(this.uid));
     foot.append(this.btn, this.msg);
-    this.el.append(head, ok ? cv : el('div', 'create-sub', '（宿舍图还没加载好）'), foot);
+    this.el.append(head, hold, foot);
+    void drawDormThumb(cv, textures, card, hostName, self).then((ok) => { if (ok) hold.replaceWith(cv); else hold.textContent = '（宿舍图没加载出来）'; });
     this.paint();
   }
   private paint() {

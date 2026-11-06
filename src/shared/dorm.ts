@@ -9,7 +9,8 @@
 import { itemDef, type Inv } from './items';
 import { fishDef, type Rarity } from './fishing';
 import { cleanText } from './profile';
-import { cleanLay, decorDef, defaultLay, layError, type Placed, type Rot } from './decor';
+import { cleanLay, decorDef, defaultLay, isRoomLevel, layError, ROOM_SIZES, type Placed, type Rot, type RoomLevel } from './decor';
+import { FLOOR_SKINS, ROOM_NAMES, ROOM_PRICES, SKINS, WALL_SKINS, type SkinKind } from './dormskin';
 
 export const DORM = {
   /** 宝箱最多放几种物品 / 每种最多放多少 */
@@ -59,12 +60,23 @@ export interface DormSave {
   lk?: number[];
   /** 1 = 不在资料卡上展示我的宿舍（默认展示） */
   hid?: 1;
+  /** 房间级别：1 = 中屋、2 = 大屋（没有 = 小屋）。扩建不可退 */
+  rm?: 1 | 2;
+  /** 墙纸 / 地板：w、f = 正在用的样式下标（缺省 0 = 默认）；ow、of = 已买的样式（按位记，第 i 位 = 第 i 种；第 0 种永远拥有） */
+  sk?: { w?: number; f?: number; ow?: number; of?: number };
 }
 
 /** 宿舍房间的尺寸与门（和 data/interiors/dorm.json 一致，测试里核对）：服务器据此限定屋里的位置范围、给新进屋的人定出生点 */
 export const DORM_ROOM = { w: 16, h: 11, exitX: 7, exitW: 2 } as const;
+/** 某一级房间的尺寸与门（门洞永远在 x 7..8，在南墙上） */
+export const dormRoom = (level: number = 0) => { const r = ROOM_SIZES[isRoomLevel(level) ? level : 0]; return { w: r.w, h: r.h, exitX: 7, exitW: 2 } as const; };
+export const roomLevel = (d: DormSave | undefined): RoomLevel => (d?.rm === 1 || d?.rm === 2 ? d.rm : 0);
+/** 宿舍在室内数据里的 id：小屋 dorm、中屋 dorm-2、大屋 dorm-3 */
+export const dormInteriorId = (level: number = 0) => (level === 1 ? 'dorm-2' : level === 2 ? 'dorm-3' : 'dorm');
+export const isDormInterior = (id: unknown): boolean => id === 'dorm' || id === 'dorm-2' || id === 'dorm-3';
+export const dormInteriorLevel = (id: unknown): RoomLevel => (id === 'dorm-2' ? 1 : id === 'dorm-3' ? 2 : 0);
 /** 进屋出生点（像素）：门洞中间、门里面一点 */
-export const roomSpawn = () => ({ x: (DORM_ROOM.exitX + DORM_ROOM.exitW / 2) * 16, y: (DORM_ROOM.h - 2.2) * 16 });
+export const roomSpawn = (level: number = 0) => { const r = dormRoom(level); return { x: (r.exitX + r.exitW / 2) * 16, y: (r.h - 2.2) * 16 }; };
 /** 门牌上显示的名字：房主起过名就用，没起过——自己看到「我的宿舍」，别人看到「xx的宿舍」 */
 export const roomTitle = (title: string | undefined, hostName: string, mine: boolean): string => title || (mine ? '我的宿舍' : `${hostName}的宿舍`);
 export const cleanTitle = (v: unknown): string => cleanText(v, DORM.TITLE_MAX);
@@ -105,7 +117,9 @@ export function cleanDorm(raw: unknown): DormSave | undefined {
   { const bt = cleanBath(r.bt); if (Object.keys(bt).length) out.bt = bt; }
   if (r.ac === 1 || r.ac === 2) out.ac = r.ac;
   const ch = cleanChest(r.ch); if (Object.keys(ch).length) out.ch = ch;
-  { const lay = cleanLay(r.lay); if (lay) out.lay = lay; }
+  if (r.rm === 1 || r.rm === 2) out.rm = r.rm;
+  { const sk = cleanSkin(r.sk); if (sk) out.sk = sk; }
+  { const lay = cleanLay(r.lay, out.rm ?? 0); if (lay) out.lay = lay; }
   { const lk = cleanLikes(r.lk); if (lk.length) out.lk = lk; }
   if (r.hid === 1) out.hid = 1;
   return Object.keys(out).length ? out : undefined;
@@ -234,14 +248,14 @@ const asRot = (r: unknown): Rot | undefined => (r === 90 || r === 180 || r === 2
  * 摆完整体再校验一遍（layError：不重叠、不堵路、小件在桌上…），所以改任何一件都不会让房间变成非法状态。
  */
 export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: string } {
-  const cur = layOf(d), bad = (msg: string) => ({ ok: false, msg });
+  const cur = layOf(d), lv = roomLevel(d), bad = (msg: string) => ({ ok: false, msg });
   let next: Placed[], done: string;
   if (op.op === 'place') {
     const def = decorDef(op.d); if (!def) return bad('没有这件家具');
     if ((inv[def.id] ?? 0) < 1) return bad(`背包里没有${def.name}`);
     const p: Placed = { d: def.id, x: op.x, y: op.y }; const r = asRot(op.r); if (r) p.r = r;
     next = [...cur, p]; done = `摆上了${def.name}`;
-    const err = layError(next); if (err) return bad(err);
+    const err = layError(next, lv); if (err) return bad(err);
     inv[def.id] -= 1; if (inv[def.id] <= 0) delete inv[def.id];
   } else {
     if (!Number.isInteger(op.i) || op.i < 0 || op.i >= cur.length) return bad('找不到这件家具');
@@ -249,12 +263,12 @@ export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: 
     if (op.op === 'move') {
       const p: Placed = { d: old.d, x: op.x, y: op.y }; const r = asRot(op.r); if (r) p.r = r;
       next = cur.map((q, i) => (i === op.i ? p : q)); done = `挪好了${def.name}`;
-      const err = layError(next); if (err) return bad(err);
+      const err = layError(next, lv); if (err) return bad(err);
     } else {
       if (def.surface && cur.some((q) => decorDef(q.d)?.kind === 'top' && q.x >= old.x && q.y >= old.y && q.x < old.x + def.fw && q.y < old.y + def.fh)) return bad('桌子上还有东西，先把桌上的小件收起来');
       const have = inv[def.id] ?? 0; if (have + 1 > STACKCAP) return bad(`背包里的${def.name}放不下了`);
       next = cur.filter((_, i) => i !== op.i); done = `收回了${def.name}`;
-      const err = layError(next); if (err) return bad(err);
+      const err = layError(next, lv); if (err) return bad(err);
       inv[def.id] = have + 1;
     }
   }
@@ -265,7 +279,7 @@ const STACKCAP = 999;
 
 // ------------------------------------------------------------------ 资料卡上的宿舍与点赞
 /** 资料卡上展示的宿舍：门牌、楼栋、家具摆放（没装修过 = 默认布局）、赞数、我有没有赞过 */
-export interface DormCard { title?: string; b: string; lay: Placed[]; likes: number; liked: boolean }
+export interface DormCard { title?: string; b: string; lay: Placed[]; likes: number; liked: boolean; /** 房间级别、墙纸/地板（缩略图按它画） */ rm?: 1 | 2; sk?: { w?: number; f?: number } }
 export function cleanLikes(raw: unknown): number[] {
   if (!Array.isArray(raw)) return [];
   const seen = new Set<number>();
@@ -280,4 +294,54 @@ export function likeToggle(d: DormSave, by: number, host: number): { ok: boolean
   if (lk.length >= DORM.LIKE_MAX) return { ok: false, msg: `这间宿舍的赞已经满啦（${DORM.LIKE_MAX}）`, liked: false, n: lk.length };
   lk.push(by);
   return { ok: true, msg: '赞了这间宿舍 ♥', liked: true, n: lk.length };
+}
+
+// ------------------------------------------------------------------ 墙纸、地板、扩建
+export function cleanSkin(raw: unknown): DormSave['sk'] | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>, out: NonNullable<DormSave['sk']> = {};
+  const idx = (v: unknown, n: number) => (Number.isInteger(v) && (v as number) >= 1 && (v as number) < n ? (v as number) : 0);
+  const mask = (v: unknown, n: number) => (Number.isInteger(v) ? ((v as number) & ((1 << n) - 2)) : 0); // 只留第 1..n-1 位（第 0 种不用记）
+  const w = idx(r.w, WALL_SKINS.length), f = idx(r.f, FLOOR_SKINS.length), ow = mask(r.ow, WALL_SKINS.length), of = mask(r.of, FLOOR_SKINS.length);
+  if (w) out.w = w; if (f) out.f = f; if (ow) out.ow = ow; if (of) out.of = of;
+  return Object.keys(out).length ? out : undefined;
+}
+/** 正在用的墙纸、地板样式（没选过 = 0 = 默认） */
+export const skinOf = (d: DormSave | undefined): { w: number; f: number } => ({ w: d?.sk?.w ?? 0, f: d?.sk?.f ?? 0 });
+/** 拥有这个样式吗（第 0 种默认永远拥有；买了的也一直拥有，当前正在用的一定拥有） */
+export function skinOwned(d: DormSave | undefined, kind: SkinKind, idx: number): boolean {
+  if (idx === 0) return true;
+  const m = kind === 'w' ? d?.sk?.ow : d?.sk?.of;
+  return !!m && (m & (1 << idx)) !== 0;
+}
+/**
+ * 买墙纸/地板或换着用（原地修改存档）。coins = 我现在有多少校园币；返回 cost = 要扣的币（调用方扣，保证够才会改存档）。
+ * buy：没买过才买（买下就用上）；use：只能用已经拥有的。选原来正在用的什么也不做。
+ */
+export function skinApply(d: DormSave, kind: SkinKind, idx: unknown, op: unknown, coins: number): { ok: boolean; msg: string; cost: number } {
+  const list = SKINS[kind], name = (i: number) => list[i].name;
+  if (kind !== 'w' && kind !== 'f') return { ok: false, msg: '没有这种东西', cost: 0 };
+  if (!Number.isInteger(idx) || (idx as number) < 0 || (idx as number) >= list.length) return { ok: false, msg: '没有这个样式', cost: 0 };
+  const i = idx as number, cur = skinOf(d)[kind];
+  if (op === 'use') {
+    if (!skinOwned(d, kind, i)) return { ok: false, msg: `还没买${name(i)}`, cost: 0 };
+    if (i === cur) return { ok: true, msg: `正在用${name(i)}`, cost: 0 };
+  } else if (op === 'buy') {
+    if (skinOwned(d, kind, i)) return { ok: false, msg: `已经有${name(i)}了，直接用就行`, cost: 0 };
+    if (coins < list[i].price) return { ok: false, msg: `校园币不够：要 ${list[i].price}，你有 ${coins}`, cost: 0 };
+  } else return { ok: false, msg: '操作不对', cost: 0 };
+  const sk = (d.sk ??= {}), price = op === 'buy' ? list[i].price : 0;
+  if (op === 'buy') { if (kind === 'w') sk.ow = (sk.ow ?? 0) | (1 << i); else sk.of = (sk.of ?? 0) | (1 << i); }
+  if (kind === 'w') { if (i) sk.w = i; else delete sk.w; } else { if (i) sk.f = i; else delete sk.f; }
+  if (!Object.keys(sk).length) delete d.sk;
+  return { ok: true, msg: op === 'buy' ? `买下并换上了${name(i)}（花了 ${price} 校园币）` : `换上了${name(i)}`, cost: price };
+}
+/** 扩建一级（小屋 → 中屋 → 大屋，不可退）。coins 够才改存档，cost 由调用方扣；摆放不变（升级后仍合法，见 decor.ts） */
+export function expandApply(d: DormSave, coins: number): { ok: boolean; msg: string; cost: number } {
+  const lv = roomLevel(d);
+  if (lv >= 2) return { ok: false, msg: '已经是最大的房间了', cost: 0 };
+  const next = (lv + 1) as 1 | 2, price = ROOM_PRICES[next];
+  if (coins < price) return { ok: false, msg: `校园币不够：扩建${ROOM_NAMES[next]}要 ${price}，你有 ${coins}`, cost: 0 };
+  d.rm = next;
+  return { ok: true, msg: `房间扩建成${ROOM_NAMES[next]}了（${dormRoom(next).w}×${dormRoom(next).h}），花了 ${price} 校园币`, cost: price };
 }

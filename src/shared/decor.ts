@@ -84,14 +84,21 @@ export const DECOR_CATS: readonly DecorCat[] = ['桌椅', '柜架', '电器', '�
 export const DECOR_REFUND = 0.5;
 export const decorRefund = (id: string): number => { const d = BY_ID.get(id); return d ? Math.max(1, Math.floor(d.price * DECOR_REFUND)) : 0; };
 
-// ------------------------------------------------------------------ 房间与固定家具（和 data/interiors/dorm.json 一致）
-/** 房间 16×11 格：北墙占上面 3 行；地面是 x 1..14、y 3..9；南墙（第 10 行）中间 2 格是门洞 */
-export const DECOR_ROOM = { w: 16, h: 11, x0: 1, x1: 14, y0: 3, y1: 9 } as const;
+// ------------------------------------------------------------------ 房间与固定家具（和 data/interiors/dorm*.json 一致）
+/** 房间的三个级别（扩建：1500 / 4000 校园币，见 dorm.ts 的 ROOM_PRICES）：小屋 16×11、中屋 20×13、大屋 24×15。
+ *  向右、向下扩：北墙一行、床/衣柜/宝箱/浴缸/空调/门牌的位置都不变，门洞仍在 x 7..8，只是随房间变深而下移——所以升级后原来的摆放仍然合法 */
+export const ROOM_SIZES = [{ w: 16, h: 11 }, { w: 20, h: 13 }, { w: 24, h: 15 }] as const;
+export type RoomLevel = 0 | 1 | 2;
+export const isRoomLevel = (v: unknown): v is RoomLevel => v === 0 || v === 1 || v === 2;
+/** 房间尺寸与地面范围：北墙占上面 3 行；地面是 x 1..w-2、y 3..h-2；南墙（第 h-1 行）中间 2 格是门洞 */
+export const roomDims = (level: number = 0) => { const r = ROOM_SIZES[isRoomLevel(level) ? level : 0]; return { w: r.w, h: r.h, x0: 1, x1: r.w - 2, y0: 3, y1: r.h - 2 }; };
+export const DECOR_ROOM = roomDims(0);
 export interface Rect { x: number; y: number; w: number; h: number }
-/** 房里原有的、不能动的地面家具：床、衣柜、宝箱、浴缸 */
+/** 房里原有的、不能动的地面家具：床、衣柜、宝箱、浴缸（各级房间位置相同） */
 export const FIXED_FLOOR: readonly Rect[] = [{ x: 1, y: 3, w: 2, h: 3 }, { x: 12, y: 3, w: 2, h: 1 }, { x: 14, y: 3, w: 1, h: 1 }, { x: 11, y: 6, w: 3, h: 2 }];
-/** 门口要留空（进屋的出生点在这里） */
-export const DOOR_KEEP: Rect = { x: 7, y: 8, w: 2, h: 2 };
+/** 门口要留空（进屋的出生点在这里），随房间变深下移 */
+export const doorKeep = (level: number = 0): Rect => ({ x: 7, y: roomDims(level).h - 3, w: 2, h: 2 });
+export const DOOR_KEEP: Rect = doorKeep(0);
 /** 北墙上不能再挂东西的地方：门牌、窗户、空调，以及衣柜、宝箱（它们的精灵向上挡住了墙面） */
 export const FIXED_WALL: readonly Rect[] = [{ x: 1, y: 0, w: 5, h: 2 }, { x: 6, y: 0, w: 3, h: 3 }, { x: 9, y: 0, w: 3, h: 1 }, { x: 12, y: 0, w: 2, h: 3 }, { x: 14, y: 2, w: 1, h: 1 }];
 /** 摆完之后必须还走得到的地方：床、衣柜、宝箱、浴缸的四周（八个方向都算），门牌和空调下面的地面 */
@@ -113,15 +120,16 @@ export const defaultLay = (): Placed[] => [{ d: 'dc_deskpc', x: 6, y: 3 }, { d: 
 
 const hit = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 const within = (x: number, y: number, r: Rect) => x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h;
-const key = (x: number, y: number) => y * DECOR_ROOM.w + x;
+const KW = 32; // 格子编号的行宽（比任何级别的房间都宽）
+const key = (x: number, y: number) => y * KW + x;
 
 /** 摆放是否合法：返回第一个问题（给玩家看的话），没问题返回 null。服务器和客户端用同一个函数 */
-export function layError(lay: readonly Placed[]): string | null {
+export function layError(lay: readonly Placed[], level: number = 0): string | null {
   if (lay.length > DECOR_MAX) return `最多摆 ${DECOR_MAX} 件`;
-  const { x0, x1, y0, y1 } = DECOR_ROOM;
+  const { x0, x1, y0, y1 } = roomDims(level), DOOR = doorKeep(level);
   const fixed = new Set<number>(), keep = new Set<number>(), floor = new Set<number>(), rug = new Set<number>(), surf = new Set<number>(), top = new Set<number>();
   for (const r of FIXED_FLOOR) for (let j = 0; j < r.h; j++) for (let i = 0; i < r.w; i++) fixed.add(key(r.x + i, r.y + j));
-  for (let j = 0; j < DOOR_KEEP.h; j++) for (let i = 0; i < DOOR_KEEP.w; i++) keep.add(key(DOOR_KEEP.x + i, DOOR_KEEP.y + j));
+  for (let j = 0; j < DOOR.h; j++) for (let i = 0; i < DOOR.w; i++) keep.add(key(DOOR.x + i, DOOR.y + j));
   const walls: Rect[] = [...FIXED_WALL], tops: { def: DecorDef; p: Placed }[] = [];
   for (const p of lay) {
     const def = decorDef(p?.d);
@@ -159,10 +167,10 @@ export function layError(lay: readonly Placed[]): string | null {
   }
   // 摆完之后：从门口出发，必须还能走到床、衣柜、宝箱、浴缸的旁边和门牌/空调下面
   const seen = new Set<number>(), q: number[] = [];
-  for (const [x, y] of [[DOOR_KEEP.x, y1], [DOOR_KEEP.x + 1, y1]]) { seen.add(key(x, y)); q.push(key(x, y)); }
+  for (const [x, y] of [[DOOR.x, y1], [DOOR.x + 1, y1]]) { seen.add(key(x, y)); q.push(key(x, y)); }
   const free = (x: number, y: number) => x >= x0 && x <= x1 && y >= y0 && y <= y1 && !fixed.has(key(x, y)) && !floor.has(key(x, y));
   while (q.length) {
-    const c = q.pop()!, x = c % DECOR_ROOM.w, y = Math.floor(c / DECOR_ROOM.w);
+    const c = q.pop()!, x = c % KW, y = Math.floor(c / KW);
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = key(nx, ny); if (!seen.has(k) && free(nx, ny)) { seen.add(k); q.push(k); } }
   }
   for (const r of REACH_RECTS) {
@@ -179,7 +187,7 @@ export function layError(lay: readonly Placed[]): string | null {
 }
 
 /** 从磁盘/网络来的摆放：逐件校验，不合法的丢掉；地面家具排在小件前面（小件要放在桌子上，桌子得先有） */
-export function cleanLay(raw: unknown): Placed[] | undefined {
+export function cleanLay(raw: unknown, level: number = 0): Placed[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const cand: Placed[] = [];
   for (const e of raw.slice(0, DECOR_MAX * 2)) {
@@ -192,7 +200,7 @@ export function cleanLay(raw: unknown): Placed[] | undefined {
   }
   cand.sort((a, b) => Number(decorDef(a.d)!.kind === 'top') - Number(decorDef(b.d)!.kind === 'top'));
   const out: Placed[] = [];
-  for (const p of cand) { if (out.length >= DECOR_MAX) break; const next = [...out, p]; if (!layError(next)) out.push(p); }
+  for (const p of cand) { if (out.length >= DECOR_MAX) break; const next = [...out, p]; if (!layError(next, level)) out.push(p); }
   return out;
 }
 

@@ -477,6 +477,8 @@ export class NetClient implements ChatTransport {
   /** 装修：place = 摆一件、move = 挪/转、pick = 收回 */
   dormLike(uid: number) { this.tx({ t: 'dorm_like', uid }); }
   dormPub(on: boolean) { this.tx({ t: 'dorm_pub', on }); }
+  dormSkin(kind: 'w' | 'f', i: number, op: 'buy' | 'use') { this.tx({ t: 'dorm_skin', kind, i, op }); }
+  dormExpand() { this.tx({ t: 'dorm_expand' }); }
   dormLay(m: { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number }) { this.tx({ t: 'dorm_lay', ...m }); }
   fzGet() { this.tx({ t: 'fz_get' }); }
   fzSet(c: number) { this.tx({ t: 'fz_set', c }); }

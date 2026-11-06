@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { isDormInterior } from '@/shared/dorm';
 import type { WorldFile } from '@/shared/world-format';
 import { Hud } from '@/ui/Hud';
 import { loadGlyphs } from '@/ui/glyphs';
@@ -57,7 +58,7 @@ export class BootScene extends Phaser.Scene {
       this.load.image(`ground_${key}`, `${WD}/ground/${this.registry.get('season')}/c_${key}.webp`);
       if (waterSet.has(key)) for (let f = 1; f < world.water.frames; f++) this.load.image(`water${f}_${key}`, `${WD}/ground/w${f}_${key}.webp`);
     }
-    for (const it of this.cache.json.get('interiors') as { bg: string }[]) this.load.image(it.bg, `${G}/${it.bg}.webp`);
+    for (const it of this.cache.json.get('interiors') as { id: string; bg: string }[]) if (!isDormInterior(it.id)) this.load.image(it.bg, `${G}/${it.bg}.webp`); // 宿舍的底图是墙纸+地板两层，进宿舍时才按选的样式加载
     this.load.off('progress');
     this.load.on('progress', (p: number) => hud.setLoading(0.3 + p * 0.7, `铺设校园地面… ${Math.round(p * 100)}%`));
     this.load.once('complete', () => {

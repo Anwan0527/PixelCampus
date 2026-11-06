@@ -36,6 +36,7 @@ import { MonPanel } from '@/ui/MonPanel';
 import { BattleUi } from '@/ui/BattleUi';
 import { TeleportPanel } from '@/ui/TeleportPanel';
 import { setDormDefs } from '@/ui/DormPeek';
+import { dormInteriorId } from '@/shared/dorm';
 import { DormPanel } from '@/ui/DormPanel';
 import { WorldPanel } from '@/ui/WorldPanel';
 import { HandUi } from '@/ui/HandUi';
@@ -859,7 +860,7 @@ export class WorldScene extends Phaser.Scene {
     this.enterPos = { x, y };
     const cam = this.cameras.main;
     cam.fadeOut(220, 20, 14, 10);
-    cam.once('camerafadeoutcomplete', () => { this.scene.sleep(); this.scene.launch('Interior', { id: 'dorm' }); });
+    cam.once('camerafadeoutcomplete', () => { this.scene.sleep(); const v = this.registry.get('dormVisit') as { rm?: number } | null | undefined; this.scene.launch('Interior', { id: dormInteriorId(v ? v.rm ?? 0 : this.dormUi.data?.rm ?? 0) }); });
   }
 
   // ------------------------------------------------------------ 每帧

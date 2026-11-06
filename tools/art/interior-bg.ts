@@ -13,8 +13,35 @@ const THEMES = {
   canteen: { floor: [hex('#bfae94'), hex('#cdbfa8'), hex('#dbcfba')], wall: [hex('#f4e4c0'), hex('#e6d2a2'), hex('#d1b980')], wain: [hex('#a8402f'), hex('#c25a3f')], plank: false },
 } as const;
 
-export function paintInterior(s: InteriorSpec): Img {
-  const T = THEMES[s.theme];
+/** 宿舍墙纸 / 地板样式（下标和 src/shared/dormskin.ts 的 WALL_SKINS / FLOOR_SKINS 一一对应；第 0 种 = library 主题原样） */
+type WallStyle = { wall: readonly RGBA[]; wain: readonly RGBA[] };
+type FloorStyle = { floor: readonly RGBA[]; plank: boolean };
+const cl = (...c: string[]) => c.map((x) => hex(x));
+export const DORM_WALL_STYLES: readonly WallStyle[] = [
+  { wall: THEMES.library.wall, wain: THEMES.library.wain },
+  { wall: cl('#c4dff2', '#9cc4e4', '#7fa8cc'), wain: cl('#4f6f94', '#6a8cb4') },
+  { wall: cl('#cdeed4', '#a8d8b4', '#8cc09a'), wain: cl('#4f8a64', '#64a47c') },
+  { wall: cl('#fadde6', '#f2bccb', '#dca0b2'), wain: cl('#a8506a', '#c26a84') },
+  { wall: cl('#e2e5ea', '#c4c8d0', '#aab0ba'), wain: cl('#6a7080', '#868c9c') },
+  { wall: cl('#f8e6a8', '#f2d278', '#dcba58'), wain: cl('#a8782a', '#c4923c') },
+];
+export const DORM_FLOOR_STYLES: readonly FloorStyle[] = [
+  { floor: THEMES.library.floor, plank: true },
+  { floor: cl('#a8a69e', '#d6d4cc', '#e4e2da'), plank: false },
+  { floor: cl('#4e3220', '#6e4a30', '#855a3a'), plank: true },
+  { floor: cl('#c4a878', '#e2c9a0', '#efdab8'), plank: true },
+  { floor: cl('#5a6d86', '#7f93ad', '#9bb0c8'), plank: false },
+  { floor: cl('#8a4328', '#b3603f', '#c9774f'), plank: false },
+];
+
+/**
+ * 画室内底图。宿舍的皮肤：opts.wall / opts.floor 选墙纸 / 地板样式；opts.layer = 'wall' 只留墙（北墙、侧墙、南墙，窗和窗帘），
+ * 'floor' 只留地板（含门洞、门垫、画在地上的地毯），另一层透明——客户端把两层叠起来，墙纸和地板就能各自独立地换。
+ */
+export function paintInterior(s: InteriorSpec, opts: { wall?: number; floor?: number; layer?: 'wall' | 'floor' } = {}): Img {
+  const base = THEMES[s.theme];
+  const ws = DORM_WALL_STYLES[opts.wall ?? 0], fs = DORM_FLOOR_STYLES[opts.floor ?? 0];
+  const T = opts.wall === undefined && opts.floor === undefined && !opts.layer ? base : { ...base, wall: ws.wall, wain: ws.wain, floor: fs.floor, plank: fs.plank };
   const img = new Img(s.w * 16, s.h * 16);
   const WALL_H = 3 * 16;
   for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) {
@@ -94,5 +121,11 @@ export function paintInterior(s: InteriorSpec): Img {
   }
   // 门垫
   img.rect(ex0 + 2, img.h - 14, ex1 - ex0 - 4, 10, hex('#5a3a28')); img.rect(ex0 + 4, img.h - 12, ex1 - ex0 - 8, 6, hex('#7a5233'));
+  if (opts.layer) { // 只留一层：墙 = 北墙 + 左右侧墙 + 南墙（门洞除外）；其余是地板层
+    for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) {
+      const wall = y < WALL_H || x < 16 || x >= img.w - 16 || (y >= img.h - 16 && (x < ex0 || x >= ex1));
+      if (wall !== (opts.layer === 'wall')) img.data[(y * img.w + x) * 4 + 3] = 0;
+    }
+  }
   return img;
 }

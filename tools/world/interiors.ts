@@ -8,7 +8,9 @@ import { FURNITURE } from '../art/furniture.ts';
 import { OFFICE_FURNITURE, FURN_INFO, FURN_TEXT } from '../art/furniture-office.ts';
 import { DORM_FURNITURE, DORM_INFO } from '../art/furniture-dorm.ts';
 import { Img } from '../art/px.ts';
-import { paintInterior, type InteriorSpec } from '../art/interior-bg.ts';
+import { paintInterior, DORM_WALL_STYLES, DORM_FLOOR_STYLES, type InteriorSpec } from '../art/interior-bg.ts';
+import { skinFile } from '../../src/shared/dormskin.ts';
+import { dormInteriorLevel, isDormInterior } from '../../src/shared/dorm.ts';
 import { pack, type PackItem } from '../art/pack.ts';
 import { validateInterior, furnitureLabel, rotInfo } from '../../src/shared/interior.ts';
 import { DECOR_FURNITURE, DECOR_INFO } from '../art/furniture-decor.ts';
@@ -49,6 +51,11 @@ for (const s of specs) {
   if (errs.length) throw new Error(`室内 ${s.id} 不合法：\n${errs.slice(0, 8).join('\n')}`);
   const bg = paintInterior(s);
   await bg.save(join(GEN, `interior-${s.id}.png`));
+  if (isDormInterior(s.id)) { // 宿舍：墙纸、地板各烘焙成透明的一层，客户端按玩家选的样式叠起来（用到哪张才加载哪张）
+    const lv = dormInteriorLevel(s.id);
+    for (let i = 0; i < DORM_WALL_STYLES.length; i++) await paintInterior(s, { wall: i, floor: 0, layer: 'wall' }).save(join(GEN, `${skinFile(lv, 'w', i)}.png`));
+    for (let i = 0; i < DORM_FLOOR_STYLES.length; i++) await paintInterior(s, { wall: 0, floor: i, layer: 'floor' }).save(join(GEN, `${skinFile(lv, 'f', i)}.png`));
+  }
   const rows: Uint8Array[] = Array.from({ length: s.h }, () => new Uint8Array(s.w));
   for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
     let b = y < 3 || x === 0 || x === s.w - 1 || y === s.h - 1;

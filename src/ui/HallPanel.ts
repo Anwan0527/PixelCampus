@@ -10,11 +10,12 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 };
 
-type Tab = 'play' | 'cat' | 'fish';
+type Tab = 'play' | 'cat' | 'fish' | 'dorm';
 const TABS: { id: Tab; name: string; sub: string }[] = [
   { id: 'play', name: '游玩时间', sub: '累计在线时间最长的同学（实时更新）。' },
   { id: 'cat', name: '猫缘', sub: '和校园小猫的好感度总和；也可以改成按结缘的小猫只数排。' },
   { id: 'fish', name: '钓鱼', sub: '钓上来的鱼的总价值（按鱼的标准收购价算，杂物不计）。' },
+  { id: 'dorm', name: '宿舍人气', sub: '收到赞最多的宿舍（点同学可以看他的宿舍；不想上榜可以在宿舍面板里关掉「展示我的宿舍」）。' },
 ];
 const MEDAL = ['🥇', '🥈', '🥉'];
 
@@ -70,10 +71,11 @@ export class HallPanel {
   close() { this.root.classList.add('hidden'); window.clearInterval(this.timer); }
   toggle() { this.isOpen ? this.close() : this.open(); }
 
-  private rows(): HallRow[] { const d = this.data; return !d ? [] : this.tab === 'play' ? d.play : this.tab === 'fish' ? d.fish : this.catMode === 'aff' ? d.cat : d.catN; }
+  private rows(): HallRow[] { const d = this.data; return !d ? [] : this.tab === 'play' ? d.play : this.tab === 'fish' ? d.fish : this.tab === 'dorm' ? d.dorm : this.catMode === 'aff' ? d.cat : d.catN; }
   private text(r: { value: number; extra: number }): string {
     if (this.tab === 'play') return fmtPlay(r.value);
     if (this.tab === 'fish') return `${r.value} 校园币 · ${r.extra} 条`;
+    if (this.tab === 'dorm') return `❤️ ${r.value} · 摆了 ${r.extra} 件`;
     return this.catMode === 'aff' ? `好感 ${r.value} · 结缘 ${r.extra} 只` : `结缘 ${r.value} 只 · 好感 ${r.extra}`;
   }
   private render() {
@@ -84,7 +86,7 @@ export class HallPanel {
     const d = this.data;
     if (!d) { this.list.append(el('div', 'board-empty', '读取中…')); return; }
     const rows = this.rows(), me = this.tab === 'cat' ? (this.catMode === 'aff' ? d.me.cat : d.me.catN) : d.me[this.tab];
-    if (!rows.length) this.list.append(el('div', 'board-empty', this.tab === 'play' ? '还没有人上榜。' : this.tab === 'cat' ? '还没有人和小猫成为朋友。去摸摸、喂喂校园里的小猫吧！' : '还没有人钓到鱼。去精工湖边试试！'));
+    if (!rows.length) this.list.append(el('div', 'board-empty', this.tab === 'play' ? '还没有人上榜。' : this.tab === 'dorm' ? '还没有宿舍收到赞。选好宿舍楼栋，把家里布置漂亮，等同学来点赞吧！' : this.tab === 'cat' ? '还没有人和小猫成为朋友。去摸摸、喂喂校园里的小猫吧！' : '还没有人钓到鱼。去精工湖边试试！'));
     rows.forEach((r, i) => {
       const row = el('button', 'hall-row' + (r.uid === this.hooks.selfUid() ? ' me' : '')); row.type = 'button';
       row.append(el('div', 'hall-rank', i < 3 ? MEDAL[i] : String(i + 1)));
@@ -92,7 +94,7 @@ export class HallPanel {
       name.append(el('span', r.online ? 'hall-dot on' : 'hall-dot'), document.createTextNode(r.name));
       const t = titleDef(r.title);
       if (t) { const tg = el('span', 'hall-title', t.name); tg.style.color = t.color; name.append(tg); }
-      mid.append(name);
+      mid.append(name); if (r.note) mid.append(el('div', 'hall-note', `🏠 ${r.note}`));
       row.append(mid, el('div', 'hall-val', this.text(r)));
       row.addEventListener('click', () => this.hooks.showPlayer(r.uid));
       this.list.append(row);

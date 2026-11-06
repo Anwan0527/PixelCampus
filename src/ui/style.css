@@ -1087,3 +1087,16 @@ body.touch .decor-acts .btn { font-size: 12px; padding: 1px 8px; }
 body.touch .card-wrap.with-dorm.with-sheet { grid-template-columns: auto minmax(0, 1fr); }
 body.touch .dorm-peek { width: auto; padding: 4px 6px 6px; }
 .decor-open.dorm-like { padding: 6px 14px; font-size: 15px; }
+
+/* 装修托盘：模式标签、墙纸/地板色块、扩建 */
+.decor-modes .seg { padding: 3px 12px; font-size: 14px; }
+.decor-skin { width: 96px; }
+.decor-sw { display: flex; width: 54px; height: 30px; border: 2px solid var(--wood-d); box-sizing: border-box; }
+.decor-sw i { flex: 1; display: block; }
+.decor-skin .decor-n { position: static; background: none; font-size: 11px; }
+.decor-room { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; align-items: flex-start; }
+.decor-room-now { font-weight: bold; }
+body.touch .decor-modes .seg { padding: 1px 8px; font-size: 12px; }
+body.touch .decor-skin { width: 80px; }
+
+.hall-note { font-size: 12px; opacity: .75; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

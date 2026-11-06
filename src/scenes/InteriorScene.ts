@@ -10,7 +10,8 @@ import type { NetClient } from '@/net/client';
 import type { DormPanel } from '@/ui/DormPanel';
 import type { ChatPanel } from '@/ui/ChatPanel';
 import type { Profile } from '@/shared/profile';
-import { AC_NAMES, roomTitle } from '@/shared/dorm';
+import { AC_NAMES, dormInteriorId, dormInteriorLevel, isDormInterior, roomTitle } from '@/shared/dorm';
+import { ensureSkin, skinTextureKey } from '@/systems/dormskin';
 import { RemotePlayer } from '@/entities/RemotePlayer';
 import { BathFx } from '@/systems/bathfx';
 import { DecorEditor } from '@/systems/decoredit';
@@ -40,6 +41,7 @@ export class InteriorScene extends Phaser.Scene {
   private leaving = false;
   // ---- 家具摆放（装修）：宿舍里除了床/衣柜/宝箱/浴缸，其余家具都来自摆放数据，客户端按它现画
   private lay: Placed[] = []; private layKey = ''; private decorObjs: Phaser.GameObjects.Image[] = []; private decorTalk: NonNullable<InteriorDef['interacts']> = [];
+  private level = 0; private skinNow = { w: -1, f: -1 }; private skinImgs: Phaser.GameObjects.Image[] = []; private skinSeq = 0;
   private baseCollision: string[] = []; private editor?: DecorEditor; private decorBtn?: HTMLButtonElement; private likeBtn?: HTMLButtonElement; private prevLikes?: NetClient['handlers']['dormLikes'];
   private talking: Npc | null = null;
   // ---- 宿舍（id === 'dorm'）
@@ -62,7 +64,7 @@ export class InteriorScene extends Phaser.Scene {
   private takeTouchPress() { const p = !!this.registry.get('touchPress'); if (p) this.registry.set('touchPress', false); return p; }
   constructor() { super('Interior'); }
 
-  init(data: { id: string }) { this.registry.set('interiorId', data.id); this.leaving = false; this.layKey = ''; this.lay = []; this.decorObjs = []; this.decorTalk = []; }
+  init(data: { id: string }) { this.registry.set('interiorId', data.id); this.leaving = false; this.layKey = ''; this.lay = []; this.decorObjs = []; this.decorTalk = []; this.skinNow = { w: -1, f: -1 }; this.skinImgs = []; this.skinSeq++; }
 
   create() {
     this.hud = this.registry.get('hud') as Hud;
@@ -73,11 +75,11 @@ export class InteriorScene extends Phaser.Scene {
     this.map = new WorldMap({ width: d.w, height: d.h, collision: d.collision });
     this.baseCollision = d.collision.slice();
     this.cameras.main.setBackgroundColor('#17110d');
-    this.add.image(0, 0, d.bg).setOrigin(0).setDepth(-1);
+    if (!isDormInterior(d.id)) this.add.image(0, 0, d.bg).setOrigin(0).setDepth(-1); // 宿舍的底图是墙纸 + 地板两层，按玩家选的样式在 setupDorm 里加载
     for (const o of d.objects) this.add.image(o.x, o.y, 'furniture', o.k).setOrigin(0).setDepth(o.depth);
     for (const l of d.labels ?? []) this.add.text(l.x * TILE, l.y * TILE, l.text, { fontFamily: 'ArkPixel', fontSize: `${l.size ?? 10}px`, color: l.color ?? '#2a2a33' }).setOrigin(0.5).setDepth(9000); // 文字牌要压在家具上面（家具的层级 = 它的底边像素，比 5 大得多，之前文字被横幅/字画盖住了）
     this.npcs = d.npcs.map((n) => new Npc(this, n.x * TILE, n.y * TILE, n.look, n.name, n.lines, false, n.facing ?? 'down'));
-    this.dorm = d.id === 'dorm';
+    this.dorm = isDormInterior(d.id); this.level = dormInteriorLevel(d.id);
     this.visit = this.dorm ? ((this.registry.get('dormVisit') as Extract<ServerMsg, { t: 'dorm_visit' }> | null | undefined) ?? null) : null;
     const me = this.registry.get('profile') as Profile | undefined; this.seenProfile = me;
     this.player = new Player(this, d.spawn.x * TILE, d.spawn.y * TILE, this.dorm && me ? me.look : 0, this.dorm ? me?.app : undefined); // 宿舍里是你自己的样子（换装后也跟着变）
@@ -114,6 +116,7 @@ export class InteriorScene extends Phaser.Scene {
     const bath = this.def.objects.find((o) => o.k === 'dbath'); if (bath) this.bathFx = new BathFx(this, bath.x, bath.y, bath.depth);
     const sg = this.def.objects.find((o) => o.k === 'dsign');
     if (sg) { this.signAt = { x: sg.x + 41, y: sg.y + 11 }; this.signText = this.add.text(this.signAt.x, this.signAt.y, '', { fontFamily: 'ArkPixel', fontSize: '10px', color: '#4a2e14' }).setOrigin(0.5).setDepth(9000); }
+    { const sk = this.visit ? this.visit.sk : this.dormUi?.data?.sk; this.setSkin(sk?.w ?? 0, sk?.f ?? 0); }
     this.setLay(this.visit ? (this.visit.lay ?? defaultLay()) : (this.dormUi?.data?.lay ?? defaultLay())); // 房里的家具摆放：访客用房主的，自己用自己的（数据还没来就先用默认布局）
     this.hostName = this.visit?.hostName ?? ((this.registry.get('profile') as Profile | undefined)?.name ?? '');
     if (this.visit) { // 我是访客：屋里的状态来自房主（空调、门牌、房主睡没睡），屋里已有的人也要画出来
@@ -128,13 +131,13 @@ export class InteriorScene extends Phaser.Scene {
       h.roomLeave = (id) => this.removeRemote(id);
       h.roomPos = (id, x, y, f) => { if (id === this.selfId) { this.player.x = x; this.player.y = y; return; } this.remotes.get(id)?.push(x, y, f, performance.now()); }; // 发给自己的 = 被服务器拉回
       h.roomState = (m) => {
-        this.setTitle(m.title); this.setAc(m.ac); this.setBath(m.bv);
+        this.setTitle(m.title); this.setAc(m.ac); this.setBath(m.bv); if (!this.isHost) this.setSkin(m.sk?.w ?? 0, m.sk?.f ?? 0);
         if (!this.isHost) { if (m.sleeping) this.showSleeper(this.hostChar()); else if (this.sleepWho && this.sleepWho !== this.player) this.hideSleeper(); } // 房主自己的睡觉由本地按钮流程驱动
       };
     }
     this.registry.set('roomSay', (pid: number, text: string) => { if (pid === this.selfId) this.player.say(text); else this.remotes.get(pid)?.say(text); }); // 公屏的话冒泡在人头上
     if (this.dormUi) {
-      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); this.setLay(m.lay ?? defaultLay()); this.editor?.refresh(); } };
+      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); this.setSkin(m.sk?.w ?? 0, m.sk?.f ?? 0); if ((m.rm ?? 0) !== this.level) { this.expandTo(m.rm ?? 0); return; } this.setLay(m.lay ?? defaultLay()); this.editor?.refresh(); } };
       this.dormUi.onResult = (ok, msg, wake) => {
         this.hud.banner(ok ? '🏠 宿舍' : '⚠️ 宿舍', msg);
         if (this.sleepPending) { this.sleepPending = false; if (ok) this.beginSleep(); }
@@ -282,9 +285,26 @@ export class InteriorScene extends Phaser.Scene {
     else { const edit = this.registry.get('editProfile') as (() => void) | undefined; this.input.keyboard!.resetKeys(); edit?.(); }
   }
 
+  /** 墙纸 + 地板：两层透明图叠在一起（没加载过的先下载）；换样式时旧的换成新的 */
+  private setSkin(w: number, f: number) {
+    if (w === this.skinNow.w && f === this.skinNow.f) return;
+    this.skinNow = { w, f }; const seq = ++this.skinSeq, lv = this.level;
+    void ensureSkin(this.textures, lv, w, f).then((ok) => {
+      if (seq !== this.skinSeq || !this.scene.isActive()) return;
+      for (const i of this.skinImgs) i.destroy(); this.skinImgs = [];
+      if (ok) this.skinImgs = [this.add.image(0, 0, skinTextureKey(lv, 'f', f)).setOrigin(0).setDepth(-1), this.add.image(0, 0, skinTextureKey(lv, 'w', w)).setOrigin(0).setDepth(-0.9)];
+    });
+  }
+  /** 房间扩建了：换成对应大小的房间（重新进屋，人站在新房间的门口） */
+  private expandTo(level: number) {
+    if (this.leaving) return; this.leaving = true;
+    this.editor?.close(); this.hud.banner('🏠 宿舍', '房间扩建好了！');
+    this.time.delayedCall(60, () => this.scene.start('Interior', { id: dormInteriorId(level) }));
+  }
+
   /** 装修：右上角的「装修」按钮 + 装修模式（只有房主）。屋里有访客、正在睡觉时不能装修 */
   private setupDecorUi(net: NetClient) {
-    this.editor = new DecorEditor(this, net, { lay: () => this.lay, banner: (t, x) => this.hud.banner(t, x), onToggle: (on) => { this.decorBtn?.classList.toggle('hidden', on); if (on) this.hud.hint(null); }, reserve: (px) => { if (px !== this.reserve) { this.reserve = px; this.applyZoom(); } } });
+    this.editor = new DecorEditor(this, net, { lay: () => this.lay, level: () => this.level, data: () => this.dormUi?.data ?? null, banner: (t, x) => this.hud.banner(t, x), onToggle: (on) => { this.decorBtn?.classList.toggle('hidden', on); if (on) this.hud.hint(null); }, reserve: (px) => { if (px !== this.reserve) { this.reserve = px; this.applyZoom(); } } });
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn decor-open'; b.textContent = '🛋 装修'; b.title = '摆放家具、挪动、收回';
     b.addEventListener('click', () => {
       if (net.status !== 'online') { this.hud.banner('⚠️ 装修', '没连上服务器，现在不能装修'); return; }

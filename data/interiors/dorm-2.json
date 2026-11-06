@@ -1,0 +1,67 @@
+{
+ "id": "dorm-2",
+ "name": "我的宿舍",
+ "w": 20,
+ "h": 13,
+ "theme": "library",
+ "desc": "你的小屋：床、空调、衣柜、宝箱、浴缸都在。点左边的「装修」自己摆家具；走到南侧门口即可出门",
+ "exit": {
+  "x": 7,
+  "w": 2
+ },
+ "windows": [
+  {
+   "x": 6,
+   "w": 3,
+   "curtain": true
+  }
+ ],
+ "rugs": [
+  {
+   "x": 5,
+   "y": 6,
+   "w": 6,
+   "h": 3,
+   "color": "#c8856a"
+  }
+ ],
+ "labels": [],
+ "furniture": [
+  {
+   "k": "dsign",
+   "x": 1,
+   "y": 2,
+   "act": "sign"
+  },
+  {
+   "k": "ac",
+   "x": 9,
+   "y": 1,
+   "act": "ac"
+  },
+  {
+   "k": "dbed",
+   "x": 1,
+   "y": 3,
+   "act": "bed"
+  },
+  {
+   "k": "dwardrobe",
+   "x": 12,
+   "y": 3,
+   "act": "wardrobe"
+  },
+  {
+   "k": "dchest",
+   "x": 14,
+   "y": 3,
+   "act": "chest"
+  },
+  {
+   "k": "dbath",
+   "x": 11,
+   "y": 6,
+   "act": "bath"
+  }
+ ]
+}

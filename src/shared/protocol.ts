@@ -281,6 +281,9 @@ export type ClientMsg =
   /** 装修：place = 从背包摆一件（d = 家具物品 id）/ move = 挪动或转向已摆的第 i 件 / pick = 收回第 i 件 */
   /** 给 TA 的宿舍点赞 / 取消赞；设置我的宿舍要不要在资料卡上展示 */
   | { t: 'dorm_like'; uid: number }
+  /** 买 / 换墙纸（kind = w）和地板（kind = f）：i = 样式下标；扩建房间 */
+  | { t: 'dorm_skin'; kind: 'w' | 'f'; i: number; op: 'buy' | 'use' }
+  | { t: 'dorm_expand' }
   | { t: 'dorm_pub'; on: boolean }
   | { t: 'dorm_lay'; op: 'place' | 'move' | 'pick'; d?: string; i?: number; x?: number; y?: number; r?: number }
   /** 宿舍做客：邀请好友来我的宿舍（我得在自己宿舍里）/ 敲好友宿舍的门（好友得在宿舍里）/ 回应别人的邀请或敲门 / 房主改门牌 / 在宿舍里报自己的位置（屋里的坐标，像素） */
@@ -459,7 +462,7 @@ export type ServerMsg =
   | { t: 'mon_result'; ok: boolean; msg: string }
   | { t: 'tp_result'; ok: boolean; msg: string }
   /** 我的宿舍：楼栋（没绑定 = 没有）、今天还能不能改楼栋、空调、宝箱；options = 能选的楼栋（按社区分组） */
-  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 我的宿舍收到的赞数 */ likes?: number; options: { group: string; names: string[] }[] }
+  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 房间级别（1 中屋 / 2 大屋，没有 = 小屋）、墙纸地板（w、f 正在用的样式；ow、of 已拥有的样式，按位记） */ rm?: 1 | 2; sk?: { w?: number; f?: number; ow?: number; of?: number }; /** 我的宿舍收到的赞数 */ likes?: number; options: { group: string; names: string[] }[] }
   /** 可以进屋了（x、y = 我在宿舍楼门口的位置，像素）/ 宿舍操作的结果 */
   | { t: 'dorm_in'; x: number; y: number }
   /** 服务器把人从宿舍里带走了（传送、队友传送、被管理员传走…）：客户端要离开室内、留在新位置 */
@@ -467,12 +470,12 @@ export type ServerMsg =
   /** 有人邀请我去 TA 的宿舍（kind = invite），或有人想来我的宿舍（kind = knock）；30 秒内回应 */
   | { t: 'dorm_ask'; uid: number; name: string; kind: 'invite' | 'knock'; title?: string }
   /** 我进了好友的宿舍：房主、门牌（房主起的名字，可能为空）、空调、房主是不是在睡觉、屋里已经有的人 */
-  | { t: 'dorm_visit'; host: number; hostName: string; title: string; ac: number; sleeping: boolean; bv?: BathView; lay?: Placed[]; /** 这间宿舍的赞数、我有没有赞过 */ likes?: number; liked?: boolean; roster: RoomWho[] }
+  | { t: 'dorm_visit'; host: number; hostName: string; title: string; ac: number; sleeping: boolean; bv?: BathView; lay?: Placed[]; rm?: 1 | 2; sk?: { w?: number; f?: number }; /** 这间宿舍的赞数、我有没有赞过 */ likes?: number; liked?: boolean; roster: RoomWho[] }
   /** 屋里有人进来 / 出去 / 动了；屋里的状态变了（空调、门牌、房主睡觉） */
   | { t: 'room_join'; w: RoomWho }
   | { t: 'room_leave'; id: number }
   | { t: 'room_pos'; id: number; x: number; y: number; flags: number }
-  | { t: 'room_state'; ac: number; title: string; sleeping: boolean; bv?: BathView }
+  | { t: 'room_state'; ac: number; title: string; sleeping: boolean; bv?: BathView; sk?: { w?: number; f?: number } }
   | { t: 'dorm_result'; ok: boolean; msg: string; /** 睡太久，服务器让你起床了 */ wake?: boolean }
   /** 手拉手：有人想牵我的手 / 全部牵着手的一对（玩家编号，l = 牵手的人，f = 被牵的人；画连线用）/ 我自己的状态（role = 我是牵的人/被牵的人/没有；pid、name = 对方）/ 操作结果 */
   | { t: 'hand_invite'; uid: number; name: string }
