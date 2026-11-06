@@ -36,6 +36,8 @@ export class ShopPanel {
   private mode: 'shop' | 'stall' = 'shop';
   private tab: 'buy' | 'sell' | 'craft' | 'comm' = 'sell';
   private craftParam = '';
+  /** 上一次画的是哪一页（模式:标签）：同一页重画时保留滚动位置 */
+  private shownKey = '';
   private coins = 0; private inv: Inv = {};
 
   /** day() 返回今天的日期编号（东八区，和服务器一致），用来算今日行情 */
@@ -70,7 +72,7 @@ export class ShopPanel {
 
   get isOpen() { return !this.root.classList.contains('hidden'); }
   open(mode: 'shop' | 'stall' = 'shop') {
-    this.mode = mode; this.root.classList.remove('hidden'); this.msg.textContent = '';
+    this.mode = mode; this.shownKey = ''; this.root.classList.remove('hidden'); this.msg.textContent = '';
     this.titleEl.textContent = mode === 'stall' ? '钓具摊 · 钓具老板' : '校园商店';
     this.subEl.textContent = mode === 'stall' ? '「钓鱼的人，装备和耐心一样要紧。」摊子卖全套钓鱼用品、能合成，每天和每周有委托；卖鱼要去图书馆广场的校园商店。' : '钓上来的鱼、翻垃圾桶翻出来的东西都可以在这里卖钱；赚到的校园币能买鱼饵、猫粮、猫条、猫窝和更好的鱼竿。';
     this.buildTabs(); this.net.getInv(); this.net.getCoins(); this.net.getFx(); if (mode === 'stall') this.net.getWq(); this.render();
@@ -81,11 +83,21 @@ export class ShopPanel {
   private say(t: string, ok: boolean) { this.msg.textContent = t; this.msg.classList.toggle('bad', !ok); }
 
   private icon(id: string) { const c = el('canvas', 'shop-ico'); drawItem(c, this.textures, id, 3); return c; }
+  /**
+   * 重画整页内容。买/卖/合成之后服务器会连着推背包和校园币，每次都要重画，
+   * 所以要把滚动位置记下来再还原——否则买一样东西列表就跳回最上面。切换标签页、重新打开商店才回到顶部。
+   */
   private render() {
+    const key = `${this.mode}:${this.tab}`, list = this.body.querySelector<HTMLElement>('.shop-list');
+    const top = list && key === this.shownKey ? list.scrollTop : 0, outer = this.root.scrollTop;
     this.body.replaceChildren();
     const online = this.net.status === 'online';
     if (!online) this.body.append(el('div', 'board-empty', '没连上服务器，现在不能买卖。'));
     else if (this.tab === 'buy') this.renderBuy(); else if (this.tab === 'craft') this.renderCraft(); else if (this.tab === 'comm') this.renderComm(); else this.renderSell();
+    const now = this.body.querySelector<HTMLElement>('.shop-list');
+    if (now && top) now.scrollTop = top;
+    if (key === this.shownKey) this.root.scrollTop = outer;
+    this.shownKey = key;
   }
 
   private renderBuy() {

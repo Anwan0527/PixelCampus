@@ -32,6 +32,8 @@ export class WallPanel {
   /** 管理员：只看待审核的 / 待审核数量 */
   private pendingMode = false; private pendingN = 0;
   private modBar = el('div', 'wall-modbar hidden');
+  /** 当前画的是列表还是某条帖子的详情；进详情前记下列表的滚动位置，返回时还原（点赞、刷新、翻页重画也不跳回顶部） */
+  private view: 'list' | 'thread' | null = null; private listTop = 0;
 
   constructor(private net: NetClient) {
     const panel = el('div', 'box wall');
@@ -67,7 +69,7 @@ export class WallPanel {
   }
 
   get isOpen() { return !this.root.classList.contains('hidden'); }
-  open() { this.root.classList.remove('hidden'); this.open_ = null; this.msg.textContent = ''; this.send.disabled = this.net.status !== 'online'; this.pendingMode = false; this.renderModBar(); this.net.wallList(); this.renderFeed(); }
+  open() { this.root.classList.remove('hidden'); this.open_ = null; this.view = null; this.listTop = 0; this.msg.textContent = ''; this.send.disabled = this.net.status !== 'online'; this.pendingMode = false; this.renderModBar(); this.net.wallList(); this.renderFeed(); }
   close() { this.area.blur(); this.root.classList.add('hidden'); }
   /** 管理员的「全部 / 待审核」切换条 */
   private renderModBar() {
@@ -75,7 +77,7 @@ export class WallPanel {
     if (!this.admin) return;
     const mk = (label: string, pending: boolean) => {
       const b = el('button', 'seg' + (this.pendingMode === pending ? ' on' : ''), label); b.type = 'button';
-      b.addEventListener('click', () => { this.pendingMode = pending; this.open_ = null; this.renderModBar(); this.net.wallList(undefined, pending); });
+      b.addEventListener('click', () => { this.pendingMode = pending; this.open_ = null; this.view = null; this.listTop = 0; this.renderModBar(); this.net.wallList(undefined, pending); });
       return b;
     };
     this.modBar.append(el('span', 'wall-modlbl', '🛡 审核'), mk('全部', false), mk(`待审核 (${this.pendingN})`, true));
@@ -107,7 +109,13 @@ export class WallPanel {
   }
 
   private renderFeed() {
+    const keep = this.view === 'list' ? this.feed.scrollTop : this.listTop;
     this.feed.replaceChildren();
+    this.view = 'list';
+    this.renderCards();
+    this.feed.scrollTop = keep;
+  }
+  private renderCards() {
     if (!this.items.length) { this.feed.append(el('div', 'board-empty', this.net.status === 'online' ? (this.pendingMode ? '没有待审核的帖子。' : '墙上还空空的，来贴第一张吧。') : '连上服务器后能看到校园墙。')); return; }
     for (const p of this.items) {
       const card = el('div', 'wall-card' + (p.hidden ? ' hidden-post' : ''));
@@ -156,7 +164,14 @@ export class WallPanel {
 
   private renderThread() {
     const t = this.open_; if (!t) return;
+    const keep = this.view === 'thread' ? this.feed.scrollTop : 0;
+    if (this.view === 'list') this.listTop = this.feed.scrollTop;
+    this.view = 'thread';
     this.feed.replaceChildren();
+    this.buildThread(t);
+    this.feed.scrollTop = keep;
+  }
+  private buildThread(t: { post: WallPost; comments: WallComment[] }) {
     const back = el('button', 'btn', '← 返回'); back.type = 'button'; back.addEventListener('click', () => this.back());
     const p = t.post, card = el('div', 'wall-card big');
     const top = el('div', 'board-item-top'); top.append(this.who(p.name, p.hue, p.anon, '楼主'), el('span', 'board-time', fmt(p.ts)));
