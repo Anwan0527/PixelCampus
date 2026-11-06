@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CAT_REACH, CAT_WANDER, LEVEL_NAMES, catLevel, type CatDef } from '@/shared/cats';
 import type { WorldMap } from '@/world/WorldMap';
+import { redrawWhenGlyphsReady } from '@/ui/glyphs';
 
 type State = 'sit' | 'walk' | 'sleep' | 'eat' | 'happy' | 'flee' | 'act';
 
@@ -37,6 +38,7 @@ export class Cat {
   private face = 1;
   private held = false;
   private tag?: Phaser.GameObjects.Text;
+  private tagLabel = '';
   /** 玩家给它取的专属名字（只有这个玩家的客户端会设置）；没有就用原名 */
   nick?: string;
   private away = false; private wasFollowing = false;
@@ -249,7 +251,9 @@ export class Cat {
   private showTag(near: boolean, aff: number) {
     if (!near) { this.tag?.setVisible(false); return; }
     if (!this.tag) this.tag = this.scene.add.text(0, 0, '', { fontFamily: 'ArkPixel', fontSize: '11px', color: '#ffe9c0', backgroundColor: 'rgba(24,18,12,0.62)', padding: { x: 3, y: 1 } }).setOrigin(0.5, 1);
-    this.tag.setText(`${this.label} ${'♥'.repeat(catLevel(aff) + 1)}`).setVisible(true);
+    const label = `${this.label} ${'♥'.repeat(catLevel(aff) + 1)}`;
+    this.tag.setText(label).setVisible(true);
+    if (label !== this.tagLabel) { this.tagLabel = label; const tg = this.tag; redrawWhenGlyphsReady(label, () => { if (tg.active) tg.updateText(); }); }   // 猫名由玩家取，可能含生僻字；每帧调用，所以只在文字变了才查
     this.tag.setData('lv', LEVEL_NAMES[catLevel(aff)]);
   }
 

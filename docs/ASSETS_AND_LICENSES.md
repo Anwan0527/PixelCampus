@@ -3,7 +3,7 @@
 | 内容 | 来源 | 许可/备注 |
 |---|---|---|
 | 地面、建筑、树、小品、人物、UI 框 | 本项目程序化生成（`tools/art/`） | 自有，无第三方素材 |
-| 中文像素字体 Ark Pixel 12px | [TakWolf/ark-pixel-font](https://github.com/TakWolf/ark-pixel-font) | SIL OFL 1.1，随附 `public/fonts/OFL.txt` |
+| 中文像素字体 Ark Pixel 12px | [TakWolf/ark-pixel-font](https://github.com/TakWolf/ark-pixel-font) | SIL OFL 1.1，随附 `public/fonts/OFL.txt`；网页发布的是按字切片后的子集（`public/fonts/ark-pixel-12-zh-{a,b,c}.woff2`，字形未改动），完整字体源文件在 `tools/assets/fonts/` |
 | 卫星正射图（仅描图参考） | Esri World Imagery | 不入库、不分发（`.cache/` 已忽略）；仅用于量测几何 |
 | 环路/车道坐标 | OpenStreetMap contributors | ODbL；`data/campus/osm-roads.json` 为衍生数据，发布时需署名 © OpenStreetMap contributors |
 | 河北工程大学全景图（地图参考） | 维生酥鱼老师开源分享：[mab.suyu.ink](https://mab.suyu.ink) | 仅作地图布局的参考，不复制、不分发其图像；游戏「关于」面板里有致谢 |

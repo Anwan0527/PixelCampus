@@ -640,7 +640,7 @@ export class WorldScene extends Phaser.Scene {
     else {
       let left = need.length;
       for (const t of need) {
-        const url = t.startsWith('ground_') ? `${WD}/ground/${this.season}/c_${key}.png` : `${WD}/ground/w${t.charAt(5)}_${key}.png`;
+        const url = t.startsWith('ground_') ? `${WD}/ground/${this.season}/c_${key}.webp` : `${WD}/ground/w${t.charAt(5)}_${key}.webp`;
         this.load.once(`filecomplete-image-${t}`, () => { if (--left === 0) build(); });
         this.load.image(t, url);
       }
@@ -1013,7 +1013,7 @@ export class WorldScene extends Phaser.Scene {
       if (!quiet) { this.hud.banner('季节更替', `${SEASON_NAME[s]}天来了`); this.net.system(`🍃 季节更替：${SEASON_NAME[s]}天来了`); }
     };
     if (this.textures.exists(key)) { apply(); return; }
-    this.load.atlas(key, `${WD}/atlas-props-${s}.png`, `${WD}/atlas-props.json`);
+    this.load.atlas(key, `${WD}/atlas-props-${s}.webp`, `${WD}/atlas-props.json`);
     this.load.once('complete', apply);
     if (!this.load.isLoading()) this.load.start();
   }

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { WorldFile } from '@/shared/world-format';
 import { Hud } from '@/ui/Hud';
+import { loadGlyphs } from '@/ui/glyphs';
 
 import { G, WD } from '@/core/paths';
 import { loadProfile, saveProfile } from '@/core/profileStore';
@@ -24,33 +25,34 @@ export class BootScene extends Phaser.Scene {
     // 季节：由当前时间决定（服务器时间要连上才知道，这里先用本机时间；跨季节的瞬间 WorldScene 会再校正一次）
     const season = seasonAt(Date.now());
     this.registry.set('season', season);
-    this.load.atlas('props', `${WD}/atlas-props-${season}.png`, `${WD}/atlas-props.json`);
-    this.load.atlas('chars', `${G}/atlas-chars.png`, `${G}/atlas-chars.json`);
+    this.load.atlas('props', `${WD}/atlas-props-${season}.webp`, `${WD}/atlas-props.json`);
+    this.load.atlas('chars', `${G}/atlas-chars.webp`, `${G}/atlas-chars.json`);
     this.load.json('charsMeta', `${G}/chars-meta.json`);
-    this.load.atlas('portraits', `${G}/atlas-portraits.png`, `${G}/atlas-portraits.json`);
-    this.load.atlas('held', `${G}/atlas-held.png`, `${G}/atlas-held.json`);
+    this.load.atlas('portraits', `${G}/atlas-portraits.webp`, `${G}/atlas-portraits.json`);
+    this.load.atlas('held', `${G}/atlas-held.webp`, `${G}/atlas-held.json`);
     this.load.json('interiors', `${G}/interiors.json`);
-    this.load.atlas('furniture', `${G}/atlas-furniture.png`, `${G}/atlas-furniture.json`);
-    this.load.atlas('cats', `${G}/atlas-cats.png`, `${G}/atlas-cats.json`);
+    this.load.atlas('furniture', `${G}/atlas-furniture.webp`, `${G}/atlas-furniture.json`);
+    this.load.atlas('cats', `${G}/atlas-cats.webp`, `${G}/atlas-cats.json`);
     this.load.json('catsMeta', `${G}/cats-meta.json`);
-    this.load.atlas('bikes', `${G}/atlas-bikes.png`, `${G}/atlas-bikes.json`);
+    this.load.atlas('bikes', `${G}/atlas-bikes.webp`, `${G}/atlas-bikes.json`);
     this.load.json('bikesMeta', `${G}/bikes-meta.json`);
-    this.load.atlas('items', `${G}/atlas-items.png`, `${G}/atlas-items.json`);
+    this.load.atlas('items', `${G}/atlas-items.webp`, `${G}/atlas-items.json`);
   }
   create() {
     const hud = this.registry.get('hud') as Hud;
     const world = this.cache.json.get('world') as WorldFile;
     // 建筑图集分页
-    for (let i = 0; i < (world.atlases.buildingPages ?? 1); i++) this.load.atlas(`buildings${i}`, `${WD}/atlas-buildings-${i}.png`, `${WD}/atlas-buildings-${i}.json`);
-    // 只预载出生点附近的地面块；其余由 WorldScene 按视野流式加载/释放
-    const sx = world.spawn.x * TILE, sy = world.spawn.y * TILE, px = world.chunk.px, waterSet = new Set(world.water.chunks);
+    for (let i = 0; i < (world.atlases.buildingPages ?? 1); i++) this.load.atlas(`buildings${i}`, `${WD}/atlas-buildings-${i}.webp`, `${WD}/atlas-buildings-${i}.json`);
+    // 只预载出生点附近的地面块（±800 像素，约 6 块，和 WorldScene 的流式加载范围 700 相当）；其余按视野流式加载/释放。
+    // 以前预载 ±1600（12 块），多下载约 0.8 MB，而很多玩家的落点并不在出生点附近
+    const sx = world.spawn.x * TILE, sy = world.spawn.y * TILE, px = world.chunk.px, waterSet = new Set(world.water.chunks), R = 800;
     for (const key of world.chunks ?? allChunks(world)) {
       const [cx, cy] = key.split('_').map(Number);
-      if (cx * px > sx + 1600 || (cx + 1) * px < sx - 1600 || cy * px > sy + 1600 || (cy + 1) * px < sy - 1600) continue;
-      this.load.image(`ground_${key}`, `${WD}/ground/${this.registry.get('season')}/c_${key}.png`);
-      if (waterSet.has(key)) for (let f = 1; f < world.water.frames; f++) this.load.image(`water${f}_${key}`, `${WD}/ground/w${f}_${key}.png`);
+      if (cx * px > sx + R || (cx + 1) * px < sx - R || cy * px > sy + R || (cy + 1) * px < sy - R) continue;
+      this.load.image(`ground_${key}`, `${WD}/ground/${this.registry.get('season')}/c_${key}.webp`);
+      if (waterSet.has(key)) for (let f = 1; f < world.water.frames; f++) this.load.image(`water${f}_${key}`, `${WD}/ground/w${f}_${key}.webp`);
     }
-    for (const it of this.cache.json.get('interiors') as { bg: string }[]) this.load.image(it.bg, `${G}/${it.bg}.png`);
+    for (const it of this.cache.json.get('interiors') as { bg: string }[]) this.load.image(it.bg, `${G}/${it.bg}.webp`);
     this.load.off('progress');
     this.load.on('progress', (p: number) => hud.setLoading(0.3 + p * 0.7, `铺设校园地面… ${Math.round(p * 100)}%`));
     this.load.once('complete', () => {
@@ -65,7 +67,7 @@ export class BootScene extends Phaser.Scene {
     });
     // 世界内文字牌用像素字体：先确保字体已加载，否则 Phaser 文本会固化成回退字体
     const go = () => this.load.start();
-    (document.fonts?.load('12px ArkPixel', '河北工程大学南门西门东门') ?? Promise.resolve()).then(go, go);
+    loadGlyphs('河北工程大学南门西门东门').then(go, go);   // 字体是按字切片的，只加载这些字所在的那片（常用片，约 85 KB）
   }
   /** 小特效贴图：骑车扬起的尘土、摸猫冒出的爱心（程序画，不占图集） */
   private makeEffectTextures() {

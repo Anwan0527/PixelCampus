@@ -6,5 +6,10 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 export default defineConfig({
   resolve: { alias: { '@': r('./src'), '@data': r('./data') } },
   server: { host: '127.0.0.1', port: 5173, proxy: { '/ws': { target: 'ws://127.0.0.1:8787', ws: true } } }, // 联机：把 /ws 转给 npm run server
-  build: { target: 'es2022', chunkSizeWarningLimit: 2000 },
+  build: {
+    target: 'es2022', chunkSizeWarningLimit: 2000,
+    // Phaser 单独打成一个文件（约 1.2 MB 原始 / 330 KB 压缩）：它几乎不变，文件名里的哈希也就不变，
+    // 玩家浏览器缓存后，之后每次部署只需重新下载我们自己的代码（约 1/3），不用每次都把引擎再下一遍
+    rollupOptions: { output: { manualChunks: (id) => (id.includes('node_modules/phaser/') ? 'phaser' : undefined) } },
+  },
 });

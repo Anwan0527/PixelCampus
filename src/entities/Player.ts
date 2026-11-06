@@ -7,6 +7,7 @@ import { IDX, type Appearance } from '@/shared/appearance';
 import type { SkinManager } from '@/art/skins';
 import { heldDef } from '@/shared/held';
 import { UMB } from '@/systems/weather';
+import { redrawWhenGlyphsReady } from '@/ui/glyphs';
 
 export type Facing = 'down' | 'up' | 'left' | 'right';
 
@@ -230,6 +231,7 @@ export class Character {
   setNameTag(text: string, color = '#ffffff') {
     if (!this.tag) this.tag = this.sprite.scene.add.text(0, 0, '', { fontFamily: 'ArkPixel', fontSize: '12px', backgroundColor: 'rgba(24,18,12,0.62)', padding: { x: 3, y: 1 } }).setOrigin(0.5, 1);
     this.tag.setText(text).setColor(color);
+    const tag = this.tag; redrawWhenGlyphsReady(text, () => { if (tag.active) { tag.updateText(); this.syncSprite(); } });   // 生僻字所在字体片刚下完：重画
     this.syncSprite();
   }
   /** 昵称上方的称号牌（undefined = 不显示） */
@@ -237,6 +239,7 @@ export class Character {
     if (!t) { this.titleTag?.destroy(); this.titleTag = undefined; this.syncSprite(); return; }
     if (!this.titleTag) this.titleTag = this.sprite.scene.add.text(0, 0, '', { fontFamily: 'ArkPixel', fontSize: '10px', backgroundColor: 'rgba(24,18,12,0.5)', padding: { x: 3, y: 0 } }).setOrigin(0.5, 1);
     this.titleTag.setText(t.name).setColor(t.color);
+    const tt = this.titleTag; redrawWhenGlyphsReady(t.name, () => { if (tt.active) { tt.updateText(); this.syncSprite(); } });
     this.syncSprite();
   }
   /** 头顶说话气泡（聊天内容短暂显示在头上） */
@@ -245,6 +248,7 @@ export class Character {
     const party = style === 'party'; // 队伍的话：绿色气泡，只有队友看得到
     this.bubble = this.sprite.scene.add.text(0, 0, text, { fontFamily: 'ArkPixel', fontSize: '12px', color: party ? '#1f3d10' : '#3b2412', backgroundColor: party ? '#d9efc4' : '#fbf3dc', padding: { x: 4, y: 2 }, wordWrap: { width: 132, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5, 1);
     this.bubbleUntil = this.sprite.scene.time.now + ms;
+    const bub = this.bubble; redrawWhenGlyphsReady(text, () => { if (bub.active) { bub.updateText(); this.syncSprite(); } });
     this.syncSprite();
   }
   destroy() { this.fzImg?.destroy(); this.heldImg?.destroy(); this.skinToken++; this.skinHandle?.release(); this.umb?.destroy(); this.fishG?.destroy(); this.fishMark?.destroy(); this.seatStrip?.destroy(); this.emoteTxt?.destroy(); this.sprite.scene.tweens.killTweensOf(this.fx); this.sprite.scene.tweens.killTweensOf(this.emo); this.tag?.destroy(); this.titleTag?.destroy(); this.bubble?.destroy(); this.bikeBack?.destroy(); this.bikeFront?.destroy(); this.sprite.destroy(); }

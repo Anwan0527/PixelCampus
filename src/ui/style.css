@@ -1,4 +1,5 @@
-@font-face { font-family: 'ArkPixel'; src: url('/fonts/ark-pixel-12-zh.woff2') format('woff2'); font-display: swap; }
+/* 像素字体按字切成三片（常用+游戏用到的字 80 KB / 其余 GB2312 汉字 106 KB / 生僻字 450 KB），只下载页面上实际出现的字所在的那片；生成：tools/assets/font-slices.py */
+@import './fonts.css';
 :root { --wood-d: #3b1f10; --wood: #6b3a1e; --wood-l: #d79b4a; --paper: #f7e3b0; --paper-d: #e4c27c; --ink: #3b2412; }
 html, body { margin: 0; height: 100%; background: #1a2a1c; overflow: hidden; font-family: 'ArkPixel', 'PingFang SC', monospace; color: var(--ink); }
 #game { position: fixed; inset: 0; }
@@ -20,7 +21,7 @@ html, body { margin: 0; height: 100%; background: #1a2a1c; overflow: hidden; fon
 #hint { position: absolute; left: 50%; bottom: 62px; transform: translateX(-50%); font-size: 18px; white-space: nowrap; }
 #controls { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); color: #fff; font-size: 14px; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; white-space: nowrap; opacity: .9; }
 #minimap { position: absolute; left: 22px; bottom: 22px; padding: 4px; width: 200px; height: 156px; transition: all .18s steps(4); pointer-events: auto; cursor: pointer; }
-#minimap-img { position: absolute; inset: 4px; background: #17241a url('/assets/generated/minimap.png') center/100% 100% no-repeat; image-rendering: pixelated; overflow: hidden; }
+#minimap-img { position: absolute; inset: 4px; background: #17241a url('/assets/generated/minimap.webp') center/100% 100% no-repeat; image-rendering: pixelated; overflow: hidden; }
 #minimap-n { position: absolute; right: 9px; top: 6px; font-size: 11px; color: #fff; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; pointer-events: none; }
 #minimap:not(.big) .poi { font-size: 11px; }
 #minimap-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #ff4a3a; border: 2px solid #fff; border-radius: 50%; box-sizing: border-box; box-shadow: 0 0 0 1px #000; animation: mm-pulse 1.4s steps(4) infinite; }
