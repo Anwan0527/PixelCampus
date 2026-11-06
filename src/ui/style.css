@@ -1035,7 +1035,8 @@ body.touch .cx-gcard canvas { width: 34px; }
 
 /* 宿舍装修：右上角的「装修」按钮 + 底部的家具托盘 */
 .decor-open { position: absolute; left: 22px; top: 222px; z-index: 5; pointer-events: auto; background: #ffe9a0; padding: 6px 14px; font-size: 15px; }
-body.touch .decor-open { left: calc(10px + env(safe-area-inset-left)); top: calc(168px + env(safe-area-inset-top)); padding: 4px 10px; font-size: 13px; }
+body.touch .decor-open { left: calc(10px + env(safe-area-inset-left)); top: calc(126px + env(safe-area-inset-top)); padding: 4px 10px; font-size: 13px; } /* 在头像牌、校园币、世界条（横屏时世界条在校园币下面一行）的下面 */
+body.touch:has(.decor-open:not(.hidden)) .hand-bar { top: calc(170px + env(safe-area-inset-top)); } /* 宿舍里「手持物」条让到「装修」按钮下面，不叠在一起 */
 .decor-open.hidden { display: none; }
 .decor-tray { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 7; pointer-events: auto; width: min(760px, 96vw); box-sizing: border-box; background: var(--paper); border: 3px solid var(--wood); box-shadow: 0 4px 0 var(--wood-d); padding: 6px 10px 8px; display: flex; flex-direction: column; gap: 5px; }
 .decor-tray.hidden { display: none; }
@@ -1108,3 +1109,18 @@ body.touch .decor-pad { display: flex; }
 .decor-arrow { padding: 2px 12px; font-size: 16px; min-width: 38px; }
 .decor-put { padding: 2px 12px; font-size: 14px; white-space: nowrap; flex: 0 0 auto; }
 .decor-arrow { flex: 0 0 auto; }
+
+/* 手机装修：托盘、顶上的信息牌、装修按钮互不挤占 */
+body.touch.decorating #profile-chip, body.touch.decorating #clock, body.touch.decorating #coin-pill, body.touch.decorating .world-chip,
+body.touch.decorating .hand-bar, body.touch.decorating #hint, body.touch.decorating #touch-menu, body.touch.decorating #emote-bar { display: none !important; } /* 装修时藏起：它们会压在房间上、也容易误触 */
+body.touch .decor-acts { flex-wrap: wrap; row-gap: 4px; }
+body.touch .decor-pad { flex: 1 0 100%; justify-content: center; margin-left: 0; } /* 方向键 + 「放这里」单独占一行，不再挤出屏幕右边 */
+body.touch .decor-arrow { flex: 1 1 0; max-width: 64px; padding: 2px 0; }
+body.touch .decor-put { flex: 2 1 0; max-width: 140px; }
+@media (orientation: landscape) and (max-height: 520px) { /* 手机横屏：托盘靠右竖着放，房间在左边，不再被托盘压成一小条 */
+  body.touch .decor-tray { left: auto; right: calc(6px + env(safe-area-inset-right)); top: calc(6px + env(safe-area-inset-top)); bottom: calc(6px + env(safe-area-inset-bottom)); transform: none; width: min(320px, 46vw); }
+  body.touch .decor-head { flex-wrap: wrap; }
+  body.touch .decor-list { flex: 1 1 auto; min-height: 0; flex-wrap: wrap; align-content: flex-start; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  body.touch .decor-pad { flex-wrap: nowrap; }
+  body.touch .decor-msg { min-height: 0; }
+}

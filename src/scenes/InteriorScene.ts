@@ -307,7 +307,7 @@ export class InteriorScene extends Phaser.Scene {
 
   /** 装修：右上角的「装修」按钮 + 装修模式（只有房主）。屋里有访客、正在睡觉时不能装修 */
   private setupDecorUi(net: NetClient) {
-    this.editor = new DecorEditor(this, net, { lay: () => this.lay, level: () => this.level, data: () => this.dormUi?.data ?? null, banner: (t, x) => this.hud.banner(t, x), onToggle: (on) => { this.decorBtn?.classList.toggle('hidden', on); if (on) this.hud.hint(null); }, reserve: (px) => { if (px !== this.reserve) { this.reserve = px; this.applyZoom(); } } });
+    this.editor = new DecorEditor(this, net, { lay: () => this.lay, level: () => this.level, data: () => this.dormUi?.data ?? null, banner: (t, x) => this.hud.banner(t, x), onToggle: (on) => { this.decorBtn?.classList.toggle('hidden', on); if (on) this.hud.hint(null); }, reserve: (px, side = 0) => { if (px !== this.reserve || side !== this.reserveW) { this.reserve = px; this.reserveW = side; this.applyZoom(); } } });
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn decor-open'; b.textContent = '🛋 装修'; b.title = '摆放家具、挪动、收回';
     b.addEventListener('click', () => {
       if (net.status !== 'online') { this.hud.banner('⚠️ 装修', '没连上服务器，现在不能装修'); return; }
@@ -379,15 +379,16 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   /** 装修托盘占了屏幕底部多少像素：房间缩放到上面剩下的空间里（装修时允许缩到 1 倍） */
-  private reserve = 0;
+  private reserve = 0; private reserveW = 0;
   private applyZoom() {
     // 让整间屋子尽量完整可见，但不低于 2 倍（装修时为托盘让位，可以低到 1 倍）
-    const availH = Math.max(120, this.scale.height - this.reserve);
-    const fit = Math.min(this.scale.width / (this.def.w * TILE + 32), availH / (this.def.h * TILE + 48));
-    let z = 2; if (this.reserve) z = Math.max(1, Math.min(5, Math.floor(fit * 2) / 2)); else for (const c of ZOOMS) if (c <= fit) z = c; // 装修时允许半倍缩放（手机竖屏房间放大一点）
-    const cam = this.cameras.main; cam.setSize(this.scale.width, availH); cam.setZoom(this.reserve ? z : Math.max(2, z)); // 窗口大小变化时，Phaser 自己的相机尺寸更新可能比这里慢一拍，所以直接按画布尺寸来
+    const availH = Math.max(120, this.scale.height - this.reserve), availW = Math.max(160, this.scale.width - this.reserveW); // 装修托盘在底部（占高度）或手机横屏时在右边（占宽度）
+    const fit = Math.min(availW / (this.def.w * TILE + 32), availH / (this.def.h * TILE + 48));
+    const reserved = this.reserve > 0 || this.reserveW > 0;
+    let z = 2; if (reserved) z = Math.max(1, Math.min(5, Math.floor(fit * 2) / 2)); else for (const c of ZOOMS) if (c <= fit) z = c; // 装修时允许半倍缩放（手机竖屏房间放大一点）
+    const cam = this.cameras.main; cam.setSize(availW, availH); cam.setZoom(reserved ? z : Math.max(2, z)); // 窗口大小变化时，Phaser 自己的相机尺寸更新可能比这里慢一拍，所以直接按画布尺寸来
     // 房间比屏幕小时，把相机范围撑到屏幕那么大并让房间居中——否则 Phaser 会把房间贴在屏幕左上角，剩下一大片黑（"室内黑屏"的真正原因）
-    const vw = this.scale.width / cam.zoom, vh = availH / cam.zoom, rw = this.def.w * TILE, rh = this.def.h * TILE, ex = Math.max(0, vw - rw), ey = Math.max(0, vh - rh);
+    const vw = availW / cam.zoom, vh = availH / cam.zoom, rw = this.def.w * TILE, rh = this.def.h * TILE, ex = Math.max(0, vw - rw), ey = Math.max(0, vh - rh);
     cam.setBounds(-ex / 2, -ey / 2, rw + ex, rh + ey);
   }
 
