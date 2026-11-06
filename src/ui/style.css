@@ -985,3 +985,39 @@ body.touch .cx-gcard canvas { width: 34px; }
 .qty-row .btn { padding: 3px 10px; font-size: 14px; }
 .qty-hint { font-size: 12px; opacity: .65; }
 .bx-sum { font-size: 14px; line-height: 1.6; }
+
+/* 日历 / 天气预报 */
+#clock.clickable { cursor: pointer; pointer-events: auto; }
+.cal { width: min(520px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.cal-body { max-height: min(66vh, 520px); overflow-y: auto; -webkit-overflow-scrolling: touch; border-top: 2px dashed var(--wood-l); padding-top: 8px; }
+.cal-now { display: flex; align-items: center; gap: 12px; }
+.cal-now-ico { font-size: 44px; line-height: 1; }
+.cal-now-name { font-size: 22px; font-weight: bold; }
+.cal-sub { font-size: 13px; opacity: .7; margin: 2px 0; }
+.cal-tips { margin: 8px 0; display: grid; gap: 4px; }
+.cal-tip { font-size: 14px; background: var(--paper-d); border: 2px solid var(--wood-l); padding: 4px 8px; }
+.cal-h { font-weight: bold; margin: 8px 0 4px; }
+.cal-fc-row { display: grid; grid-template-columns: 84px 28px 1fr 50px; gap: 6px; align-items: center; padding: 5px 4px; border-bottom: 1px dotted var(--wood-l); font-size: 14px; }
+.cal-fc-row.now { background: rgba(255, 236, 170, .35); font-weight: bold; }
+.cal-fc-ico { font-size: 20px; text-align: center; }
+.cal-fc-g { grid-column: 1 / -1; font-size: 11px; opacity: .5; margin-top: -3px; }
+.cal-fc-t { text-align: right; }
+.cal-foot { font-size: 12px; opacity: .6; margin-top: 8px; }
+.cal-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 4px; }
+.cal-year { font-weight: bold; font-size: 17px; min-width: 130px; text-align: center; }
+.cal-season { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.cal-season-name { flex: none; width: 52px; font-weight: bold; font-size: 14px; }
+.cal-cells { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; flex: 1; }
+.cal-cell { position: relative; border: 2px solid var(--wood-l); background: var(--paper-d); padding: 6px 0 3px; cursor: pointer; font: inherit; min-height: 42px; border-radius: 0; }
+.cal-cell.past { opacity: .5; }
+.cal-cell.today { background: #8fd05a; border-color: #3f7a24; font-weight: bold; opacity: 1; }
+.cal-cell.fest { background: #ffe9a8; border-color: #c9962a; }
+.cal-cell.today.fest { background: #cfe86a; }
+.cal-cell.on { outline: 3px solid #d0502a; }
+.cal-d { display: block; font-size: 14px; } .cal-f { display: block; font-size: 15px; min-height: 18px; }
+.cal-fest { margin-top: 10px; border: 2px solid var(--wood-l); background: var(--paper-d); padding: 8px 10px; }
+.cal-fest-name { font-weight: bold; font-size: 16px; }
+.cal-fest-blurb { font-size: 14px; margin: 4px 0; line-height: 1.5; }
+.cal-fest-li { font-size: 13px; opacity: .85; }
+.cal-fest-buff { margin-top: 4px; font-size: 13px; color: #2a6a1a; font-weight: bold; }
+@media (max-width: 520px) { .cal-fc-row { grid-template-columns: 74px 24px 1fr 44px; } .cal-season-name { width: 44px; } }

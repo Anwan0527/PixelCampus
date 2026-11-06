@@ -51,6 +51,7 @@ import { Character } from '@/entities/Player';
 import { SoundPanel } from '@/ui/SoundPanel';
 import { AboutPanel, mountWatermark } from '@/ui/AboutPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
+import { CalendarPanel } from '@/ui/CalendarPanel';
 import { RunPanel } from '@/ui/RunPanel';
 import { AdminPanel } from '@/ui/AdminPanel';
 import { PartyPanel } from '@/ui/PartyPanel';
@@ -99,7 +100,7 @@ export class WorldScene extends Phaser.Scene {
   private seasonChanging = false;
   private seasonLocked = false; // 开发调试：锁定季节（不跟随服务器时间）
   private weather!: WeatherFx;
-  private lastWx = '';
+  private lastWx = ''; private lastBow = false;
   private wxPlaceT = 0; private placeText = '';
   private keys!: Keys;
   private tintRect!: Phaser.GameObjects.Rectangle;
@@ -135,6 +136,7 @@ export class WorldScene extends Phaser.Scene {
   private emoteUi!: EmotePanel;
   private soundUi!: SoundPanel;
   private questUi!: QuestPanel;
+  private calUi!: CalendarPanel;
   private runUi!: RunPanel;
   private adminUi!: AdminPanel;
   private partyUi!: PartyPanel;
@@ -347,6 +349,7 @@ export class WorldScene extends Phaser.Scene {
     this.questUi = new QuestPanel(this.net, {
       onDone: (ids) => { for (const id of ids) { const q = questDef(id); if (q) { this.hud.banner('📋 任务完成', q.name); this.net.system(`📋 任务完成：${q.name}`); sfx('catch'); } } },
     });
+    this.calUi = new CalendarPanel({ now: () => Date.now() + this.clock.offset });
     this.adminUi = new AdminPanel(this.net, this.textures, { openMap: () => { if (!this.hud.mapOpen) this.hud.toggleMap(); }, showCard: (uid) => this.socialUi.showPlayer(uid) });
     // 管理员：大地图上点哪里就传送到哪里（服务器会再检查是不是管理员，并把落点挪到能站的地方）
     this.net.onAdmin((ok) => this.hud.setMapPicker(ok ? (tx, ty) => { this.net.adm({ op: 'tp', x: tx * TILE, y: ty * TILE }); if (this.hud.mapOpen) this.hud.toggleMap(); } : null));
@@ -461,7 +464,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /** 有没有面板/弹窗盖在游戏上（有的话点击不该穿透到场景） */
-  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.soundUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
+  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.calUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.soundUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
 
   /** 点中的位置（世界坐标）有没有别的玩家：有就弹出资料卡；多个重叠时取最靠前（y 最大）的 */
   private pickPlayerAt(wx: number, wy: number) {
@@ -958,12 +961,19 @@ export class WorldScene extends Phaser.Scene {
       this.placeText = whereIs(this.player.x, this.player.y, { pois: this.wf.pois, buildings: this.wf.buildings, w: this.wf.width, h: this.wf.height });
       this.checkSeason(now);
     }
-    const w = this.weather.state;
-    this.hud.setClock(this.clock.day, this.clock.hhmm, phase, { season: SEASON_NAME[this.season], weather: `${w.icon} ${w.name}`.trim(), place: this.placeText });
-    if (w.name !== this.lastWx) { // 天气变了：聊天栏里说一声（刚进游戏那一次不说）
-      if (this.lastWx) { const msg = w.kind === 'rain' ? `${w.icon} 下起了${w.name}，大家都撑起了伞` : w.kind === 'snow' ? `${w.icon} 下起了${w.name}` : w.kind === 'sunny' ? `${w.icon} 天晴了` : `${w.icon} 天阴了`; this.net.system(msg); }
-      this.lastWx = w.name;
+    const w = this.weather.state, sk = this.weather.sky;
+    this.hud.setClock(this.clock.day, this.clock.hhmm, phase, { season: SEASON_NAME[this.season], weather: `${sk.icon} ${sk.name} ${sk.tempC}°`.trim(), place: this.placeText });
+    const key = sk.storm ? '雷暴' : sk.fog > 0.3 ? '大雾' : w.name;
+    if (key !== this.lastWx) { // 天气变了：聊天栏里说一声（刚进游戏那一次不说）
+      if (this.lastWx) {
+        const msg = sk.storm ? `⛈️ 雷暴来了，大家都撑起了伞` : sk.fog > 0.3 ? `🌫️ 起雾了，清晨的校园白蒙蒙的` : w.kind === 'rain' ? `${w.icon} 下起了${w.name}，大家都撑起了伞` : w.kind === 'snow' ? `${w.icon} 下起了${w.name}` : w.kind === 'sunny' ? `${w.icon} 天晴了` : `${w.icon} 天阴了`;
+        this.net.system(msg);
+      }
+      this.lastWx = key;
     }
+    const bow = sk.rainbow > 0.3; // 雨后出彩虹：说一声（只在刚出现时）
+    if (bow && !this.lastBow && this.lastWx) this.net.system('🌈 雨停了，天边出了彩虹');
+    this.lastBow = bow;
   }
 
   /** 季节跨过边界了就换一套地面和树木 */

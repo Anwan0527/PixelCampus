@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { weatherAt, type WeatherState } from '@/shared/season';
+import { skyAt, weatherOfSlot, weatherSlot, type Sky, type WeatherState } from '@/shared/season';
 
 /** 一把伞的几种颜色（按人物外观编号轮着用） */
 /** 雨伞贴图尺寸：伞面中心在第 cx 列，握柄的手在第 hx 列（Character 据此把伞面罩在头顶、手放在身侧） */
@@ -76,7 +76,13 @@ const mul = (m: [number, number, number], c: [number, number, number], l: number
  * 天气本身由服务器时间决定（shared/season.ts），这里只负责"显示成什么样"。
  */
 export class WeatherFx {
-  state: WeatherState = weatherAt(Date.now());
+  state: WeatherState = weatherOfSlot(weatherSlot(Date.now()));
+  /** 天气的细节：雾 / 雷暴 / 彩虹 / 温度（state 是基础天气，规则只看 state） */
+  sky: Sky = skyAt(Date.now());
+  /** 雾 / 雷暴 / 彩虹的当前显示强度（缓动） */
+  fog = 0; storm = 0; bow = 0;
+  private fogRect: Phaser.GameObjects.Rectangle; private flashRect: Phaser.GameObjects.Rectangle; private bowG: Phaser.GameObjects.Graphics;
+  private flashAt = 3; private flash = 0;
   /** 当前显示强度（向目标缓动，天气切换时有 5 秒左右的渐变） */
   cloud = 0; rain = 0; snow = 0;
   private layers: { ts: Phaser.GameObjects.TileSprite; kind: 'rain' | 'snow'; vy: number; vx: number; sway: number }[] = [];
@@ -91,16 +97,33 @@ export class WeatherFx {
     };
     mk('fx_rain_b', 'rain', 330, -110, 0); mk('fx_rain_a', 'rain', 560, -190, 0);
     mk('fx_snow_b', 'snow', 38, -6, 10); mk('fx_snow_a', 'snow', 66, -10, 16);
+    this.fogRect = scene.add.rectangle(0, 0, 64, 64, 0xe4eaee, 1).setOrigin(0.5).setDepth(999989).setVisible(false);
+    this.flashRect = scene.add.rectangle(0, 0, 64, 64, 0xffffff, 1).setOrigin(0.5).setDepth(999995).setVisible(false);
+    this.bowG = scene.add.graphics().setDepth(999988).setVisible(false);
     const t = targetsOf(this.state); this.cloud = t.cloud; this.rain = t.rain; this.snow = t.snow; // 刚进游戏就是当前天气，不从晴天渐变
   }
 
   /** 每帧：serverNow = 校准后的服务器时间（毫秒） */
   update(dt: number, serverNow: number) {
     this.t += dt;
-    this.state = this.forced ?? weatherAt(serverNow);
+    this.sky = skyAt(serverNow); this.state = this.forced ?? this.sky.w;
+    const sk = this.forced ? { fog: 0, storm: false, rainbow: 0 } : this.sky;
     const tg = targetsOf(this.state), step = (cur: number, to: number, rate: number) => cur + Phaser.Math.Clamp(to - cur, -rate * dt, rate * dt);
     this.cloud = step(this.cloud, tg.cloud, 0.2); this.rain = step(this.rain, tg.rain, 0.2); this.snow = step(this.snow, tg.snow, 0.2);
+    this.fog = step(this.fog, sk.fog, 0.12); this.storm = step(this.storm, sk.storm ? 1 : 0, 0.3); this.bow = step(this.bow, sk.rainbow, 0.15);
     const cam = this.scene.cameras.main, w = Math.ceil(cam.width / cam.zoom) + 4, h = Math.ceil(cam.height / cam.zoom) + 4;
+    // 雾：整屏一层淡淡的白灰
+    this.fogRect.setVisible(this.fog > 0.02); if (this.fog > 0.02) this.fogRect.setPosition(Math.round(cam.midPoint.x), Math.round(cam.midPoint.y)).setSize(w, h).setAlpha(0.34 * this.fog);
+    // 雷暴：隔几秒打一次闪（整屏白光一闪、很快淡掉）
+    if (this.storm > 0.5) { this.flashAt -= dt; if (this.flashAt <= 0) { this.flash = 0.55; this.flashAt = 4 + Math.random() * 8; } }
+    this.flash = Math.max(0, this.flash - dt * 1.6);
+    this.flashRect.setVisible(this.flash > 0.01); if (this.flash > 0.01) this.flashRect.setPosition(Math.round(cam.midPoint.x), Math.round(cam.midPoint.y)).setSize(w, h).setAlpha(this.flash);
+    // 彩虹：屏幕上方一道半圆的七色弧
+    this.bowG.setVisible(this.bow > 0.02);
+    if (this.bow > 0.02) {
+      const g = this.bowG, cx = Math.round(cam.midPoint.x), cy = Math.round(cam.midPoint.y + h * 0.42), R = Math.min(w * 0.42, h * 0.8);
+      g.clear(); ['#e85a5a', '#f09a4a', '#f0d24a', '#6cc46a', '#5ab4e8', '#5a6ae0', '#9a5ad0'].forEach((c, i) => { g.lineStyle(3, Phaser.Display.Color.HexStringToColor(c).color, 0.5 * this.bow); g.beginPath(); g.arc(cx, cy, R - i * 3, Math.PI, 0, false); g.strokePath(); });
+    }
     for (const L of this.layers) {
       const lv = L.kind === 'rain' ? this.rain : this.snow;
       L.ts.setVisible(lv > 0.02);
@@ -115,7 +138,7 @@ export class WeatherFx {
   /** 整体叠色的乘数（0~1）：阴天偏灰、雨天更暗更蓝、雪天偏亮偏冷 */
   get tint(): [number, number, number] {
     const m: [number, number, number] = [1, 1, 1];
-    mul(m, [0.9, 0.92, 0.96], this.cloud); mul(m, [0.84, 0.88, 0.95], this.rain); mul(m, [0.94, 0.96, 1], this.snow);
+    mul(m, [0.9, 0.92, 0.96], this.cloud); mul(m, [0.84, 0.88, 0.95], this.rain); mul(m, [0.94, 0.96, 1], this.snow); mul(m, [0.82, 0.85, 0.93], this.storm);
     return m;
   }
   /** 现在要不要给所有人打伞（雨够大了才打，免得刚飘几滴就全体撑伞） */
