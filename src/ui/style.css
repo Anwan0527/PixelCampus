@@ -1032,3 +1032,36 @@ body.touch .cx-gcard canvas { width: 34px; }
 .cal-ward-row .btn { padding: 3px 10px; font-size: 14px; }
 .bath-glow { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; min-height: 22px; }
 .bath-chip { border: 2px solid; padding: 0 8px; font-size: 13px; font-weight: bold; background: var(--paper-d); }
+
+/* 宿舍装修：右上角的「装修」按钮 + 底部的家具托盘 */
+.decor-open { position: absolute; left: 22px; top: 222px; z-index: 5; pointer-events: auto; background: #ffe9a0; padding: 6px 14px; font-size: 15px; }
+body.touch .decor-open { left: calc(10px + env(safe-area-inset-left)); top: calc(168px + env(safe-area-inset-top)); padding: 4px 10px; font-size: 13px; }
+.decor-open.hidden { display: none; }
+.decor-tray { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 7; pointer-events: auto; width: min(760px, 96vw); box-sizing: border-box; background: var(--paper); border: 3px solid var(--wood); box-shadow: 0 4px 0 var(--wood-d); padding: 6px 10px 8px; display: flex; flex-direction: column; gap: 5px; }
+.decor-tray.hidden { display: none; }
+.decor-head { display: flex; align-items: center; gap: 10px; }
+.decor-title { font-weight: bold; font-size: 17px; white-space: nowrap; }
+.decor-info { flex: 1; font-size: 13px; opacity: .85; min-width: 0; }
+.decor-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+.decor-tabs .seg { padding: 2px 10px; font-size: 13px; }
+.decor-list { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 6px; min-height: 64px; align-items: stretch; }
+.decor-item { flex: 0 0 auto; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 2px; border: 3px solid var(--wood); background: var(--paper-d); cursor: pointer; font: inherit; position: relative; }
+.decor-item.on { background: #8fd05a; border-color: #3f7a24; }
+.decor-item canvas { image-rendering: pixelated; max-width: 40px; max-height: 36px; }
+.decor-name { font-size: 11px; line-height: 1.1; text-align: center; max-width: 70px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.decor-n { position: absolute; right: 2px; top: 0; font-size: 11px; font-weight: bold; background: #fff6; padding: 0 2px; }
+.decor-empty { font-size: 13px; opacity: .8; padding: 8px 4px; }
+.decor-acts { display: flex; gap: 6px; min-height: 30px; }
+.decor-acts .btn { padding: 2px 12px; font-size: 14px; }
+.decor-msg { font-size: 13px; min-height: 17px; color: #2f7a24; }
+.decor-msg.bad { color: #b0402a; }
+body.touch .decor-tray { bottom: calc(6px + env(safe-area-inset-bottom)); }
+body.touch .decor-tray { padding: 4px 8px 6px; gap: 3px; }
+body.touch .decor-info { display: none; }
+body.touch .decor-title { font-size: 15px; flex: 1; }
+body.touch .decor-tabs .seg { padding: 1px 8px; font-size: 12px; }
+body.touch .decor-list { min-height: 56px; }
+body.touch .decor-item { width: 62px; }
+body.touch .decor-name { font-size: 10px; max-width: 58px; }
+body.touch .decor-acts { min-height: 26px; }
+body.touch .decor-acts .btn { font-size: 12px; padding: 1px 8px; }

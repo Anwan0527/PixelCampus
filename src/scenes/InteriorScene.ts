@@ -13,6 +13,9 @@ import type { Profile } from '@/shared/profile';
 import { AC_NAMES, roomTitle } from '@/shared/dorm';
 import { RemotePlayer } from '@/entities/RemotePlayer';
 import { BathFx } from '@/systems/bathfx';
+import { DecorEditor } from '@/systems/decoredit';
+import { spotOf } from '@/systems/decorview';
+import { decorDef, defaultLay, footOf, type Placed } from '@/shared/decor';
 import type { BathView } from '@/shared/dorm';
 import { packFlags, type RoomWho, type ServerMsg } from '@/shared/protocol';
 
@@ -35,6 +38,9 @@ export class InteriorScene extends Phaser.Scene {
   private npcs: Npc[] = [];
   private keys!: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'shift' | 'e' | 'space' | 'esc' | 'enter' | 'y', Phaser.Input.Keyboard.Key>;
   private leaving = false;
+  // ---- 家具摆放（装修）：宿舍里除了床/衣柜/宝箱/浴缸，其余家具都来自摆放数据，客户端按它现画
+  private lay: Placed[] = []; private layKey = ''; private decorObjs: Phaser.GameObjects.Image[] = []; private decorTalk: NonNullable<InteriorDef['interacts']> = [];
+  private baseCollision: string[] = []; private editor?: DecorEditor; private decorBtn?: HTMLButtonElement;
   private talking: Npc | null = null;
   // ---- 宿舍（id === 'dorm'）
   private dorm = false;
@@ -56,7 +62,7 @@ export class InteriorScene extends Phaser.Scene {
   private takeTouchPress() { const p = !!this.registry.get('touchPress'); if (p) this.registry.set('touchPress', false); return p; }
   constructor() { super('Interior'); }
 
-  init(data: { id: string }) { this.registry.set('interiorId', data.id); this.leaving = false; }
+  init(data: { id: string }) { this.registry.set('interiorId', data.id); this.leaving = false; this.layKey = ''; this.lay = []; this.decorObjs = []; this.decorTalk = []; }
 
   create() {
     this.hud = this.registry.get('hud') as Hud;
@@ -65,6 +71,7 @@ export class InteriorScene extends Phaser.Scene {
     this.def = defs.find((d) => d.id === id)!;
     const d = this.def;
     this.map = new WorldMap({ width: d.w, height: d.h, collision: d.collision });
+    this.baseCollision = d.collision.slice();
     this.cameras.main.setBackgroundColor('#17110d');
     this.add.image(0, 0, d.bg).setOrigin(0).setDepth(-1);
     for (const o of d.objects) this.add.image(o.x, o.y, 'furniture', o.k).setOrigin(0).setDepth(o.depth);
@@ -107,6 +114,7 @@ export class InteriorScene extends Phaser.Scene {
     const bath = this.def.objects.find((o) => o.k === 'dbath'); if (bath) this.bathFx = new BathFx(this, bath.x, bath.y, bath.depth);
     const sg = this.def.objects.find((o) => o.k === 'dsign');
     if (sg) { this.signAt = { x: sg.x + 41, y: sg.y + 11 }; this.signText = this.add.text(this.signAt.x, this.signAt.y, '', { fontFamily: 'ArkPixel', fontSize: '10px', color: '#4a2e14' }).setOrigin(0.5).setDepth(9000); }
+    this.setLay(this.visit ? (this.visit.lay ?? defaultLay()) : (this.dormUi?.data?.lay ?? defaultLay())); // 房里的家具摆放：访客用房主的，自己用自己的（数据还没来就先用默认布局）
     this.hostName = this.visit?.hostName ?? ((this.registry.get('profile') as Profile | undefined)?.name ?? '');
     if (this.visit) { // 我是访客：屋里的状态来自房主（空调、门牌、房主睡没睡），屋里已有的人也要画出来
       this.setTitle(this.visit.title); this.setAc(this.visit.ac); this.setBath(this.visit.bv);
@@ -116,7 +124,7 @@ export class InteriorScene extends Phaser.Scene {
     }
     if (this.net) {
       const h = this.net.handlers;
-      h.roomJoin = (w) => this.addRemote(w);
+      h.roomJoin = (w) => { this.addRemote(w); if (this.editor?.active) { this.editor.close(); this.hud.banner('🛋 装修', `${w.p.name} 进来了，装修先停一下`); } };
       h.roomLeave = (id) => this.removeRemote(id);
       h.roomPos = (id, x, y, f) => { if (id === this.selfId) { this.player.x = x; this.player.y = y; return; } this.remotes.get(id)?.push(x, y, f, performance.now()); }; // 发给自己的 = 被服务器拉回
       h.roomState = (m) => {
@@ -126,7 +134,7 @@ export class InteriorScene extends Phaser.Scene {
     }
     this.registry.set('roomSay', (pid: number, text: string) => { if (pid === this.selfId) this.player.say(text); else this.remotes.get(pid)?.say(text); }); // 公屏的话冒泡在人头上
     if (this.dormUi) {
-      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); } };
+      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); this.setLay(m.lay ?? defaultLay()); this.editor?.refresh(); } };
       this.dormUi.onResult = (ok, msg, wake) => {
         this.hud.banner(ok ? '🏠 宿舍' : '⚠️ 宿舍', msg);
         if (this.sleepPending) { this.sleepPending = false; if (ok) this.beginSleep(); }
@@ -134,6 +142,7 @@ export class InteriorScene extends Phaser.Scene {
       };
       if (this.isHost) { if (this.dormUi.data) { this.setAc(this.dormUi.data.ac); this.setTitle(this.dormUi.data.title ?? ''); this.setBath(this.dormUi.data.bv); } else this.net?.dormGet(); }
     }
+    if (this.isHost && this.net) this.setupDecorUi(this.net);
     this.events.once('shutdown', () => {
       this.registry.set('roomSay', null); this.registry.set('dormVisit', null);
       if (this.net) { const h = this.net.handlers; h.roomJoin = h.roomLeave = h.roomPos = h.roomState = undefined; }
@@ -143,6 +152,7 @@ export class InteriorScene extends Phaser.Scene {
       if (this.net) this.net.handlers.dormOut = undefined;
       if (this.dormUi) { this.dormUi.onData = () => {}; this.dormUi.onResult = () => {}; this.dormUi.close(); this.dormUi.closeChest(); }
       this.acTimer?.remove(); this.zzTimer?.remove();
+      this.editor?.destroy(); this.editor = undefined; this.decorBtn?.remove(); this.decorBtn = undefined;
     });
   }
 
@@ -270,13 +280,46 @@ export class InteriorScene extends Phaser.Scene {
     else { const edit = this.registry.get('editProfile') as (() => void) | undefined; this.input.keyboard!.resetKeys(); edit?.(); }
   }
 
+  /** 装修：右上角的「装修」按钮 + 装修模式（只有房主）。屋里有访客、正在睡觉时不能装修 */
+  private setupDecorUi(net: NetClient) {
+    this.editor = new DecorEditor(this, net, { lay: () => this.lay, banner: (t, x) => this.hud.banner(t, x), onToggle: (on) => { this.decorBtn?.classList.toggle('hidden', on); if (on) this.hud.hint(null); }, reserve: (px) => { if (px !== this.reserve) { this.reserve = px; this.applyZoom(); } } });
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn decor-open'; b.textContent = '🛋 装修'; b.title = '摆放家具、挪动、收回';
+    b.addEventListener('click', () => {
+      if (net.status !== 'online') { this.hud.banner('⚠️ 装修', '没连上服务器，现在不能装修'); return; }
+      if (this.remotes.size) { this.hud.banner('🛋 装修', '屋里有访客，装修会挤到人：等好友出去再装修'); return; }
+      if (this.sleeping || this.hud.dialogOpen || this.dormUi?.anyOpen) return;
+      this.editor?.open();
+    });
+    (document.getElementById('hud') ?? document.body).append(b); this.decorBtn = b;
+  }
+
+  /** 按摆放数据画房里的家具（地毯、桌椅、柜子、小件、墙饰），并更新碰撞：占地的地面家具挡路，地毯、小件、墙饰不挡 */
+  private setLay(lay: Placed[]) {
+    const key = JSON.stringify(lay); if (key === this.layKey) return; this.layKey = key; this.lay = lay;
+    for (const o of this.decorObjs) o.destroy(); this.decorObjs = []; this.decorTalk = [];
+    const rows = this.baseCollision.map((r) => r.split(''));
+    for (const p of lay) {
+      const def = decorDef(p.d), spot = spotOf(this.textures, lay, p); if (!def || !spot) continue;
+      this.decorObjs.push(this.add.image(spot.x, spot.y, 'furniture', spot.frame).setOrigin(0).setDepth(spot.depth));
+      if (def.kind !== 'floor') continue;
+      const { fw, fh } = footOf(def, p.r);
+      for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) if (rows[p.y + j]?.[p.x + i] !== undefined) rows[p.y + j][p.x + i] = '1';
+      if (def.say) this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + fw) * 16 + 8, y0: p.y * 16 - 8, y1: (p.y + fh) * 16 + 16, title: def.name, text: def.say });
+    }
+    this.map = new WorldMap({ width: this.def.w, height: this.def.h, collision: rows.map((r) => r.join('')) });
+    if (this.player && this.map.boxBlocked(this.player.x, this.player.y)) { const s = standNear((px, py) => this.map.boxBlocked(px, py), this.player.x, this.player.y, 64); if (s) { this.player.x = s.x; this.player.y = s.y; } } // 家具摆到了人脚下：把人挪到旁边
+  }
+
+  /** 装修托盘占了屏幕底部多少像素：房间缩放到上面剩下的空间里（装修时允许缩到 1 倍） */
+  private reserve = 0;
   private applyZoom() {
-    // 让整间屋子尽量完整可见，但不低于 2 倍
-    const fit = Math.min(this.scale.width / (this.def.w * TILE + 32), this.scale.height / (this.def.h * TILE + 48));
-    let z = 2; for (const c of ZOOMS) if (c <= fit) z = c;
-    const cam = this.cameras.main; cam.setSize(this.scale.width, this.scale.height); cam.setZoom(Math.max(2, z)); // 窗口大小变化时，Phaser 自己的相机尺寸更新可能比这里慢一拍，所以直接按画布尺寸来
+    // 让整间屋子尽量完整可见，但不低于 2 倍（装修时为托盘让位，可以低到 1 倍）
+    const availH = Math.max(120, this.scale.height - this.reserve);
+    const fit = Math.min(this.scale.width / (this.def.w * TILE + 32), availH / (this.def.h * TILE + 48));
+    let z = 2; if (this.reserve) z = Math.max(1, Math.min(5, Math.floor(fit * 2) / 2)); else for (const c of ZOOMS) if (c <= fit) z = c; // 装修时允许半倍缩放（手机竖屏房间放大一点）
+    const cam = this.cameras.main; cam.setSize(this.scale.width, availH); cam.setZoom(this.reserve ? z : Math.max(2, z)); // 窗口大小变化时，Phaser 自己的相机尺寸更新可能比这里慢一拍，所以直接按画布尺寸来
     // 房间比屏幕小时，把相机范围撑到屏幕那么大并让房间居中——否则 Phaser 会把房间贴在屏幕左上角，剩下一大片黑（"室内黑屏"的真正原因）
-    const vw = this.scale.width / cam.zoom, vh = this.scale.height / cam.zoom, rw = this.def.w * TILE, rh = this.def.h * TILE, ex = Math.max(0, vw - rw), ey = Math.max(0, vh - rh);
+    const vw = this.scale.width / cam.zoom, vh = availH / cam.zoom, rw = this.def.w * TILE, rh = this.def.h * TILE, ex = Math.max(0, vw - rw), ey = Math.max(0, vh - rh);
     cam.setBounds(-ex / 2, -ey / 2, rw + ex, rh + ey);
   }
 
@@ -301,7 +344,7 @@ export class InteriorScene extends Phaser.Scene {
     for (const n of this.npcs) { const dd = Math.hypot(n.x - this.player.x, n.y - this.player.y); if (dd < nd) { nd = dd; near = n; } }
     // 横幅等可互动的家具：站在好几个互动区重叠的地方时，选中心最近的那个
     let spot: NonNullable<InteriorDef['interacts']>[number] | null = null, sd = Infinity;
-    if (!near) for (const a of this.def.interacts ?? []) {
+    if (!near) for (const a of [...(this.def.interacts ?? []), ...this.decorTalk]) {
       if (this.player.x < a.x0 || this.player.x > a.x1 || this.player.y < a.y0 || this.player.y > a.y1) continue;
       const dd = Math.hypot((a.x0 + a.x1) / 2 - this.player.x, (a.y0 + a.y1) / 2 - this.player.y);
       if (dd < sd) { sd = dd; spot = a; }
@@ -337,7 +380,7 @@ export class InteriorScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(k.enter) && !this.hud.dialogOpen && !this.registry.get('editorOpen')) this.chat?.focus();
     const tp = this.registry.get('tpUi') as TeleportPanel | undefined;
     if (Phaser.Input.Keyboard.JustDown(k.y) && !this.chat?.typing && !this.registry.get('editorOpen') && !this.dormUi?.anyOpen) tp?.toggle(); // Y：在宿舍里也能打开传送
-    const typing = !!this.chat?.typing, busy = !!tp?.isOpen || !!this.dormUi?.anyOpen || !!this.registry.get('editorOpen') || typing;
+    const typing = !!this.chat?.typing, busy = !!tp?.isOpen || !!this.dormUi?.anyOpen || !!this.registry.get('editorOpen') || typing || !!this.editor?.active;
     if (this.sleeping) {
       const move = !busy && (k.up.isDown || k.down.isDown || k.left.isDown || k.right.isDown || k.w.isDown || k.a.isDown || k.s.isDown || k.d.isDown || Math.abs(joy?.x ?? 0) + Math.abs(joy?.y ?? 0) > 0.3);
       if (move || (tap && !busy)) this.endSleep();
@@ -352,7 +395,7 @@ export class InteriorScene extends Phaser.Scene {
     if (this.leaving) return;
     this.leaving = true; this.registry.set('dormForced', true);
     this.endSleep(false); this.hud.hint(null);
-    this.dormUi?.close(); this.dormUi?.closeChest(); (this.registry.get('tpUi') as TeleportPanel | undefined)?.close();
+    this.editor?.close(); this.dormUi?.close(); this.dormUi?.closeChest(); (this.registry.get('tpUi') as TeleportPanel | undefined)?.close();
     this.cameras.main.fadeOut(240, 20, 14, 10);
     this.cameras.main.once('camerafadeoutcomplete', () => { this.hud.showMinimap(true); this.scene.stop('Interior'); this.scene.wake('World'); });
   }
