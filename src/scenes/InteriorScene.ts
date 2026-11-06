@@ -226,7 +226,7 @@ export class InteriorScene extends Phaser.Scene {
   private addRemote(w: RoomWho) {
     if (w.id === this.selfId || this.remotes.has(w.id)) return;
     const r = new RemotePlayer(this, w.id, w.uid, w.p, w.x, w.y, w.flags);
-    r.applyTitle(w.ttl); if (w.held) r.setHeld(w.held);
+    r.applyTitle(w.ttl); if (w.held) r.setHeld(w.held); if (w.fz) r.setFz(w.fz);
     this.remotes.set(w.id, r);
     this.rt.f = -1; // 新来的人要马上知道我在哪
     if (w.uid === this.visit?.host && this.visit.sleeping) this.showSleeper(r);

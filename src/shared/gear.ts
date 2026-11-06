@@ -138,7 +138,7 @@ export interface Gear {
 export const WAIT_MIN = 0.35, LUCK_MAX = 3, TREASURE_MAX = 3, BAR_MAX = 1.3;
 
 /** extra：钓鱼等级和路线给的加成（bar = 绿条加成的比例，如 0.02；treasure = 盲盒倍率，如 1.3），都不传 = 没有 */
-export function resolveGear(inv: Record<string, number>, eq: Partial<Equip> | undefined, env: GearEnv, extra?: { bar?: number; treasure?: number }): Gear {
+export function resolveGear(inv: Record<string, number>, eq: Partial<Equip> | undefined, env: GearEnv, extra?: { bar?: number; treasure?: number; /** 运气倍数（节日福利等） */ luck?: number }): Gear {
   const rod = pickRod(inv, eq), baitId = pickBait(inv, eq), bait = baitId ? baitDef(baitId) : undefined;
   const tackle = (eq?.tackle ?? []).map((t) => tackleDef(t)).filter((t): t is TackleDef => !!t && (inv[t.id] ?? 0) > 0).slice(0, rod?.slots ?? 0);
   const rp = rod?.perk ?? {};
@@ -151,7 +151,7 @@ export function resolveGear(inv: Record<string, number>, eq: Partial<Equip> | un
   const seasonBoost = bait?.seasonBoost && env.season ? bait.seasonBoost : 1;
   const season = env.season;
   const wait = Math.max(WAIT_MIN, (rod?.wait ?? 1) * (bait?.wait ?? 1) * nightWait * rainWait);
-  const luck = Math.min(LUCK_MAX, (rod?.luck ?? 1) * (bait?.luck ?? 1));
+  const luck = Math.min(LUCK_MAX, (rod?.luck ?? 1) * (bait?.luck ?? 1) * (extra?.luck ?? 1));
   const best = (xs: (number | undefined)[]) => Math.max(...xs.filter((x): x is number => typeof x === 'number'), 0);
   const treasure = Math.min(TREASURE_MAX, Math.max(1, best([rp.treasure, bait?.treasure, ...tackle.map((t) => t.treasure)])) * (extra?.treasure ?? 1));
   const barBonus = Math.max(...tackle.map((t) => (t.bar ?? 1) - 1), 0) + (rp.bar ?? 0) + (extra?.bar ?? 0);

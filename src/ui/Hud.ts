@@ -26,10 +26,11 @@ export class Hud {
     e.textContent = String(n);
     if (up) { box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop'); }
   }
-  setClock(day: number, hhmm: string, phase: string, extra?: { season: string; weather: string; place: string }) {
+  setClock(day: number, hhmm: string, phase: string, extra?: { season: string; weather: string; place: string; fest?: string }) {
     $('clock-day').textContent = extra ? `第 ${day} 天 · ${extra.season}` : `第 ${day} 天`;
     $('clock-time').textContent = hhmm;
     $('clock-phase').textContent = extra ? `${phase} · ${extra.weather}` : phase;
+    const fest = document.getElementById('clock-fest'); if (fest && fest.textContent !== (extra?.fest ?? '')) fest.textContent = extra?.fest ?? '';
     const place = $('clock-place'); // 文字没变就不写 DOM
     const txt = extra ? `📍 ${extra.place}` : '';
     if (place.textContent !== txt) place.textContent = txt;

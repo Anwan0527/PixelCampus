@@ -213,6 +213,7 @@ export class Character {
     } else if (this.umb) { this.umb.destroy(); this.umb = undefined; }
     this.seatStrip?.setDepth(this.y + 0.2);
     this.syncHeld(cx, cy);
+    if (this.syncFz()) lift += this.fzId === 3 ? 10 : 4; // 戴着头饰：昵称牌抬高一点（兔耳朵最高）
     const ty = cy + this.fx.dy;
     if (this.tag) this.tag.setPosition(cx, ty - 37 - lift).setDepth(this.y + 0.5).setVisible(vis);
     const titleH = this.titleTag ? this.titleTag.height + 1 : 0;
@@ -246,7 +247,7 @@ export class Character {
     this.bubbleUntil = this.sprite.scene.time.now + ms;
     this.syncSprite();
   }
-  destroy() { this.heldImg?.destroy(); this.skinToken++; this.skinHandle?.release(); this.umb?.destroy(); this.fishG?.destroy(); this.fishMark?.destroy(); this.seatStrip?.destroy(); this.emoteTxt?.destroy(); this.sprite.scene.tweens.killTweensOf(this.fx); this.sprite.scene.tweens.killTweensOf(this.emo); this.tag?.destroy(); this.titleTag?.destroy(); this.bubble?.destroy(); this.bikeBack?.destroy(); this.bikeFront?.destroy(); this.sprite.destroy(); }
+  destroy() { this.fzImg?.destroy(); this.heldImg?.destroy(); this.skinToken++; this.skinHandle?.release(); this.umb?.destroy(); this.fishG?.destroy(); this.fishMark?.destroy(); this.seatStrip?.destroy(); this.emoteTxt?.destroy(); this.sprite.scene.tweens.killTweensOf(this.fx); this.sprite.scene.tweens.killTweensOf(this.emo); this.tag?.destroy(); this.titleTag?.destroy(); this.bubble?.destroy(); this.bikeBack?.destroy(); this.bikeFront?.destroy(); this.sprite.destroy(); }
   /** 换外观：先显示预置造型（look），有自定义外观（app）就在后台生成，好了再换上 */
   setLook(look: number, app?: Appearance) {
     this.look = look; this.umb?.destroy(); this.umb = undefined;
@@ -262,6 +263,19 @@ export class Character {
     this.moving = false; this.play();
   }
   /** 手持物（0 = 没拿）：图从 'held' 图集取，按朝向挂在手的位置；骑车/坐着/钓鱼/蹲下/打伞时不显示 */
+  /** 节日限定头饰（0 = 没戴）：图是 fz_1..fz_4，底边中点对着头顶；打伞时被伞面遮住就不画 */
+  private fzId = 0; private fzImg?: Phaser.GameObjects.Image;
+  get fz() { return this.fzId; }
+  setFz(c: number) { if (c === this.fzId) return; this.fzId = c; this.fzImg?.destroy(); this.fzImg = undefined; this.syncSprite(); }
+  /** 把头饰摆到头顶；返回是否画了（昵称牌要相应抬高一点） */
+  private syncFz(): boolean {
+    if (!this.fzId || Character.umbrella || this.crouching) { this.fzImg?.setVisible(false); return false; }
+    const key = `fz_${this.fzId}`, sc = this.sprite.scene; if (!sc.textures.exists(key)) return false;
+    const img = this.fzImg ?? (this.fzImg = sc.add.image(0, 0, key).setOrigin(0.5, 1));
+    const bob = this.moving ? Math.round(Math.sin(sc.time.now / 90)) : 0;
+    img.setVisible(true).setPosition(Math.round(this.sprite.x), Math.round(this.sprite.y) - 25 + bob).setDepth(this.y + 0.35);
+    return true;
+  }
   private heldId = 0; private heldImg?: Phaser.GameObjects.Image;
   get held() { return this.heldId; }
   setHeld(id: number) { if (id === this.heldId) return; this.heldId = id; if (!id) { this.heldImg?.destroy(); this.heldImg = undefined; } this.syncSprite(); }

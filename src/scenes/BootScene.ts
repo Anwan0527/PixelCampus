@@ -8,6 +8,7 @@ import { CreateCharacter } from '@/ui/CreateCharacter';
 import { TILE } from '@/core/const';
 import { seasonAt } from '@/shared/season';
 import { makeWeatherTextures } from '@/systems/weather';
+import { makeFestivalTextures } from '@/art/festival';
 import { SkinManager, createCharAnims, type CharsMeta } from '@/art/skins';
 
 function allChunks(w: WorldFile) { const o: string[] = []; for (let cy = 0; cy < w.chunk.rows; cy++) for (let cx = 0; cx < w.chunk.cols; cx++) o.push(`${cx}_${cy}`); return o; }
@@ -68,7 +69,7 @@ export class BootScene extends Phaser.Scene {
   }
   /** 小特效贴图：骑车扬起的尘土、摸猫冒出的爱心（程序画，不占图集） */
   private makeEffectTextures() {
-    makeWeatherTextures(this);
+    makeWeatherTextures(this); makeFestivalTextures(this);
     if (!this.textures.exists('puff')) {
       const c = this.textures.createCanvas('puff', 12, 12)!, g = c.getContext(), r = g.createRadialGradient(6, 6, 0, 6, 6, 6);
       r.addColorStop(0, 'rgba(238,228,206,0.95)'); r.addColorStop(0.55, 'rgba(226,214,188,0.55)'); r.addColorStop(1, 'rgba(220,208,180,0)');

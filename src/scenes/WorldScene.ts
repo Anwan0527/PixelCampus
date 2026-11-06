@@ -52,6 +52,9 @@ import { SoundPanel } from '@/ui/SoundPanel';
 import { AboutPanel, mountWatermark } from '@/ui/AboutPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
 import { CalendarPanel } from '@/ui/CalendarPanel';
+import { FestivalFx } from '@/systems/festival';
+import { festData } from '@/ui/festivalData';
+import { festivalByCode } from '@/shared/calendar';
 import { RunPanel } from '@/ui/RunPanel';
 import { AdminPanel } from '@/ui/AdminPanel';
 import { PartyPanel } from '@/ui/PartyPanel';
@@ -99,7 +102,7 @@ export class WorldScene extends Phaser.Scene {
   private propsKey = 'props';
   private seasonChanging = false;
   private seasonLocked = false; // 开发调试：锁定季节（不跟随服务器时间）
-  private weather!: WeatherFx;
+  private weather!: WeatherFx; private festFx!: FestivalFx; private lastFest = '';
   private lastWx = ''; private lastBow = false;
   private wxPlaceT = 0; private placeText = '';
   private keys!: Keys;
@@ -207,7 +210,7 @@ export class WorldScene extends Phaser.Scene {
     this.world = new WorldMap(this.wf);
     this.season = (this.registry.get('season') as Season | undefined) ?? seasonAt(Date.now());
     this.buildLighting();
-    this.weather = new WeatherFx(this);
+    this.weather = new WeatherFx(this); this.festFx = new FestivalFx(this);
     this.buildStream();
 
     const sp = this.wf.spawn;
@@ -349,7 +352,7 @@ export class WorldScene extends Phaser.Scene {
     this.questUi = new QuestPanel(this.net, {
       onDone: (ids) => { for (const id of ids) { const q = questDef(id); if (q) { this.hud.banner('📋 任务完成', q.name); this.net.system(`📋 任务完成：${q.name}`); sfx('catch'); } } },
     });
-    this.calUi = new CalendarPanel({ now: () => Date.now() + this.clock.offset });
+    this.calUi = new CalendarPanel({ now: () => Date.now() + this.clock.offset, wear: (c) => { if (this.net.status === 'online') this.net.fzSet(c); else this.hud.banner('离线中', '连上服务器才能换节日装扮'); } });
     this.adminUi = new AdminPanel(this.net, this.textures, { openMap: () => { if (!this.hud.mapOpen) this.hud.toggleMap(); }, showCard: (uid) => this.socialUi.showPlayer(uid) });
     // 管理员：大地图上点哪里就传送到哪里（服务器会再检查是不是管理员，并把落点挪到能站的地方）
     this.net.onAdmin((ok) => this.hud.setMapPicker(ok ? (tx, ty) => { this.net.adm({ op: 'tp', x: tx * TILE, y: ty * TILE }); if (this.hud.mapOpen) this.hud.toggleMap(); } : null));
@@ -404,8 +407,14 @@ export class WorldScene extends Phaser.Scene {
       saveProfile(p); this.registry.set('profile', p); this.profileUi.set(p); this.player.setLook(p.look, p.app); this.player.setNameTag(p.name, '#ffe9a0');
     };
     h.friendOn = (_uid, name) => this.net.system(`🟢 您的好友 ${name} 上线了`); // 只有互为好友的才收到，不是公屏广播
-    h.spawn = (id, uid, x, y, flags, p, ttl, held) => this.upsertRemote(id, uid, x, y, flags, p, ttl, held);
+    h.spawn = (id, uid, x, y, flags, p, ttl, held, fz) => this.upsertRemote(id, uid, x, y, flags, p, ttl, held, fz);
     h.held = (pid, hv) => this.remotes.get(pid)?.setHeld(hv);
+    h.fz = (pid, c) => this.remotes.get(pid)?.setFz(c);
+    h.fzState = (own, on, news, gift) => { // 自己的节日装扮：获得了哪些 / 戴着哪个
+      festData.set(own, on); this.player.setFz(on);
+      for (const c of news ?? []) { const f = festivalByCode(c); if (f) { this.hud.banner(`${f.icon} 获得节日装扮`, `${f.costume.name}（日历 · 节日里可以穿上）`); sfx('achieve'); } }
+      for (const g of gift ?? []) this.net.system(`🎁 节日礼物：${itemDef(g.id)?.name ?? g.id} ×${g.n}`);
+    };
     h.titles = (own, sel, fresh) => {
       this.titleUi.set(own, sel); this.profileUi.setTitle(sel);
       const t = titleDef(sel); this.player.setTitle(t ? { name: t.name, color: t.color } : undefined);
@@ -482,11 +491,11 @@ export class WorldScene extends Phaser.Scene {
     const d = heldDef(this.heldId);
     this.hud.banner(d ? `${d.icon} 手里拿着：${d.name}` : '🖐 放下了手里的东西', '再按 V 换下一样');
   }
-  private upsertRemote(id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number) {
+  private upsertRemote(id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number, fz?: number) {
     let r = this.remotes.get(id);
     if (r) r.applyInfo(p);
     else { r = new RemotePlayer(this, id, uid, p, x, y, flags); this.remotes.set(id, r); }
-    r.applyTitle(ttl); r.setHeld(held ?? 0);
+    r.applyTitle(ttl); r.setHeld(held ?? 0); r.setFz(fz ?? 0);
   }
 
   /** 每帧：上报自己的位置（变化才发，最高 15 Hz），并让远程玩家按插值移动 */
@@ -946,11 +955,11 @@ export class WorldScene extends Phaser.Scene {
   private updateClock(dt: number) {
     this.clock.update(dt);
     const now = Date.now() + this.clock.offset;
-    this.weather.update(dt, now);
+    this.weather.update(dt, now); this.festFx.update(dt, now);
     Character.umbrella = this.weather.umbrella;
     Cat.env = { night: this.clock.nightness > 0.6, rain: this.weather.rain > 0.3, snow: this.weather.snow > 0.3 };
-    const t = this.clock.tint(), wm = this.weather.tint;
-    this.tintRect.setFillStyle(Phaser.Display.Color.GetColor(t.r * wm[0], t.g * wm[1], t.b * wm[2]));
+    const t = this.clock.tint(), wm = this.weather.tint, ft = this.festFx.tint;
+    this.tintRect.setFillStyle(Phaser.Display.Color.GetColor(t.r * wm[0] * ft[0], t.g * wm[1] * ft[1], t.b * wm[2] * ft[2]));
     const n = Math.min(1, this.clock.nightness + (this.weather.cloud + this.weather.rain) * 0.12); // 阴雨天路灯亮得早一点
     for (const g of this.glowActive) g.setAlpha(n * 0.9);
     const h = this.clock.minuteOfDay / 60;
@@ -962,7 +971,8 @@ export class WorldScene extends Phaser.Scene {
       this.checkSeason(now);
     }
     const w = this.weather.state, sk = this.weather.sky;
-    this.hud.setClock(this.clock.day, this.clock.hhmm, phase, { season: SEASON_NAME[this.season], weather: `${sk.icon} ${sk.name} ${sk.tempC}°`.trim(), place: this.placeText });
+    this.hud.setClock(this.clock.day, this.clock.hhmm, phase, { season: SEASON_NAME[this.season], weather: `${sk.icon} ${sk.name} ${sk.tempC}°`.trim(), place: this.placeText, fest: this.festFx.current ? `${this.festFx.current.icon} ${this.festFx.current.name}` : '' });
+    { const ff = this.festFx.current; const fid = ff?.id ?? ''; if (fid !== this.lastFest) { if (ff) { this.hud.banner(`${ff.icon} ${ff.name}开始啦`, ff.buff.text); this.net.system(`${ff.icon} ${ff.name}：${ff.blurb}（节日福利：${ff.buff.text}）`); } else if (this.lastFest) this.net.system('节日结束了，下个节日在日历里看看吧'); this.lastFest = fid; } }
     const key = sk.storm ? '雷暴' : sk.fog > 0.3 ? '大雾' : w.name;
     if (key !== this.lastWx) { // 天气变了：聊天栏里说一声（刚进游戏那一次不说）
       if (this.lastWx) {

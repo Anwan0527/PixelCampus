@@ -1,6 +1,7 @@
 import { clockMinutes } from '@/shared/clock';
 import { SEASON_NAME, SEASONS, forecast, nextWet, skyAt, type ForecastItem } from '@/shared/season';
-import { FESTIVAL_DAYS, calendarOf, dateLabel, festivalOfDay, festivalOn, gameDayAt, nextFestival, yearGrid, type Festival } from '@/shared/calendar';
+import { festData } from './festivalData';
+import { FESTIVALS, FESTIVAL_DAYS, calendarOf, dateLabel, festivalOfDay, festivalOn, gameDayAt, nextFestival, yearGrid, type Festival } from '@/shared/calendar';
 import { ui } from './actions';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -22,6 +23,8 @@ function realIn(ms: number): string {
 export interface CalendarHooks {
   /** 校准后的服务器时间（毫秒） */
   now(): number;
+  /** 戴上 / 脱下节日装扮（0 = 脱下） */
+  wear(code: number): void;
 }
 
 /**
@@ -56,6 +59,7 @@ export class CalendarPanel {
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
     (document.getElementById('hud') ?? document.body).append(this.root);
     ui.add({ id: 'calendar', label: '日历', run: () => this.toggle() });
+    festData.subscribe(() => { if (this.isOpen && this.tab === 'cal') this.render(); });
     const clock = document.getElementById('clock');
     if (clock) { clock.classList.add('clickable'); clock.title = '点开看日历和天气预报'; clock.addEventListener('click', () => this.toggle()); }
   }
@@ -146,6 +150,18 @@ export class CalendarPanel {
     if (this.picked) { const x = festivalOn(SEASONS[this.picked.season], this.picked.day); f = x?.f; if (!f) note = `${SEASON_NAME[SEASONS[this.picked.season]]} ${this.picked.day} 日：普通的一天。`; }
     else { const n = nextFestival(day); f = n.f; note = n.active ? `今天正在过${n.f.name}！` : `下一个节日：${n.f.name}（还有 ${n.inDays} 个游戏日）`; }
     b.append(this.festCard(f, note));
+    // 我的节日装扮：节日期间上线自动获得、永久保留，之后随时可以穿
+    const wr = el('div', 'cal-wardrobe');
+    wr.append(el('div', 'cal-h', '🎀 我的节日装扮'));
+    for (const fe of FESTIVALS) {
+      const has = festData.own.includes(fe.costume.code), wearing = festData.on === fe.costume.code;
+      const row = el('div', 'cal-ward-row' + (has ? '' : ' lock'));
+      row.append(el('span', 'cal-ward-ico', fe.icon), el('span', 'cal-ward-name', `${fe.costume.name}　${has ? '' : `（${fe.name}期间上线获得）`}`));
+      const btn = el('button', 'btn' + (has && !wearing ? ' primary' : ''), !has ? '未获得' : wearing ? '脱下' : '穿上'); btn.type = 'button'; btn.disabled = !has;
+      btn.addEventListener('click', () => this.hooks.wear(wearing ? 0 : fe.costume.code));
+      row.append(btn); wr.append(row);
+    }
+    b.append(wr);
   }
   private festCard(f: Festival | undefined, note: string) {
     const box = el('div', 'cal-fest');

@@ -129,3 +129,19 @@ export function yearGrid(year: number): { day: number; season: Season; seasonIdx
     return { day: first + i, season, seasonIdx, dayInSeason, fest: festivalOn(season, dayInSeason) };
   });
 }
+
+// ------------------------------------------------------------------ 节日装扮（存档与校验）
+/** 玩家的节日装扮存档：c = 已获得的装扮编号；on = 现在戴着哪个（0 / 缺省 = 没戴）；g = 上一次领节日礼物的节日轮次 */
+export interface FzSave { c: number[]; on?: number; g?: number }
+export const FZ_CODES: readonly number[] = FESTIVALS.map((f) => f.costume.code);
+export const isFzCode = (c: unknown): c is number => typeof c === 'number' && FZ_CODES.includes(c);
+export function cleanFz(raw: unknown): FzSave | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>, c = Array.isArray(r.c) ? [...new Set(r.c.filter(isFzCode))].sort((a, b) => a - b) : [];
+  const out: FzSave = { c };
+  if (isFzCode(r.on) && c.includes(r.on)) out.on = r.on;
+  if (Number.isInteger(r.g) && (r.g as number) > 0) out.g = r.g as number;
+  return c.length || out.g ? out : undefined;
+}
+/** 装扮编号 → 名字 */
+export const fzName = (code: number): string => festivalByCode(code)?.costume.name ?? '';

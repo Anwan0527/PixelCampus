@@ -23,8 +23,10 @@ import type { ChatStatus, ChatTransport } from './chat';
 
 export interface NetHandlers {
   welcome?: (id: number, x: number, y: number) => void;
-  spawn?: (id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number) => void;
+  spawn?: (id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number, fz?: number) => void;
   held?: (pid: number, h: number) => void;
+  fz?: (pid: number, c: number) => void;
+  fzState?: (own: number[], on: number, news?: number[], gift?: { id: string; n: number }[]) => void;
   despawn?: (id: number) => void;
   snapshot?: (entries: SnapEntry[], now: number) => void;
   correct?: (x: number, y: number) => void;
@@ -248,8 +250,10 @@ export class NetClient implements ChatTransport {
         this.handlers.welcome?.(m.id, m.x, m.y);
         { const t = readAdminToken(); if (t) this.ws?.send(JSON.stringify({ t: 'admin_resume', token: t })); } // 之前登录过管理员：自动恢复
         break;
-      case 'spawn': this.handlers.spawn?.(m.id, m.uid, m.x, m.y, m.flags, m.p, m.ttl, m.held); break;
+      case 'spawn': this.handlers.spawn?.(m.id, m.uid, m.x, m.y, m.flags, m.p, m.ttl, m.held, m.fz); break;
       case 'held': this.handlers.held?.(m.pid, m.h); break;
+      case 'fz': this.handlers.fz?.(m.pid, m.c); break;
+      case 'fz_state': this.handlers.fzState?.(m.own, m.on, m.news, m.gift); break;
       case 'despawn': this.handlers.despawn?.(m.id); break;
       case 'correct': this.handlers.correct?.(m.x, m.y); break;
       case 'chat': this.emit({ id: ++this.seq, kind: 'chat', pid: m.pid, uid: m.uid, from: m.from, hue: m.hue, text: m.text, ts: m.ts, mid: m.mid, ...(m.ch ? { ch: m.ch } : {}) }); break;
@@ -466,6 +470,8 @@ export class NetClient implements ChatTransport {
   sit(on: boolean) { this.tx({ t: 'sit', on }); }
   emote(e: number) { this.tx({ t: 'emote', e }); }
   held(h: number) { this.tx({ t: 'held', h }); }
+  fzGet() { this.tx({ t: 'fz_get' }); }
+  fzSet(c: number) { this.tx({ t: 'fz_set', c }); }
   /** 举报：kind = chat / dm / board / wall / user；ref 见 ReportDialog */
   report(kind: ReportKind, ref: number, reason: number, note?: string, cid?: number, ch?: ChannelId) { this.tx({ t: 'report', kind, ref, reason, ...(note ? { note } : {}), ...(cid ? { cid } : {}), ...(ch && ch !== 'world' ? { ch } : {}) }); }
   /** 管理员控制台操作（服务器会检查你是不是管理员） */

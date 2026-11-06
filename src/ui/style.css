@@ -15,6 +15,8 @@ html, body { margin: 0; height: 100%; background: #1a2a1c; overflow: hidden; fon
 #clock-phase { font-size: 13px; opacity: .8; }
 #clock-place { font-size: 13px; margin-top: 3px; padding-top: 3px; border-top: 2px dotted rgba(107,58,30,.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #clock-place:empty { display: none; }
+#clock-fest { font-size: 13px; margin-top: 3px; color: #a03a1a; font-weight: bold; }
+#clock-fest:empty { display: none; }
 #hint { position: absolute; left: 50%; bottom: 62px; transform: translateX(-50%); font-size: 18px; white-space: nowrap; }
 #controls { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); color: #fff; font-size: 14px; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; white-space: nowrap; opacity: .9; }
 #minimap { position: absolute; left: 22px; bottom: 22px; padding: 4px; width: 200px; height: 156px; transition: all .18s steps(4); pointer-events: auto; cursor: pointer; }
@@ -1021,3 +1023,9 @@ body.touch .cx-gcard canvas { width: 34px; }
 .cal-fest-li { font-size: 13px; opacity: .85; }
 .cal-fest-buff { margin-top: 4px; font-size: 13px; color: #2a6a1a; font-weight: bold; }
 @media (max-width: 520px) { .cal-fc-row { grid-template-columns: 74px 24px 1fr 44px; } .cal-season-name { width: 44px; } }
+.cal-wardrobe { margin-top: 8px; }
+.cal-ward-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; border-bottom: 1px dotted var(--wood-l); }
+.cal-ward-row.lock { opacity: .55; }
+.cal-ward-ico { font-size: 20px; flex: none; width: 26px; text-align: center; }
+.cal-ward-name { flex: 1; min-width: 0; font-size: 14px; }
+.cal-ward-row .btn { padding: 3px 10px; font-size: 14px; }

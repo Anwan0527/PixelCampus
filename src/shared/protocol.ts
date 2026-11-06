@@ -43,7 +43,7 @@ export const PROTOCOL_VERSION = 11;
 export interface CommView { id: CommTier; tier: CommTier; name: string; desc: string; goal: number; prog: number; done: boolean; claimed: boolean; reward: CommReward }
 
 /** 宿舍里的一位玩家（和 spawn 消息同一套字段，位置是屋里的坐标） */
-export interface RoomWho { id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; held?: number }
+export interface RoomWho { id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; held?: number; fz?: number }
 
 export const NET = {
   /** 服务器快照频率（Hz） */
@@ -177,6 +177,9 @@ export type ClientMsg =
   | { t: 'emote'; e: number }
   /** 手持物（编号见 held.ts，0 = 放下）：只是外观，服务器转发给看得见我的人 */
   | { t: 'held'; h: number }
+  /** 节日装扮：要状态 / 戴上（c = 装扮编号，0 = 脱下；没获得的会被拒） */
+  | { t: 'fz_get' }
+  | { t: 'fz_set'; c: number }
   /** 钓鱼：抛竿（朝向取服务器记的）/ 收竿 / 收线放弃；钓鱼图鉴 */
   | { t: 'fish_cast' }
   | { t: 'fish_reel' }
@@ -296,7 +299,7 @@ export type ClientMsg =
 export type ServerMsg =
   | { t: 'welcome'; id: number; uid: number; x: number; y: number; online: number }
   /** ttl = 这个玩家佩戴的称号 id（服务器认定的，没戴就没有这个字段） */
-  | { t: 'spawn'; id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; /** 手持物（没拿就没有这个字段） */ held?: number }
+  | { t: 'spawn'; id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; /** 手持物（没拿就没有这个字段） */ held?: number; /** 节日装扮编号（没戴就没有这个字段） */ fz?: number }
   | { t: 'despawn'; id: number }
   /** ch 不写 = world；party 的话客户端用不同颜色的气泡 */
   | { t: 'chat'; pid: number; uid: number; from: string; hue: number; text: string; ts: number; /** 记录编号（管理员撤回用） */ mid?: number; ch?: ChannelId }
@@ -430,6 +433,10 @@ export type ServerMsg =
   /** 有人（pid = 玩家编号，包括我自己）做了表情 */
   | { t: 'emote'; pid: number; e: number }
   | { t: 'held'; pid: number; h: number }
+  /** 别人的节日装扮变了（c = 编号，0 = 脱下） */
+  | { t: 'fz'; pid: number; c: number }
+  /** 自己的节日装扮：own = 已获得的编号，on = 戴着的；news = 刚获得的（用来弹提示）；gift = 刚领到的节日礼物 */
+  | { t: 'fz_state'; own: number[]; on: number; news?: number[]; gift?: { id: string; n: number }[] }
   /** 全部成就解锁记录（成就 id → 解锁时间）；new = 这次刚解锁的（客户端据此弹提示） */
   | { t: 'ach'; unlocked: Record<string, number>; new?: string[] }
   /** 今天的任务进度；full = 累计做完全部任务的天数；fresh = 这次刚完成的任务（客户端据此弹提示） */

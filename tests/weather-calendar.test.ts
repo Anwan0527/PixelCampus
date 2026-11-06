@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { CLOCK_EPOCH_MS, clockMsAt, clockMinutes } from '../src/shared/clock';
 import { SEASONS, SEASON_DAYS, WEATHER_SLOT_MS, forecast, nextWet, skyAt, weatherOfSlot, weatherAt, FORECAST_EXACT, seasonAt } from '../src/shared/season';
-import { FESTIVALS, FESTIVAL_DAYS, YEAR_DAYS, calendarOf, festivalAt, festivalOfDay, gameDayAt, nextFestival, yearGrid, festivalBuff, festivalDef, festivalByCode } from '../src/shared/calendar';
+import { applySoftCap, XP_SOFT_CAP } from '../src/shared/fishlevel';
+import { resolveGear } from '../src/shared/gear';
+import { cleanFz, fzName, FESTIVALS, FESTIVAL_DAYS, YEAR_DAYS, calendarOf, festivalAt, festivalOfDay, gameDayAt, nextFestival, yearGrid, festivalBuff, festivalDef, festivalByCode } from '../src/shared/calendar';
 
 describe('天气：连续性、细节、预报', () => {
   it('同一时段内不变；概率仍按季节表（晴/阴/雨雪的占比在容许范围内）', () => {
@@ -72,5 +74,23 @@ describe('游戏日历与节日', () => {
   it('yearGrid：24 格，每季 6 格，节日格数对；第 1 年的春夏在开服前（day ≤ 0）', () => {
     const g = yearGrid(1); expect(g).toHaveLength(24); expect(g.filter((x) => x.fest).length).toBe(FESTIVALS.length * FESTIVAL_DAYS);
     expect(g[0].day).toBeLessThanOrEqual(0); expect(g[12].day).toBe(1); expect(g[12].season).toBe('autumn');
+  });
+});
+
+describe('节日装扮存档与福利入口', () => {
+  it('cleanFz：只留认识的装扮编号、戴着的必须已获得；乱数据收敛', () => {
+    expect(cleanFz(null)).toBeUndefined(); expect(cleanFz({ c: [9, 'x'] })).toBeUndefined();
+    expect(cleanFz({ c: [4, 1, 1, 7], on: 4, g: 55 })).toEqual({ c: [1, 4], on: 4, g: 55 });
+    expect(cleanFz({ c: [1], on: 2 })).toEqual({ c: [1] }); // 没获得的不能戴
+    expect(fzName(3)).toBe('玉兔发箍'); expect(fzName(99)).toBe('');
+  });
+  it('经验软上限可以带自定义上限（中秋 700）：同样的当日累计，上限高的拿到更多；默认不变', () => {
+    expect(applySoftCap(590, 20).granted).toBe(applySoftCap(590, 20, XP_SOFT_CAP).granted);
+    expect(applySoftCap(590, 20, 700).granted).toBe(20); expect(applySoftCap(590, 20).granted).toBeLessThan(20);
+  });
+  it('resolveGear 的运气倍数（樱花节）：乘进去、仍受 LUCK_MAX 封顶', () => {
+    const inv = { fishing_rod: 1, bait: 5 }, env = { night: false, rain: false, season: 'spring' as const };
+    const a = resolveGear(inv, undefined, env), b = resolveGear(inv, undefined, env, { luck: 1.05 });
+    expect(b.luck).toBeCloseTo(a.luck * 1.05); expect(resolveGear(inv, undefined, env, { luck: 99 }).luck).toBeLessThanOrEqual(3);
   });
 });
