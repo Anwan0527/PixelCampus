@@ -20,7 +20,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   if (text !== undefined) e.textContent = text;
   return e;
 };
-const KIND: Record<ItemKind, string> = { food: '食物', collect: '收藏品', key: '关键物品', tool: '工具', fish: '鱼', tackle: '钓鱼配件', box: '盲盒' };
+const KIND: Record<ItemKind, string> = { food: '食物', collect: '收藏品', key: '关键物品', tool: '工具', fish: '鱼', tackle: '钓鱼配件', box: '盲盒', decor: '宿舍家具' };
 
 /**
  * 背包：显示服务器上的物品（物品跟着身份走，换设备/用备份码恢复后还在）。

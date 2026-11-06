@@ -10,6 +10,7 @@ import { itemDef, type Inv } from '@/shared/items';
 import type { NetClient } from '@/net/client';
 import type { CommView } from '@/shared/protocol';
 import { drawItem } from './sprites';
+import { DECOR_CATS, decorDef } from '@/shared/decor';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -89,13 +90,14 @@ export class ShopPanel {
 
   private renderBuy() {
     const list = el('div', 'shop-list');
-    const group = (id: string) => (id.startsWith('rod_') || id === 'fishing_rod' ? '🎣 鱼竿' : id.startsWith('tk_') ? '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）' : id.startsWith('bait') ? '🪱 鱼饵' : '🐱 其他');
+    const TK = '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', ORDER = ['🪱 鱼饵', '🎣 鱼竿', TK, '🐱 其他', ...DECOR_CATS.map((c) => `🛋 宿舍家具 · ${c}`)];
+    const group = (id: string) => { const d = decorDef(id); return d ? `🛋 宿舍家具 · ${d.cat}` : id.startsWith('rod_') || id === 'fishing_rod' ? '🎣 鱼竿' : id.startsWith('tk_') ? TK : id.startsWith('bait') ? '🪱 鱼饵' : '🐱 其他'; };
     let last = '';
-    for (const s of [...SHOP].filter((x) => this.mode === 'shop' || FISH_GEAR_IDS.has(x.id)).sort((a, b) => ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(a.id)) - ['🪱 鱼饵', '🎣 鱼竿', '🧷 鱼竿配件（不消耗，要装在带配件槽的鱼竿上）', '🐱 其他'].indexOf(group(b.id)))) {
+    for (const s of [...SHOP].filter((x) => this.mode === 'shop' || FISH_GEAR_IDS.has(x.id)).sort((a, b) => ORDER.indexOf(group(a.id)) - ORDER.indexOf(group(b.id)))) {
       const g = group(s.id); if (g !== last) { list.append(el('div', 'shop-group', g)); last = g; }
       list.append(this.buyRow(s));
     }
-    this.body.append(list, el('div', 'shop-tip', '万能饵、指名饵、神话饵、龙骨竿、寒江竿、并蒂竿不在商店卖：要靠合成或钓鱼时的盲盒。'));
+    this.body.append(list, el('div', 'shop-tip', '万能饵、指名饵、神话饵、龙骨竿、寒江竿、并蒂竿不在商店卖：要靠合成或钓鱼时的盲盒。宿舍家具买回来在自己的宿舍里点「装修」摆放；不想要了可以在「卖鱼」页按原价的一半退货。'));
   }
 
   /** 合成：杂物换鱼饵、小鱼做饵、指名饵、神话饵、龙骨竿（规则在 shared/craft.ts，服务器扣材料和币） */
@@ -176,9 +178,9 @@ export class ShopPanel {
       const row = el('div', 'shop-row'), info = el('div', 'shop-info');
       const mul = r.rarity === 'junk' || !fishDef(r.id) ? 1 : marketMul(day, r.id), trend = mul >= 1.1 ? '行情好 ↑' : mul <= 0.93 ? '行情差 ↓' : '';
       const name = el('div', 'shop-name', `${r.name} ×${r.n}`); name.style.color = r.rarity === 'common' || r.rarity === 'junk' ? '' : RARITY_COLORS[r.rarity];
-      const sub = el('div', 'shop-note', isTrashItem(r.id) ? (r.id === TREASURE_ID ? '垃圾桶里翻出来的好东西' : '垃圾桶里翻出来的') : (EXTRA_SELL[r.id] ? '盲盒、河蚌里得到的小东西' : `${RARITY_NAMES[r.rarity]}${trend ? ` · ${trend}` : ''}`));
+      const sub = el('div', 'shop-note', decorDef(r.id) ? '宿舍家具 · 退货按原价的一半' : isTrashItem(r.id) ? (r.id === TREASURE_ID ? '垃圾桶里翻出来的好东西' : '垃圾桶里翻出来的') : (EXTRA_SELL[r.id] ? '盲盒、河蚌里得到的小东西' : `${RARITY_NAMES[r.rarity]}${trend ? ` · ${trend}` : ''}`));
       info.append(name, sub);
-      const price = el('div', 'shop-price'); price.append(el('span', 'coin-ico'), document.createTextNode(`${r.price} / 条`));
+      const price = el('div', 'shop-price'); price.append(el('span', 'coin-ico'), document.createTextNode(`${r.price} / ${decorDef(r.id) ? '件' : '条'}`));
       const one = el('button', 'btn', '卖 1'), all = el('button', 'btn primary', `全卖 (${r.price * r.n})`);
       for (const b of [one, all]) b.type = 'button';
       one.addEventListener('click', () => this.net.shopSell(r.id, 1));

@@ -6,11 +6,12 @@
  */
 import { FISH } from './fishing';
 import { BAITS, RODS, TACKLES } from './gear';
+import { DECOR } from './decor';
 
 /** 可堆叠物品在背包里一格最多放多少（2026-11-06 起 999；鱼竿、配件等 stack 1 的不变） */
 export const STACK_MAX = 999;
 
-export type ItemKind = 'food' | 'collect' | 'key' | 'tool' | 'fish' | 'tackle' | 'box';
+export type ItemKind = 'food' | 'collect' | 'key' | 'tool' | 'fish' | 'tackle' | 'box' | 'decor';
 export interface ItemDef { id: string; name: string; desc: string; kind: ItemKind; stack: number }
 
 /** 物品目录。新增物品：在这里加一项，并在 tools/art/items.ts 里画同名图标 */
@@ -81,14 +82,16 @@ const FISH2_ITEMS: ItemDef[] = [
   { id: 'relic_history', name: '校史残页', desc: '一页被水泡过的校史，字迹模糊，只能看清"一九……"几个字。', kind: 'collect', stack: STACK_MAX },
   ...FISH.filter((f) => f.blurb).map((f): ItemDef => ({ id: f.id, name: f.name, desc: f.blurb!, kind: 'fish', stack: STACK_MAX })),
 ];
-export const ITEMS: readonly ItemDef[] = [...BASE_ITEMS, ...FISH2_ITEMS];
+/** 宿舍家具：每件家具是一种背包物品（摆上去从背包扣一个，收回来还一个；目录在 decor.ts） */
+const DECOR_ITEMS: ItemDef[] = DECOR.map((d): ItemDef => ({ id: d.id, name: d.name, desc: `${d.note}（${d.cat}${d.kind === 'wall' ? '，挂在北墙上' : d.kind === 'top' ? '，摆在桌面上' : d.kind === 'rug' ? '，铺在地上' : ''}）在宿舍里点「装修」摆放，校园商店有售。`, kind: 'decor', stack: STACK_MAX }));
+export const ITEMS: readonly ItemDef[] = [...BASE_ITEMS, ...FISH2_ITEMS, ...DECOR_ITEMS];
 
 export type ItemId = string;
 export type Inv = Record<string, number>;
 export interface Gain { id: string; n: number }
 
 /** 背包界面的格子数（物品种类不会超过它） */
-export const INV_SLOTS = 128;
+export const INV_SLOTS = 256;
 
 const BY_ID = new Map<string, ItemDef>(ITEMS.map((i) => [i.id, i]));
 export const itemDef = (id: string): ItemDef | undefined => BY_ID.get(id);

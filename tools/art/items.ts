@@ -3,6 +3,10 @@
  * 新增物品：在 ICONS 里加同名的绘制函数。
  */
 import { Img, hex } from './px.ts';
+import { DECOR } from '../../src/shared/decor.ts';
+import { FURNITURE } from './furniture.ts';
+import { OFFICE_FURNITURE } from './furniture-office.ts';
+import { DECOR_FURNITURE } from './furniture-decor.ts';
 
 const O = hex('#2a1f2e');
 
@@ -680,6 +684,23 @@ export const ICONS: Record<string, () => Img> = {
   junk_can: CAN, junk_bottle: BOTTLE,
   trash_paper: PAPER, trash_cup: CUP, trash_wrapper: WRAPPER, trash_peel: PEEL, trash_chopsticks: chopsticks, bin_usb: USB,
 };
+
+/** 宿舍家具的背包图标：把家具精灵按面积平均缩进 16×16（保持比例、居中），再和别的图标一样描边 */
+function decorIcon(k: string): Img {
+  const src = ({ ...FURNITURE, ...OFFICE_FURNITURE, ...DECOR_FURNITURE })[k]().img;
+  const s = Math.max(1, Math.max(src.w, src.h) / 16), nw = Math.max(1, Math.min(16, Math.round(src.w / s))), nh = Math.max(1, Math.min(16, Math.round(src.h / s)));
+  const out = new Img(16, 16), ox = (16 - nw) >> 1, oy = (16 - nh) >> 1;
+  for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {
+    let r = 0, g = 0, b = 0, a = 0, n = 0;
+    for (let sy = Math.floor((y * src.h) / nh); sy < Math.max(Math.floor((y * src.h) / nh) + 1, Math.floor(((y + 1) * src.h) / nh)); sy++)
+      for (let sx = Math.floor((x * src.w) / nw); sx < Math.max(Math.floor((x * src.w) / nw) + 1, Math.floor(((x + 1) * src.w) / nw)); sx++) {
+        const p = src.get(sx, sy); n++; a += p[3]; r += p[0] * p[3]; g += p[1] * p[3]; b += p[2] * p[3];
+      }
+    if (n && a / n >= 110) out.set(ox + x, oy + y, [Math.round(r / a), Math.round(g / a), Math.round(b / a), 255]);
+  }
+  return out;
+}
+for (const d of DECOR) ICONS[d.id] = () => decorIcon(d.k);
 
 /** 成品：描边后的图标 */
 export function buildItemIcon(id: string): Img { return ICONS[id]().outlinedSoft(0.4, [40, 28, 64, 255]); }

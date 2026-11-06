@@ -471,6 +471,8 @@ export class NetClient implements ChatTransport {
   emote(e: number) { this.tx({ t: 'emote', e }); }
   held(h: number) { this.tx({ t: 'held', h }); }
   dormBath(op: 'put' | 'take', id: string, n: number) { this.tx({ t: 'dorm_bath', op, id, n }); }
+  /** 装修：place = 摆一件、move = 挪/转、pick = 收回 */
+  dormLay(m: { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number }) { this.tx({ t: 'dorm_lay', ...m }); }
   fzGet() { this.tx({ t: 'fz_get' }); }
   fzSet(c: number) { this.tx({ t: 'fz_set', c }); }
   /** 举报：kind = chat / dm / board / wall / user；ref 见 ReportDialog */

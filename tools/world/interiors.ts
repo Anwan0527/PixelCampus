@@ -10,7 +10,8 @@ import { DORM_FURNITURE, DORM_INFO } from '../art/furniture-dorm.ts';
 import { Img } from '../art/px.ts';
 import { paintInterior, type InteriorSpec } from '../art/interior-bg.ts';
 import { pack, type PackItem } from '../art/pack.ts';
-import { validateInterior, furnitureLabel } from '../../src/shared/interior.ts';
+import { validateInterior, furnitureLabel, rotInfo } from '../../src/shared/interior.ts';
+import { DECOR_FURNITURE, DECOR_INFO } from '../art/furniture-decor.ts';
 
 const dir = join(ROOT, 'data', 'interiors');
 const specs: InteriorSpec[] = readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')));
@@ -21,18 +22,17 @@ type RotInfo = { fw: number; fh: number; w: number; h: number; mx: number; my: n
 const foot: Record<string, { fw: number; fh: number; w: number; h: number; rots: Record<number, RotInfo> }> = {};
 /** 顺时针转 90°：(x,y) → (H-1-y, x) */
 function rotCW(img: Img): Img { const o = new Img(img.h, img.w); for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) { const si = (y * img.w + x) * 4, di = (x * o.w + (img.h - 1 - y)) * 4; for (let c = 0; c < 4; c++) o.data[di + c] = img.data[si + c]; } return o; }
-for (const [k, mk] of Object.entries({ ...FURNITURE, ...OFFICE_FURNITURE, ...DORM_FURNITURE })) {
+for (const [k, mk] of Object.entries({ ...FURNITURE, ...OFFICE_FURNITURE, ...DORM_FURNITURE, ...DECOR_FURNITURE })) {
   const f = mk();
   sprites.push({ key: k, img: f.img });
-  // 占地矩形在精灵图里的位置：左缘 +1（描边），底缘 = 图底 -1；旋转时跟着转，所以任何朝向占地都对得上格子
-  let rect = { x: 1, y: f.img.h - 1 - f.fh * 16, w: f.fw * 16, h: f.fh * 16 };
-  const rots: Record<number, RotInfo> = { 0: { fw: f.fw, fh: f.fh, w: f.img.w, h: f.img.h, mx: rect.x, my: rect.y } };
+  // 占地矩形在精灵图里的位置（算法在 shared/interior.ts 的 rotInfo，宿舍里摆家具时客户端用同一个）：旋转时跟着转，所以任何朝向占地都对得上格子
+  const rots: Record<number, RotInfo> = { 0: rotInfo(f.fw, f.fh, f.img.w, f.img.h, 0) };
   if (f.fh > 0) { // 墙面挂件（fh=0）不能旋转
     let img = f.img;
     for (const r of [90, 180, 270]) {
-      rect = { x: img.h - (rect.y + rect.h), y: rect.x, w: rect.h, h: rect.w }; img = rotCW(img);
+      img = rotCW(img);
       sprites.push({ key: `${k}@${r}`, img });
-      rots[r] = { fw: rect.w / 16, fh: rect.h / 16, w: img.w, h: img.h, mx: rect.x, my: rect.y };
+      rots[r] = rotInfo(f.fw, f.fh, f.img.w, f.img.h, r);
     }
   }
   foot[k] = { fw: f.fw, fh: f.fh, w: f.img.w, h: f.img.h, rots };
@@ -41,7 +41,7 @@ const atlas = pack(sprites, 512);
 await atlas.img.save(join(GEN, 'atlas-furniture.png'));
 writeFileSync(join(GEN, 'atlas-furniture.json'), JSON.stringify(atlas.json));
 /** 给地图编辑器用的家具目录：脚印、精灵尺寸、各朝向的占地偏移、中文名、分类、能写字的版式（不进游戏） */
-writeFileSync(join(GEN, 'furniture-meta.json'), JSON.stringify(Object.fromEntries(Object.entries(foot).map(([k, v]) => [k, { ...v, name: (FURN_INFO[k] ?? DORM_INFO[k])?.name ?? k, cat: (FURN_INFO[k] ?? DORM_INFO[k])?.cat ?? '其他', top: !!FURN_INFO[k]?.top, ...(FURN_TEXT[k] ? { text: FURN_TEXT[k] } : {}) }]))));
+writeFileSync(join(GEN, 'furniture-meta.json'), JSON.stringify(Object.fromEntries(Object.entries(foot).map(([k, v]) => [k, { ...v, name: (FURN_INFO[k] ?? DORM_INFO[k] ?? DECOR_INFO[k])?.name ?? k, cat: (FURN_INFO[k] ?? DORM_INFO[k] ?? DECOR_INFO[k])?.cat ?? '其他', top: !!FURN_INFO[k]?.top, ...(FURN_TEXT[k] ? { text: FURN_TEXT[k] } : {}) }]))));
 
 const out: any[] = [];
 for (const s of specs) {
@@ -65,7 +65,7 @@ for (const s of specs) {
     objects.push({ k: rot ? `${f.k}@${rot}` : f.k, x: f.x * 16 - ri.mx, y: f.y * 16 - ri.my, depth: f.top ? bottom + (f.dz ?? 24) + 0.1 : bottom }); // 桌面小件：层级抬高，盖在桌子上面
     if (f.interact || f.act) { // 互动区（像素，按脚点判断）：墙面挂件在它下面两格内；有占地的家具在占地外扩一格内
       const wall = ri.fh === 0, x0 = f.x * 16 - 8, x1 = (f.x + ri.fw) * 16 + 8;
-      interacts.push({ x0, x1, y0: wall ? 0 : f.y * 16 - 8, y1: wall ? Math.max((f.y + 3) * 16, 80) : (f.y + ri.fh) * 16 + 16, title: f.text ?? (FURN_INFO[f.k] ?? DORM_INFO[f.k])?.name ?? f.k, text: f.interact ?? '', ...(f.act ? { act: f.act } : {}) });
+      interacts.push({ x0, x1, y0: wall ? 0 : f.y * 16 - 8, y1: wall ? Math.max((f.y + 3) * 16, 80) : (f.y + ri.fh) * 16 + 16, title: f.text ?? (FURN_INFO[f.k] ?? DORM_INFO[f.k] ?? DECOR_INFO[f.k])?.name ?? f.k, text: f.interact ?? '', ...(f.act ? { act: f.act } : {}) });
     }
     const lb = furnitureLabel(f, { ...ri, text: FURN_TEXT[f.k]?.mode }); if (lb) furnLabels.push(lb);
   }

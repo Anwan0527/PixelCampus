@@ -30,6 +30,16 @@ export interface InteriorSpec {
 
 /** 旋转后的占地（格）：90/270 宽高互换 */
 export const rotFoot = (fw: number, fh: number, rot: number = 0) => (rot === 90 || rot === 270 ? { fw: fh, fh: fw } : { fw, fh });
+/**
+ * 一件家具按某个朝向摆放时，占地矩形在精灵图里的位置：mx/my = 占地左上角在精灵图里的像素位置，fw/fh = 旋转后的占地格数，w/h = 旋转后的精灵图尺寸。
+ * 精灵图（带 1px 描边）的约定：占地左缘 = 图左缘 +1，占地底缘 = 图底 −1，精灵可以向上超出；顺时针转 90° 一次：(x,y) → (H−1−y, x)。
+ * 室内编译（tools/world/interiors.ts）和宿舍里摆家具（InteriorScene）共用这一个算法，两边不会对不上。
+ */
+export function rotInfo(fw: number, fh: number, w: number, h: number, rot: number = 0): { fw: number; fh: number; w: number; h: number; mx: number; my: number } {
+  let rect = { x: 1, y: h - 1 - fh * 16, w: fw * 16, h: fh * 16 }, iw = w, ih = h;
+  for (let r = 90; r <= rot && fh > 0; r += 90) { rect = { x: ih - (rect.y + rect.h), y: rect.x, w: rect.h, h: rect.w }; [iw, ih] = [ih, iw]; }
+  return { fw: rect.w / 16, fh: rect.h / 16, w: iw, h: ih, mx: rect.x, my: rect.y };
+}
 /** 家具上写字的版式：h = 横排（横幅、白板），v = 竖排（字画） */
 export type TextMode = 'h' | 'v';
 /**

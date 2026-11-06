@@ -9,6 +9,7 @@
 import { itemDef, type Inv } from './items';
 import { fishDef, type Rarity } from './fishing';
 import { cleanText } from './profile';
+import { cleanLay, decorDef, defaultLay, layError, type Placed, type Rot } from './decor';
 
 export const DORM = {
   /** 宝箱最多放几种物品 / 每种最多放多少 */
@@ -50,6 +51,8 @@ export interface DormSave {
   n?: string;
   /** 浴缸：养在里面的鱼（物品 id → 条数）。放进去的鱼不在背包里，所以不能卖、不能交易；随时可以取回 */
   bt?: Inv;
+  /** 家具摆放（装修过才有；没有 = 用原来的默认布局 defaultLay）。摆在房间里的家具不在背包里，收回来才还给背包 */
+  lay?: Placed[];
 }
 
 /** 宿舍房间的尺寸与门（和 data/interiors/dorm.json 一致，测试里核对）：服务器据此限定屋里的位置范围、给新进屋的人定出生点 */
@@ -96,6 +99,7 @@ export function cleanDorm(raw: unknown): DormSave | undefined {
   { const bt = cleanBath(r.bt); if (Object.keys(bt).length) out.bt = bt; }
   if (r.ac === 1 || r.ac === 2) out.ac = r.ac;
   const ch = cleanChest(r.ch); if (Object.keys(ch).length) out.ch = ch;
+  { const lay = cleanLay(r.lay); if (lay) out.lay = lay; }
   return Object.keys(out).length ? out : undefined;
 }
 
@@ -208,3 +212,45 @@ export function bathView(bath: Inv | undefined): BathView {
 export const glowTier = (v: BathView): number => { for (let i = v.r.length - 1; i >= 0; i--) if (v.r[i] > 0) return i + 1; return 0; };
 /** 闪光的密度 0..1：发光的鱼越多越密（封顶） */
 export const glowDensity = (v: BathView): number => Math.min(1, 0.15 + v.r.reduce((a, b) => a + b, 0) / 40);
+
+// ------------------------------------------------------------------ 装修（家具摆放）
+/** 房间里现在的摆放：装修过就用存档里的，没装修过用原来的默认布局 */
+export const layOf = (d: DormSave | undefined): Placed[] => d?.lay ?? defaultLay();
+
+export type LayOp = { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number };
+const asRot = (r: unknown): Rot | undefined => (r === 90 || r === 180 || r === 270 ? r : undefined);
+
+/**
+ * 装修一步（原地修改存档 d 和背包 inv；校验失败什么都不改）：
+ * place = 从背包拿一件摆上去；move = 把已摆的一件挪个位置/转个方向；pick = 收回背包。
+ * 摆完整体再校验一遍（layError：不重叠、不堵路、小件在桌上…），所以改任何一件都不会让房间变成非法状态。
+ */
+export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: string } {
+  const cur = layOf(d), bad = (msg: string) => ({ ok: false, msg });
+  let next: Placed[], done: string;
+  if (op.op === 'place') {
+    const def = decorDef(op.d); if (!def) return bad('没有这件家具');
+    if ((inv[def.id] ?? 0) < 1) return bad(`背包里没有${def.name}`);
+    const p: Placed = { d: def.id, x: op.x, y: op.y }; const r = asRot(op.r); if (r) p.r = r;
+    next = [...cur, p]; done = `摆上了${def.name}`;
+    const err = layError(next); if (err) return bad(err);
+    inv[def.id] -= 1; if (inv[def.id] <= 0) delete inv[def.id];
+  } else {
+    if (!Number.isInteger(op.i) || op.i < 0 || op.i >= cur.length) return bad('找不到这件家具');
+    const old = cur[op.i], def = decorDef(old.d)!;
+    if (op.op === 'move') {
+      const p: Placed = { d: old.d, x: op.x, y: op.y }; const r = asRot(op.r); if (r) p.r = r;
+      next = cur.map((q, i) => (i === op.i ? p : q)); done = `挪好了${def.name}`;
+      const err = layError(next); if (err) return bad(err);
+    } else {
+      if (def.surface && cur.some((q) => decorDef(q.d)?.kind === 'top' && q.x >= old.x && q.y >= old.y && q.x < old.x + def.fw && q.y < old.y + def.fh)) return bad('桌子上还有东西，先把桌上的小件收起来');
+      const have = inv[def.id] ?? 0; if (have + 1 > STACKCAP) return bad(`背包里的${def.name}放不下了`);
+      next = cur.filter((_, i) => i !== op.i); done = `收回了${def.name}`;
+      const err = layError(next); if (err) return bad(err);
+      inv[def.id] = have + 1;
+    }
+  }
+  d.lay = next;
+  return { ok: true, msg: done };
+}
+const STACKCAP = 999;

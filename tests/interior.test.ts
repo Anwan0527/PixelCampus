@@ -5,11 +5,12 @@ import { validateInterior, rotFoot, furnitureLabel, type InteriorSpec } from '..
 import { FURNITURE } from '../tools/art/furniture';
 import { OFFICE_FURNITURE, FURN_INFO } from '../tools/art/furniture-office';
 import { DORM_FURNITURE } from '../tools/art/furniture-dorm';
+import { DECOR_FURNITURE } from '../tools/art/furniture-decor';
 import { GEN } from '../tools/paths';
 
 const DIR = join(__dirname, '..', 'data', 'interiors');
 const specs: InteriorSpec[] = readdirSync(DIR).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(join(DIR, f), 'utf8')));
-const ALL = { ...FURNITURE, ...OFFICE_FURNITURE, ...DORM_FURNITURE };
+const ALL = { ...FURNITURE, ...OFFICE_FURNITURE, ...DORM_FURNITURE, ...DECOR_FURNITURE };
 const known = new Set(Object.keys(ALL));
 const foot = (k: string, rot = 0) => { const f = ALL[k](); return rotFoot(f.fw, f.fh, rot); };
 

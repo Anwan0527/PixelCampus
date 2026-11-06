@@ -6,6 +6,7 @@
 import { FISH, fishDef, type FishDef, type Rarity } from './fishing';
 import { TACKLES } from './gear';
 import { itemDef } from './items';
+import { DECOR, decorRefund } from './decor';
 import { TREASURE_ID, TRASH_ONLY, trashPrice } from './trash';
 
 /** 日期编号：东八区的"第几天"，换日以北京时间 0 点为界（和服务器 progress.dayNo 一致） */
@@ -35,6 +36,7 @@ export const EXTRA_SELL: Readonly<Record<string, number>> = { pearl: 120, relic_
 /** 今天卖一条这个物品能得多少币；不收的东西返回 0 */
 export function sellPrice(id: string, day: number, bonus = 0): number {
   if (EXTRA_SELL[id]) return EXTRA_SELL[id];
+  { const r = decorRefund(id); if (r) return r; } // 宿舍家具：商店按原价的一半收回（没有行情、没有加成）
   const tp = trashPrice(id); // 翻垃圾桶翻出来的东西：垃圾 1 币、U 盘 999 币，没有行情
   if (tp) return tp;
   const d = fishDef(id);
@@ -87,6 +89,7 @@ export const SHOP: readonly ShopItem[] = [
   { id: 'rod_pickup', n: 1, price: 1500, note: '拾遗竿：更容易钓到盲盒' },
   { id: 'rod_golden', n: 1, price: 1800, note: '金龙鱼竿：拉鱼大幅放宽、咬钩最快、稀有鱼显著增多' },
   ...TACKLES.map((t) => ({ id: t.id, n: 1, price: t.price, note: `${t.eff}（配件，不消耗；要有带配件槽的鱼竿才能装）` })),
+  ...DECOR.filter((d) => d.price > 0).map((d) => ({ id: d.id, n: 1, price: d.price, note: d.note })), // 宿舍家具（图书馆广场的校园商店卖）
 ];
 const SHOP_BY_ID = new Map(SHOP.map((s) => [s.id, s]));
 export const shopItem = (id: unknown): ShopItem | undefined => (typeof id === 'string' ? SHOP_BY_ID.get(id) : undefined);
@@ -94,12 +97,13 @@ export const shopItem = (id: unknown): ShopItem | undefined => (typeof id === 's
 export const CAT_BED_GAIN = 20;
 
 /** 该件东西在背包里能不能卖（收鱼、杂物，和翻垃圾桶翻出来的东西） */
-export const sellable = (id: string): boolean => !!fishDef(id) || trashPrice(id) > 0 || (EXTRA_SELL[id] ?? 0) > 0;
+export const sellable = (id: string): boolean => !!fishDef(id) || trashPrice(id) > 0 || (EXTRA_SELL[id] ?? 0) > 0 || decorRefund(id) > 0;
 /** 一键卖出收的东西：杂物、常见、少见的鱼，和翻出来的垃圾（U 盘舍不得，要卖手动点） */
 export const bulkSellable = (id: string): boolean => { const d = fishDef(id); return d ? BULK_RARITIES.includes(d.rarity) : TRASH_ONLY.includes(id); };
 export function sellList(inv: Record<string, number>, day: number, bonus = 0): { id: string; name: string; n: number; price: number; rarity: Rarity }[] {
   const out: { id: string; name: string; n: number; price: number; rarity: Rarity }[] = FISH.filter((f) => (inv[f.id] ?? 0) > 0).map((f) => ({ id: f.id, name: f.name, n: inv[f.id], price: sellPrice(f.id, day, bonus), rarity: f.rarity }));
   for (const id of [...Object.keys(EXTRA_SELL), ...TRASH_ONLY, TREASURE_ID]) if ((inv[id] ?? 0) > 0) out.push({ id, name: itemDef(id)?.name ?? id, n: inv[id], price: sellPrice(id, day), rarity: id === TREASURE_ID || EXTRA_SELL[id] ? 'rare' : 'junk' });
+  for (const d of DECOR) if ((inv[d.id] ?? 0) > 0) out.push({ id: d.id, name: d.name, n: inv[d.id], price: decorRefund(d.id), rarity: 'rare' }); // 宿舍家具：退货（原价的一半）
   return out;
 }
 /** 钓具摊（精工湖边）卖的东西：商店里所有钓鱼相关的商品（鱼竿 / 鱼饵 / 配件）；图书馆广场的商店照旧卖全部 */

@@ -7,6 +7,7 @@ import { Img, Rng, hex, type RGBA } from './px.ts';
 import { PAL } from './palette.ts';
 import type { Furn } from './furniture.ts';
 import { DORM_INFO } from './furniture-dorm.ts';
+import { DECOR_INFO } from './furniture-decor.ts';
 
 const OUT = PAL.outline;
 const W = PAL.wood, M = PAL.metal;
@@ -225,4 +226,5 @@ export const FURN_INFO: Record<string, { name: string; cat: (typeof FURN_CATS)[n
   shelf1: { name: '书架1', cat: '图书馆' }, shelf2: { name: '书架2', cat: '图书馆' }, shelf3: { name: '书架3', cat: '图书馆' }, shelf4: { name: '书架4', cat: '图书馆' },
   counter3: { name: '柜台3', cat: '食堂' }, counter5: { name: '柜台5', cat: '食堂' }, foodcounter5: { name: '打饭窗口5', cat: '食堂' }, foodcounter7: { name: '打饭窗口7', cat: '食堂' },
   ...DORM_INFO, // 宿舍家具（单人床/衣柜/宝箱…），画在 furniture-dorm.ts
+  ...DECOR_INFO, // 宿舍商店卖的装饰家具，画在 furniture-decor.ts
 };
