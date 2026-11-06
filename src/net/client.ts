@@ -470,6 +470,7 @@ export class NetClient implements ChatTransport {
   sit(on: boolean) { this.tx({ t: 'sit', on }); }
   emote(e: number) { this.tx({ t: 'emote', e }); }
   held(h: number) { this.tx({ t: 'held', h }); }
+  dormBath(op: 'put' | 'take', id: string, n: number) { this.tx({ t: 'dorm_bath', op, id, n }); }
   fzGet() { this.tx({ t: 'fz_get' }); }
   fzSet(c: number) { this.tx({ t: 'fz_set', c }); }
   /** 举报：kind = chat / dm / board / wall / user；ref 见 ReportDialog */

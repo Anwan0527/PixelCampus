@@ -1029,3 +1029,5 @@ body.touch .cx-gcard canvas { width: 34px; }
 .cal-ward-ico { font-size: 20px; flex: none; width: 26px; text-align: center; }
 .cal-ward-name { flex: 1; min-width: 0; font-size: 14px; }
 .cal-ward-row .btn { padding: 3px 10px; font-size: 14px; }
+.bath-glow { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; min-height: 22px; }
+.bath-chip { border: 2px solid; padding: 0 8px; font-size: 13px; font-weight: bold; background: var(--paper-d); }

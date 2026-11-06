@@ -7,11 +7,14 @@
  * 校验都在这里，服务器不信任客户端。
  */
 import { itemDef, type Inv } from './items';
+import { fishDef, type Rarity } from './fishing';
 import { cleanText } from './profile';
 
 export const DORM = {
   /** 宝箱最多放几种物品 / 每种最多放多少 */
   CHEST_KINDS: 24, CHEST_STACK: 999,
+  /** 浴缸：最多养几种鱼 / 每种最多几条（只是展示用，不是第二个仓库） */
+  BATH_KINDS: 12, BATH_STACK: 99,
   /** 睡觉：从 0 血睡到满血要多久（毫秒）。长椅 4 秒回满、自然恢复 10 分钟回满，这里夹在中间，算"慢慢恢复" */
   SLEEP_FULL_MS: 90000,
   /** 睡觉的最长时长（毫秒）：超过就自动起床（防止挂机一直占着服务器上的计时） */
@@ -45,6 +48,8 @@ export interface DormSave {
   ch?: Inv;
   /** 门牌：房主给宿舍起的名字（最多 8 个字） */
   n?: string;
+  /** 浴缸：养在里面的鱼（物品 id → 条数）。放进去的鱼不在背包里，所以不能卖、不能交易；随时可以取回 */
+  bt?: Inv;
 }
 
 /** 宿舍房间的尺寸与门（和 data/interiors/dorm.json 一致，测试里核对）：服务器据此限定屋里的位置范围、给新进屋的人定出生点 */
@@ -88,6 +93,7 @@ export function cleanDorm(raw: unknown): DormSave | undefined {
   if (isDormName(r.b)) out.b = r.b;
   if (Number.isInteger(r.bd) && (r.bd as number) > 0) out.bd = r.bd as number;
   { const n = cleanTitle(r.n); if (n) out.n = n; }
+  { const bt = cleanBath(r.bt); if (Object.keys(bt).length) out.bt = bt; }
   if (r.ac === 1 || r.ac === 2) out.ac = r.ac;
   const ch = cleanChest(r.ch); if (Object.keys(ch).length) out.ch = ch;
   return Object.keys(out).length ? out : undefined;
@@ -144,3 +150,61 @@ export function atDormDoor(name: string, tx: number, ty: number, buildings: read
   for (const b of buildings) if (b.name === name) for (const d of b.doors ?? []) if (tx >= d.x - 0.5 - slack && tx <= d.x + d.w + 0.5 + slack && ty >= d.y - 0.3 - slack && ty <= d.y + d.h + slack) return true;
   return false;
 }
+
+// ------------------------------------------------------------------ 浴缸
+/** 能放进浴缸的：钓上来的鱼（杂物不算）。稀有度越高，缸里越闪 */
+export const isBathFish = (id: unknown): id is string => { const d = typeof id === 'string' ? fishDef(id) : undefined; return !!d && d.rarity !== 'junk' && !!itemDef(d.id); };
+/** 会发光的稀有度（常见的鱼只是在缸里游，不发光） */
+export const GLOW_RARITIES = ['uncommon', 'rare', 'epic', 'legendary', 'mythic'] as const satisfies readonly Rarity[];
+/** 闪光的颜色：少见绿 / 稀有蓝 / 史诗紫 / 传说金 / 神话彩虹（界面和宿舍场景共用） */
+export const GLOW_COLORS: Record<(typeof GLOW_RARITIES)[number], string> = { uncommon: '#7ad28a', rare: '#6aa8ff', epic: '#c08aff', legendary: '#ffd24a', mythic: '#ff7a8a' };
+
+export function cleanBath(raw: unknown): Inv {
+  const out: Inv = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [id, n] of Object.entries(raw as Record<string, unknown>)) {
+    if (!isBathFish(id) || typeof n !== 'number' || !Number.isFinite(n)) continue;
+    const v = Math.min(DORM.BATH_STACK, Math.floor(n));
+    if (v >= 1) out[id] = v;
+    if (Object.keys(out).length >= DORM.BATH_KINDS) break;
+  }
+  return out;
+}
+
+/** 浴缸存取（原地修改 bath 与 inv）：只收鱼；放进去后背包里就没有了（所以不能卖、不能交易），取回才有 */
+export function bathMove(bath: Inv, inv: Inv, op: 'put' | 'take', id: unknown, n: unknown): { ok: boolean; msg: string; moved: number } {
+  const d = typeof id === 'string' ? itemDef(id) : undefined;
+  if (!d) return { ok: false, msg: '没有这种东西', moved: 0 };
+  if (!isBathFish(d.id)) return { ok: false, msg: `${d.name}不能放进浴缸（只能养钓上来的鱼）`, moved: 0 };
+  if (!Number.isInteger(n) || (n as number) < 1 || (n as number) > 999) return { ok: false, msg: '数量不对', moved: 0 };
+  const want = n as number;
+  if (op === 'put') {
+    const have = inv[d.id] ?? 0; if (have < 1) return { ok: false, msg: `背包里没有${d.name}`, moved: 0 };
+    if (!(d.id in bath) && Object.keys(bath).length >= DORM.BATH_KINDS) return { ok: false, msg: `浴缸里最多养 ${DORM.BATH_KINDS} 种鱼，已经满了`, moved: 0 };
+    const room = DORM.BATH_STACK - (bath[d.id] ?? 0);
+    const k = Math.min(want, have, room); if (k < 1) return { ok: false, msg: `浴缸里的${d.name}已经够多了（每种最多 ${DORM.BATH_STACK} 条）`, moved: 0 };
+    inv[d.id] = have - k; if (inv[d.id] <= 0) delete inv[d.id];
+    bath[d.id] = (bath[d.id] ?? 0) + k;
+    return { ok: true, msg: `放进浴缸：${d.name} ×${k}`, moved: k };
+  }
+  const have = bath[d.id] ?? 0; if (have < 1) return { ok: false, msg: `浴缸里没有${d.name}`, moved: 0 };
+  const room = d.stack - (inv[d.id] ?? 0);
+  const k = Math.min(want, have, room); if (k < 1) return { ok: false, msg: `背包里的${d.name}已经拿满了`, moved: 0 };
+  inv[d.id] = (inv[d.id] ?? 0) + k;
+  bath[d.id] = have - k; if (bath[d.id] <= 0) delete bath[d.id];
+  return { ok: true, msg: `取回来：${d.name} ×${k}`, moved: k };
+}
+
+/** 给场景和访客看的浴缸概览：r = 少见/稀有/史诗/传说/神话各有几条；f = 最多 6 种在缸里游的鱼（稀有度高的优先） */
+export interface BathView { r: number[]; f: string[] }
+const RANK: Record<string, number> = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
+export function bathView(bath: Inv | undefined): BathView {
+  const r = GLOW_RARITIES.map(() => 0), list: { id: string; rank: number; n: number }[] = [];
+  for (const [id, n] of Object.entries(bath ?? {})) { const d = fishDef(id); if (!d || !(n >= 1)) continue; const rank = RANK[d.rarity] ?? 0; if (rank >= 1) r[rank - 1] += n; list.push({ id, rank, n }); }
+  list.sort((a, b) => b.rank - a.rank || b.n - a.n || (a.id < b.id ? -1 : 1));
+  return { r, f: list.slice(0, 6).map((x) => x.id) };
+}
+/** 最高的发光稀有度：0 = 没有会发光的鱼，1..5 = 少见..神话 */
+export const glowTier = (v: BathView): number => { for (let i = v.r.length - 1; i >= 0; i--) if (v.r[i] > 0) return i + 1; return 0; };
+/** 闪光的密度 0..1：发光的鱼越多越密（封顶） */
+export const glowDensity = (v: BathView): number => Math.min(1, 0.15 + v.r.reduce((a, b) => a + b, 0) / 40);

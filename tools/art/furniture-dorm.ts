@@ -76,6 +76,19 @@ export function dchest(): Furn {
   return f(img, 1, 1);
 }
 
+/** 浴缸（3×2 格脚印）：白瓷缸身 + 一池清水 + 左上角的水龙头 + 两只铜脚；缸里的鱼和闪光由宿舍场景在上面现画（水面在精灵里的 (4,12)–(43,25)） */
+export function dbath(): Furn {
+  const img = new Img(48, 36);
+  const P: RGBA[] = ['#aab4c0', '#d4dce6', '#eef2f6', '#ffffff'].map((c) => hex(c)), WT: RGBA[] = ['#4a98c8', '#6fb8e0', '#9ad4f0'].map((c) => hex(c));
+  img.rect(3, 0, 3, 9, M[2]); img.rect(3, 0, 9, 3, M[2]); img.hline(3, 0, 9, M[3]); img.rect(10, 3, 2, 3, M[1]); // 水龙头
+  img.rect(0, 8, 48, 24, P[2]); img.hline(0, 8, 48, P[3]); img.hline(0, 9, 48, P[1]); // 缸身 + 缸沿
+  img.rect(4, 12, 40, 14, WT[1]); img.rect(4, 12, 40, 2, WT[0]); img.hline(8, 18, 10, WT[2]); img.hline(26, 21, 14, WT[2]); // 水
+  img.hline(4, 11, 40, P[0]); img.vline(4, 12, 14, P[0]); img.vline(43, 12, 14, P[1]);
+  img.rect(0, 26, 48, 6, P[1]); img.hline(0, 31, 48, P[0]); img.vline(0, 10, 22, P[1]); img.vline(47, 10, 22, P[0]);
+  img.rect(3, 32, 4, 4, hex('#c9a43c')); img.rect(41, 32, 4, 4, hex('#c9a43c')); img.hline(3, 32, 4, hex('#f0d56a')); img.hline(41, 32, 4, hex('#f0d56a')); // 铜脚
+  return f(img, 3, 2);
+}
+
 /** 门牌（墙面挂件，5×0 格）：木框 + 米色底，两根挂绳；上面的字由宿舍场景按房主起的名字现写 */
 export function dsign(): Furn {
   const img = new Img(80, 18);
@@ -86,7 +99,7 @@ export function dsign(): Furn {
   return f(img, 5, 0);
 }
 
-export const DORM_FURNITURE: Record<string, () => Furn> = { dbed, dbed_cover: dbedCover, dwardrobe, dchest, dsign };
+export const DORM_FURNITURE: Record<string, () => Furn> = { dbed, dbed_cover: dbedCover, dwardrobe, dchest, dsign, dbath };
 export const DORM_INFO: Record<string, { name: string; cat: '桌椅' | '柜子电器' | '墙面挂件' | '其他' }> = {
-  dbed: { name: '单人床', cat: '柜子电器' }, dbed_cover: { name: '被子（睡觉时盖住人，别摆）', cat: '其他' }, dwardrobe: { name: '衣柜', cat: '柜子电器' }, dchest: { name: '宝箱', cat: '柜子电器' }, dsign: { name: '门牌（房主可改名）', cat: '墙面挂件' },
+  dbed: { name: '单人床', cat: '柜子电器' }, dbed_cover: { name: '被子（睡觉时盖住人，别摆）', cat: '其他' }, dwardrobe: { name: '衣柜', cat: '柜子电器' }, dbath: { name: '浴缸（放鱼）', cat: '柜子电器' }, dchest: { name: '宝箱', cat: '柜子电器' }, dsign: { name: '门牌（房主可改名）', cat: '墙面挂件' },
 };

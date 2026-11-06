@@ -8,7 +8,7 @@ export const INTERIOR_THEMES: { k: string; name: string }[] = [
 export interface InteriorWindow { x: number; w: number; curtain?: boolean }
 export interface InteriorLabel { text: string; x: number; y: number; size?: number; color?: string }
 export type Rot = 0 | 90 | 180 | 270;
-export interface InteriorFurn { k: string; x: number; y: number; /** 顺时针旋转角度（缺省 0）；90/270 时占地的宽高互换 */ rot?: Rot; /** 横幅/字画/白板上的字（由 Phaser 文字牌画在家具上） */ text?: string; /** 走近按 E 弹出的话（互动）；标题用家具上的字或家具名 */ interact?: string; /** 宿舍专用的动作：床（睡觉）、空调（开关/制冷/制热）、衣柜（换装）、宝箱（仓库）；走近按 E 触发，由宿舍场景处理 */ act?: 'bed' | 'ac' | 'wardrobe' | 'chest' | 'sign'; /** 摆在桌面上的小件：不占地、画在桌子上面 */ top?: boolean; /** top 小件的层级抬高（像素），缺省 24 */ dz?: number }
+export interface InteriorFurn { k: string; x: number; y: number; /** 顺时针旋转角度（缺省 0）；90/270 时占地的宽高互换 */ rot?: Rot; /** 横幅/字画/白板上的字（由 Phaser 文字牌画在家具上） */ text?: string; /** 走近按 E 弹出的话（互动）；标题用家具上的字或家具名 */ interact?: string; /** 宿舍专用的动作：床（睡觉）、空调（开关/制冷/制热）、衣柜（换装）、宝箱（仓库）；走近按 E 触发，由宿舍场景处理 */ act?: 'bed' | 'ac' | 'wardrobe' | 'chest' | 'sign' | 'bath'; /** 摆在桌面上的小件：不占地、画在桌子上面 */ top?: boolean; /** top 小件的层级抬高（像素），缺省 24 */ dz?: number }
 /** 房间内的玻璃隔断（竖向，一格厚）：x 列、y0~y1 行（含两端），gap = 隔断上留的"内部门"（从第 y 行起、高 h 格） */
 export interface InteriorPartition { x: number; y0: number; y1: number; gap?: { y: number; h: number } }
 export interface InteriorNpc { look: number; x: number; y: number; name: string; facing?: 'down' | 'up' | 'left' | 'right'; lines: string[] }
@@ -65,7 +65,7 @@ export function validateInterior(j: unknown, known: ReadonlySet<string>): string
     else if (f.dz !== undefined && (!num(f.dz) || f.dz < 0 || f.dz > 200)) err.push(`furniture[${i}]: dz 不合法`);
     else if (f.rot !== undefined && ![0, 90, 180, 270].includes(f.rot)) err.push(`furniture[${i}]: 旋转只能是 0/90/180/270`);
     else if (f.interact !== undefined && (typeof f.interact !== 'string' || !f.interact || f.interact.length > 120)) err.push(`furniture[${i}]: 互动文字 1~120 字`);
-    else if (f.act !== undefined && !['bed', 'ac', 'wardrobe', 'chest', 'sign'].includes(f.act)) err.push(`furniture[${i}]: act 只能是 bed/ac/wardrobe/chest/sign`);
+    else if (f.act !== undefined && !['bed', 'ac', 'wardrobe', 'chest', 'sign', 'bath'].includes(f.act)) err.push(`furniture[${i}]: act 只能是 bed/ac/wardrobe/chest/sign/bath`);
     else if (f.text !== undefined && (typeof f.text !== 'string' || f.text.length > 16)) err.push(`furniture[${i}]: 文字最多 16 字`);
   });
   if (s.windows !== undefined) {

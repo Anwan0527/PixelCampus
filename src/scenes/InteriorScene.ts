@@ -12,12 +12,14 @@ import type { ChatPanel } from '@/ui/ChatPanel';
 import type { Profile } from '@/shared/profile';
 import { AC_NAMES, roomTitle } from '@/shared/dorm';
 import { RemotePlayer } from '@/entities/RemotePlayer';
+import { BathFx } from '@/systems/bathfx';
+import type { BathView } from '@/shared/dorm';
 import { packFlags, type RoomWho, type ServerMsg } from '@/shared/protocol';
 
 export interface InteriorDef {
   id: string; name: string; w: number; h: number; bg: string; desc?: string;
   labels?: { text: string; x: number; y: number; size?: number; color?: string }[];
-  interacts?: { x0: number; x1: number; y0: number; y1: number; title: string; text: string; act?: 'bed' | 'ac' | 'wardrobe' | 'chest' | 'sign' }[];
+  interacts?: { x0: number; x1: number; y0: number; y1: number; title: string; text: string; act?: 'bed' | 'ac' | 'wardrobe' | 'chest' | 'sign' | 'bath' }[];
   collision: string[];
   objects: { k: string; x: number; y: number; depth: number }[];
   npcs: { look: number; x: number; y: number; name: string; facing?: 'down' | 'up' | 'left' | 'right'; lines: string[] }[];
@@ -102,11 +104,12 @@ export class InteriorScene extends Phaser.Scene {
     const ac = this.def.objects.find((o) => o.k === 'ac'), bed = this.def.objects.find((o) => o.k === 'dbed');
     if (ac) { this.acVent = { x: ac.x + 18, y: ac.y + 13 }; this.acLed = this.add.rectangle(ac.x + 28.5, ac.y + 5, 5, 2, 0x3f9a58).setDepth(ac.depth + 1); }
     if (bed) this.bed = { px: bed.x, py: bed.y, wx: bed.x + 17, wy: bed.y + 71 }; // wx/wy = 起床后站的位置（床尾外面，再用 standNear 找个真能站的）
+    const bath = this.def.objects.find((o) => o.k === 'dbath'); if (bath) this.bathFx = new BathFx(this, bath.x, bath.y, bath.depth);
     const sg = this.def.objects.find((o) => o.k === 'dsign');
     if (sg) { this.signAt = { x: sg.x + 41, y: sg.y + 11 }; this.signText = this.add.text(this.signAt.x, this.signAt.y, '', { fontFamily: 'ArkPixel', fontSize: '10px', color: '#4a2e14' }).setOrigin(0.5).setDepth(9000); }
     this.hostName = this.visit?.hostName ?? ((this.registry.get('profile') as Profile | undefined)?.name ?? '');
     if (this.visit) { // 我是访客：屋里的状态来自房主（空调、门牌、房主睡没睡），屋里已有的人也要画出来
-      this.setTitle(this.visit.title); this.setAc(this.visit.ac);
+      this.setTitle(this.visit.title); this.setAc(this.visit.ac); this.setBath(this.visit.bv);
       for (const w of this.visit.roster) this.addRemote(w);
       if (this.visit.sleeping) this.showSleeper(this.hostChar());
       this.hud.banner(`🏠 ${roomTitle(this.visit.title, this.visit.hostName, false)}`, `${this.visit.hostName} 的宿舍 · 走到南侧门口即可离开`);
@@ -117,19 +120,19 @@ export class InteriorScene extends Phaser.Scene {
       h.roomLeave = (id) => this.removeRemote(id);
       h.roomPos = (id, x, y, f) => { if (id === this.selfId) { this.player.x = x; this.player.y = y; return; } this.remotes.get(id)?.push(x, y, f, performance.now()); }; // 发给自己的 = 被服务器拉回
       h.roomState = (m) => {
-        this.setTitle(m.title); this.setAc(m.ac);
+        this.setTitle(m.title); this.setAc(m.ac); this.setBath(m.bv);
         if (!this.isHost) { if (m.sleeping) this.showSleeper(this.hostChar()); else if (this.sleepWho && this.sleepWho !== this.player) this.hideSleeper(); } // 房主自己的睡觉由本地按钮流程驱动
       };
     }
     this.registry.set('roomSay', (pid: number, text: string) => { if (pid === this.selfId) this.player.say(text); else this.remotes.get(pid)?.say(text); }); // 公屏的话冒泡在人头上
     if (this.dormUi) {
-      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); } };
+      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); } };
       this.dormUi.onResult = (ok, msg, wake) => {
         this.hud.banner(ok ? '🏠 宿舍' : '⚠️ 宿舍', msg);
         if (this.sleepPending) { this.sleepPending = false; if (ok) this.beginSleep(); }
         if (wake && this.sleeping) this.endSleep(false);
       };
-      if (this.isHost) { if (this.dormUi.data) { this.setAc(this.dormUi.data.ac); this.setTitle(this.dormUi.data.title ?? ''); } else this.net?.dormGet(); }
+      if (this.isHost) { if (this.dormUi.data) { this.setAc(this.dormUi.data.ac); this.setTitle(this.dormUi.data.title ?? ''); this.setBath(this.dormUi.data.bv); } else this.net?.dormGet(); }
     }
     this.events.once('shutdown', () => {
       this.registry.set('roomSay', null); this.registry.set('dormVisit', null);
@@ -144,6 +147,8 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   /** 空调：0 关 / 1 制冷 / 2 制热。状态灯换色，出风口持续飘出冷风（蓝白风丝+雪点）或暖风（橙色热气） */
+  private bathFx?: BathFx; private bathView?: BathView;
+  private setBath(v: BathView | undefined) { this.bathView = v; this.bathFx?.set(v); }
   private setAc(mode: number) {
     if (mode === this.acMode && (this.acTimer || !mode)) return;
     this.acMode = mode;
@@ -251,12 +256,16 @@ export class InteriorScene extends Phaser.Scene {
     const maxW = 68; if (this.signText.width > maxW) this.signText.setScale(maxW / this.signText.width);
   }
 
-  private dormAct(act: 'bed' | 'ac' | 'wardrobe' | 'chest' | 'sign') {
+  private dormAct(act: 'bed' | 'ac' | 'wardrobe' | 'chest' | 'sign' | 'bath') {
     if (!this.net || this.net.status !== 'online') { this.hud.banner('⚠️ 宿舍', '没连上服务器，这里的东西暂时用不了'); return; }
     const who = this.hostName || '房主';
     if (act === 'ac') this.net.dormAc();
     else if (act === 'sign') { if (this.isHost) this.dormUi?.openSign(this.titleRaw); else this.hud.openDialog('门牌', [`「${roomTitle(this.titleRaw, this.hostName, false)}」——${who}的宿舍`]); }
     else if (act === 'bed') { if (!this.isHost) this.hud.openDialog('单人床', [`这是 ${who} 的床。`]); else if (!this.sleepPending) { this.sleepPending = true; this.net.dormSleep(true); } }
+    else if (act === 'bath') {
+      if (this.isHost) this.dormUi?.openBath();
+      else { const v = this.bathView, n = v ? v.r.reduce((a, b) => a + b, 0) : 0; this.hud.openDialog('浴缸', [v && v.f.length ? `${who} 的浴缸里养着 ${v.f.length > 1 ? '好几种' : ''}鱼${n ? `，其中有 ${n} 条会发光的稀有鱼` : ''}，水面闪闪的。` : `${who} 的浴缸是空的，水很清。`]); }
+    }
     else if (act === 'chest') { if (this.isHost) this.dormUi?.openChest(); else this.hud.openDialog('宝箱', [`${who} 的宝箱，只有主人能打开。`]); }
     else { const edit = this.registry.get('editProfile') as (() => void) | undefined; this.input.keyboard!.resetKeys(); edit?.(); }
   }
@@ -272,6 +281,7 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   override update(_t: number, delta: number) {
+    this.bathFx?.update(Math.min(0.1, delta / 1000));
     const dt = Math.min(delta, 50) / 1000, k = this.keys, joy = this.touchState(), tap = this.takeTouchPress();
     if (this.dorm && this.dormFrame(dt, k, joy, tap)) return;
     if (this.hud.dialogOpen) {
@@ -296,7 +306,7 @@ export class InteriorScene extends Phaser.Scene {
       const dd = Math.hypot((a.x0 + a.x1) / 2 - this.player.x, (a.y0 + a.y1) / 2 - this.player.y);
       if (dd < sd) { sd = dd; spot = a; }
     }
-    const tip = (a: NonNullable<InteriorDef['interacts']>[number]) => a.act === 'sign' ? (this.isHost ? 'E  给宿舍起个名字（改门牌）' : 'E  看门牌') : a.act === 'bed' ? (this.isHost ? 'E  上床睡觉（精灵会慢慢恢复）' : `E  ${this.hostName} 的床`) : a.act === 'ac' ? `E  空调：现在${AC_NAMES[this.acMode as 0 | 1 | 2]}，点一下切换` : a.act === 'wardrobe' ? 'E  打开衣柜（换装）' : a.act === 'chest' ? (this.isHost ? 'E  打开宝箱（仓库）' : 'E  宝箱（只有主人能开）') : `E  查看：${a.title}`;
+    const tip = (a: NonNullable<InteriorDef['interacts']>[number]) => a.act === 'sign' ? (this.isHost ? 'E  给宿舍起个名字（改门牌）' : 'E  看门牌') : a.act === 'bed' ? (this.isHost ? 'E  上床睡觉（精灵会慢慢恢复）' : `E  ${this.hostName} 的床`) : a.act === 'ac' ? `E  空调：现在${AC_NAMES[this.acMode as 0 | 1 | 2]}，点一下切换` : a.act === 'wardrobe' ? 'E  打开衣柜（换装）' : a.act === 'bath' ? (this.isHost ? 'E  浴缸：放鱼进去养着（放进去的鱼不能卖）' : 'E  看看浴缸里的鱼') : a.act === 'chest' ? (this.isHost ? 'E  打开宝箱（仓库）' : 'E  宝箱（只有主人能开）') : `E  查看：${a.title}`;
     this.hud.hint(near ? `E  和「${near.name}」交谈` : spot ? tip(spot) : null);
     if (spot && press) { if (spot.act) this.dormAct(spot.act); else this.hud.openDialog(spot.title, [spot.text]); }
     if (near && press) {
