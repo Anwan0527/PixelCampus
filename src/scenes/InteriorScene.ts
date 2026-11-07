@@ -21,6 +21,11 @@ import { decorDef, defaultLay, footOf, seatsOf, type Placed } from '@/shared/dec
 import type { BathView } from '@/shared/dorm';
 import { packFlags, type RoomWho, type ServerMsg } from '@/shared/protocol';
 import { festData } from '@/ui/festivalData';
+import { emoteDef } from '@/shared/emotes';
+import type { EmotePanel } from '@/ui/EmotePanel';
+import { Cat } from '@/entities/Cat';
+import { CAT_REACH, type CatDef } from '@/shared/cats';
+import { bedSpots, dormCatHome, type CatBridge, type DormCatFx } from '@/systems/dormcats';
 
 export interface InteriorDef {
   id: string; name: string; w: number; h: number; bg: string; desc?: string;
@@ -39,7 +44,7 @@ export class InteriorScene extends Phaser.Scene {
   private map!: WorldMap;
   private player!: Player;
   private npcs: Npc[] = [];
-  private keys!: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'shift' | 'e' | 'space' | 'esc' | 'enter' | 'y', Phaser.Input.Keyboard.Key>;
+  private keys!: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'shift' | 'e' | 'space' | 'esc' | 'enter' | 'y' | 'x', Phaser.Input.Keyboard.Key>;
   private leaving = false;
   // ---- 家具摆放（装修）：宿舍里除了床/衣柜/宝箱/浴缸，其余家具都来自摆放数据，客户端按它现画
   private lay: Placed[] = []; private layKey = ''; private decorObjs: Phaser.GameObjects.Image[] = []; private decorTalk: NonNullable<InteriorDef['interacts']> = [];
@@ -59,7 +64,10 @@ export class InteriorScene extends Phaser.Scene {
   private visit: Extract<ServerMsg, { t: 'dorm_visit' }> | null = null;
   private remotes = new Map<number, RemotePlayer>();
   private hostName = ''; private titleRaw = ''; private signText?: Phaser.GameObjects.Text; private signAt = { x: 0, y: 0 };
+  private prevEmote?: NetClient['handlers']['emote']; private prevEmoteEnd?: NetClient['handlers']['emoteEnd']; private heldPoseId = -1;
   private prevFz?: NetClient['handlers']['fz']; private prevHeld?: NetClient['handlers']['held']; private unFest?: () => void;
+  /** 养在宿舍的小猫（房主养的；房主自己能摸 / 喂 / 抱，访客只能看）：猫编号 → 宿舍里的那只 Cat */
+  private dormCats = new Map<number, Cat>(); private catBridge?: CatBridge; private peersBefore: Cat[] = []; private heldCats = new Set<number>(); private catCrouch = false; private catShift = false; private bnd = { x: 0, y: 0, w: 0, h: 0 };
   private sleepWho?: Character; private rt = { t: 0, x: -1, y: -1, f: -1 };
   /** 我是不是房主（自己的宿舍） */
   private get isHost() { return !this.visit; }
@@ -99,7 +107,7 @@ export class InteriorScene extends Phaser.Scene {
     this.events.once('shutdown', () => this.scale.off('resize', this.applyZoom, this));
 
     const K = Phaser.Input.Keyboard.KeyCodes;
-    this.keys = this.input.keyboard!.addKeys({ up: K.UP, down: K.DOWN, left: K.LEFT, right: K.RIGHT, w: K.W, a: K.A, s: K.S, d: K.D, shift: K.SHIFT, e: K.E, space: K.SPACE, esc: K.ESC, enter: K.ENTER, y: K.Y }) as any;
+    this.keys = this.input.keyboard!.addKeys({ up: K.UP, down: K.DOWN, left: K.LEFT, right: K.RIGHT, w: K.W, a: K.A, s: K.S, d: K.D, shift: K.SHIFT, e: K.E, space: K.SPACE, esc: K.ESC, enter: K.ENTER, y: K.Y, x: K.X }) as any;
     this.registry.set('touchPress', false); // 进门那一下的互动键别算在室内里
     cam.fadeIn(280, 20, 14, 10);
     this.hud.showMinimap(false);
@@ -129,6 +137,9 @@ export class InteriorScene extends Phaser.Scene {
       const h = this.net.handlers;
       h.roomJoin = (w) => { this.addRemote(w); if (this.editor?.active) { this.editor.close(); this.hud.banner('🛋 装修', `${w.p.name} 进来了，装修先停一下`); } };
       h.roomLeave = (id) => this.removeRemote(id);
+      this.prevEmote = h.emote; this.prevEmoteEnd = h.emoteEnd;   // 屋里的表情（自己的和同屋人的）：校园场景的处理函数管的是校园里的人，这里自己接
+      h.emote = (pid, e) => { const d = emoteDef(e); if (!d) return; if (pid === this.selfId) this.player.emote(d); else this.remotes.get(pid)?.emote(d); };
+      h.emoteEnd = (pid) => { if (pid === this.selfId) this.player.endPose(); else this.remotes.get(pid)?.endPose(); };
       this.prevFz = h.fz; this.prevHeld = h.held;
       h.fz = (pid, c) => this.remotes.get(pid)?.setFz(c);          // 屋里别人换了节日装扮 / 手持物：校园场景的处理函数管的是校园里的人，这里自己接
       h.held = (pid, hv) => this.remotes.get(pid)?.setHeld(hv);
@@ -141,7 +152,7 @@ export class InteriorScene extends Phaser.Scene {
     }
     this.registry.set('roomSay', (pid: number, text: string) => { if (pid === this.selfId) this.player.say(text); else this.remotes.get(pid)?.say(text); }); // 公屏的话冒泡在人头上
     if (this.dormUi) {
-      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); this.setSkin(m.sk?.w ?? 0, m.sk?.f ?? 0); if ((m.rm ?? 0) !== this.level) { this.expandTo(m.rm ?? 0); return; } this.setLay(m.lay ?? defaultLay(this.level)); this.editor?.refresh(); } };
+      this.dormUi.onData = (m) => { if (this.isHost) { this.setAc(m.ac); this.setTitle(m.title ?? ''); this.setBath(m.bv); this.setSkin(m.sk?.w ?? 0, m.sk?.f ?? 0); if ((m.rm ?? 0) !== this.level) { this.expandTo(m.rm ?? 0); return; } this.setLay(m.lay ?? defaultLay(this.level)); this.syncDormCats(m.dc ?? []); this.editor?.refresh(); } };
       this.dormUi.onResult = (ok, msg, wake) => {
         this.hud.banner(ok ? '🏠 宿舍' : '⚠️ 宿舍', msg);
         if (this.sleepPending) { this.sleepPending = false; if (ok) this.beginSleep(); }
@@ -152,13 +163,20 @@ export class InteriorScene extends Phaser.Scene {
     this.prevFindSeat = RemotePlayer.findSeat; RemotePlayer.findSeat = (x, y) => { const t = this.seats.find((q) => Math.hypot(q.x - x, q.y - y) < 6); return t ? { bx: t.bx, by: t.by, strip: false } : undefined; }; // 屋里别人坐在哪把椅子上
     if (this.isHost && this.net) this.setupDecorUi(this.net);
     if (this.visit && this.net) this.setupLikeUi(this.net, this.visit);
+    this.catBridge = this.registry.get('catBridge') as CatBridge | undefined;
+    if (this.catBridge) { // 养在宿舍的猫：Cat 的同伴列表换成宿舍里的（校园里的猫在睡觉，不参与）；校园场景收到互动结果时转发过来
+      this.peersBefore = Cat.peers; Cat.peers = [];
+      this.registry.set('dormCatFx', ((id, kind, r) => this.dormCatFx(id, kind, r)) as DormCatFx);
+      this.syncDormCats(this.visit ? this.visit.dc ?? [] : this.dormUi?.data?.dc ?? []);
+    }
     this.events.once('shutdown', () => { // 每一步单独兜底：这里任何一步抛错，Phaser 会放弃后面排队的"唤醒校园场景"，人就卡在黑屏里
       const safe = (f: () => void) => { try { f(); } catch (e) { console.warn('宿舍场景收尾出错（已忽略）', e); } };
       safe(() => { this.registry.set('roomSay', null); this.registry.set('dormVisit', null); });
-      safe(() => { if (this.net) { const h = this.net.handlers; h.roomJoin = h.roomLeave = h.roomPos = h.roomState = undefined; h.fz = this.prevFz; h.held = this.prevHeld; } });
+      safe(() => { if (this.net) { const h = this.net.handlers; h.roomJoin = h.roomLeave = h.roomPos = h.roomState = undefined; h.fz = this.prevFz; h.held = this.prevHeld; h.emote = this.prevEmote; h.emoteEnd = this.prevEmoteEnd; } });
       safe(() => { this.unFest?.(); this.unFest = undefined; });
       safe(() => this.dormUi?.closeSign());
       safe(() => this.clearRemotes());
+      safe(() => { this.clearDormCats(); this.registry.set('dormCatFx', null); Cat.peers = this.peersBefore; });
       safe(() => { if (this.chat && this.chatFocus) this.chat.onFocus = this.chatFocus; });
       safe(() => { if (this.net) this.net.handlers.dormOut = undefined; });
       safe(() => { if (this.dormUi) { this.dormUi.onData = () => {}; this.dormUi.onResult = () => {}; this.dormUi.close(); this.dormUi.closeChest(); } });
@@ -168,6 +186,64 @@ export class InteriorScene extends Phaser.Scene {
       safe(() => { if (this.net) this.net.handlers.dormLikes = this.prevLikes; });
     });
   }
+  // ---- 宿舍里养的猫
+  /** 让宿舍里的猫和 ids 一致：多出来的（送回校园了）去掉，新来的画出来 */
+  private syncDormCats(ids: readonly number[]) {
+    if (!this.catBridge) return;
+    for (const [id, c] of this.dormCats) if (!ids.includes(id)) { c.destroy(); this.dormCats.delete(id); this.heldCats.delete(id); }
+    for (const id of ids) {
+      if (this.dormCats.has(id)) continue;
+      const def = this.catBridge.def(id); if (!def) continue;
+      const cat = new Cat(this, { ...def }); cat.nick = this.catBridge.nick(id); this.dormCats.set(id, cat);
+    }
+    Cat.peers = [...this.dormCats.values()];
+    this.homeDormCats();
+  }
+  /** 按猫窝的位置给每只猫分家（猫窝挪了 / 收回了也跟着变）；新来的猫直接站到家里 */
+  private homeDormCats() {
+    if (!this.dormCats.size) return;
+    const beds = bedSpots(this.lay), fb = standNear((px, py) => this.map.boxBlocked(px, py), this.def.w * 8, 6 * 16, 96) ?? { x: this.def.w * 8, y: 7 * 16 };
+    let i = 0;
+    for (const cat of this.dormCats.values()) {
+      const h = dormCatHome(i++, beds, fb), d = cat.def as CatDef;
+      const fresh = d.hx === 0 && d.hy === 0 ? true : cat.x === d.hx && cat.y === d.hy;
+      d.hx = h.x; d.hy = h.y; cat.restSpot = h.bed ? { x: h.x, y: h.y } : undefined;
+      if (fresh || this.map.boxBlocked(cat.x, cat.y)) { cat.x = h.x; cat.y = h.y; }
+    }
+  }
+  private clearDormCats() { for (const c of this.dormCats.values()) { try { c.destroy(); } catch { /* 关闭阶段，忽略 */ } } this.dormCats.clear(); this.heldCats.clear(); }
+  /** 每帧：宿舍里的猫自己活动；小猫面板开着时那只猫原地待着、玩家蹲下 */
+  private updateDormCats(dt: number) {
+    if (!this.dormCats.size) return;
+    const P = this.player, v = { x: P.x, y: P.y, fast: P.running, still: !P.moving, sitting: this.sitting, fishing: false };
+    const pn = this.catBridge?.panel(), openId = pn?.isOpen ? pn.id : undefined;
+    for (const [id, cat] of this.dormCats) {
+      const want = openId === id;
+      if (want !== this.heldCats.has(id)) { cat.hold(want, P.x); if (want) this.heldCats.add(id); else this.heldCats.delete(id); }
+      cat.update(dt, this.map, v, this.catBridge?.aff(id) ?? 0, null);
+    }
+    { // 小猫面板在屏幕下方：镜头往上挪一点，别让面板盖住人和猫（和校园场景一个思路）
+      const root = openId !== undefined ? document.querySelector('.cat-panel') as HTMLElement | null : null, cam = this.cameras.main;
+      if (root) { // 目标：人落在面板上沿以上约 100 像素处；房间本来正好占满镜头范围，所以把范围往下多放一块（200 像素），镜头才挪得动
+        const r = root.getBoundingClientRect(), z = cam.zoom || 1, want = r.top - 100, up = Math.max(0, window.innerHeight / 2 - want) / z;
+        cam.setBounds(this.bnd.x, this.bnd.y, this.bnd.w, this.bnd.h + 200); cam.setFollowOffset(0, -up); this.catShift = true;
+      }
+      else if (this.catShift) { cam.setFollowOffset(0, 0); cam.setBounds(this.bnd.x, this.bnd.y, this.bnd.w, this.bnd.h); this.catShift = false; }
+    }
+    const crouch = openId !== undefined && this.dormCats.has(openId) && !this.sitting && !this.sleeping;
+    if (crouch !== this.catCrouch) { this.catCrouch = crouch; P.setCrouch(crouch); }
+  }
+  private dormCatFx(id: number, kind: 'pet' | 'feed' | 'hug', r: { ok: boolean; loved?: boolean; leveled?: boolean; gift?: boolean }) {
+    const c = this.dormCats.get(id); if (!c || !r.ok) return;
+    if (kind === 'pet') c.pet(); else if (kind === 'hug') c.hug(this.player.x, this.player.y); else c.eat();
+    if (r.loved) c.loved(); if (r.leveled) c.leveledUp(); if (r.gift) c.giftMeow();
+  }
+  /** 走近宿舍里的猫按 E：房主打开小猫面板；访客只能看（好感度、喂食都是房主自己的事） */
+  private touchDormCat(cat: Cat) {
+    if (this.isHost) { this.catBridge?.open(cat.def.id); return; }
+    this.hud.openDialog(cat.label, [`${cat.def.name}是${this.hostName}养在宿舍里的猫，睡在猫窝里。`, '只有房主能摸它、喂它。']);
+  }
+
   /** 回校园：先清掉屋里的人，再关室内、唤醒校园场景；万一唤醒没成功（关闭阶段抛了别的错），1.5 秒后兜底再唤醒一次，绝不让人卡在黑屏里 */
   private backToWorld() {
     const mgr = this.scene.manager;
@@ -268,7 +344,7 @@ export class InteriorScene extends Phaser.Scene {
     if (w.id === this.selfId || this.remotes.has(w.id)) return;
     const r = new RemotePlayer(this, w.id, w.uid, w.p, w.x, w.y, w.flags);
     r.applyTitle(w.ttl); if (w.held) r.setHeld(w.held); if (w.fz) r.setFz(w.fz);
-    this.remotes.set(w.id, r);
+    this.remotes.set(w.id, r); r.setHeldPose(emoteDef(w.pose));   // 进屋时对方正躺着 / 坐在地上
     this.rt.f = -1; // 新来的人要马上知道我在哪
     if (w.uid === this.visit?.host && this.visit.sleeping) this.showSleeper(r);
   }
@@ -390,7 +466,7 @@ export class InteriorScene extends Phaser.Scene {
       this.decorObjs.push(addDecorImage(this, spot));
       if (def.act && def.kind === 'wall') this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + def.fw) * 16 + 8, y0: 0, y1: Math.max((p.y + 3) * 16, 80), title: def.name, text: '', act: def.act }); // 墙上的空调、门牌：走到它下面按 E
       if (def.kind === 'top' && def.say) { const raise = topRaise(lay, p); this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + 1) * 16 + 8, y0: p.y * 16 - 8 - raise, y1: (p.y + 1) * 16 + 16, title: def.name, text: def.say }); }
-      if (def.kind !== 'floor') continue;
+      if (def.kind !== 'floor' || def.walk) continue; // 猫窝能直接走上去：不挡路
       const { fw, fh } = footOf(def, p.r);
       for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) if (rows[p.y + j]?.[p.x + i] !== undefined) rows[p.y + j][p.x + i] = '1';
       if (def.say || def.act) this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + fw) * 16 + 8, y0: p.y * 16 - 8, y1: (p.y + fh) * 16 + 16, title: def.name, text: def.say ?? '', ...(def.act ? { act: def.act } : {}) });
@@ -398,6 +474,7 @@ export class InteriorScene extends Phaser.Scene {
     this.rebindFixtures(lay);
     this.seats = lay.flatMap((p) => seatsOf(p));
     this.map = new WorldMap({ width: this.def.w, height: this.def.h, collision: rows.map((r) => r.join('')) });
+    this.homeDormCats();
     if (this.player && this.map.boxBlocked(this.player.x, this.player.y)) { const s = standNear((px, py) => this.map.boxBlocked(px, py), this.player.x, this.player.y, 64); if (s) { this.player.x = s.x; this.player.y = s.y; } } // 家具摆到了人脚下：把人挪到旁边
   }
 
@@ -412,12 +489,13 @@ export class InteriorScene extends Phaser.Scene {
     const cam = this.cameras.main; cam.setSize(availW, availH); cam.setZoom(reserved ? z : Math.max(2, z)); // 窗口大小变化时，Phaser 自己的相机尺寸更新可能比这里慢一拍，所以直接按画布尺寸来
     // 房间比屏幕小时，把相机范围撑到屏幕那么大并让房间居中——否则 Phaser 会把房间贴在屏幕左上角，剩下一大片黑（"室内黑屏"的真正原因）
     const vw = availW / cam.zoom, vh = availH / cam.zoom, rw = this.def.w * TILE, rh = this.def.h * TILE, ex = Math.max(0, vw - rw), ey = Math.max(0, vh - rh);
-    cam.setBounds(-ex / 2, -ey / 2, rw + ex, rh + ey);
+    this.bnd = { x: -ex / 2, y: -ey / 2, w: rw + ex, h: rh + ey }; cam.setBounds(this.bnd.x, this.bnd.y, this.bnd.w, this.bnd.h);
   }
 
   override update(_t: number, delta: number) {
     (this.registry.get('tickClock') as ((dt: number) => void) | undefined)?.(Math.min(0.1, delta / 1000)); // 时钟 / 天气 / 节日由校园场景算，它睡着时这里代为推进
     this.bathFx?.update(Math.min(0.1, delta / 1000));
+    this.updateDormCats(Math.min(50, delta) / 1000);
     const dt = Math.min(delta, 50) / 1000, k = this.keys, joy = this.touchState(), tap = this.takeTouchPress();
     if (this.dorm && this.dormFrame(dt, k, joy, tap)) return;
     if (this.hud.dialogOpen) {
@@ -438,7 +516,9 @@ export class InteriorScene extends Phaser.Scene {
     for (const n of this.npcs) { const dd = Math.hypot(n.x - this.player.x, n.y - this.player.y); if (dd < nd) { nd = dd; near = n; } }
     // 横幅等可互动的家具：站在好几个互动区重叠的地方时，选中心最近的那个
     let spot: NonNullable<InteriorDef['interacts']>[number] | null = null, sd = Infinity;
-    if (!near) for (const a of [...(this.def.interacts ?? []), ...this.decorTalk]) {
+    let dcat: Cat | null = null; // 宿舍里养的猫：走近到够得着，优先于家具 / 椅子
+    if (this.dorm && !near) { let cd = CAT_REACH; for (const c of this.dormCats.values()) { const dd = c.distTo(this.player.x, this.player.y); if (dd < cd) { cd = dd; dcat = c; } } }
+    if (!near && !dcat) for (const a of [...(this.def.interacts ?? []), ...this.decorTalk]) {
       if (this.player.x < a.x0 || this.player.x > a.x1 || this.player.y < a.y0 || this.player.y > a.y1) continue;
       const dd = Math.hypot((a.x0 + a.x1) / 2 - this.player.x, (a.y0 + a.y1) / 2 - this.player.y);
       if (dd < sd) { sd = dd; spot = a; }
@@ -446,9 +526,10 @@ export class InteriorScene extends Phaser.Scene {
     const tip = (a: NonNullable<InteriorDef['interacts']>[number]) => a.act === 'sign' ? (this.isHost ? 'E  给宿舍起个名字（改门牌）' : 'E  看门牌') : a.act === 'bed' ? (this.isHost ? 'E  上床睡觉（精灵会慢慢恢复）' : `E  ${this.hostName} 的床`) : a.act === 'ac' ? `E  空调：现在${AC_NAMES[this.acMode as 0 | 1 | 2]}，点一下切换` : a.act === 'wardrobe' ? 'E  打开衣柜（换装）' : a.act === 'bath' ? (this.isHost ? 'E  鱼缸：放鱼进去养着（放进去的鱼不能卖）' : 'E  看看鱼缸里的鱼') : a.act === 'chest' ? (this.isHost ? 'E  打开宝箱（仓库）' : 'E  宝箱（只有主人能开）') : `E  查看：${a.title}`;
     // 椅子：靠近按 E 坐下；坐着时按 E 起身
     let seat: (typeof this.seats)[number] | null = null;
-    if (this.dorm && !near && !spot && !this.sitting) { let sd2 = 26; for (const q of this.seats) { const dd = Math.hypot(q.bx - this.player.x, q.by - this.player.y); if (dd < sd2) { sd2 = dd; seat = q; } } }
-    this.hud.hint(this.sitting ? 'E / 方向键  起身' : near ? `E  和「${near.name}」交谈` : spot ? tip(spot) : seat ? 'E  坐下' : null);
+    if (this.dorm && !near && !spot && !dcat && !this.sitting) { let sd2 = 26; for (const q of this.seats) { const dd = Math.hypot(q.bx - this.player.x, q.by - this.player.y); if (dd < sd2) { sd2 = dd; seat = q; } } }
+    this.hud.hint(this.sitting ? 'E / 方向键  起身' : near ? `E  和「${near.name}」交谈` : dcat ? `E  ${this.isHost ? '和' : '看看'}「${dcat.label}」${this.isHost ? '玩' : ''}` : spot ? tip(spot) : seat ? 'E  坐下' : null);
     if (this.sitting && press) this.standUp(); else if (seat && press) this.sitDown(seat);
+    if (dcat && press && !this.sitting) this.touchDormCat(dcat);
     if (spot && press) { if (spot.act) this.dormAct(spot.act); else this.hud.openDialog(spot.title, [spot.text]); }
     if (near && press) {
       this.talking = near;
@@ -476,9 +557,11 @@ export class InteriorScene extends Phaser.Scene {
     const me = this.registry.get('profile') as Profile | undefined;
     if (me && me !== this.seenProfile) { this.seenProfile = me; this.player.setLook(me.look, me.app); }
     if (Phaser.Input.Keyboard.JustDown(k.enter) && !this.hud.dialogOpen && !this.registry.get('editorOpen')) this.chat?.focus();
+    { const hp = this.player.holdingEmote; if (this.heldPoseId >= 0 && hp < 0 && this.player.moving && !this.remotes.size && net?.status === 'online') net.emote(this.heldPoseId); this.heldPoseId = hp; } // 屋里没人时不上报位置：自己走开了，用再发一次同一个表情的方式让服务器也知道站起来了
     const tp = this.registry.get('tpUi') as TeleportPanel | undefined;
+    if (Phaser.Input.Keyboard.JustDown(k.x) && !this.chat?.typing && !this.registry.get('editorOpen') && !this.dormUi?.anyOpen && !this.hud.dialogOpen && !this.sleeping) (this.registry.get('emoteUi') as EmotePanel | undefined)?.toggle(); // X：宿舍里也能做表情
     if (Phaser.Input.Keyboard.JustDown(k.y) && !this.chat?.typing && !this.registry.get('editorOpen') && !this.dormUi?.anyOpen) tp?.toggle(); // Y：在宿舍里也能打开传送
-    const typing = !!this.chat?.typing, busy = !!tp?.isOpen || !!this.dormUi?.anyOpen || !!this.registry.get('editorOpen') || typing || !!this.editor?.active;
+    const typing = !!this.chat?.typing, busy = (this.dormCats.size > 0 && !!this.catBridge?.panel().isOpen) || !!tp?.isOpen || !!this.dormUi?.anyOpen || !!this.registry.get('editorOpen') || typing || !!this.editor?.active;
     if (this.sleeping) {
       const move = !busy && (k.up.isDown || k.down.isDown || k.left.isDown || k.right.isDown || k.w.isDown || k.a.isDown || k.s.isDown || k.d.isDown || Math.abs(joy?.x ?? 0) + Math.abs(joy?.y ?? 0) > 0.3);
       if (move || (tap && !busy)) this.endSleep();

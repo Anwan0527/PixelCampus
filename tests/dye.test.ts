@@ -26,7 +26,7 @@ describe('调色板与染料物品', () => {
     const can = DECOR.filter((d) => d.dye).map((d) => d.id), cant = ['dc_deskpc', 'dc_tv', 'dc_tank', 'dc_bath', 'dc_bed', 'dc_lamp', 'dc_lamp_desk', 'dc_clock', 'dc_paint1', 'dc_win_blue', 'dc_window', 'dc_ac', 'dc_sign', 'dc_plant', 'dc_cactus', 'dc_books', 'dc_laptop', 'dc_pc', 'dc_whiteboard'];
     for (const id of ['dc_desk', 'dc_sofa', 'dc_chair', 'dc_cab2', 'dc_rug_home', 'dc_mat_door', 'dc_bear', 'dc_wardrobe', 'dc_chest', 'dc_beanbag']) expect(can, id).toContain(id);
     for (const id of cant) { expect(decorDef(id), id).toBeTruthy(); expect(can, id).not.toContain(id); }
-    expect(can.length).toBe(30);
+    expect(can.length).toBe(31);
   });
 });
 

@@ -260,7 +260,18 @@ function pc(): Furn {
   return f(img, 1, 1);
 }
 
+/** 宿舍猫窝：圆圆的软垫窝，米色边、奶油色的窝底、中间一个小爪印 */
+function catbed(): Furn {
+  const img = new Img(16, 12), B = [c('#b88a58'), c('#d9a874'), c('#f0c996'), c('#f9e2b8')], I = [c('#e8b4b0'), c('#f4cfc8'), c('#fbe4de')], P = c('#d9908c');
+  img.ellipse(8, 7, 7.5, 4.8, B[0]);                       // 外圈（深边）
+  img.ellipse(8, 6.5, 7, 4.4, B[1]); img.ellipse(8, 5.6, 6.4, 3.4, B[2]); img.hline(5, 2, 6, B[3]); // 圆滚滚的边沿
+  img.ellipse(8, 6.8, 5, 2.8, I[0]); img.ellipse(8, 6.4, 4.4, 2.3, I[1]); img.ellipse(7.4, 5.8, 2.6, 1.1, I[2]); // 窝底
+  img.set(7, 6, P); img.set(9, 6, P); img.set(8, 7, P); img.set(7, 8, P); img.set(9, 8, P);        // 爪印
+  return f(img, 1, 1);
+}
+
 export const DECOR_FURNITURE: Record<string, () => Furn> = {
+  dc_catbed: catbed,
   dc_dtable: () => cleanTable(2, 2), dc_dtable3: () => cleanTable(3, 2), dc_gamechair: gamechair, dc_beanbag: beanbag, dc_shoebox: shoebox, dc_coatrack: coatrack,
   dc_tv: tv, dc_tank: tank, dc_lamp: lamp, dc_bear: bear, dc_guitar: guitar,
   dc_rug_red: rugRed, dc_rug_blue: rugBlue, dc_rug_round: rugRound, dc_rug_paw: rugPaw,
@@ -273,7 +284,7 @@ export const DECOR_FURNITURE: Record<string, () => Furn> = {
 export const DECOR_INFO: Record<string, { name: string; cat: '桌椅' | '柜子电器' | '小件' | '墙面挂件' | '其他' }> = {
   dc_dtable: { name: '书桌（干净）', cat: '桌椅' }, dc_dtable3: { name: '长桌（干净）', cat: '桌椅' }, dc_gamechair: { name: '电竞椅', cat: '桌椅' }, dc_beanbag: { name: '懒人沙发', cat: '桌椅' },
   dc_shoebox: { name: '鞋柜', cat: '柜子电器' }, dc_coatrack: { name: '衣帽架', cat: '柜子电器' }, dc_tv: { name: '电视柜', cat: '柜子电器' }, dc_tank: { name: '观赏鱼缸', cat: '柜子电器' }, dc_lamp: { name: '落地灯', cat: '柜子电器' },
-  dc_bear: { name: '大熊玩偶', cat: '其他' }, dc_guitar: { name: '吉他', cat: '其他' },
+  dc_catbed: { name: '宿舍猫窝', cat: '其他' }, dc_bear: { name: '大熊玩偶', cat: '其他' }, dc_guitar: { name: '吉他', cat: '其他' },
   dc_rug_red: { name: '红格地毯', cat: '其他' }, dc_rug_blue: { name: '蓝条地毯', cat: '其他' }, dc_rug_round: { name: '圆形地毯', cat: '其他' }, dc_rug_paw: { name: '爪印地毯', cat: '其他' },
   dc_clock: { name: '挂钟', cat: '墙面挂件' }, dc_paint1: { name: '风景画', cat: '墙面挂件' }, dc_paint2: { name: '竖幅画', cat: '墙面挂件' }, dc_pennant: { name: '校旗', cat: '墙面挂件' }, dc_poster: { name: '海报', cat: '墙面挂件' },
   dc_lamp_desk: { name: '台灯', cat: '小件' }, dc_cactus: { name: '仙人掌', cat: '小件' },

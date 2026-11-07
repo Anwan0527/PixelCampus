@@ -76,3 +76,23 @@ export function drawFrame(canvas: HTMLCanvasElement, textures: Phaser.Textures.T
   ctx.drawImage(src, fr.cutX, fr.cutY, fr.cutWidth, fr.cutHeight, 0, 0, canvas.width, canvas.height);
 }
 export const drawItem = (canvas: HTMLCanvasElement, textures: Phaser.Textures.TextureManager, id: string, scale = 3) => drawFrame(canvas, textures, 'items', `item_${id}`, scale);
+
+/**
+ * 物品图标 <img>：每种（物品, 缩放）只画一次、转成 data URL 缓存，之后每个格子都是一个轻量 <img>。
+ * 以前交易面板 / 背包每次重画都给每个物品新建一个 <canvas>（交易面板 100+ 行，每点一下 +/- 重画一遍），
+ * 画布的后备存储在成交关闭面板、释放时会造成几百毫秒的卡顿（背包大的时候明显）。
+ */
+const iconCache = new Map<string, string>();
+export function itemIconUrl(textures: Phaser.Textures.TextureManager, id: string, scale = 3): string {
+  const key = `${id}@${scale}`; let url = iconCache.get(key);
+  if (url === undefined) {
+    try { const c = document.createElement('canvas'); drawItem(c, textures, id, scale); url = c.toDataURL(); } catch { url = ''; }
+    iconCache.set(key, url);
+  }
+  return url;
+}
+export function itemImg(textures: Phaser.Textures.TextureManager, id: string, scale = 3, cls = ''): HTMLImageElement {
+  const im = document.createElement('img'); if (cls) im.className = cls;
+  im.src = itemIconUrl(textures, id, scale); im.alt = ''; im.draggable = false; im.decoding = 'sync';
+  return im;
+}

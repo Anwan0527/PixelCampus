@@ -1,5 +1,4 @@
 import { ABOUT, CREDITS, THANKS, copyrightLine } from '@/shared/about';
-import { ui } from './actions';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -13,18 +12,12 @@ const link = (text: string, href: string) => {
   return a;
 };
 
-/** 「关于」：作者声明、作者链接、许可、致谢。电脑在左上角「菜单」里，手机在 ☰ 里。 */
-export class AboutPanel {
-  private root = el('div', 'screen hidden');
+/** 「关于」（「设置」面板的「关于」页）：作者声明、作者链接、许可、致谢。 */
+export class AboutSection {
+  readonly view = el('div', 'about-body');
 
   constructor() {
-    const panel = el('div', 'box about');
-    const head = el('div', 'board-head');
-    const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭关于');
-    close.addEventListener('click', () => this.close());
-    head.append(el('div', 'board-title', '关于'), close);
-    const body = el('div', 'about-body');
-
+    const body = this.view;
     body.append(el('div', 'about-name', ABOUT.title), el('div', 'about-copy', copyrightLine() + ' · 保留所有权利'));
 
     const who = el('div', 'about-sec'); who.append(el('div', 'about-h', '作者'));
@@ -55,19 +48,7 @@ export class AboutPanel {
       list.append(row);
     }
     th.append(list); body.append(th);
-
-    panel.append(head, body);
-    this.root.append(panel);
-    this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
-    (document.getElementById('hud') ?? document.body).append(this.root);
-    ui.add({ id: 'about', label: '关于', run: () => this.toggle() });
   }
-
-  get isOpen() { return !this.root.classList.contains('hidden'); }
-  open() { this.root.classList.remove('hidden'); }
-  close() { this.root.classList.add('hidden'); }
-  toggle() { this.isOpen ? this.close() : this.open(); }
 }
 
 /**

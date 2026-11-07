@@ -1,11 +1,12 @@
 /** 与地图无关的美术：人物、小猫、共享单车、物品图标图集。 npm run assets:art */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ANIMS, buildAll, frameMeta, PRESET_LOOKS, renderPortrait } from './char-rig.ts';
+import { ANIMS, buildAll, frameMeta, LIE_META, PRESET_LOOKS, renderPortrait } from './char-rig.ts';
 import { buildHeld } from '../../src/art/held.ts';
 import { pack, type PackItem } from './pack.ts';
 import { GEN } from '../paths.ts';
 import { CAT_ANIMS, CAT_FRAME, CAT_FRONT_ANIMS, CAT_PRESETS, renderCat, renderCatFront } from './cat-rig.ts';
+import { BIRD_ANIMS, BIRD_FRAME, BIRD_LOOKS, renderBird } from './birds.ts';
 import { buildBikes, BIKE_AX, BIKE_AY, BIKE_H, BIKE_W, RIDER } from './bikes.ts';
 import { buildItemIcon, ICONS } from './items.ts';
 
@@ -20,7 +21,7 @@ const items: PackItem[] = [];
   await atlas.img.save(join(GEN, 'atlas-chars.png'));
   writeFileSync(join(GEN, 'atlas-chars.json'), JSON.stringify(atlas.json));
   const anims = Object.fromEntries(ANIMS.map((a) => [a.id, { fps: a.fps, loop: a.loop, n: a.frames.length, views: a.views.flatMap((v) => (v === 'right' ? ['right', 'left'] : [v])) }]));
-  writeFileSync(join(GEN, 'chars-meta.json'), JSON.stringify({ w: M.w, h: M.h, ax: M.ax, ay: M.ay, count: PRESET_LOOKS.length, anims }));
+  writeFileSync(join(GEN, 'chars-meta.json'), JSON.stringify({ w: M.w, h: M.h, ax: M.ax, ay: M.ay, lie: LIE_META, count: PRESET_LOOKS.length, anims }));
   console.log('人物图集完成：', PRESET_LOOKS.length, '个外观，', items.length, '帧，每帧', M.w, '×', M.h);
 }
 
@@ -59,6 +60,17 @@ const items: PackItem[] = [];
   const anims = Object.fromEntries([...CAT_ANIMS.map((x) => [x.id, { fps: x.fps, loop: x.loop, n: x.frames.length }]), ...CAT_FRONT_ANIMS.map((x) => [x.id, { fps: x.fps, loop: x.loop, n: x.frames.length }])]);
   writeFileSync(join(GEN, 'cats-meta.json'), JSON.stringify({ w: CAT_FRAME.w, h: CAT_FRAME.h, ax: CAT_FRAME.ax, ay: CAT_FRAME.ay, coats, anims }));
   console.log('小猫图集完成：', coats, '种毛色，', cats.length, '帧');
+}
+// 水禽（精工湖的鸭子和天鹅）：5 种外观 × 侧视 / 正面 / 背面动作
+{
+  const birds: PackItem[] = [];
+  BIRD_LOOKS.forEach((look, k) => { for (const a of BIRD_ANIMS) a.frames.forEach((p, i) => birds.push({ key: `bird${k}_${a.id}_${i}`, img: renderBird(look, p, a.view ?? 'side') })); });
+  const a = pack(birds, 1024);
+  await a.img.save(join(GEN, 'atlas-birds.png'));
+  writeFileSync(join(GEN, 'atlas-birds.json'), JSON.stringify(a.json));
+  const anims = Object.fromEntries(BIRD_ANIMS.map((x) => [x.id, { fps: x.fps, loop: x.loop, n: x.frames.length }]));
+  writeFileSync(join(GEN, 'birds-meta.json'), JSON.stringify({ w: BIRD_FRAME.w, h: BIRD_FRAME.h, ax: BIRD_FRAME.ax, ay: BIRD_FRAME.ay, kinds: BIRD_LOOKS.length, anims }));
+  console.log('水禽图集完成：', BIRD_LOOKS.length, '种外观，', birds.length, '帧');
 }
 // 共享单车：骑行 4 向 × 4 帧 + 停放
 {

@@ -46,7 +46,7 @@ export const PROTOCOL_VERSION = 12;
 export interface CommView { id: CommTier; tier: CommTier; name: string; desc: string; goal: number; prog: number; done: boolean; claimed: boolean; reward: CommReward }
 
 /** 宿舍里的一位玩家（和 spawn 消息同一套字段，位置是屋里的坐标） */
-export interface RoomWho { id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; held?: number; fz?: number }
+export interface RoomWho { id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; held?: number; fz?: number; /** 正在保持的持续型表情（躺下 / 坐地）的编号；没有就没有这个字段 */ pose?: number }
 
 export const NET = {
   /** 服务器快照频率（Hz） */
@@ -168,6 +168,8 @@ export type ClientMsg =
   | { t: 'cat_feed'; id: number; item: string }
   /** 抱抱（挚友以上；服务器回 cat_result，kind = 'hug'） */
   | { t: 'cat_hug'; id: number }
+  /** 喂水禽（精工湖的鸭子 / 天鹅；id 见 shared/waterfowl.ts）：消耗 1 份鱼饵，服务器回 bird_result */
+  | { t: 'bird_feed'; id: number }
   /** 让亲密的小猫跟着我 / 回家；给它取专属名字（空 = 清除） */
   | { t: 'cat_follow'; id: number; on: boolean }
   | { t: 'cat_nick'; id: number; name: string }
@@ -302,6 +304,8 @@ export type ClientMsg =
   | { t: 'dorm_knock'; uid: number }
   | { t: 'dorm_reply'; uid: number; accept: boolean }
   | { t: 'dorm_title'; text: string }
+  /** 把好感 ≥ 200 的小猫接回宿舍养（on=true）/ 送回校园（on=false） */
+  | { t: 'dorm_cat'; id: number; on: boolean }
   | { t: 'room_move'; x: number; y: number; flags: number }
   /** 好感度满值时收服一只校园小猫为精灵 / 和一只校园小猫「老吴对战」 */
   | { t: 'cat_tame'; id: number }
@@ -314,7 +318,7 @@ export type ClientMsg =
 export type ServerMsg =
   | { t: 'welcome'; id: number; uid: number; x: number; y: number; online: number }
   /** ttl = 这个玩家佩戴的称号 id（服务器认定的，没戴就没有这个字段） */
-  | { t: 'spawn'; id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; /** 手持物（没拿就没有这个字段） */ held?: number; /** 节日装扮编号（没戴就没有这个字段） */ fz?: number }
+  | { t: 'spawn'; id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; /** 手持物（没拿就没有这个字段） */ held?: number; /** 节日装扮编号（没戴就没有这个字段） */ fz?: number; /** 正在保持的持续型表情（躺下 / 坐地）的编号 */ pose?: number }
   | { t: 'despawn'; id: number }
   /** ch 不写 = world；party 的话客户端用不同颜色的气泡 */
   | { t: 'chat'; pid: number; uid: number; from: string; hue: number; text: string; ts: number; /** 记录编号（管理员撤回用） */ mid?: number; ch?: ChannelId }
@@ -391,6 +395,8 @@ export type ServerMsg =
   | { t: 'time'; now: number }
   /** 跟随/取名的结果提示 */
   | { t: 'cat_msg'; ok: boolean; msg: string }
+  /** 喂水禽的结果；left = 今天还能喂几次 */
+  | { t: 'bird_result'; id: number; ok: boolean; msg: string; gifts: Gain[]; left?: number }
   /** 我给小猫取的专属名字（只发给我自己） */
   | { t: 'cat_nicks'; nicks: Record<string, string> }
   /** 谁带着哪只猫：整份（猫编号 → 玩家编号）/ 一只猫变了（pid 0 = 回家了） */
@@ -449,6 +455,8 @@ export type ServerMsg =
   | { t: 'fishdex'; log: Record<string, FishLog> }
   /** 有人（pid = 玩家编号，包括我自己）做了表情 */
   | { t: 'emote'; pid: number; e: number }
+  /** 持续型表情结束了（走动 / 再点一次 / 被传走）：pid 站起来。老客户端不认识这条会忽略 */
+  | { t: 'emote_end'; pid: number }
   | { t: 'held'; pid: number; h: number }
   /** 别人的节日装扮变了（c = 编号，0 = 脱下） */
   | { t: 'fz'; pid: number; c: number }
@@ -465,7 +473,7 @@ export type ServerMsg =
   | { t: 'mon_result'; ok: boolean; msg: string }
   | { t: 'tp_result'; ok: boolean; msg: string }
   /** 我的宿舍：楼栋（没绑定 = 没有）、今天还能不能改楼栋、空调、宝箱；options = 能选的楼栋（按社区分组） */
-  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 房间级别（1 中屋 / 2 大屋，没有 = 小屋）、墙纸地板（w、f 正在用的样式；ow、of 已拥有的样式，按位记） */ rm?: 1 | 2; sk?: { w?: number; f?: number; ow?: number; of?: number }; /** 我的宿舍收到的赞数 */ likes?: number; options: { group: string; names: string[] }[] }
+  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 房间级别（1 中屋 / 2 大屋，没有 = 小屋）、墙纸地板（w、f 正在用的样式；ow、of 已拥有的样式，按位记） */ rm?: 1 | 2; sk?: { w?: number; f?: number; ow?: number; of?: number }; /** 我的宿舍收到的赞数 */ likes?: number; /** 养在宿舍的小猫编号 */ dc?: number[]; options: { group: string; names: string[] }[] }
   /** 可以进屋了（x、y = 我在宿舍楼门口的位置，像素）/ 宿舍操作的结果 */
   | { t: 'dorm_in'; x: number; y: number }
   /** 服务器把人从宿舍里带走了（传送、队友传送、被管理员传走…）：客户端要离开室内、留在新位置 */
@@ -473,7 +481,7 @@ export type ServerMsg =
   /** 有人邀请我去 TA 的宿舍（kind = invite），或有人想来我的宿舍（kind = knock）；30 秒内回应 */
   | { t: 'dorm_ask'; uid: number; name: string; kind: 'invite' | 'knock'; title?: string }
   /** 我进了好友的宿舍：房主、门牌（房主起的名字，可能为空）、空调、房主是不是在睡觉、屋里已经有的人 */
-  | { t: 'dorm_visit'; host: number; hostName: string; title: string; ac: number; sleeping: boolean; bv?: BathView; lay?: Placed[]; rm?: 1 | 2; sk?: { w?: number; f?: number }; /** 这间宿舍的赞数、我有没有赞过 */ likes?: number; liked?: boolean; roster: RoomWho[] }
+  | { t: 'dorm_visit'; host: number; hostName: string; title: string; ac: number; sleeping: boolean; bv?: BathView; lay?: Placed[]; rm?: 1 | 2; sk?: { w?: number; f?: number }; /** 这间宿舍的赞数、我有没有赞过 */ likes?: number; liked?: boolean; /** 房主养在宿舍的小猫编号（访客只能看） */ dc?: number[]; roster: RoomWho[] }
   /** 屋里有人进来 / 出去 / 动了；屋里的状态变了（空调、门牌、房主睡觉） */
   | { t: 'room_join'; w: RoomWho }
   | { t: 'room_leave'; id: number }

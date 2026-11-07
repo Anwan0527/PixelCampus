@@ -20,7 +20,7 @@ describe('人物 Rig', () => {
   it('每个预置造型的每个动作的每一帧：尺寸 = frameMeta，不为空，不碰画布边缘', () => {
     const M = frameMeta(1);
     PRESET_LOOKS.forEach((look) => {
-      for (const a of ANIMS) for (const v of a.views) a.frames.forEach((pose, i) => {
+      for (const a of ANIMS) for (const v of a.views) if (!a.rot) a.frames.forEach((pose, i) => {   // 躺下是横画布（LIE_META），尺寸另测（tests/emotes.test.ts）
         const img = renderFrame(look, pose, v, i);
         expect([img.w, img.h]).toEqual([M.w, M.h]);
         expect(opaque(img)).toBeGreaterThan(200);
@@ -48,7 +48,7 @@ describe('人物 Rig', () => {
     expect(frameMeta(1).ay - [...rows][0]).toBe(1);   // 最低的不透明行 = 鞋底描边，脚点在它下面 1 行（旧版 16×32 人物也是这个关系）
   });
   it('表情动作用到的姿势动画都存在（emotes.ts 的 pose）', () => {
-    for (const e of EMOTES) if (e.pose) { const a = ANIMS.find((x) => x.id === e.pose); expect(a, e.pose).toBeTruthy(); expect(a!.views).toContain('down'); }
+    for (const e of EMOTES) if (e.pose) { const a = ANIMS.find((x) => x.id === e.pose); expect(a, e.pose).toBeTruthy(); /* 躺下是横画布（右 / 左） */ expect(a!.views).toContain(a!.rot ? 'right' : 'down'); }
   });
   it('2 倍分辨率与证件照：尺寸与不为空', () => {
     const img2 = renderFrame(PRESET_LOOKS[1], ANIMS[0].frames[0], 'down', 0, 2);

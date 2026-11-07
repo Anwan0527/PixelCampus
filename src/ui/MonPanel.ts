@@ -4,6 +4,7 @@ import { CONTENT, monArt, speciesOf } from '@/shared/mons-content';
 import { MON, STAT_KEYS, STAT_NAMES, elementName, maxHp, monStats, xpForLevel, type Mon } from '@/shared/mons';
 import { isCatSpecies } from '@/shared/cat-mons';
 import { ui } from './actions';
+import type { Host, Section } from './hosted';
 
 type MonData = Extract<ServerMsg, { t: 'mon_data' }>;
 type Tab = 'sq' | 'bx';
@@ -24,12 +25,12 @@ const bar = (frac: number, cls = '') => { const b = el('div', `mon-bar ${cls}`),
 const rating = (iv: number[]) => { const p = iv.reduce((a, b) => a + b, 0) / (iv.length * MON.MAX_IV); return p >= 0.9 ? '顶尖' : p >= 0.7 ? '优秀' : p >= 0.45 ? '不错' : '普通'; };
 
 /**
- * 精灵面板：出战队伍（≤6，第 1 只是首发）、精灵背包（≤60）、精灵详情；还没有精灵时先三选一领初始精灵。
+ * 精灵（背包里的「精灵」页）：出战队伍（≤6，第 1 只是首发）、精灵背包（≤60）、精灵详情；还没有精灵时先三选一领初始精灵。
  * 界面只显示服务器给的数据；整理（移动/排序/昵称/放生）都只是向服务器发请求，成功后服务器推回整份最新数据。
- * 电脑按 R 或点菜单「精灵」，手机点 ☰ → 精灵。
+ * 电脑按 R、手机点 ☰ → 背包 → 精灵都会打开背包并切到这一页（2026-11-10 起不再有单独的菜单入口）。
  */
-export class MonPanel {
-  private root = el('div', 'screen hidden');
+export class MonPanel implements Section {
+  readonly view = el('div', 'mon-sec');
   private body = el('div', 'mon-body');
   private msg = el('div', 'mon-msg');
   private data: MonData | null = null;
@@ -37,33 +38,30 @@ export class MonPanel {
   private picked: string | null = null;
   private confirmFree: string | null = null;
   private freeTimer = 0;
+  private host: Host<'mons'> | null = null;
   /** 数据更新时通知（猫面板据此刷新「收服/对战」按钮） */
   onData: (() => void) | null = null;
 
   constructor(private net: NetClient) {
-    const panel = el('div', 'box mon');
-    const head = el('div', 'board-head');
-    const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭精灵面板');
-    close.addEventListener('click', () => this.close());
-    head.append(el('div', 'board-title', '精灵'), close);
-    panel.append(head, this.msg, this.body);
-    this.root.append(panel);
-    this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
-    (document.getElementById('hud') ?? document.body).append(this.root);
-    ui.add({ id: 'mons', label: '精灵', key: 'R', run: () => this.toggle() });
-    net.handlers.mon = (d) => { this.data = d; ui.badge('mons', d.starter ? 0 : 1); if (this.picked && !this.find(this.picked)) this.picked = null; this.render(); this.onData?.(); };
+    this.view.append(this.msg, this.body);
+    net.handlers.mon = (d) => { this.data = d; ui.badge('bag', d.starter ? 0 : 1); if (this.picked && !this.find(this.picked)) this.picked = null; this.render(); this.onData?.(); }; // 还没领初始精灵：背包入口亮红点
     net.handlers.monResult = (ok, text) => { this.say(text, ok); };
     this.render();
   }
 
-  get isOpen() { return !this.root.classList.contains('hidden'); }
+  /** 接到背包上（场景创建完背包后调用） */
+  attach(host: Host<'mons'>) { this.host = host; }
+  /** 还没领初始精灵（背包的「精灵」页签上亮红点用） */
+  get needsStarter() { return !!this.data && !this.data.starter; }
+  get isOpen() { return !!this.host?.isOpenOn('mons'); }
   /** 已经收服过的校园猫编号 / 队伍里有没有还能战斗的猫系精灵（「老吴对战」的条件） */
   get tamed(): readonly number[] { return this.data?.tamed ?? []; }
   get hasCatSpirit(): boolean { return !!this.data?.sq.some((m) => isCatSpecies(m.sp) && m.hp > 0); }
-  open() { this.root.classList.remove('hidden'); this.net.monGet(); this.render(); }
-  close() { this.root.classList.add('hidden'); this.confirmFree = null; }
+  open() { this.host?.open('mons'); }
+  close() { if (this.isOpen) { this.confirmFree = null; this.host?.close(); } }
   toggle() { this.isOpen ? this.close() : this.open(); }
+  /** 背包切到精灵页时：取一次最新数据 */
+  enter() { this.net.monGet(); this.render(); }
   /** 连上服务器后请求一次（用来在菜单上亮"还没领初始精灵"的红点） */
   refresh() { this.net.monGet(); }
 

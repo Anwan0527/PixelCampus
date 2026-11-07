@@ -1,5 +1,6 @@
 import { TITLES, titleDef } from '@/shared/titles';
 import type { NetClient } from '@/net/client';
+import type { Host, Section } from './hosted';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -9,12 +10,12 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 };
 
 /**
- * 称号面板：已获得的可以点一下佩戴（再点取消），没获得的显示怎么得到。
+ * 称号（图鉴里的「称号」页）：已获得的可以点一下佩戴（再点取消），没获得的显示怎么得到。
  * 佩戴哪个由服务器记录并告诉周围的人——这里只发"我想戴这个"，服务器认可后会推送最新的称号列表。
- * 从学生证里点「称号」打开。
+ * 从学生证 / 设置里点「称号」会打开图鉴并切到这一页。
  */
-export class TitlePanel {
-  private root = el('div', 'screen hidden');
+export class TitlePanel implements Section {
+  readonly view = el('div', 'cx-sec');
   private list = el('div', 'ach-list');
   private count = el('div', 'create-sub');
   private note = el('div', 'bag-note');
@@ -22,26 +23,20 @@ export class TitlePanel {
   private sel = '';
   private loaded = false;
   private admin = false;
+  private host: Host<'titles'> | null = null;
 
   constructor(private net: NetClient) {
-    const panel = el('div', 'box ach');
-    const head = el('div', 'board-head');
-    const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭称号');
-    close.addEventListener('click', () => this.close());
-    head.append(el('div', 'board-title', '称号'), close);
-    panel.append(head, this.count, this.list, this.note);
-    this.root.append(panel);
-    this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
-    (document.getElementById('hud') ?? document.body).append(this.root);
+    this.view.append(this.count, this.list, this.note);
     this.render();
   }
 
-  get isOpen() { return !this.root.classList.contains('hidden'); }
+  attach(host: Host<'titles'>) { this.host = host; }
+  get isOpen() { return !!this.host?.isOpenOn('titles'); }
   /** 当前佩戴的称号 id */
   get selected() { return this.sel; }
-  open() { this.root.classList.remove('hidden'); this.net.getTitles(); this.render(); }
-  close() { this.root.classList.add('hidden'); }
+  open() { this.host?.open('titles'); }
+  close() { if (this.isOpen) this.host?.close(); }
+  enter() { this.net.getTitles(); this.render(); }
   /** 服务器推来最新的称号列表 */
   set(own: Record<string, number>, sel: string) { this.loaded = true; this.own = own; this.sel = sel; this.render(); }
   setAdmin(on: boolean) { this.admin = on; this.render(); }

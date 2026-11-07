@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { WALK_SPEED, RUN_MULT, BIKE_SPEED, BIKE_ACCEL, BIKE_BRAKE } from '@/core/const';
 import type { WorldMap } from '@/world/WorldMap';
-import type { EmoteDef } from '@/shared/emotes';
+import type { EmoteDef, EmoteFx } from '@/shared/emotes';
 import { DIRS } from '@/shared/fishing';
 import { IDX, type Appearance } from '@/shared/appearance';
 import type { SkinManager } from '@/art/skins';
@@ -50,7 +50,10 @@ export class Character {
   private fx = { dx: 0, dy: 0 };
   private emo = { rise: 0 };
   private emoteTxt?: Phaser.GameObjects.Text;
-  private danceUntil = 0;
+  private danceUntil = 0; private danceStep = 150;
+  /** 表情特效（泪滴 / 💢 / 💤 / 爱心…）的定时器；躺下等持续型表情的编号（-1 = 没有）；躺下时精灵换成横画布，原点要换 */
+  private charsMeta!: { w: number; h: number; ax: number; ay: number; /** 躺下用的横画布（char-rig 的 LIE_META） */ lie?: { w: number; h: number; ax: number; ay: number } };
+  private fxTimer?: Phaser.Time.TimerEvent; private holdEmote = -1; private lieOrigin = false;
   private tag?: Phaser.GameObjects.Text;
   private titleTag?: Phaser.GameObjects.Text;
   private bubble?: Phaser.GameObjects.Text;
@@ -64,7 +67,8 @@ export class Character {
   constructor(scene: Phaser.Scene, public x: number, public y: number, public look: number, app?: Appearance) {
     this.skin = `c${look}`;
     this.sprite = scene.add.sprite(x, y, 'chars', `c${look}_down_0`);
-    const m = scene.cache.json.get('charsMeta') as { w: number; h: number; ax: number; ay: number };
+    const m = scene.cache.json.get('charsMeta') as typeof this.charsMeta;
+    this.charsMeta = m;
     this.sprite.setOrigin(m.ax / m.w, (m.ay + 1) / m.h);
     this.lx = x; this.ly = y;
     if (app) this.setLook(look, app);
@@ -150,26 +154,69 @@ export class Character {
     g.setDepth(Math.max(this.y, ty) + 1);
   }
 
-  /** 头顶冒出表情图标并做小动作（动作只在画面上，不影响位置） */
+  /** 头顶冒出表情图标并做小动作（动作只在画面上，不影响位置）；持续型（hold）姿势一直保持到走动 / 再做别的表情 / endPose */
   emote(e: EmoteDef) {
     const sc = this.sprite.scene;
     sc.tweens.killTweensOf(this.fx); sc.tweens.killTweensOf(this.emo);
-    this.fx.dx = this.fx.dy = 0; this.emoteTxt?.destroy();
+    this.fx.dx = this.fx.dy = 0; this.emoteTxt?.destroy(); this.stopFx(); this.danceUntil = 0;
+    this.poseAnim = undefined; this.holdEmote = -1;   // 新表情顶掉旧的（包括躺着）
     this.emoteTxt = sc.add.text(0, 0, e.icon, { fontFamily: 'sans-serif', fontSize: '20px' }).setOrigin(0.5, 1).setAlpha(1);
     this.emo.rise = 0;
     sc.tweens.add({ targets: this.emo, rise: 14, duration: e.ms, ease: 'Quad.easeOut', onUpdate: (tw) => { this.emoteTxt?.setAlpha(tw.progress < 0.7 ? 1 : 1 - (tw.progress - 0.7) / 0.3); }, onComplete: () => { this.emoteTxt?.destroy(); this.emoteTxt = undefined; } });
-    if (e.pose) { this.poseAnim = e.pose; this.poseUntil = sc.time.now + e.ms; this.play(); }
+    if (e.pose) { this.poseAnim = e.pose; this.poseUntil = e.hold ? Infinity : sc.time.now + e.ms; if (e.hold) this.holdEmote = e.id; this.play(); }
     else if (e.anim === 'shake') sc.tweens.add({ targets: this.fx, dx: { from: -2, to: 2 }, duration: 70, yoyo: true, repeat: Math.floor(e.ms / 140), onComplete: () => { this.fx.dx = 0; } });
     else if (e.anim === 'jump') sc.tweens.add({ targets: this.fx, dy: -7, duration: 150, ease: 'Quad.easeOut', yoyo: true, repeat: 2, onComplete: () => { this.fx.dy = 0; } });
     else if (e.anim === 'dance') {
-      this.danceUntil = sc.time.now + e.ms;
+      this.danceUntil = sc.time.now + e.ms; this.danceStep = 150;
       sc.tweens.add({ targets: this.fx, dy: -3, duration: 140, yoyo: true, repeat: Math.floor(e.ms / 280), onComplete: () => { this.fx.dy = 0; } });
+    } else if (e.anim === 'spin') {   // 原地转圈圈：四个朝向 90 毫秒一换，身子随着小幅起落
+      this.danceUntil = sc.time.now + e.ms; this.danceStep = 90;
+      sc.tweens.add({ targets: this.fx, dy: -2, duration: 180, yoyo: true, repeat: Math.floor(e.ms / 360), onComplete: () => { this.fx.dy = 0; } });
     }
+    if (e.anim === 'shake' && e.pose) sc.tweens.add({ targets: this.fx, dx: { from: -1, to: 1 }, duration: 70, yoyo: true, repeat: Math.floor(e.ms / 140), onComplete: () => { this.fx.dx = 0; } });   // 带姿势的抖动（生气跺脚）：整个人也跟着抖
+    if (e.anim === 'jump' && e.pose) sc.tweens.add({ targets: this.fx, dy: -5, duration: 140, ease: 'Quad.easeOut', yoyo: true, repeat: 1, onComplete: () => { this.fx.dy = 0; } });
+    if (e.fx) this.startFx(e.fx, e.hold ? Infinity : e.ms);
+  }
+  /** 持续型表情结束（再点一次 / 服务器通知 / 走动）：站起来 */
+  endPose() { if (this.holdEmote < 0 && !this.poseAnim) return; this.poseAnim = undefined; this.holdEmote = -1; this.stopFx(); this.play(); this.syncSprite(); }
+  /** 是不是躺着 / 坐在地上（持续型姿势生效中） */
+  get lying() { return this.poseAnim === 'lie'; }
+  get holdingEmote() { return this.holdEmote; }
+  private stopFx() { this.fxTimer?.remove(); this.fxTimer = undefined; }
+  /** 小特效：每隔一会儿在头边冒一个（泪滴往下掉、💢 弹出、💤 飘起、爱心 / 闪光 / 冷汗），ms 到了停；Infinity = 直到 stopFx */
+  private startFx(kind: EmoteFx, ms: number) {
+    const sc = this.sprite.scene, end = ms === Infinity ? Infinity : sc.time.now + ms;
+    const gap = { tears: 260, anger: 520, zzz: 1500, hearts: 420, sweat: 700, sparkle: 380 }[kind];
+    const once = () => {
+      if (!this.sprite.active) return;
+      const lie = this.lying, x = this.sprite.x, top = this.sprite.y - (lie ? 8 : this.sitHeight());   // 头顶（躺着时在脑袋旁边）
+      const r = (a: number, b: number) => a + Math.random() * (b - a);
+      const pop = (txt: string, px: number, py: number, dx: number, dy: number, size = 11, dur = 900) => {
+        const t = sc.add.text(Math.round(px), Math.round(py), txt, { fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif', fontSize: `${size}px` }).setOrigin(0.5).setDepth(this.y + 0.9).setAlpha(0);
+        sc.tweens.add({ targets: t, x: t.x + dx, y: t.y + dy, alpha: { from: 1, to: 0 }, duration: dur, ease: 'Quad.easeOut', onStart: () => t.setAlpha(1), onComplete: () => t.destroy() });
+      };
+      if (kind === 'tears') for (const sx of [-1, 1]) { const d = sc.add.rectangle(Math.round(x + sx * 4), Math.round(this.sprite.y - 24), 2, 3, 0x8fd0ff).setDepth(this.y + 0.9); sc.tweens.add({ targets: d, y: d.y + r(8, 13), x: d.x + sx * r(1, 3), alpha: { from: 1, to: 0 }, duration: 520, ease: 'Quad.easeIn', onComplete: () => d.destroy() }); }
+      else if (kind === 'anger') pop('💢', x + r(5, 9), top - 4, 3, -6, 13, 520);
+      else if (kind === 'zzz') pop('💤', x + (lie ? r(10, 14) : 8), top - (lie ? 2 : 0), 8, -20, 14, 1900);
+      else if (kind === 'hearts') pop('♥', x + r(-8, 8), top - 2, r(-3, 3), -14, 10, 900);
+      else if (kind === 'sweat') pop('💧', x + 9, top + 4, 2, 6, 10, 700);
+      else pop('✦', x + r(-11, 11), top + r(2, 12), 0, -8, 10, 700);
+    };
+    this.stopFx(); once();
+    this.fxTimer = sc.time.addEvent({ delay: gap, loop: true, callback: () => { if (sc.time.now > end) this.stopFx(); else once(); } });
+  }
+  /** 头顶到脚的高度（坐在地上矮一截）：特效冒出的位置 */
+  private sitHeight() { return this.poseAnim === 'sitg' ? 26 : 32; }
+  /** 进视野 / 进屋时补上别人正在保持的姿势（不冒图标，直接躺着） */
+  setHeldPose(e: EmoteDef | undefined) {
+    if (!e || !e.hold || !e.pose) { if (this.holdEmote >= 0) this.endPose(); return; }
+    if (this.holdEmote === e.id) return;
+    this.poseAnim = e.pose; this.poseUntil = Infinity; this.holdEmote = e.id; this.stopFx(); if (e.fx) this.startFx(e.fx, Infinity); this.play(); this.syncSprite();
   }
   /** 当前画出来的朝向：跳舞时四个方向轮流转（站着/坐着时才转；走动时不转） */
   private shownFacing(): Facing {
     const now = this.sprite.scene.time.now;
-    if (!this.poseAnim && this.danceUntil > now && !this.moving && !this.riding) return (['down', 'left', 'up', 'right'] as const)[Math.floor(now / 150) % 4];
+    if (!this.poseAnim && this.danceUntil > now && !this.moving && !this.riding) return (['down', 'left', 'up', 'right'] as const)[Math.floor(now / this.danceStep) % 4];
     return this.facing;
   }
 
@@ -202,7 +249,7 @@ export class Character {
       lift = m.rider.dy + 15; // 昵称牌比车主的再高一截，免得叠在一起
     } else this.sprite.setPosition(cx + this.fx.dx, cy + this.fx.dy);
     this.sprite.setDepth(this.pax ? this.y + (this.facing === 'up' ? 0.1 : -0.05) : this.y);
-    if (Character.umbrella) { // 雨伞：长柄握在手里（面朝上下时在身侧，朝左右时伸到身前），伞面高过头顶；昵称牌相应抬高
+    if (Character.umbrella && this.poseAnim !== 'lie') { // 雨伞：长柄握在手里（面朝上下时在身侧，朝左右时伸到身前），伞面高过头顶；昵称牌相应抬高
       const sc = this.sprite.scene;
       if (!this.umb) this.umb = sc.add.image(0, 0, `umb${this.appRef ? this.appRef[IDX.topColor] % 6 : this.look % 6}`).setOrigin(0.5, 1);
       // 伞面罩在头顶（中心略偏向持伞的一侧），手握在身侧；朝左/上时换另一只手（贴图翻转）
@@ -214,6 +261,7 @@ export class Character {
     } else if (this.umb) { this.umb.destroy(); this.umb = undefined; }
     this.seatStrip?.setDepth(this.y + 0.2);
     this.syncHeld(cx, cy);
+    if (this.poseAnim === 'lie') lift -= 22; else if (this.poseAnim === 'sitg') lift -= 6; // 躺着 / 坐在地上：人矮了，昵称牌和图标跟着降下来
     if (this.syncFz()) lift += this.fzId === 3 ? 10 : 4; // 戴着头饰：昵称牌抬高一点（兔耳朵最高）
     const ty = cy + this.fx.dy;
     if (this.tag) this.tag.setPosition(cx, ty - 37 - lift).setDepth(this.y + 0.5).setVisible(vis);
@@ -251,7 +299,7 @@ export class Character {
     const bub = this.bubble; redrawWhenGlyphsReady(text, () => { if (bub.active) { bub.updateText(); this.syncSprite(); } });
     this.syncSprite();
   }
-  destroy() { this.fzImg?.destroy(); this.heldImg?.destroy(); this.skinToken++; this.skinHandle?.release(); this.umb?.destroy(); this.fishG?.destroy(); this.fishMark?.destroy(); this.seatStrip?.destroy(); this.emoteTxt?.destroy(); { const tw = this.sprite.scene?.tweens; tw?.killTweensOf(this.fx); tw?.killTweensOf(this.emo); } /* 场景正在关闭时 tweens 已经没了（宿舍里还有别人时，退出会在这里抛错，校园场景就醒不过来 = 黑屏） */ this.tag?.destroy(); this.titleTag?.destroy(); this.bubble?.destroy(); this.bikeBack?.destroy(); this.bikeFront?.destroy(); this.sprite.destroy(); }
+  destroy() { this.stopFx(); this.fzImg?.destroy(); this.heldImg?.destroy(); this.skinToken++; this.skinHandle?.release(); this.umb?.destroy(); this.fishG?.destroy(); this.fishMark?.destroy(); this.seatStrip?.destroy(); this.emoteTxt?.destroy(); { const tw = this.sprite.scene?.tweens; tw?.killTweensOf(this.fx); tw?.killTweensOf(this.emo); } /* 场景正在关闭时 tweens 已经没了（宿舍里还有别人时，退出会在这里抛错，校园场景就醒不过来 = 黑屏） */ this.tag?.destroy(); this.titleTag?.destroy(); this.bubble?.destroy(); this.bikeBack?.destroy(); this.bikeFront?.destroy(); this.sprite.destroy(); }
   /** 换外观：先显示预置造型（look），有自定义外观（app）就在后台生成，好了再换上 */
   setLook(look: number, app?: Appearance) {
     this.look = look; this.umb?.destroy(); this.umb = undefined;
@@ -273,7 +321,7 @@ export class Character {
   setFz(c: number) { if (c === this.fzId) return; this.fzId = c; this.fzImg?.destroy(); this.fzImg = undefined; this.syncSprite(); }
   /** 把头饰摆到头顶；返回是否画了（昵称牌要相应抬高一点） */
   private syncFz(): boolean {
-    if (!this.fzId || Character.umbrella || this.crouching) { this.fzImg?.setVisible(false); return false; }
+    if (!this.fzId || Character.umbrella || this.crouching || this.poseAnim === 'lie' || this.poseAnim === 'sitg') { this.fzImg?.setVisible(false); return false; }
     const key = `fz_${this.fzId}`, sc = this.sprite.scene; if (!sc.textures.exists(key)) return false;
     const img = this.fzImg ?? (this.fzImg = sc.add.image(0, 0, key).setOrigin(0.5, 1));
     const bob = this.moving ? Math.round(Math.sin(sc.time.now / 90)) : 0;
@@ -286,7 +334,7 @@ export class Character {
   /** 把手持物摆到手上：胸前拿的（书/手机/相机）面朝镜头、侧面时可见，背面藏在身体前；身侧提的（奶茶/咖啡/篮球）四个方向都看得见；走路时随步伐上下一格 */
   private syncHeld(cx: number, cy: number) {
     const def = this.heldId ? heldDef(this.heldId) : undefined;
-    const show = !!def && !this.riding && !this.pax && !this.fishing && !this.crouching && !this.sitting && !Character.umbrella;
+    const show = !!def && !this.riding && !this.pax && !this.fishing && !this.crouching && !this.sitting && !Character.umbrella && this.poseAnim !== 'lie' && this.poseAnim !== 'sitg';
     if (!def || !show) { this.heldImg?.setVisible(false); return; }
     const f = this.facing, view = f === 'up' ? 'up' : f === 'down' ? 'down' : 'right', flip = f === 'left';
     if (def.grip === 'chest' && view === 'up') { this.heldImg?.setVisible(false); return; }
@@ -298,16 +346,26 @@ export class Character {
     else img.setOrigin(0.5, 1).setPosition(cx + (view === 'right' ? 5 * sx : 6), cy - 6 + bob);
     img.setDepth(this.y + 0.15);
   }
+  /** 取消正在播的姿势（走动、到时、坐椅子…）：持续型表情一并结束，特效停掉 */
+  private dropHold() { this.poseAnim = undefined; if (this.holdEmote >= 0) { this.holdEmote = -1; this.stopFx(); } if (this.lieOrigin) this.setLieOrigin(false); }
+  /** 躺下的帧是横画布（见 LIE_META）：精灵的原点要跟着换，站起来再换回来 */
+  private setLieOrigin(on: boolean) {
+    this.lieOrigin = on; const m = this.charsMeta, l = m.lie;
+    if (on && l) this.sprite.setOrigin(l.ax / l.w, l.ay / l.h); else this.sprite.setOrigin(m.ax / m.w, (m.ay + 1) / m.h);
+  }
   /** 蹲下（摸猫、喂猫时）：由场景在猫面板打开/关闭时设置 */
   crouching = false;
   setCrouch(on: boolean) { if (on === this.crouching) return; this.crouching = on; this.moving = false; this.play(); this.syncSprite(); }
   protected play() {
     const face = this.shownFacing(), id = this.skin, now = this.sprite.scene.time.now;
-    if (this.sitting) { this.sprite.anims.timeScale = 1; if (this.sprite.anims.currentAnim?.key !== `${id}_sit_down` || !this.sprite.anims.isPlaying) this.sprite.play(`${id}_sit_down`, true); return; }
+    if (this.sitting || this.riding || this.pax) this.dropHold();   // 坐椅子 / 骑车 / 坐后座：躺着、坐地的姿势取消
+    if (this.sitting) { this.lieOrigin && this.setLieOrigin(false); this.sprite.anims.timeScale = 1; if (this.sprite.anims.currentAnim?.key !== `${id}_sit_down` || !this.sprite.anims.isPlaying) this.sprite.play(`${id}_sit_down`, true); return; }
     // 骑车时人物不迈腿：固定站姿帧（腿本来就被车架挡住）
-    if (this.riding || this.pax) { this.sprite.anims.stop(); this.sprite.setFrame(`${id}_${this.facing}_0`); return; }
-    if (this.poseAnim && (this.moving || now >= this.poseUntil)) this.poseAnim = undefined;
-    const key = this.poseAnim ? `${id}_${this.poseAnim}_down`
+    if (this.riding || this.pax) { this.lieOrigin && this.setLieOrigin(false); this.sprite.anims.stop(); this.sprite.setFrame(`${id}_${this.facing}_0`); return; }
+    if (this.poseAnim && (this.moving || now >= this.poseUntil)) this.dropHold();
+    const lying = this.poseAnim === 'lie' && !!this.charsMeta.lie;
+    if (lying !== this.lieOrigin) this.setLieOrigin(lying);
+    const key = this.poseAnim ? `${id}_${this.poseAnim}_${lying ? (this.facing === 'left' ? 'left' : 'right') : 'down'}`
       : this.fishing ? `${id}_${this.fishBite ? 'fish_bite' : 'fish'}_${this.facing}`
       : this.crouching && !this.moving ? `${id}_crouch_${this.facing}`
       : `${id}_${this.moving ? (this.running ? 'run' : 'walk') : 'idle'}_${face}`;

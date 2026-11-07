@@ -38,9 +38,9 @@ type Skin = ReturnType<typeof skinTones>;
 const WHITE = hex('#fbf8f0'), EYE = hex('#2a1e2e'), MOUTH = hex('#b0584c'), MOUTH_IN = hex('#6a2a34'), TONGUE = hex('#e0707a');
 
 /* ───────── 姿势（Rig） ───────── */
-export type Eyes = 'open' | 'blink' | 'happy' | 'sad';
-export type Mouth = 'neutral' | 'smile' | 'open' | 'frown';
-export type ArmShape = 'down' | 'cheer' | 'wave' | 'chin' | 'hips' | 'hold';
+export type Eyes = 'open' | 'blink' | 'happy' | 'sad' | /** 2026-11 表情扩充：生气（眉头压下）/ 哭（闭眼 + 泪）/ 害羞（弯弯的笑眼）/ 受惊（睁大） */ 'angry' | 'cry' | 'shy' | 'wide';
+export type Mouth = 'neutral' | 'smile' | 'open' | 'frown' | /** 嚎啕大哭 / 小圆嘴（哈欠、惊讶） */ 'wail' | 'o';
+export type ArmShape = 'down' | 'cheer' | 'wave' | 'chin' | 'hips' | 'hold' | /** 手捂眼睛 / 捧脸 / 捂嘴 / 比耶 / 拍手（alt = 两手分开） */ 'face' | 'cheek' | 'mouth' | 'peace' | 'clap';
 export interface ArmSpec { shape: ArmShape; off?: number; alt?: boolean }
 export interface SideRig { nx: number; nl: number; fx: number; fl: number; arm: 'swing' | 'bent' | 'up' | 'reach'; ax: number; lean: number }
 export interface Pose {
@@ -50,12 +50,15 @@ export interface Pose {
   aL: ArmSpec; aR: ArmSpec; lift: [number, number];
   /** 右向侧视图的腿/臂 */
   s?: SideRig;
+  /** 坐在地上：腿向前伸（正面画成一块宽裤腿 + 两只鞋），躯干下沉 */
+  legs?: 'sit';
 }
 const D: ArmSpec = { shape: 'down' };
 const sw = (o: number): ArmSpec => ({ shape: 'down', off: o });
 
 export type View = 'down' | 'up' | 'right';
-export interface Anim { id: string; fps: number; loop: boolean; views: View[]; frames: Pose[] }
+/** rot = 'lie'：躺着的姿势——先按右向侧视画站姿，再整张逆时针转 90°（头朝左，脸朝上），画布是横的（尺寸见 LIE_META，场景里按它设精灵的原点） */
+export interface Anim { id: string; fps: number; loop: boolean; views: View[]; frames: Pose[]; rot?: 'lie' }
 
 const stand = (extra: Partial<Pose> = {}): Pose => ({ dy: 0, aL: D, aR: D, lift: [0, 0], s: { nx: 0, nl: 0, fx: 0, fl: 0, arm: 'swing', ax: 0, lean: 0 }, ...extra });
 
@@ -103,6 +106,48 @@ export const ANIMS: Anim[] = [
     stand({ dy: -1, hx: -1, mouth: 'open', aL: { shape: 'hold' }, aR: { shape: 'hold' }, s: { nx: 0, nl: 0, fx: 0, fl: 0, arm: 'bent', ax: 2, lean: -1 } }),
     stand({ dy: 0, hx: 0, mouth: 'open', aL: { shape: 'hold', alt: true }, aR: { shape: 'hold', alt: true }, s: { nx: 0, nl: 0, fx: 0, fl: 0, arm: 'bent', ax: 2, lean: 0 } })] },
   { id: 'sit', fps: 2, loop: true, views: ['down'], frames: [stand({ dy: 3, aL: sw(-1), aR: sw(-1) }), stand({ dy: 3, eyes: 'blink', lift: [0, 1], aL: sw(-1), aR: sw(-1) })] },
+  /* ───── 2026-11 表情扩充（编号见 shared/emotes.ts）：都只有正面一个视角，躺下是横躺的特殊画布 ───── */
+  /** 哭：一只手抹眼睛，另一只垂着，肩膀一抽一抽；换手 */
+  { id: 'cry', fps: 4, loop: true, views: ['down'], frames: [
+    stand({ dy: 1, hy: 1, eyes: 'cry', mouth: 'wail', aL: { shape: 'face' }, aR: sw(1) }), stand({ dy: 2, hy: 1, eyes: 'cry', mouth: 'wail', aL: { shape: 'face' }, aR: sw(1) }),
+    stand({ dy: 1, hy: 1, eyes: 'cry', mouth: 'wail', aL: sw(1), aR: { shape: 'face' } }), stand({ dy: 2, hy: 1, eyes: 'cry', mouth: 'wail', aL: sw(1), aR: { shape: 'face' } })] },
+  /** 生气：叉腰、眉头压下、左右脚轮流跺 */
+  { id: 'angry', fps: 7, loop: true, views: ['down'], frames: [
+    stand({ eyes: 'angry', mouth: 'frown', aL: { shape: 'hips' }, aR: { shape: 'hips' }, lift: [2, 0] }), stand({ dy: 1, eyes: 'angry', mouth: 'open', aL: { shape: 'hips' }, aR: { shape: 'hips' }, lift: [0, 0] }),
+    stand({ eyes: 'angry', mouth: 'frown', aL: { shape: 'hips' }, aR: { shape: 'hips' }, lift: [0, 2] }), stand({ dy: 1, eyes: 'angry', mouth: 'open', aL: { shape: 'hips' }, aR: { shape: 'hips' }, lift: [0, 0] })] },
+  /** 害羞：两手捧着脸、歪头、笑眼 */
+  { id: 'shy', fps: 2.5, loop: true, views: ['down'], frames: [
+    stand({ hx: 1, hy: 1, dy: 1, eyes: 'shy', mouth: 'smile', aL: { shape: 'cheek' }, aR: { shape: 'cheek' } }), stand({ hx: -1, hy: 1, dy: 1, eyes: 'shy', mouth: 'smile', aL: { shape: 'cheek' }, aR: { shape: 'cheek' } })] },
+  /** 鞠躬：头和上半身慢慢压下去，停一下，再起来 */
+  { id: 'bow', fps: 5, loop: false, views: ['down'], frames: [
+    stand(), stand({ dy: 1, hy: 1, eyes: 'blink' }), stand({ dy: 3, hy: 3, eyes: 'blink' }), stand({ dy: 3, hy: 3, eyes: 'blink' }), stand({ dy: 3, hy: 3, eyes: 'blink' }), stand({ dy: 1, hy: 1 }), stand()] },
+  /** 拍手：两手合 / 开，笑眼，微微上下 */
+  { id: 'clap', fps: 6, loop: true, views: ['down'], frames: [
+    stand({ eyes: 'happy', mouth: 'smile', aL: { shape: 'clap' }, aR: { shape: 'clap' } }), stand({ dy: -1, eyes: 'happy', mouth: 'smile', aL: { shape: 'clap', alt: true }, aR: { shape: 'clap', alt: true } })] },
+  /** 打哈欠：嘴越张越大，一只手捂在嘴边，眼睛眯上，最后缓过来 */
+  { id: 'yawn', fps: 3, loop: false, views: ['down'], frames: [
+    stand({ mouth: 'neutral' }), stand({ eyes: 'blink', mouth: 'o', aR: { shape: 'mouth' } }), stand({ dy: -1, eyes: 'blink', mouth: 'wail', aR: { shape: 'mouth' } }), stand({ dy: -1, eyes: 'blink', mouth: 'wail', aR: { shape: 'mouth' } }), stand({ eyes: 'blink', mouth: 'o', aR: { shape: 'mouth' } }), stand({ eyes: 'open', mouth: 'neutral', dy: 1 })] },
+  /** 伸懒腰：双手慢慢举过头顶，踮脚，哈一口气，放下 */
+  { id: 'stretch', fps: 3, loop: false, views: ['down'], frames: [
+    stand({ eyes: 'blink', aL: { shape: 'peace' }, aR: { shape: 'peace' } }), stand({ dy: -1, eyes: 'blink', mouth: 'o', aL: { shape: 'cheer' }, aR: { shape: 'cheer' }, lift: [1, 1] }),
+    stand({ dy: -2, eyes: 'blink', mouth: 'wail', aL: { shape: 'cheer' }, aR: { shape: 'cheer' }, lift: [1, 1] }), stand({ dy: -2, eyes: 'blink', mouth: 'wail', aL: { shape: 'cheer' }, aR: { shape: 'cheer' }, lift: [1, 1] }), stand({ dy: 1, eyes: 'happy', mouth: 'smile', aL: sw(1), aR: sw(1) })] },
+  /** 比耶：一只手举到脸旁，笑眼，歪头 */
+  { id: 'peace', fps: 3, loop: true, views: ['down'], frames: [
+    stand({ eyes: 'happy', mouth: 'smile', hx: 1, aR: { shape: 'peace' } }), stand({ dy: -1, eyes: 'happy', mouth: 'open', hx: 1, aR: { shape: 'peace' } })] },
+  /** 发呆：歪着头、小圆嘴，偶尔眨眼 */
+  { id: 'daze', fps: 1.5, loop: true, views: ['down'], frames: [stand({ hx: 1, mouth: 'o' }), stand({ hx: 1, mouth: 'o', eyes: 'blink' }), stand({ hx: 1, dy: 1, mouth: 'o' })] },
+  /** 耸肩摊手：叉着腰左右晃头，一脸无奈 */
+  { id: 'shrug', fps: 3, loop: true, views: ['down'], frames: [
+    stand({ hx: -1, eyes: 'sad', mouth: 'neutral', aL: { shape: 'hips' }, aR: { shape: 'hips' }, dy: -1 }), stand({ hx: 1, eyes: 'sad', mouth: 'neutral', aL: { shape: 'hips' }, aR: { shape: 'hips' } })] },
+  /** 受惊：跳一下、睁大眼睛、双手举起、小圆嘴 */
+  { id: 'shock', fps: 8, loop: true, views: ['down'], frames: [
+    stand({ dy: -1, air: 2, eyes: 'wide', mouth: 'o', aL: { shape: 'cheer' }, aR: { shape: 'cheer' }, lift: [1, 1] }), stand({ eyes: 'wide', mouth: 'o', aL: { shape: 'cheer' }, aR: { shape: 'cheer' } })] },
+  /** 坐在地上（不是椅子）：躯干下沉、腿向前伸，偶尔眨眼 */
+  { id: 'sitg', fps: 1.5, loop: true, views: ['down'], frames: [
+    stand({ dy: 5, legs: 'sit', aL: sw(2), aR: sw(2) }), stand({ dy: 5, legs: 'sit', eyes: 'blink', aL: sw(2), aR: sw(2) }), stand({ dy: 6, legs: 'sit', aL: sw(2), aR: sw(2) })] },
+  /** 躺下：右向侧视的站姿整张逆时针转 90°（头朝左、脸朝上），两帧是呼吸；闭眼 */
+  { id: 'lie', fps: 1.2, loop: true, views: ['right'], rot: 'lie', frames: [
+    stand({ eyes: 'blink', mouth: 'neutral' }), stand({ dy: 1, eyes: 'blink', mouth: 'neutral' })] },
 ];
 
 /* ───────── 绘图小工具 ───────── */
@@ -251,9 +296,15 @@ function faceFront(p: Pen, S: Skin, look: Look, eyes: Eyes, mouth: Mouth) {
 function eyesFront(p: Pen, S: Skin, look: Look, eyes: Eyes, mouth: Mouth) {
   if (p.k >= 2) { faceHD(p, S, look, eyes, mouth); return; }
   const hy = HY, dark: RGBA = [90, 60, 80, 255];
-  if (eyes === 'open' || eyes === 'sad') { for (const x of [5, 9]) { p.rect(x, hy + 8, 2, 3, EYE); p.set(x, hy + 8, WHITE); p.set(x + 1, hy + 10, dark); } }
+  if (eyes === 'open' || eyes === 'sad' || eyes === 'angry') { for (const x of [5, 9]) { p.rect(x, hy + 8, 2, 3, EYE); p.set(x, hy + 8, WHITE); p.set(x + 1, hy + 10, dark); } }
+  else if (eyes === 'wide') { for (const x of [5, 9]) { p.rect(x, hy + 7, 2, 4, EYE); p.set(x, hy + 7, WHITE); p.set(x + 1, hy + 10, dark); } }
   else if (eyes === 'blink') { p.hline(5, hy + 10, 2, EYE); p.hline(9, hy + 10, 2, EYE); }
+  else if (eyes === 'cry') { p.hline(5, hy + 10, 2, EYE); p.hline(9, hy + 10, 2, EYE); p.set(4, hy + 9, EYE); p.set(11, hy + 9, EYE); }   // 紧闭的眼睛，外眼角下垂
+  else if (eyes === 'shy') { for (const x of [5, 9]) { p.hline(x, hy + 10, 2, EYE); p.set(x - 1, hy + 9, EYE); p.set(x + 2, hy + 9, EYE); } }   // 弯弯向下的笑眼（和 happy 反过来）
   else { for (const x of [5, 9]) { p.hline(x, hy + 9, 2, EYE); p.set(x - 1, hy + 10, EYE); p.set(x + 2, hy + 10, EYE); } }
+  if (eyes === 'angry') { p.set(4, hy + 6, EYE); p.set(5, hy + 7, EYE); p.set(6, hy + 7, EYE); p.set(11, hy + 6, EYE); p.set(10, hy + 7, EYE); p.set(9, hy + 7, EYE); p.rect(4, hy + 11, 2, 1, [236, 96, 84, 255]); p.rect(10, hy + 11, 2, 1, [236, 96, 84, 255]); }   // 眉头压向鼻梁，脸颊发红
+  if (eyes === 'cry') { const tear: RGBA = [150, 206, 255, 255]; for (const [x, y] of [[4, 10], [4, 11], [4, 12], [11, 10], [11, 11], [11, 12], [5, 11], [10, 11]]) p.set(x, hy + y, tear); }
+  if (eyes === 'shy') { p.rect(4, hy + 11, 3, 1, [244, 120, 130, 255]); p.rect(9, hy + 11, 3, 1, [244, 120, 130, 255]); }
   if (eyes === 'sad') { p.set(5, hy + 7, EYE); p.set(6, hy + 6, EYE); p.set(10, hy + 6, EYE); p.set(11, hy + 7, EYE); }
   if (look.fringe === 'none' || look.fringe === 'part' || look.fringe === 'airy') { const bc = tones(look.hairColor)[1]; p.hline(5, hy + 6, 2, bc); p.hline(9, hy + 6, 2, bc); if (eyes === 'sad') { p.set(5, hy + 6, SKINS_DUMMY); p.set(5, hy + 7, bc); p.set(10, hy + 6, SKINS_DUMMY); p.set(10, hy + 7, bc); } }
   if (look.blush !== false) { p.rect(4, hy + 11, 2, 1, S.blush); p.rect(10, hy + 11, 2, 1, S.blush); }
@@ -261,6 +312,8 @@ function eyesFront(p: Pen, S: Skin, look: Look, eyes: Eyes, mouth: Mouth) {
   if (mouth === 'neutral') p.rect(7, hy + 11, 2, 1, MOUTH);
   else if (mouth === 'smile') { p.set(6, hy + 11, MOUTH); p.hline(7, hy + 12, 2, MOUTH); p.set(9, hy + 11, MOUTH); }
   else if (mouth === 'open') { p.rect(7, hy + 11, 2, 2, MOUTH_IN); p.set(7, hy + 12, TONGUE); p.set(8, hy + 12, TONGUE); }
+  else if (mouth === 'wail') { p.rect(6, hy + 11, 4, 3, MOUTH_IN); p.set(7, hy + 13, TONGUE); p.set(8, hy + 13, TONGUE); p.hline(6, hy + 11, 4, WHITE); }
+  else if (mouth === 'o') { p.rect(7, hy + 11, 2, 2, MOUTH_IN); p.hline(7, hy + 11, 2, MOUTH); }
   else { p.set(6, hy + 12, MOUTH); p.hline(7, hy + 11, 2, MOUTH); p.set(9, hy + 12, MOUTH); }
   if (look.mask) { const mk = tones('#e8f0f4'); p.rect(4, hy + 10, 8, 4, mk[2]); p.hline(4, hy + 10, 8, mk[3]); p.hline(4, hy + 13, 8, mk[1]); p.vline(3, hy + 9, 3, mk[1]); p.vline(12, hy + 9, 3, mk[1]); }
   if (look.glasses) glassesFront(p, look.glasses);
@@ -459,6 +512,12 @@ function armCells(spec: ArmSpec): Cell[] {
     case 'wave': return spec.alt ? [[0, 0], [0, -1], [-1, -2], [-1, -3], [-1, -4], [-1, -5], [-2, -6], [-2, -7]] : [[0, 0], [0, -1], [-1, -2], [-1, -3], [-1, -4], [-1, -5], [0, -6], [0, -7]];
     case 'chin': return [[0, 0], [0, 1], [0, 2], [0, 3], [1, 2], [2, 0], [2, -1], [3, -2]];
     case 'hips': return [[0, 0], [0, 1], [-1, 2], [-1, 3], [0, 4], [1, 5], [1, 6], [1, 7]];
+    /** 手捂眼睛 / 捧着脸颊 / 捂在嘴边 / 比耶（举在脸旁）/ 拍手（合 / 开）；dx 是朝身体中线的格数 */
+    case 'face': return [[0, 0], [0, -1], [0, -2], [1, -3], [2, -4], [3, -5], [3, -6], [3, -6]];
+    case 'cheek': return [[0, 0], [0, -1], [0, -2], [1, -3], [2, -3], [3, -4], [3, -5], [3, -5]];
+    case 'mouth': return [[0, 0], [0, -1], [0, -2], [1, -3], [2, -3], [2, -4], [3, -4], [3, -4]];
+    case 'peace': return [[0, 0], [0, -1], [-1, -2], [-1, -3], [-1, -4], [-2, -5], [-2, -6], [-2, -6]];
+    case 'clap': return spec.alt ? [[0, 0], [0, 1], [0, 2], [1, 3], [2, 3], [2, 2], [3, 2], [3, 2]] : [[0, 0], [0, 1], [0, 2], [1, 3], [2, 3], [3, 3], [4, 3], [4, 3]];
     /** 双手在胸前握住鱼竿（两只手在身体中线汇合） */
     case 'hold': return spec.alt ? [[0, 0], [0, 1], [0, 2], [1, 3], [2, 3], [3, 2], [4, 2], [5, 2]] : [[0, 0], [0, 1], [0, 2], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3]];
     default: return Array.from({ length: 8 }, (_, i) => [0, i + off] as Cell);
@@ -613,9 +672,14 @@ function headSide(p: Pen, look: Look, S: Skin, eyes: Eyes, mouth: Mouth) {
 /** 输出帧尺寸与脚点（k = 分辨率倍数）：k=1 → 26×44；k=2 → 50×84 */
 export const frameMeta = (k = 1) => ({ w: CANVAS.w * k + 2, h: CANVAS.h * k + 2 + 2 * k, ax: (CANVAS.ox + 8) * k + 1, ay: (CANVAS.oy + 33) * k });   // 脚点 = 鞋底再往下 2k 行（与旧版 16×32 人物的锚点关系一致）
 export const FRAME = frameMeta(1);
-export function renderFrame(look: Look, pose: Pose, view: View, tick = 0, k = 1): Img {
+export function renderFrame(look: Look, pose: Pose, view: View, tick = 0, k = 1): Img { return finish(drawRaw(look, pose, view, tick, k), k); }
+/** 2 倍高清脸只认原来的眼睛 / 嘴型：新表情的脸在高清下退回最接近的（证件照不会用到新表情，这只是兜底） */
+const HD_EYES: Record<Eyes, Eyes> = { open: 'open', blink: 'blink', happy: 'happy', sad: 'sad', angry: 'open', cry: 'sad', shy: 'happy', wide: 'open' };
+const HD_MOUTH: Record<Mouth, Mouth> = { neutral: 'neutral', smile: 'smile', open: 'open', frown: 'frown', wail: 'open', o: 'open' };
+/** 画出（还没描边的）一帧：k=1 时 CANVAS.w × CANVAS.h */
+function drawRaw(look: Look, pose: Pose, view: View, tick = 0, k = 1): Img {
   const raw = new Img(CANVAS.w * k, CANVAS.h * k), S = skinTones(look.skin), C = tones(look.topColor), kh = hairTones(look), def = HAIRS[look.hair];
-  const air = pose.air ?? 0, eyes = pose.eyes ?? 'open', mouth = pose.mouth ?? 'neutral', sway = tick;
+  const air = pose.air ?? 0, eyes = k >= 2 ? HD_EYES[pose.eyes ?? 'open'] : pose.eyes ?? 'open', mouth = k >= 2 ? HD_MOUTH[pose.mouth ?? 'neutral'] : pose.mouth ?? 'neutral', sway = tick;
   const base = new Pen(raw, CANVAS.ox, CANVAS.oy - air, k);          // 腿
   const up = new Pen(raw, CANVAS.ox + (pose.bx ?? 0), CANVAS.oy + pose.dy - air, k); // 上半身
   const head = up.at(pose.hx ?? 0, pose.hy ?? 0);
@@ -630,11 +694,11 @@ export function renderFrame(look: Look, pose: Pose, view: View, tick = 0, k = 1)
     headSideLayers(h, look, S, eyes, mouth, def, kh, sway);
   } else {
     const back = view === 'up';
-    drawLegsFront(base, look, S, pose.lift);
+    if (pose.legs === 'sit') drawLegsSit(base, look, S); else drawLegsFront(base, look, S, pose.lift);
     if (!back) hairBackFront(head, look, def, kh, sway); // 长发的后片在身体后面，露出脖子与肩线
     if (back) { drawTorsoFront(up, look, S, true); }
     else drawTorsoFront(up, look, S, false);
-    const sy = TY + 1, raised = (a: ArmSpec) => a.shape === 'cheer' || a.shape === 'wave' || a.shape === 'chin';
+    const sy = TY + 1, raised = (a: ArmSpec) => a.shape === 'cheer' || a.shape === 'wave' || a.shape === 'chin' || a.shape === 'face' || a.shape === 'cheek' || a.shape === 'mouth' || a.shape === 'peace';
     if (!raised(pose.aL)) drawArmFront(up, look, C, S, pose.aL, false, sy);
     if (!raised(pose.aR)) drawArmFront(up, look, C, S, pose.aR, true, sy);
     if (!back) {
@@ -653,7 +717,17 @@ export function renderFrame(look: Look, pose: Pose, view: View, tick = 0, k = 1)
     if (raised(pose.aL)) drawArmFront(up, look, C, S, pose.aL, false, sy);
     if (raised(pose.aR)) drawArmFront(up, look, C, S, pose.aR, true, sy);
   }
-  return finish(raw, k);
+  return raw;
+}
+/** 坐在地上：躯干已经下沉，腿向前伸——画成两条朝着镜头、向两侧微微分开的裤腿（比站着更宽更矮），脚在更低的位置，鞋尖朝外 */
+function drawLegsSit(p: Pen, look: Look, S: Skin) {
+  const B = tones(look.bottomColor), k = look.bottom, skirt = k === 'skirt' || k === 'longskirt';
+  if (skirt) { p.rect(2, 26, 12, 3, B[2]); p.hline(2, 28, 12, B[1]); p.hline(2, 26, 12, B[3]); }
+  for (const [x, w, hi] of [[2, 5, true], [9, 5, false]] as const) {
+    if (!skirt) { p.rect(x, 27, w, 4, B[2]); p.hline(x, 27, w, B[3]); p.hline(x, 30, w, B[1]); p.vline(hi ? x : x + w - 1, 27, 4, hi ? B[3] : B[1]); }
+    else { p.rect(x + 1, 29, w - 2, 2, S.base); p.hline(x + 1, 30, w - 2, S.sh); }
+  }
+  drawShoe(p, look, 1, 31, 5); drawShoe(p, look, 10, 31, 5, true);
 }
 function headSideLayers(p: Pen, look: Look, S: Skin, eyes: Eyes, mouth: Mouth, def: HairDef, k: ReturnType<typeof hairTones>, sway: number) {
   headSide(p, look, S, eyes, mouth);
@@ -679,11 +753,28 @@ function finish(raw: Img, k = 1): Img {
   return out;
 }
 
+/** 躺下的画布：站姿（右向侧视）逆时针转 90° 后的尺寸与脚点——人躺在地上，身体中心落在 (x, y)，背贴着地面（描边 + 阴影一起算进去） */
+export const LIE_META = { w: CANVAS.h + 2, h: CANVAS.w + 2 + 2, ax: 24, ay: 18 };
+function rotCcw(src: Img): Img {
+  const out = new Img(src.h, src.w);
+  for (let ny = 0; ny < src.w; ny++) for (let nx = 0; nx < src.h; nx++) { const i = (ny * out.w + nx) * 4, j = (nx * src.w + (src.w - 1 - ny)) * 4; for (let c = 0; c < 4; c++) out.data[i + c] = src.data[j + c]; }
+  return out;
+}
+export function renderLie(look: Look, pose: Pose, tick = 0): Img {
+  const o = rotCcw(drawRaw(look, pose, 'right', tick, 1)).outlinedSoft(), out = new Img(o.w, o.h + 2);
+  let low = 0; for (let y = o.h - 1; y >= 0 && !low; y--) for (let x = 0; x < o.w; x++) if (o.alpha(x, y) > 200) { low = y; break; }   // 身体最低的一行：阴影贴在它下面
+  for (let y = low - 2; y < out.h; y++) for (let x = 1; x < o.w - 1; x++) {   // 地面上一圈横长的软阴影
+    const dx = (x + 0.5 - 24) / 16, dy = (y + 0.5 - (low + 1)) / 2.4;
+    if (dx * dx + dy * dy <= 1) out.set(x, y, [28, 36, 66, dx * dx + dy * dy > 0.5 ? 34 : 60]);
+  }
+  out.blit(o, 0, 0);
+  return out;
+}
 /** 渲染一个外观的一个动作：key = `${anim}_${view}_${frame}`，left 视角由 right 镜像 */
 export function buildAnim(look: Look, a: Anim, k = 1): Record<string, Img> {
   const out: Record<string, Img> = {};
   for (const v of a.views) a.frames.forEach((pose, i) => {
-    const img = renderFrame(look, pose, v, i, k);
+    const img = a.rot === 'lie' ? renderLie(look, pose, i) : renderFrame(look, pose, v, i, k);
     out[`${a.id}_${v}_${i}`] = img;
     if (v === 'right') { const m = new Img(img.w, img.h); for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) { const c = img.get(img.w - 1 - x, y); if (c[3]) m.set(x, y, c); } out[`${a.id}_left_${i}`] = m; }
   });

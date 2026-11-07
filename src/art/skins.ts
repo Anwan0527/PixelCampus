@@ -9,7 +9,7 @@ import { ANIMS, appToLook, buildAnim, frameMeta } from './char-rig';
 import { pack, type PackItem } from './pack';
 import { appKey, type Appearance } from '../shared/appearance';
 
-export interface CharsMeta { w: number; h: number; ax: number; ay: number; count: number; anims: Record<string, { fps: number; loop: boolean; n: number; views: string[] }> }
+export interface CharsMeta { w: number; h: number; ax: number; ay: number; /** 躺下的横画布 */ lie?: { w: number; h: number; ax: number; ay: number }; count: number; anims: Record<string, { fps: number; loop: boolean; n: number; views: string[] }> }
 
 /** 待机动画的帧顺序：呼吸（两帧各停一会儿）+ 偶尔眨眼 */
 const IDLE_ORDER = [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 2];

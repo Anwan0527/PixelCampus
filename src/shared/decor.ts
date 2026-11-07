@@ -37,6 +37,7 @@ export interface DecorDef {
   /** 固有家具：每人一份、不卖、不能交易、不能退货（可以收回背包再摆） */ starter?: boolean;
   /** 能坐的椅子 / 凳子 / 沙发 */ seat?: boolean;
   /** 能染色（见 dye.ts；DYE 集合里的家具） */ dye?: boolean;
+  /** 矮矮的、人和猫能直接走上去的家具（宿舍猫窝）：摆放时仍占一格（不和别的地面家具重叠），但不挡路，画在地毯上面、人和猫下面 */ walk?: boolean;
   /** 小件摆在这张桌子上时再抬高多少像素（一行深的桌子，桌面比脚印高） */ lift?: number;
   /** 画的时候向左偏移多少像素（窗帘比窗框宽，向两边伸出去） */ ox?: number;
   note: string;
@@ -72,6 +73,7 @@ const RAW: readonly DecorDef[] = [
   // ---- 软装
   D('dc_bear', 'dc_bear', '大熊玩偶', '软装', 'floor', 1, 1, 160, '一只软软的棕色大熊。', { say: '软乎乎的大熊，抱一下，心情好多了。' }),
   D('dc_guitar', 'dc_guitar', '吉他', '软装', 'floor', 1, 1, 240, '靠在墙边的木吉他。', { say: '琴弦有点松，你拨了一下，居然还挺好听。' }),
+  D('dc_catbed', 'dc_catbed', '宿舍猫窝', '软装', 'floor', 1, 1, 60, '软软的圆形猫窝：好感度到「知己」的小猫可以接回宿舍养，它会来这里睡觉。（和送给校园小猫的猫窝是两样东西）', { say: '软乎乎的猫窝，还带着一点暖意。', walk: true }),
   D('dc_plant', 'plant', '绿植', '软装', 'floor', 1, 1, 40, '一盆精神的绿植。'),
   D('dc_bin', 'bin', '垃圾桶', '软装', 'floor', 1, 1, 15, '灰色的小垃圾桶。'),
   // ---- 地毯（铺在地上，不挡路）
@@ -133,7 +135,7 @@ const BASE: Record<string, Rot> = { dc_chairup: 180 };
  * 鱼缸（缸里的鱼和水）、床（睡觉时盖在上面的被子是另一张图，染了会对不上）、空调和门牌（功能件）、绿植和仙人掌（本来就是植物的颜色）、桌上的小件、吉他。
  */
 const DYE = new Set(['dc_desk', 'dc_table2', 'dc_dtable', 'dc_dtable3', 'dc_chair', 'dc_chairup', 'dc_stool', 'dc_gamechair', 'dc_beanbag', 'dc_sofa', 'dc_shelf2', 'dc_shelf3', 'dc_cab2', 'dc_shoebox', 'dc_coatrack',
-  'dc_fridge', 'dc_bear', 'dc_bin', 'dc_rug_red', 'dc_rug_blue', 'dc_rug_round', 'dc_rug_paw', 'dc_mat_welcome', 'dc_mat_paw', 'dc_mat_straw', 'dc_mat_towel', 'dc_wardrobe', 'dc_chest', 'dc_rug_home', 'dc_mat_door']);
+  'dc_fridge', 'dc_bear', 'dc_bin', 'dc_catbed', 'dc_rug_red', 'dc_rug_blue', 'dc_rug_round', 'dc_rug_paw', 'dc_mat_welcome', 'dc_mat_paw', 'dc_mat_straw', 'dc_mat_towel', 'dc_wardrobe', 'dc_chest', 'dc_rug_home', 'dc_mat_door']);
 export const DECOR: readonly DecorDef[] = RAW.map((d) => {
   const x: DecorDef = FACE.has(d.id) ? { ...d, face: true, ...(BASE[d.id] ? { base: BASE[d.id] } : {}) } : TURN_FLAT.has(d.id) ? { ...d, turn: true } : d;
   return DYE.has(d.id) ? { ...x, dye: true } : x;

@@ -24,8 +24,8 @@ export const fishingPrefersCast = (s: FishLockState): boolean => !!s.castable;
 /** 在「鱼竿还在水里 / 鱼正在飞」的阶段（结算卡片不算：卡片要停几秒，那几秒里别的界面可以正常开） */
 export const fishingRodOut = (s: FishLockState): boolean => s.phase !== 'idle' || s.catching;
 
-/** 钓鱼中仍然可用的界面入口（ui 注册表的 id）：背包（换竿换饵）、地图、声音、聊天频道、沉浸模式、全屏、关于、图鉴里的钓鱼页（G 键单独处理） */
-export const FISHING_OK_UI: ReadonlySet<string> = new Set(['bag', 'map', 'minimap', 'sound', 'channels', 'immersive', 'fullscreen', 'about']);
+/** 钓鱼中仍然可用的界面入口（ui 注册表的 id）：背包（换竿换饵，含精灵页）、地图、设置（声音 / 聊天频道 / 沉浸 / 全屏 / 小地图 / 关于）、图鉴里的钓鱼页（G 键单独处理） */
+export const FISHING_OK_UI: ReadonlySet<string> = new Set(['bag', 'map', 'settings']);
 /** 钓鱼中这个界面入口要不要屏蔽 */
 export const fishingBlocksUi = (s: FishLockState, id: string): boolean => fishingRodOut(s) && !FISHING_OK_UI.has(id);
 

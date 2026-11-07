@@ -53,6 +53,8 @@ export class Cat {
   private walkSpeed = 26; private napMs = 600000;
   /** 走到目标之后做什么：'nap' = 趴下睡（陪坐着的玩家 / 和同伴蜷在一起）；greeting = 正走向玩家 */
   private arrive: '' | 'nap' = ''; private greetCd = 0; private napBeside = false;
+  /** 养在宿舍的猫：猫窝的位置（脚点）。想睡的时候先走到猫窝再趴下；没有猫窝就在原地睡 */
+  restSpot?: { x: number; y: number };
   /** 抱抱：到什么时候为止、抱在哪（玩家身上） */
   private hugUntil = 0; private hugAt = { x: 0, y: 0 }; private hugHeart = 0;
 
@@ -282,7 +284,10 @@ export class Cat {
       [lv >= 4 && near && !env.night ? 0.06 : 0, () => this.doAct('roll')],
       [lv >= 1 && dv < 90 ? 0.1 : 0, () => { this.faceVisitor(v); this.doAct('slow_blink'); }],
       [lv >= 2 && dv < 90 ? 0.05 : 0, () => { this.faceVisitor(v); this.doAct('meow'); }],
-      [dv > 90 ? (env.night ? 0.42 : cozy ? 0.22 : 0.18) : 0, () => this.setState('sleep', 9000 + Math.random() * 12000, lv >= 3 ? 'sleep_side' : 'sleep_curl')],
+      [dv > 90 || (this.restSpot && dv > 36) ? (env.night ? 0.42 : cozy ? 0.22 : 0.18) : 0, () => {
+        if (this.restSpot && this.distTo(this.restSpot.x, this.restSpot.y) > 4) { this.goTo(this.restSpot.x, this.restSpot.y, 28, 'nap', 9000 + Math.random() * 12000); return; } // 宿舍里的猫：先走到猫窝再睡
+        this.setState('sleep', 9000 + Math.random() * 12000, lv >= 3 ? 'sleep_side' : 'sleep_curl');
+      }],
       [this.partner() && (env.night || cozy) && dv > 60 ? 0.3 : 0, () => { const q = this.partner()!, t = clampToLeash(this.def.hx, this.def.hy, q.x + (this.def.hx < q.def.hx ? -11 : 11), q.y); this.goTo(t.x, t.y, 30, 'nap', 14000 + Math.random() * 12000); }],
       [cozy || env.night ? 0.16 : 0.08, () => this.doAct('loaf')],
       [0.07, () => this.doAct('lick_paw')], [0.06, () => this.doAct('groom')], [0.04, () => this.doAct('scratch')],

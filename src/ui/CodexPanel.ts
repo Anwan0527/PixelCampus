@@ -12,6 +12,7 @@ import { COAT_LABELS, COAT_RARITY, LEVEL_NAMES, REAL_CAT_FIRST, REAL_CAT_COUNT, 
 import { GROUP_NAMES, catProfile, likesKnown, realCatOf, storiesUnlocked } from '@/shared/cat-lore';
 import { drawFrame, drawItem } from './sprites';
 import { ui } from './actions';
+import type { Host, Section } from './hosted';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -20,11 +21,11 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 };
 
-export type CodexTab = 'animals' | 'fish';
-interface TabDef { id: CodexTab; label: string; render: (box: HTMLElement) => void }
+export type CodexTab = 'animals' | 'fish' | 'ach' | 'titles';
+interface TabDef { id: CodexTab; label: string; render: (box: HTMLElement) => void; /** 切到这一页时调用（取数据） */ enter?: () => void }
 
 /**
- * 图鉴：一个入口（电脑按 H / 菜单「图鉴」）下面分页——动物图鉴（校园小猫）、钓鱼图鉴。以后加新图鉴，在 tabs 里加一项即可。
+ * 图鉴：一个入口（电脑按 H / 菜单「图鉴」）下面分页——动物图鉴（校园小猫）、钓鱼图鉴，以及并进来的成就（J）、称号。以后加新页，在 tabs 里加一项（或 attach 一个寄宿页）即可。
  * 数据都是服务器给的（小猫好感度、钓鱼记录），这里只显示；没收集到的显示成灰色剪影和"？？？"。
  */
 export class CodexPanel {
@@ -62,7 +63,14 @@ export class CodexPanel {
   get isOpen() { return !this.root.classList.contains('hidden'); }
   /** 直接打开钓鱼图鉴的某个子页（背包里点等级那一行用） */
   openFishSub(sub: 'fish' | 'rods' | 'baits' | 'bundles' | 'level') { this.fishSub = sub; this.open('fish'); }
-  open(tab?: CodexTab) { if (tab) this.tab = tab; this.root.classList.remove('hidden'); this.net.getFishdex(); this.net.getGeardex(); this.net.getFx(); this.net.getInv(); this.render(); }
+  open(tab?: CodexTab) { if (tab) this.tab = tab; this.root.classList.remove('hidden'); this.net.getFishdex(); this.net.getGeardex(); this.net.getFx(); this.net.getInv(); this.enter(); this.render(); }
+  /** 当前页的「进入」动作（成就 / 称号页取最新数据、清红点） */
+  private enter() { this.tabs.find((t) => t.id === this.tab)?.enter?.(); }
+  /** 并进来一页（成就、称号）：宿主接口给寄宿面板用，旧的 open / close / isOpen 照常工作 */
+  attach<T extends 'ach' | 'titles'>(id: T, label: string, section: Section & { attach(h: Host<T>): void }) {
+    this.tabs.push({ id, label, render: (b) => b.append(section.view), enter: () => section.enter() });
+    section.attach({ open: (t) => this.open(t), close: () => this.close(), isOpenOn: (t) => this.isOpen && this.tab === t });
+  }
   close() { this.root.classList.add('hidden'); }
   toggle() { this.isOpen ? this.close() : this.open(); }
   /** 数据变了（小猫好感度、钓鱼记录）就刷新 */
@@ -71,7 +79,7 @@ export class CodexPanel {
   private render() {
     this.tabsBar.replaceChildren(...this.tabs.map((t) => {
       const b = el('button', 'cx-tab' + (t.id === this.tab ? ' on' : ''), t.label); b.type = 'button';
-      b.addEventListener('click', () => { this.tab = t.id; this.render(); });
+      b.addEventListener('click', () => { this.tab = t.id; this.enter(); this.render(); });
       return b;
     }));
     this.body.replaceChildren();

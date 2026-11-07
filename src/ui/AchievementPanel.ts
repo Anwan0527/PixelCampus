@@ -1,6 +1,7 @@
 import { ACHIEVEMENTS, ACH_TOTAL, achDef } from '@/shared/achievements';
 import type { NetClient } from '@/net/client';
 import { ui } from './actions';
+import type { Host, Section } from './hosted';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -19,30 +20,21 @@ export interface AchHooks {
 }
 
 /**
- * 成就面板：已解锁的亮着（带说明和解锁时间），没解锁的显示线索，占位的显示"？？？"。
- * 解锁记录在服务器上（跟着身份走），这里只显示。电脑按 J 或点右侧「成就」，手机点 ☰ → 成就，也可以在学生证里点「成就」。
+ * 成就（图鉴里的「成就」页）：已解锁的亮着（带说明和解锁时间），没解锁的显示线索，占位的显示"？？？"。
+ * 解锁记录在服务器上（跟着身份走），这里只显示。电脑按 J、学生证 / 设置里点「成就」都会打开图鉴并切到这一页。
  */
-export class AchievementPanel {
-  private root = el('div', 'screen hidden');
+export class AchievementPanel implements Section {
+  readonly view = el('div', 'cx-sec');
   private list = el('div', 'ach-list');
   private count = el('div', 'create-sub');
   private note = el('div', 'bag-note');
   private unlocked: Record<string, number> = {};
   private unseen = new Set<string>();
   private loaded = false;
+  private host: Host<'ach'> | null = null;
 
   constructor(private net: NetClient, private hooks: AchHooks) {
-    const panel = el('div', 'box ach');
-    const head = el('div', 'board-head');
-    const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭成就');
-    close.addEventListener('click', () => this.close());
-    head.append(el('div', 'board-title', '成就'), close);
-    panel.append(head, this.count, this.list, this.note);
-    this.root.append(panel);
-    this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
-    (document.getElementById('hud') ?? document.body).append(this.root);
-    ui.add({ id: 'ach', label: '成就', key: 'J', run: () => this.toggle() });
+    this.view.append(this.count, this.list, this.note);
     this.net.handlers.ach = (unlocked, fresh) => {
       this.loaded = true; this.unlocked = unlocked;
       if (fresh?.length) { for (const id of fresh) this.unseen.add(id); this.hooks.onNew(fresh); }
@@ -52,12 +44,16 @@ export class AchievementPanel {
     this.render();
   }
 
-  get isOpen() { return !this.root.classList.contains('hidden'); }
+  /** 接到图鉴上（场景创建完图鉴后调用） */
+  attach(host: Host<'ach'>) { this.host = host; }
+  get isOpen() { return !!this.host?.isOpenOn('ach'); }
   get unlockedCount() { return Object.keys(this.unlocked).filter((id) => !achDef(id)?.placeholder).length; }
-  open() { this.root.classList.remove('hidden'); this.net.getAch(); this.render(); this.unseen.clear(); this.syncBadge(); }
-  close() { this.root.classList.add('hidden'); }
+  open() { this.host?.open('ach'); }
+  close() { if (this.isOpen) this.host?.close(); }
   toggle() { this.isOpen ? this.close() : this.open(); }
-  private syncBadge() { ui.badge('ach', this.isOpen ? 0 : this.unseen.size); }
+  /** 图鉴切到成就页时：取一次最新记录，红点清掉 */
+  enter() { this.net.getAch(); this.render(); this.unseen.clear(); this.syncBadge(); }
+  private syncBadge() { ui.badge('codex', this.isOpen ? 0 : this.unseen.size); }
 
   private render() {
     this.count.textContent = `已解锁 ${this.unlockedCount} / ${ACH_TOTAL}`;

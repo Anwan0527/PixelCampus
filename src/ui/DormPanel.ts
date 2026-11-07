@@ -15,7 +15,7 @@ export type DormData = Extract<ServerMsg, { t: 'dorm_data' }>;
 
 /**
  * 宿舍面板：① 选/换宿舍楼栋（第一次随便选，之后每天一次）和「回宿舍」；② 宝箱（只有主人能开）：背包 ⇄ 宝箱。
- * 菜单里有两个入口：「回宿舍」（点一下就回去；还没选楼栋时弹出选楼栋）和「宿舍楼栋」。
+ * 菜单里一个入口「宿舍」：打开面板，里面有「回宿舍」按钮和选 / 换楼栋；电脑按 U 仍是直接回宿舍（还没选楼栋时弹出这个面板）。
  * 规则都在服务器（src/shared/dorm.ts），这里只显示。
  */
 export class DormPanel {
@@ -85,8 +85,7 @@ export class DormPanel {
     (document.getElementById('hud') ?? document.body).append(this.root, this.chestRoot, this.bathRoot, this.signRoot, this.ask);
     net.handlers.dormAsk = (uid, name, kind, title) => this.showAsk(uid, name, kind, title);
 
-    ui.add({ id: 'dorm', label: '回宿舍', key: 'U', run: () => this.goHome() });
-    ui.add({ id: 'dorm-set', label: '宿舍楼栋', run: () => this.toggle() });
+    ui.add({ id: 'dorm', label: '宿舍', key: 'U', run: () => this.toggle() }); // 2026-11-10 起「回宿舍」和「宿舍楼栋」合成一个入口：面板里有「回宿舍」大按钮 + 选 / 换楼栋；快捷键 U 仍是直接回宿舍
 
     const h = net.handlers;
     h.dormData = (m) => { this._data = m; this.render(); this.renderChest(); this.renderBath(); this.onData(m); };
@@ -129,7 +128,7 @@ export class DormPanel {
   closeBath() { this.bathRoot.classList.add('hidden'); }
   private bathSay(text: string, ok: boolean) { this.bathMsg.textContent = text; this.bathMsg.className = `tp-msg ${ok ? 'ok' : 'bad'}`; }
 
-  /** 点「回宿舍」：绑定了就直接回去，没绑定先弹出选楼栋 */
+  /** 快捷键 U / 面板里的「回宿舍」：绑定了就直接回去，没绑定先弹出选楼栋 */
   goHome() {
     if (this.net.status !== 'online') { this.say('没连上服务器，不能回宿舍', false); this.root.classList.remove('hidden'); return; }
     if (!this._data?.b) { this.open(); this.say('你还没有宿舍：先选一栋楼', false); return; }
@@ -145,7 +144,7 @@ export class DormPanel {
     if (!d) { b.append(el('div', 'create-sub', '读取中…')); return; }
     const cur = el('div', 'dorm-cur');
     cur.append(el('div', 'dorm-b', d.b ? `🏠 ${d.b}` : '🏠 还没有宿舍'));
-    const go = el('button', 'btn dorm-go', '回宿舍'); go.type = 'button'; go.disabled = !d.b;
+    const go = el('button', 'btn dorm-go', '回宿舍 (U)'); go.type = 'button'; go.disabled = !d.b;
     go.addEventListener('click', () => { this.net.dormGo(); });
     cur.append(go);
     b.append(cur, el('div', 'create-sub', d.b

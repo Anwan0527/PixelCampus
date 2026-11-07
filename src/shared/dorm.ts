@@ -11,6 +11,7 @@ import { fishDef, type Rarity } from './fishing';
 import { cleanText } from './profile';
 import { DYE_ITEM, dyeName, isDyeIdx } from './dye';
 import { LEGACY_STARTERS, cleanLay, decorDef, defaultLay, footOf, isRoomLevel, layError, ROOM_SIZES, type Placed, type Rot, type RoomLevel } from './decor';
+import { DORM_CAT_AT, DORM_CAT_LEVEL, LEVEL_NAMES, dormCatCap } from './cats';
 import { FLOOR_SKINS, ROOM_NAMES, ROOM_PRICES, SKINS, WALL_SKINS, type SkinKind } from './dormskin';
 
 export const DORM = {
@@ -67,6 +68,8 @@ export interface DormSave {
   rm?: 1 | 2;
   /** 墙纸 / 地板：w、f = 正在用的样式下标（缺省 0 = 默认）；ow、of = 已买的样式（按位记，第 i 位 = 第 i 种；第 0 种永远拥有） */
   sk?: { w?: number; f?: number; ow?: number; of?: number };
+  /** 养在宿舍的小猫编号（好感度 ≥ 200 的才能接回来；上限按房间大小，还要摆有足够的「宿舍猫窝」）。只是我自己的状态：校园里这只猫对别的玩家照常在原地 */
+  dc?: number[];
 }
 
 /** 宿舍房间的尺寸与门（和 data/interiors/dorm.json 一致，测试里核对）：服务器据此限定屋里的位置范围、给新进屋的人定出生点 */
@@ -125,9 +128,42 @@ export function cleanDorm(raw: unknown): DormSave | undefined {
   if (Array.isArray(r.lay)) { // 老存档（v1）的摆放里没有固有家具：补在原来固定的位置上（和旧规则一致，不会和玩家的摆放冲突）
     const lay = cleanLay(r.v === 2 ? r.lay : [...LEGACY_STARTERS, ...r.lay], out.rm ?? 0); if (lay) { out.lay = lay; out.v = 2; }
   }
+  { const dc = cleanDormCats(r.dc, out.rm ?? 0); if (dc.length) out.dc = dc; }
   { const lk = cleanLikes(r.lk); if (lk.length) out.lk = lk; }
   if (r.hid === 1) out.hid = 1;
   return Object.keys(out).length ? out : undefined;
+}
+
+/** 从磁盘来的"养在宿舍的猫"：合法的猫编号、去重、不超过这个房间的上限（多出来的丢掉，好感度不受影响，只是回校园了） */
+export function cleanDormCats(raw: unknown, level: number = 0): number[] {
+  if (!Array.isArray(raw)) return [];
+  const out: number[] = [];
+  for (const v of raw) { if (Number.isInteger(v) && (v as number) >= 0 && (v as number) < 1000 && !out.includes(v as number)) out.push(v as number); if (out.length >= dormCatCap(level)) break; }
+  return out;
+}
+/** 宿舍里摆着几个「宿舍猫窝」 */
+export const catBedsOf = (d: DormSave | undefined): number => layOf(d).filter((p) => p.d === 'dc_catbed').length;
+/**
+ * 接回宿舍 / 送回校园。规则：好感 ≥ 200（知己）；宿舍已绑定楼栋；房间里猫窝数 > 已经养的猫数；不超过房间大小的上限（1/2/3）；
+ * 这只猫不能正跟着我（要先让它回家）。送回校园随时可以。cat = 这只猫的名字（给提示用）。
+ */
+export function dormCatApply(d: DormSave, op: 'adopt' | 'release', catId: number, o: { name: string; aff: number; following: boolean; bound: boolean; known: boolean }): { ok: boolean; msg: string } {
+  if (!o.known) return { ok: false, msg: '找不到这只小猫' };
+  const cur = d.dc ?? [], at = cur.indexOf(catId);
+  if (op === 'release') {
+    if (at < 0) return { ok: false, msg: `${o.name}本来就在校园里` };
+    d.dc = cur.filter((i) => i !== catId); if (!d.dc.length) delete d.dc;
+    return { ok: true, msg: `${o.name}回校园了（在原来的地方等你）` };
+  }
+  if (at >= 0) return { ok: false, msg: `${o.name}已经住在你的宿舍里了` };
+  if (o.aff < DORM_CAT_AT) return { ok: false, msg: `要和${o.name}成为「${LEVEL_NAMES[DORM_CAT_LEVEL]}」（好感 ${DORM_CAT_AT} 点）才能接它回宿舍` };
+  if (!o.bound) return { ok: false, msg: '还没选宿舍楼：先在「宿舍」里选你住的楼栋' };
+  if (o.following) return { ok: false, msg: `${o.name}正跟着你，先让它回家再接回宿舍` };
+  const cap = dormCatCap(roomLevel(d));
+  if (cur.length >= cap) return { ok: false, msg: `这间宿舍最多养 ${cap} 只猫（扩建后能养更多）` };
+  if (catBedsOf(d) <= cur.length) return { ok: false, msg: `宿舍里要先摆一个空着的「宿舍猫窝」（现在有 ${catBedsOf(d)} 个，已经住了 ${cur.length} 只）：商店买，装修里摆进去` };
+  d.dc = [...cur, catId];
+  return { ok: true, msg: `${o.name}搬进你的宿舍啦！回宿舍就能看到它睡在猫窝里` };
 }
 
 /** 换楼栋：第一次（还没绑定）随便选；之后每天最多改一次，选原来的楼栋不算改 */

@@ -24,7 +24,7 @@ import type { ChatStatus, ChatTransport } from './chat';
 
 export interface NetHandlers {
   welcome?: (id: number, x: number, y: number) => void;
-  spawn?: (id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number, fz?: number) => void;
+  spawn?: (id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number, fz?: number, pose?: number) => void;
   held?: (pid: number, h: number) => void;
   fz?: (pid: number, c: number) => void;
   fzState?: (own: number[], on: number, news?: number[], gift?: { id: string; n: number }[]) => void;
@@ -128,6 +128,8 @@ export interface NetHandlers {
   tradeState?: (m: Extract<ServerMsg, { t: 'trade_state' }>) => void;
   tradeEnd?: (tid: number, ok: boolean, msg: string) => void;
   tradeNote?: (msg: string) => void;
+  /** 喂水禽的结果 */
+  birdResult?: (m: Extract<ServerMsg, { t: 'bird_result' }>) => void;
   /** 校园墙：一页帖子（append = 接在后面）/ 一条帖子和它的评论 / 操作结果 */
   wallPosts?: (items: WallPost[], more: boolean, append: boolean, pending?: number) => void;
   wallPending?: (n: number) => void;
@@ -173,6 +175,8 @@ export interface NetHandlers {
   /** 坐下结果（成功时 x/y 是座位位置）/ 别人（含自己）做了表情 */
   sitResult?: (ok: boolean, msg?: string, x?: number, y?: number) => void;
   emote?: (pid: number, e: number) => void;
+  /** 持续型表情（躺下 / 坐地）结束了 */
+  emoteEnd?: (pid: number) => void;
   /** 我的称号：已获得 / 正在佩戴 / 这次刚得到的 */
   titles?: (own: Record<string, number>, sel: string, fresh?: string[]) => void;
   /** 上车结果：被拒绝（附近没有车）时场景要把人放下来 */
@@ -252,7 +256,7 @@ export class NetClient implements ChatTransport {
         this.handlers.welcome?.(m.id, m.x, m.y);
         { const t = readAdminToken(); if (t) this.ws?.send(JSON.stringify({ t: 'admin_resume', token: t })); } // 之前登录过管理员：自动恢复
         break;
-      case 'spawn': this.handlers.spawn?.(m.id, m.uid, m.x, m.y, m.flags, m.p, m.ttl, m.held, m.fz); break;
+      case 'spawn': this.handlers.spawn?.(m.id, m.uid, m.x, m.y, m.flags, m.p, m.ttl, m.held, m.fz, m.pose); break;
       case 'held': this.handlers.held?.(m.pid, m.h); break;
       case 'fz': this.handlers.fz?.(m.pid, m.c); break;
       case 'fz_state': this.handlers.fzState?.(m.own, m.on, m.news, m.gift); break;
@@ -341,6 +345,7 @@ export class NetClient implements ChatTransport {
       case 'trade_state': this.handlers.tradeState?.(m); break;
       case 'trade_end': this.handlers.tradeEnd?.(m.tid, m.ok, m.msg); break;
       case 'trade_note': this.handlers.tradeNote?.(m.msg); break;
+      case 'bird_result': this.handlers.birdResult?.(m); break;
       case 'wall_posts': this.handlers.wallPosts?.(m.items, m.more, m.append === true, m.pending); break;
       case 'wall_pending': this.handlers.wallPending?.(m.n); break;
       case 'wall_thread': this.handlers.wallThread?.(m.post, m.comments); break;
@@ -375,6 +380,7 @@ export class NetClient implements ChatTransport {
       case 'quests': this.handlers.quests?.(m.list, m.full, m.fresh); break;
       case 'sit_result': this.handlers.sitResult?.(m.ok, m.msg, m.x, m.y); break;
       case 'emote': this.handlers.emote?.(m.pid, m.e); break;
+      case 'emote_end': this.handlers.emoteEnd?.(m.pid); break;
     }
   }
 
@@ -449,6 +455,8 @@ export class NetClient implements ChatTransport {
   dormGo() { this.tx({ t: 'dorm_go' }); }
   dormEnter() { this.tx({ t: 'dorm_enter' }); }
   dormLeave() { this.tx({ t: 'dorm_leave' }); }
+  /** 把好感 ≥ 200 的小猫接回宿舍养（on）/ 送回校园 */
+  dormCat(id: number, on: boolean) { this.tx({ t: 'dorm_cat', id, on }); }
   dormAc() { this.tx({ t: 'dorm_ac' }); }
   dormSleep(on: boolean) { this.tx({ t: 'dorm_sleep', on }); }
   dormChest(op: 'put' | 'take', id: string, n: number) { this.tx({ t: 'dorm_chest', op, id, n }); }
@@ -466,6 +474,7 @@ export class NetClient implements ChatTransport {
   monGo(accept: boolean) { this.tx({ t: 'mon_go', accept }); }
   monAct(bid: string, turn: number, a: Extract<ClientMsg, { t: 'mon_act' }>['a']) { this.tx({ t: 'mon_act', bid, turn, a }); }
   catPet(id: number) { this.tx({ t: 'cat_pet', id }); }
+  birdFeed(id: number) { this.tx({ t: 'bird_feed', id }); }
   catFeed(id: number, item: string) { this.tx({ t: 'cat_feed', id, item }); }
   catHug(id: number) { this.tx({ t: 'cat_hug', id }); }
   ride(on: boolean) { this.tx({ t: 'ride', on }); }

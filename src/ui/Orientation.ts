@@ -1,8 +1,6 @@
-import { ui } from './actions';
-
 /**
  * 手机横屏：布局由 style.css 的横屏媒体查询自动切换（竖屏、横屏都能玩）；这里只做两件事：
- *  1. 菜单里的「全屏横屏」：进入全屏，并（Android Chrome 等支持的浏览器）把屏幕锁定成横向；再点一次退出。
+ *  1. 「设置 → 画面与沉浸」里的「全屏横屏」：进入全屏，并（Android Chrome 等支持的浏览器）把屏幕锁定成横向；再点一次退出。
  *     iPhone 的 Safari 不允许网页全屏、也不能锁方向，这个入口会自动隐藏，手动把手机横过来就行（加到主屏幕再打开会更像全屏）。
  *  2. 竖屏进游戏时提示一次「横屏更舒服」，8 秒后自己消失，每台设备只提示一次（记在本机 localStorage）。
  */
@@ -12,14 +10,14 @@ export const isLandscape = () => { try { return window.matchMedia('(orientation:
 
 /** 浏览器支持网页全屏吗（iPhone Safari 不支持） */
 export const canFullscreen = () => { const d = document as Document & { webkitFullscreenEnabled?: boolean }; return !!(d.fullscreenEnabled || d.webkitFullscreenEnabled); };
-const isFs = () => { const d = document as Document & { webkitFullscreenElement?: Element | null }; return !!(document.fullscreenElement || d.webkitFullscreenElement); };
+export const isFullscreen = () => { const d = document as Document & { webkitFullscreenElement?: Element | null }; return !!(document.fullscreenElement || d.webkitFullscreenElement); };
 
 type LockableOrientation = ScreenOrientation & { lock?: (o: string) => Promise<void> };
 const orient = () => (screen.orientation ?? undefined) as LockableOrientation | undefined;
 
-async function toggleFullscreen() {
+export async function toggleFullscreen() {
   try {
-    if (isFs()) {
+    if (isFullscreen()) {
       try { orient()?.unlock?.(); } catch { /* 没锁过 */ }
       await (document.exitFullscreen?.() ?? (document as Document & { webkitExitFullscreen?: () => void }).webkitExitFullscreen?.());
       return;
@@ -31,8 +29,7 @@ async function toggleFullscreen() {
 }
 
 export function mountOrientation() {
-  ui.add({ id: 'fullscreen', label: '⛶ 全屏', run: () => { void toggleFullscreen(); }, desktop: false, visible: canFullscreen });
-  document.addEventListener('fullscreenchange', () => { if (!isFs()) { try { orient()?.unlock?.(); } catch { /* 没锁过 */ } } });
+  document.addEventListener('fullscreenchange', () => { if (!isFullscreen()) { try { orient()?.unlock?.(); } catch { /* 没锁过 */ } } });
   showRotateTip();
 }
 

@@ -3,7 +3,7 @@ import { qtyPicker } from './qty';
 import { BOX_BATCH_MAX } from '@/shared/boxes';
 import { INV_SLOTS, invList, itemDef, type Gain, type Inv, type ItemKind } from '@/shared/items';
 import type { NetClient } from '@/net/client';
-import { drawItem } from './sprites';
+import { itemImg } from './sprites';
 import { ui } from './actions';
 import { BAITS, RODS, TACKLES, baitDef, pickRod, resolveGear, rodDef, type Equip } from '@/shared/gear';
 import { boxDef, boxOdds, type BoxId } from '@/shared/boxes';
@@ -13,6 +13,7 @@ import { fishData } from './fishData';
 import { gearSummary } from './fishdexModel';
 import { PROTECTED, isProtected } from '@/shared/release';
 import { barBonus, routeBonus, type Route } from '@/shared/fishlevel';
+import type { MonPanel } from './MonPanel';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -25,10 +26,17 @@ const KIND: Record<ItemKind, string> = { food: '食物', collect: '收藏品', k
 /**
  * 背包：显示服务器上的物品（物品跟着身份走，换设备/用备份码恢复后还在）。
  * 界面只读——获得和消耗都由服务器按规则执行并推送整份背包过来，所以这里只负责显示和提示"获得了什么"。
- * 电脑按 I 或点右侧「背包」，手机点 ☰ → 背包。
+ * 电脑按 I 或点菜单「背包」，手机点 ☰ → 背包。2026-11-10 起分两页：「物品」（原来的背包）和「精灵」（原来单独的精灵面板，按 R 直达）。
  */
+export type BagTab = 'items' | 'mons';
 export class BackpackPanel {
   private root = el('div', 'screen hidden');
+  private panel = el('div', 'box bag');
+  private tabsBar = el('div', 'cx-tabs');
+  private itemsView = el('div', 'bag-items');
+  private monHolder = el('div', 'bag-mons hidden');
+  private tab: BagTab = 'items';
+  private mon: MonPanel | null = null;
   private grid = el('div', 'bag-grid');
   private detail = el('div', 'bag-detail');
   private note = el('div', 'bag-note');
@@ -44,14 +52,15 @@ export class BackpackPanel {
   private loaded = false;
 
   constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private onGain: (gains: Gain[]) => void, private openFishDex: () => void = () => {}) {
-    const panel = el('div', 'box bag');
+    const panel = this.panel;
     const head = el('div', 'board-head');
     const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭背包');
     close.addEventListener('click', () => this.close());
     head.append(el('div', 'board-title', '背包'), close);
     const dexBtn = el('button', 'bag-dexbtn', '📖 钓鱼图鉴 (G)'); dexBtn.type = 'button';
     dexBtn.addEventListener('click', () => { this.close(); this.openFishDex(); });
-    panel.append(head, el('div', 'create-sub', '物品存在服务器上，跟着你的身份走：换设备、用备份码恢复身份后都还在。'), this.equipBar, this.grid, this.detail, dexBtn, this.note);
+    this.itemsView.append(el('div', 'create-sub', '物品存在服务器上，跟着你的身份走：换设备、用备份码恢复身份后都还在。'), this.equipBar, this.grid, this.detail, dexBtn, this.note);
+    panel.append(head, this.tabsBar, this.itemsView, this.monHolder);
     this.root.append(panel);
     this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
@@ -68,9 +77,31 @@ export class BackpackPanel {
   get inv(): Readonly<Inv> { return this.items; }
   /** 钓鱼装备栏（'' = 自动用最低级的）；场景用它判断这次抛竿用什么 */
   get equip(): Readonly<Equip> { return this.eq; }
-  open() { this.root.classList.remove('hidden'); this.net.getInv(); this.render(); }
+  open(tab: BagTab = 'items') { this.tab = tab === 'mons' && !this.mon ? 'items' : tab; this.root.classList.remove('hidden'); this.net.getInv(); this.applyTab(); this.render(); if (this.tab === 'mons') this.mon?.enter(); }
   close() { this.root.classList.add('hidden'); }
   toggle() { this.isOpen ? this.close() : this.open(); }
+  /** 并进来的「精灵」页（场景创建完精灵面板后调用） */
+  attachMons(mon: MonPanel) {
+    this.mon = mon; this.monHolder.append(mon.view);
+    mon.attach({ open: (t) => this.open(t), close: () => this.close(), isOpenOn: (t) => this.isOpen && this.tab === t });
+    this.applyTab();
+  }
+  /** 精灵数据变了：页签上的"还没领初始精灵"红点跟着变 */
+  refreshTabs() { this.renderTabs(); }
+  private renderTabs() {
+    const defs: [BagTab, string][] = [['items', '🎒 物品'], ['mons', '🐾 精灵']];
+    this.tabsBar.replaceChildren(...defs.filter(([id]) => id === 'items' || !!this.mon).map(([id, label]) => {
+      const b = el('button', 'cx-tab' + (id === this.tab ? ' on' : ''), label); b.type = 'button';
+      if (id === 'mons' && this.mon?.needsStarter) b.append(el('span', 'badge', '1'));
+      b.addEventListener('click', () => { this.tab = id; this.applyTab(); if (id === 'mons') this.mon?.enter(); else this.render(); });
+      return b;
+    }));
+  }
+  private applyTab() {
+    this.itemsView.classList.toggle('hidden', this.tab !== 'items'); this.monHolder.classList.toggle('hidden', this.tab !== 'mons');
+    this.panel.classList.toggle('wide', this.tab === 'mons'); // 精灵页要宽一些
+    this.renderTabs();
+  }
 
   /**
    * 钓鱼装备栏：鱼竿、鱼饵（下拉，背包里有的）、配件（点一下装上 / 取下，数量受鱼竿的配件槽限制）、指名饵要咬的鱼；
@@ -140,7 +171,11 @@ export class BackpackPanel {
     this.detail.append(det);
   }
 
+  /** 背包没开着时不重画（以前每收到一次背包更新——喂猫、卖东西、交易成交——都在后台重建上百个格子）；打开时 open() 会重画 */
+  private rendered = false;
   private render() {
+    if (this.rendered && !this.isOpen) return;
+    this.rendered = true;
     this.renderEquip();
     this.grid.replaceChildren();
     const list = invList(this.items);
@@ -148,7 +183,7 @@ export class BackpackPanel {
     for (let i = 0; i < total; i++) {
       const it = list[i], b = el('button', 'slot' + (it && it.def.id === this.picked ? ' on' : '')); b.type = 'button';
       if (it) {
-        const c = el('canvas'); drawItem(c, this.textures, it.def.id, 3); b.append(c);
+        b.append(itemImg(this.textures, it.def.id, 3));
         if (it.def.stack > 1) b.append(el('span', 'slot-n', String(it.n)));
         b.title = it.def.name;
         b.addEventListener('click', () => { this.picked = it.def.id; this.render(); });

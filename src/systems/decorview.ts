@@ -24,6 +24,7 @@ function spotBase(textures: Phaser.Textures.TextureManager, lay: readonly Placed
   const stack = (lay.indexOf(p) + 1 || lay.findIndex((q) => q.d === p.d && q.x === p.x && q.y === p.y) + 1) * 0.001;
   if (def.kind === 'rug') return { frame, x: p.x * 16 - ri.mx, y: p.y * 16 - ri.my, depth: 0.5 + stack };
   if (def.kind === 'mat') return { frame, x: p.x * 16 - ri.mx, y: p.y * 16 - ri.my, depth: 0.6 + stack };
+  if (def.walk) return { frame, x: p.x * 16 - ri.mx, y: p.y * 16 - ri.my, depth: p.y * 16 + 0.7 + stack }; // 猫窝：贴在地面上，人和猫（层级 = 脚下的 y）踩上去会盖在它上面
   if (def.kind === 'wall') return { frame, x: p.x * 16 - ri.mx - ox, y: p.y * 16 - ri.my, depth: p.y * 16 };
   if (def.kind === 'top') { const raise = topRaise(lay, p); return { frame, x: p.x * 16 - ri.mx, y: p.y * 16 - ri.my - raise, depth: (p.y + 1) * 16 + 24.1 }; } // 桌面小件：层级抬高，盖在桌子上面
   return { frame, x: p.x * 16 - ri.mx, y: p.y * 16 - ri.my, depth: (p.y + footOf(def, p.r).fh) * 16 };

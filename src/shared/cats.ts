@@ -65,6 +65,11 @@ export const TAME_AFF_LEVEL = 4;
 /** 收服为精灵需要的好感度（= 挚友那一档的起点） */
 export const TAME_AT = LEVEL_AT[TAME_AFF_LEVEL];
 export const MAX_LEVEL_IDX = LEVEL_AT.length - 1;
+/** 养在宿舍：好感到「知己」（200）才可以把它接回宿舍；一间宿舍最多养几只（小屋 / 中屋 / 大屋），还要摆有足够的猫窝 */
+export const DORM_CAT_LEVEL = 5;
+export const DORM_CAT_AT = LEVEL_AT[DORM_CAT_LEVEL];
+export const DORM_CAT_CAP = [1, 2, 3] as const;
+export const dormCatCap = (roomLevel: number): number => DORM_CAT_CAP[roomLevel === 1 || roomLevel === 2 ? roomLevel : 0];
 export const CAT_NICK_MAX = 8;
 export const catLevel = (aff: number) => LEVEL_AT.reduce<number>((lv, at, i) => (aff >= at ? i : lv), 0);
 /** 距离下一档还差多少（已满档返回 0） */

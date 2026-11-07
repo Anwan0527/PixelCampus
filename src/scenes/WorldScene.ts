@@ -17,7 +17,6 @@ import { RemotePlayer } from '@/entities/RemotePlayer';
 import { eggAdvance, EGG_FOUND_MSG } from '@/world/egg';
 import { ProfilePanel } from '@/ui/ProfilePanel';
 import { ChatPanel } from '@/ui/ChatPanel';
-import { ChannelPanel } from '@/ui/ChannelPanel';
 import { ReportDialog } from '@/ui/ReportDialog';
 import { TouchControls, isTouchDevice } from '@/ui/TouchControls';
 import { mountOrientation } from '@/ui/Orientation';
@@ -32,6 +31,8 @@ import { SocialUi } from '@/ui/SocialUi';
 import { mountSideButtons, ui } from '@/ui/actions';
 import { CreateCharacter } from '@/ui/CreateCharacter';
 import { Cat } from '@/entities/Cat';
+import { LakeBird, LakeBirds } from '@/entities/LakeBird';
+import { BIRD_FEED_ITEM } from '@/shared/waterfowl';
 import { BackpackPanel } from '@/ui/BackpackPanel';
 import { MonPanel } from '@/ui/MonPanel';
 import { BattleUi } from '@/ui/BattleUi';
@@ -48,11 +49,11 @@ import { AchievementPanel } from '@/ui/AchievementPanel';
 import { TitlePanel } from '@/ui/TitlePanel';
 import { EmotePanel } from '@/ui/EmotePanel';
 import { PhotoMode, savePhoto } from '@/ui/PhotoMode';
-import { emoteDef } from '@/shared/emotes';
+import { emoteBlocked, emoteDef } from '@/shared/emotes';
 import { nearestSeat, seatSpots, SIT_REACH, type Seat } from '@/shared/seats';
 import { Character } from '@/entities/Player';
-import { SoundPanel } from '@/ui/SoundPanel';
-import { AboutPanel, mountWatermark } from '@/ui/AboutPanel';
+import { SettingsPanel } from '@/ui/SettingsPanel';
+import { mountWatermark } from '@/ui/AboutPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
 import { CalendarPanel } from '@/ui/CalendarPanel';
 import { FestivalFx } from '@/systems/festival';
@@ -83,7 +84,9 @@ import { sfx } from '@/audio/sfx';
 import { ambient } from '@/audio/ambient';
 import { titleDef } from '@/shared/titles';
 import { ACH_TOTAL, achDef } from '@/shared/achievements';
-import { CAT_REACH, allCats, type CatInfo } from '@/shared/cats';
+import { CAT_REACH, allCats, dormCatCap, type CatInfo } from '@/shared/cats';
+import { defaultLay } from '@/shared/decor';
+import type { CatBridge, DormCatFx } from '@/systems/dormcats';
 import { HELD_MAX, heldDef } from '@/shared/held';
 import { gateBikes } from '@/shared/bikes';
 import { itemDef } from '@/shared/items';
@@ -123,7 +126,6 @@ export class WorldScene extends Phaser.Scene {
   private enterPos: { x: number; y: number } | null = null;
   private rand = Math.random;
   private profileUi!: ProfilePanel;
-  private aboutUi!: AboutPanel;
   private chatUi!: ChatPanel;
   private chatUnread = 0;
   private reportUi!: ReportDialog;
@@ -133,6 +135,8 @@ export class WorldScene extends Phaser.Scene {
   /** 送过猫窝的小猫编号（只有我自己看得到那些窝） */
   private catBeds = new Set<number>();
   private catRo?: ResizeObserver;
+  /** 刚发了「接回宿舍 / 送回校园」，在等服务器的结果文字（显示在小猫面板里） */
+  private dormCatAwait = false;
   private noticeUi!: NoticePanel;
   private socialUi!: SocialUi;
   private backpackUi!: BackpackPanel;
@@ -141,7 +145,7 @@ export class WorldScene extends Phaser.Scene {
   private achUi!: AchievementPanel;
   private titleUi!: TitlePanel;
   private emoteUi!: EmotePanel;
-  private soundUi!: SoundPanel;
+  private settingsUi!: SettingsPanel;
   private questUi!: QuestPanel;
   private calUi!: CalendarPanel;
   private runUi!: RunPanel;
@@ -184,6 +188,8 @@ export class WorldScene extends Phaser.Scene {
   private water: WaterMask | null = null;
   private fishPhase: 'idle' | 'wait' | 'bite' | 'fight' = 'idle';
   private cats: Cat[] = [];
+  /** 精工湖的鸭子和天鹅（没有湖的世界里是 undefined） */
+  private lakeBirds?: LakeBirds;
   /** 各只小猫对我的好感度（服务器推送；猫编号 → 点数） */
   private catAff: Record<string, number> = {};
   /** 我给各只小猫取的专属名字（猫编号 → 名字）；谁带着哪只猫（猫编号 → 玩家编号） */
@@ -256,6 +262,7 @@ export class WorldScene extends Phaser.Scene {
     this.buildTrackMarks();
     this.spawnNpcs();
     this.spawnCats();
+    if (this.water) this.lakeBirds = new LakeBirds(this, this.water);
     this.spawnKeeper();
     this.buildBikes();
     this.registry.set('tickClock', (dt: number) => this.updateClock(dt)); // 进了宿舍 / 室内：校园场景在睡觉，由室内场景每帧代为推进时钟（时间显示、天气播报才不会停）
@@ -277,12 +284,11 @@ export class WorldScene extends Phaser.Scene {
   /** 个人信息、公屏聊天、修改资料。联机后：LocalChat 换成 WebSocket 实现，界面不变。 */
   private setupSocial(profile: Profile) {
     this.backupUi = new BackupPanel();
-    this.profileUi = new ProfilePanel(this.textures, profile, () => this.editProfile(), () => this.backupUi.open('show'), () => this.achUi.open(), () => this.titleUi.open(), () => this.aboutUi.open());
+    this.profileUi = new ProfilePanel(this.textures, profile, () => this.editProfile(), () => this.backupUi.open('show'), () => this.achUi.open(), () => this.titleUi.open(), () => this.settingsUi.open('about'));
     this.profileUi.setAch(0, ACH_TOTAL);
     this.net = new NetClient(defaultWsUrl(), getToken(), () => this.profileUi.profile);
     this.reportUi = new ReportDialog(this.net); // 举报弹窗：公屏 / 私聊 / 留言板 / 校园墙 / 玩家资料共用
     this.chatUi = new ChatPanel(this.net);
-    new ChannelPanel(this.net, this.chatUi); // 聊天窗口的 ⚙ 和菜单里的「聊天频道」
     this.chatUi.onUnread = (n) => { this.chatUnread = n; this.touchUi?.setChatBadge(n); }; // 手机底部「聊天」按钮的未读角标（只算没静音的频道）
     this.chatUi.onFocus = () => this.input.keyboard!.resetKeys();
     this.boardUi = new BoardPanel(this.net, (uid, ctx) => this.adminUi.openUserMenu(uid, ctx));
@@ -323,6 +329,7 @@ export class WorldScene extends Phaser.Scene {
     this.fishCard = new FishCard(this.textures);
     this.fishCard.onRelease = (id) => this.net.fishRelease(id);
     this.monUi = new MonPanel(this.net);
+    this.backpackUi.attachMons(this.monUi); // 精灵并入背包的「精灵」页（按 R 直达）
     this.battleUi = new BattleUi(this.net);
     this.handUi = new HandUi(this.net);
     this.handUi.onNote = (title, text) => { this.hud.banner(title, text); this.net.system(`${title}：${text}`); };
@@ -338,11 +345,15 @@ export class WorldScene extends Phaser.Scene {
       this.hud.banner(kind === 'solo' ? '🏠 个人世界' : kind === 'group' ? '👥 好友世界' : '🌍 公共世界', kind === 'solo' ? '这里只有你一个人' : kind === 'group' ? '只有你们几位好友' : '回到了大家中间'); sfx('go');
     };
     this.dormUi = new DormPanel(this.net);
+    { const h = this.net.handlers, pd = h.dormData, pr = h.dormResult; // 接回 / 送回宿舍后：小猫面板的按钮状态和结果文字也要跟着刷新
+      h.dormData = (m) => { pd?.(m); this.refreshCatPanel(); };
+      h.dormResult = (ok, msg, wake) => { pr?.(ok, msg, wake); if (this.dormCatAwait) { this.dormCatAwait = false; if (this.catUi?.isOpen) this.catUi.say(msg, ok); } };
+    }
     this.net.handlers.dormIn = (x, y) => { this.registry.set('dormVisit', null); this.enterDorm(x, y); };
     this.net.handlers.dormVisit = (m) => { this.registry.set('dormVisit', m); this.enterDorm(this.player.x, this.player.y); }; // 去好友的宿舍做客：出来时回到现在站的地方
     this.registry.set('net', this.net); this.registry.set('dormUi', this.dormUi); this.registry.set('chat', this.chatUi); this.registry.set('editProfile', () => this.editProfile(true)); this.registry.set('tpUi', this.tpUi); // 宿舍（室内场景）要用
     this.battleUi.onOpen = () => this.closeCat(); // 对战开始：收起和小猫互动的小面板
-    this.monUi.onData = () => this.refreshCatPanel();
+    this.monUi.onData = () => { this.refreshCatPanel(); this.backpackUi.refreshTabs(); };
     { const prev = this.net.handlers.monResult; this.net.handlers.monResult = (ok, msg) => { prev?.(ok, msg); if (this.catUi?.isOpen) this.catUi.say(msg, ok); }; }
     this.hallUi = new HallPanel(this.net, { showPlayer: (uid) => this.socialUi.showPlayer(uid), selfUid: () => this.net.selfUid });
     this.tradeUi = new TradePanel(this.net, this.textures, {
@@ -365,10 +376,14 @@ export class WorldScene extends Phaser.Scene {
     this.adminUi = new AdminPanel(this.net, this.textures, { openMap: () => { if (!this.hud.mapOpen) this.hud.toggleMap(); }, showCard: (uid) => this.socialUi.showPlayer(uid) });
     // 管理员：大地图上点哪里就传送到哪里（服务器会再检查是不是管理员，并把落点挪到能站的地方）
     this.net.onAdmin((ok) => this.hud.setMapPicker(ok ? (tx, ty) => { this.net.adm({ op: 'tp', x: tx * TILE, y: ty * TILE }); if (this.hud.mapOpen) this.hud.toggleMap(); } : null));
-    this.soundUi = new SoundPanel();
-    this.aboutUi = new AboutPanel(); mountWatermark();
+    this.settingsUi = new SettingsPanel(this.net, this.chatUi, { // 声音 / 聊天频道 / 沉浸模式 / 全屏 / 小地图 / 账号与备份 / 关于 都在「设置」里
+      miniMap: { on: () => this.hud.miniMapOn, set: (on) => this.hud.setMiniMap(on) },
+      card: () => this.profileUi.open(), editProfile: () => this.editProfile(), backup: () => this.backupUi.open('show'), achievements: () => this.achUi.open(), titles: () => this.titleUi.open(),
+    });
+    mountWatermark();
     this.setupAudio();
     this.emoteUi = new EmotePanel((id) => this.doEmote(id));
+    this.registry.set('emoteUi', this.emoteUi); // 宿舍（室内场景）里按 X 也能打开
     this.photo = new PhotoMode({
       enter: () => { this.input.keyboard!.resetKeys(); this.cameras.main.stopFollow(); },
       exit: () => { this.cameras.main.startFollow(this.player.sprite, true, 0.14, 0.14); Character.hideTags = false; },
@@ -377,6 +392,7 @@ export class WorldScene extends Phaser.Scene {
       tags: (hidden) => { Character.hideTags = hidden; },
     });
     this.titleUi = new TitlePanel(this.net);
+    this.codexUi.attach('ach', '成就', this.achUi); this.codexUi.attach('titles', '称号', this.titleUi); // 成就、称号并入图鉴（J 直达成就页）
     this.net.onAdmin((ok) => this.titleUi.setAdmin(ok));
     this.catUi = new CatPanel({
       pet: () => this.catAction('pet'), feed: (item, fishId) => this.catAction('feed', item, fishId), close: () => this.closeCat(),
@@ -385,7 +401,16 @@ export class WorldScene extends Phaser.Scene {
       hug: () => { const c = this.catUi.current; if (c) this.net.catHug(c.id); },
       tame: () => { const c = this.catUi.current; if (c) this.net.catTame(c.id); },
       duel: () => { const c = this.catUi.current; if (c) this.net.catBattle(c.id); },
+      dorm: (on) => { const c = this.catUi.current; if (c) { this.dormCatAwait = true; this.net.dormCat(c.id, on); } },
     }, this.textures);
+    { // 养在宿舍的小猫：宿舍场景用这座"桥"拿猫的资料 / 好感度、打开同一个小猫面板（宿舍里的猫是另一只 Cat 实体，数据都在这里）
+      const bridge: CatBridge = {
+        def: (id) => this.cats[id]?.def, aff: (id) => this.catAff[id] ?? 0, nick: (id) => this.catNick[id],
+        open: (id) => { const c = this.cats[id]; if (!c) return; this.catUi.open(c.def); this.hud.hint(null); this.refreshCatPanel(); },
+        panel: () => ({ isOpen: this.catUi.isOpen, id: this.catUi.current?.id }),
+      };
+      this.registry.set('catBridge', bridge);
+    }
     this.net.handlers.chatHistory = (items) => this.chatUi.addHistory(items);
     this.net.handlers.chatRecall = (mids) => { this.chatUi.recall(mids); this.adminUi?.onRecall(); };
     // 点场景里的玩家 → 资料卡（加好友 / 私聊）。点在界面上的不会到这里
@@ -393,7 +418,6 @@ export class WorldScene extends Phaser.Scene {
     // 手机菜单里的地图 / 学生证（电脑上用 M / C 键和左上角头像）
     ui.add({ id: 'held', label: '手持物', key: 'V', desktop: false, run: () => this.cycleHeld() });
     ui.add({ id: 'map', label: '地图', desktop: false, run: () => this.hud.toggleMap() });
-    ui.add({ id: 'minimap', label: '小地图', desktop: false, run: () => this.hud.setMiniMap(!this.hud.miniMapOn) });
     ui.add({ id: 'card', label: '学生证', desktop: false, run: () => this.profileUi.toggle() });
     ui.guard = (a) => (fishingBlocksUi(this.fishLockState(), a.id) ? FISHING_BLOCK_MSG : null); // 钓鱼中：会打断钓鱼的菜单入口不响应（背包、地图、声音等仍可用）
     ui.onBlocked = () => this.fishBlocked();
@@ -419,7 +443,7 @@ export class WorldScene extends Phaser.Scene {
       saveProfile(p); this.registry.set('profile', p); this.profileUi.set(p); this.player.setLook(p.look, p.app); this.player.setNameTag(p.name, '#ffe9a0');
     };
     h.friendOn = (_uid, name) => this.net.system(`🟢 您的好友 ${name} 上线了`); // 只有互为好友的才收到，不是公屏广播
-    h.spawn = (id, uid, x, y, flags, p, ttl, held, fz) => this.upsertRemote(id, uid, x, y, flags, p, ttl, held, fz);
+    h.spawn = (id, uid, x, y, flags, p, ttl, held, fz, pose) => this.upsertRemote(id, uid, x, y, flags, p, ttl, held, fz, pose);
     h.held = (pid, hv) => this.remotes.get(pid)?.setHeld(hv);
     h.fz = (pid, c) => this.remotes.get(pid)?.setFz(c);
     h.fzState = (own, on, news, gift) => { // 自己的节日装扮：获得了哪些 / 戴着哪个
@@ -437,6 +461,7 @@ export class WorldScene extends Phaser.Scene {
     h.correct = (x, y) => { const far = Math.hypot(this.player.x - x, this.player.y - y) > 240; this.player.x = x; this.player.y = y; this.player.halt(); this.lastSent = { x: -1, y: -1, flags: -1 }; if (far) this.cameras.main.centerOn(x, y); }; // 被服务器"传送"（比如校园跑接受邀请）：离得远就直接把镜头拉过去
     h.sitResult = (ok, msg) => { if (!ok) { this.player.setSitting(false); this.hud.banner('🪑 长椅', msg ?? '现在不能坐下'); } };
     h.emote = (pid, e) => { const d = emoteDef(e); if (!d) return; if (pid === this.net.selfId) { this.player.emote(d); sfx('emote'); } else this.remotes.get(pid)?.emote(d); };
+    h.emoteEnd = (pid) => { if (pid === this.net.selfId) this.player.endPose(); else this.remotes.get(pid)?.endPose(); };
     h.rideResult = (ok, msg) => { if (!ok) { this.player.setRiding(false); this.hud.banner('🚲 共享单车', msg ?? '现在不能骑车'); } };
     h.cats = (aff, beds, info, gifts) => {
       this.catAff = aff; if (beds) { this.catBeds = new Set(beds); for (const c of this.cats) c.setBed(this.catBeds.has(c.def.id)); }
@@ -457,6 +482,7 @@ export class WorldScene extends Phaser.Scene {
     h.catNicks = (nicks) => { this.catNick = nicks; for (const c of this.cats) c.nick = nicks[c.def.id]; this.refreshCatPanel(); this.codexUi.refresh(); };
     h.catFollows = (map) => { this.catWith = new Map(Object.entries(map).map(([k, v]) => [Number(k), v])); this.refreshCatPanel(); };
     h.catFollow = (id, pid) => { if (pid) this.catWith.set(id, pid); else this.catWith.delete(id); this.refreshCatPanel(); };
+    h.birdResult = (m) => { if (m.ok) { this.lakeBirds?.byId(m.id)?.feed(); sfx('feed'); } this.hud.banner(m.ok ? '🦆 喂水禽' : '🦆 水禽', m.msg); };
     h.catMsg = (ok, msg) => { if (this.catUi.isOpen) this.catUi.say(msg, ok); else this.hud.banner('🐱 小猫', msg); };
     h.catResult = (id, kind, r) => {
       this.catUi.result(id, kind, r);                                  // 记进这只猫的操作记录（当前这只猫同时更新 msg 区）
@@ -469,6 +495,7 @@ export class WorldScene extends Phaser.Scene {
       if (r.loved) { c?.loved(); sfx('catch'); }                       // 喂到最爱：一串爱心
       if (r.leveled) { c?.leveledUp(); sfx('achieve'); }               // 升档：更多爱心
       if (r.gift) c?.giftMeow();                                       // 有回礼：喵一声（物品由背包的"获得物品"横幅提示）
+      (this.registry.get('dormCatFx') as DormCatFx | undefined)?.(id, kind, r); // 在宿舍里互动的话，宿舍里那只猫也要有反应
     };
     const onInv = h.inv; h.inv = (items, gain) => { onInv?.(items, gain); this.shopUi.setInv(items); this.refreshCatPanel(); };
     h.disconnected = () => { for (const r of this.remotes.values()) r.destroy(); this.remotes.clear(); this.player.setFishing(false); this.fishPhase = 'idle'; this.fightUi.close(); this.clearDropped(); };
@@ -494,7 +521,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /** 有没有面板/弹窗盖在游戏上（有的话点击不该穿透到场景） */
-  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.calUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.soundUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
+  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.calUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.settingsUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
 
   /** 点中的位置（世界坐标）有没有别的玩家：有就弹出资料卡；多个重叠时取最靠前（y 最大）的 */
   private pickPlayerAt(wx: number, wy: number) {
@@ -512,11 +539,11 @@ export class WorldScene extends Phaser.Scene {
     const d = heldDef(this.heldId);
     this.hud.banner(d ? `${d.icon} 手里拿着：${d.name}` : '🖐 放下了手里的东西', '再按 V 换下一样');
   }
-  private upsertRemote(id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number, fz?: number) {
+  private upsertRemote(id: number, uid: number, x: number, y: number, flags: number, p: PublicProfile, ttl?: string, held?: number, fz?: number, pose?: number) {
     let r = this.remotes.get(id);
     if (r) r.applyInfo(p);
     else { r = new RemotePlayer(this, id, uid, p, x, y, flags); this.remotes.set(id, r); }
-    r.applyTitle(ttl); r.setHeld(held ?? 0); r.setFz(fz ?? 0);
+    r.applyTitle(ttl); r.setHeld(held ?? 0); r.setFz(fz ?? 0); r.setHeldPose(emoteDef(pose));   // 重新进视野的人还躺着 / 坐着，就直接是那个姿势
   }
 
   /** 每帧：上报自己的位置（变化才发，最高 15 Hz），并让远程玩家按插值移动 */
@@ -855,7 +882,18 @@ export class WorldScene extends Phaser.Scene {
     const cat = this.catUi?.current; if (!cat) return;
     const inv = this.backpackUi.inv;
     const pid = this.catWith.get(cat.id);
-    this.catUi.update(this.catAff[cat.id] ?? 0, inv.cat_food ?? 0, inv.cat_treat ?? 0, this.fishCount(), this.net.status === 'online', { info: this.catInfo[cat.id], fish: this.fishList(), bed: inv.cat_bed ?? 0, hasBed: this.catBeds.has(cat.id), following: pid === this.net.selfId && pid !== undefined, withOther: pid !== undefined && pid !== this.net.selfId, nick: this.catNick[cat.id], tamed: this.monUi.tamed.includes(cat.id), hasCatSpirit: this.monUi.hasCatSpirit });
+    this.catUi.update(this.catAff[cat.id] ?? 0, inv.cat_food ?? 0, inv.cat_treat ?? 0, this.fishCount(), this.net.status === 'online', { info: this.catInfo[cat.id], fish: this.fishList(), bed: inv.cat_bed ?? 0, hasBed: this.catBeds.has(cat.id), following: pid === this.net.selfId && pid !== undefined, withOther: pid !== undefined && pid !== this.net.selfId, nick: this.catNick[cat.id], tamed: this.monUi.tamed.includes(cat.id), hasCatSpirit: this.monUi.hasCatSpirit, dorm: this.dormCatState(cat.id, pid === this.net.selfId && pid !== undefined) });
+  }
+  /** 这只猫和"养在宿舍"的关系：已经住着 / 能不能接回来（不能时给原因，面板里显示在按钮的提示上） */
+  private dormCatState(id: number, following: boolean): { inDorm: boolean; why?: string } {
+    const d = this.dormUi?.data, dc = d?.dc ?? [];
+    if (dc.includes(id)) return { inDorm: true };
+    if (!d?.b) return { inDorm: false, why: '还没选宿舍楼：先在「宿舍」里选你住的楼栋' };
+    if (following) return { inDorm: false, why: '它正跟着你：先让它回家，再接回宿舍' };
+    const cap = dormCatCap(d.rm ?? 0), beds = (d.lay ?? defaultLay(d.rm ?? 0)).filter((p) => p.d === 'dc_catbed').length;
+    if (dc.length >= cap) return { inDorm: false, why: `这间宿舍最多养 ${cap} 只猫（扩建后能养更多）` };
+    if (beds <= dc.length) return { inDorm: false, why: `宿舍里要先摆一个空着的「宿舍猫窝」（现在 ${beds} 个，已经住了 ${dc.length} 只）：商店买、装修里摆进去` };
+    return { inDorm: false };
   }
   /** 背包里能喂猫的鱼（真鱼，不含杂物）总数 */
   private fishCount() { return Object.entries(this.backpackUi.inv).reduce((n, [id, c]) => n + (isFish(id) ? c : 0), 0); }
@@ -909,7 +947,9 @@ export class WorldScene extends Phaser.Scene {
     { const c = this.cameras.main, rx = c.width / c.zoom / 2 + 900, ry = c.height / c.zoom / 2 + 900; // 远处的行人、小猫不更新
       for (const n of this.npcs) { if (Math.abs(n.x - c.midPoint.x) > rx || Math.abs(n.y - c.midPoint.y) > ry) continue; n.update(dt, this.world, this.rand); }
       const visitor = { x: this.player.x, y: this.player.y, fast: this.player.riding || this.runNow, still: !this.player.moving && !this.player.riding, sitting: this.player.sitting, fishing: this.fishPhase !== 'idle' };
+      const home = this.dormUi?.data?.dc;
       for (const cat of this.cats) {
+        if (home?.includes(cat.def.id)) { cat.setAway(true); continue; } // 我把它接回宿舍养了：校园里这只猫对我来说"回家了"（对别的同学照常在原地）
         const pid = this.catWith.get(cat.def.id);
         if (pid) { // 正被某个玩家带着走：跟着他（自己，或视野里的别的玩家）；他不在视野里就先藏起来
           const who = pid === this.net.selfId ? this.player : this.remotes.get(pid);
@@ -919,6 +959,7 @@ export class WorldScene extends Phaser.Scene {
         if (Math.abs(cat.x - c.midPoint.x) > rx || Math.abs(cat.y - c.midPoint.y) > ry) continue;
         cat.update(dt, this.world, visitor, this.catAff[cat.def.id] ?? 0, null);
       } }
+    { const c = this.cameras.main; this.lakeBirds?.update(dt, { x: this.player.x, y: this.player.y, fast: this.player.riding || this.runNow, fishing: this.fishPhase !== 'idle' }, { x: c.midPoint.x, y: c.midPoint.y, rx: c.width / c.zoom / 2 + 700, ry: c.height / c.zoom / 2 + 700 }); } // 精工湖的水禽
     { const l = this.player.riding ? 0.24 : 0.14; this.cameras.main.setLerp(l, l); } // 骑车时镜头跟得更紧
     // 注意顺序：anyOverlay() 里也包含对话框，所以对话框必须先判断，否则下面"翻页/关闭"的分支永远走不到（手机上与 NPC 对话后点屏幕没反应、卡死就是这个原因）
     if (!this.hud.dialogOpen && this.anyOverlay()) {
@@ -1028,6 +1069,7 @@ export class WorldScene extends Phaser.Scene {
     this.weather.update(dt, now); this.festFx.update(dt, now);
     Character.umbrella = this.weather.umbrella;
     Cat.env = { night: this.clock.nightness > 0.6, rain: this.weather.rain > 0.3, snow: this.weather.snow > 0.3 };
+    LakeBird.env = { night: this.clock.nightness > 0.6, rain: this.weather.rain > 0.3 };
     const t = this.clock.tint(), wm = this.weather.tint, ft = this.festFx.tint;
     this.tintRect.setFillStyle(Phaser.Display.Color.GetColor(t.r * wm[0] * ft[0], t.g * wm[1] * ft[1], t.b * wm[2] * ft[2]));
     const n = Math.min(1, this.clock.nightness + (this.weather.cloud + this.weather.rain) * 0.12); // 阴雨天路灯亮得早一点
@@ -1153,7 +1195,9 @@ export class WorldScene extends Phaser.Scene {
   }
   private doEmote(id: number) {
     const d = emoteDef(id); if (!d) return;
-    if (this.net.status === 'online') this.net.emote(id); else { this.player.emote(d); sfx('emote'); } // 联机时由服务器回传（带限频），离线直接演
+    const why = emoteBlocked(d, { riding: this.player.riding, sitting: this.player.sitting, pax: this.player.pax, fishing: this.player.fishing, led: this.player.led });
+    if (why) { this.hud.banner('表情', why); return; }
+    if (this.net.status === 'online') this.net.emote(id); else if (d.hold && this.player.holdingEmote === id) this.player.endPose(); else { this.player.emote(d); sfx('emote'); } // 联机时由服务器回传（带限频），离线直接演
   }
 
   /** 拍照模式里：方向键/摇杆平移镜头（速度随缩放调整，画面上看起来速度一致） */
@@ -1330,6 +1374,15 @@ export class WorldScene extends Phaser.Scene {
     const rodP = pickRod(this.backpackUi.inv, this.backpackUi.equip), baitP = pickBait(this.backpackUi.inv, this.backpackUi.equip);
     const lockSt: FishLockState = { ...this.fishLockState(), castable: !!fishSpot && !!rodP && !!baitP && !(baitP === 'bait_name' && !this.backpackUi.equip.target) };
     if (fishingBlocksInteract(lockSt)) { if (fishSpot) this.fishSpotHint(press); else this.hud.hint(null); return; }
+    // 精工湖的水禽：游到岸边、够得着时，E 优先喂它（比抛竿、小猫优先；建筑门口和彩蛋区仍然优先）。钓鱼流程中上面已经返回了，所以不会打断钓鱼
+    const bird = !near && !egg && !this.player.riding ? this.lakeBirds?.nearest(this.player.x, this.player.y) ?? null : null;
+    if (bird) {
+      const baitN = this.backpackUi.inv[BIRD_FEED_ITEM] ?? 0;
+      if (this.net.status !== 'online') this.hud.hint(`「${bird.label}」游到了岸边（连上服务器才能喂）`);
+      else if (baitN <= 0) this.hud.hint(`「${bird.label}」游到了岸边：鱼饵用完了（明天登录会送，商店也有卖）`);
+      else { this.hud.hint(`E  喂「${bird.label}」（鱼饵 ×${baitN}）`); if (press) this.net.birdFeed(bird.def.id); }
+      return;
+    }
     if (fishingPrefersCast(lockSt) && !near && !egg) { this.fishSpotHint(press); return; }
     // 站在猫身边按 E 一定能和它玩：猫排在彩蛋区、队友单车前面；站在建筑门口时，猫够近（<0.75 个够得着的距离）才抢占提示
     if (cat && !this.player.riding && (!near || cd < CAT_REACH * 0.75)) {

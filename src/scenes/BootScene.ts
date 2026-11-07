@@ -35,6 +35,8 @@ export class BootScene extends Phaser.Scene {
     this.load.atlas('furniture', `${G}/atlas-furniture.webp`, `${G}/atlas-furniture.json`);
     this.load.atlas('cats', `${G}/atlas-cats.webp`, `${G}/atlas-cats.json`);
     this.load.json('catsMeta', `${G}/cats-meta.json`);
+    this.load.atlas('birds', `${G}/atlas-birds.webp`, `${G}/atlas-birds.json`);   // 精工湖的鸭子和天鹅
+    this.load.json('birdsMeta', `${G}/birds-meta.json`);
     this.load.atlas('bikes', `${G}/atlas-bikes.webp`, `${G}/atlas-bikes.json`);
     this.load.json('bikesMeta', `${G}/bikes-meta.json`);
     this.load.atlas('items', `${G}/atlas-items.webp`, `${G}/atlas-items.json`);
@@ -96,6 +98,10 @@ export class BootScene extends Phaser.Scene {
     const cm = this.cache.json.get('catsMeta') as { coats: number; anims: Record<string, { fps: number; loop: boolean; n: number }> };
     for (let c = 0; c < cm.coats; c++) for (const [id, a] of Object.entries(cm.anims)) {
       this.anims.create({ key: `cat${c}_${id}`, frameRate: a.fps, repeat: a.loop ? -1 : 0, frames: Array.from({ length: a.n }, (_, f) => ({ key: 'cats', frame: `cat${c}_${id}_${f}` })) });
+    }
+    const bm = this.cache.json.get('birdsMeta') as { kinds: number; anims: Record<string, { fps: number; loop: boolean; n: number }> };
+    for (let k = 0; k < bm.kinds; k++) for (const [id, a] of Object.entries(bm.anims)) {
+      this.anims.create({ key: `bird${k}_${id}`, frameRate: a.fps, repeat: a.loop ? -1 : 0, frames: Array.from({ length: a.n }, (_, f) => ({ key: 'birds', frame: `bird${k}_${id}_${f}` })) });
     }
     const meta = this.cache.json.get('charsMeta') as CharsMeta;
     for (let n = 0; n < meta.count; n++) createCharAnims(this.anims, `c${n}`, 'chars', meta);

@@ -15,8 +15,8 @@ describe('钓鱼沉浸（屏蔽其他互动）', () => {
       for (const id of ['friends', 'teleport', 'mons', 'photo', 'emote', 'dorm', 'quest', 'board']) expect(fishingBlocksUi(st({ phase }), id), `${phase} ${id}`).toBe(true);
     }
   });
-  it('背包（换竿换饵）、地图、声音、聊天频道、沉浸模式、全屏、关于：钓鱼中仍然可用', () => {
-    for (const id of ['bag', 'map', 'minimap', 'sound', 'channels', 'immersive', 'fullscreen', 'about']) { expect(FISHING_OK_UI.has(id)).toBe(true); expect(fishingBlocksUi(st({ phase: 'wait' }), id)).toBe(false); }
+  it('背包（换竿换饵，含精灵页）、地图、设置（声音 / 聊天频道 / 沉浸 / 全屏 / 关于都在里面）：钓鱼中仍然可用', () => {
+    for (const id of ['bag', 'map', 'settings']) { expect(FISHING_OK_UI.has(id)).toBe(true); expect(fishingBlocksUi(st({ phase: 'wait' }), id)).toBe(false); }
   });
   it('鱼飞出水面 / 结算卡片还在：场景互动继续屏蔽（只剩再抛一竿）；卡片停着的几秒里，界面入口可以正常开', () => {
     expect(fishingBlocksInteract(st({ catching: true }))).toBe(true); expect(fishingBlocksInteract(st({ cardOpen: true }))).toBe(true);

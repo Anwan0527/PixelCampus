@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import type { CatDef, CatInfo, CatResult } from '@/shared/cats';
-import { BOND_LEVEL, CAT_NICK_MAX, FEED_COOLDOWN_MS, HUG_LEVEL, LEVEL_AT, LEVEL_NAMES, LEVEL_PERKS, PET_COOLDOWN_MS, TAME_AT, catLevel, catNext } from '@/shared/cats';
+import { BOND_LEVEL, CAT_NICK_MAX, DORM_CAT_AT, FEED_COOLDOWN_MS, HUG_LEVEL, LEVEL_AT, LEVEL_NAMES, LEVEL_PERKS, PET_COOLDOWN_MS, TAME_AT, catLevel, catNext } from '@/shared/cats';
 import { catProfile, isLiked, levelName, likesKnown, storiesUnlocked } from '@/shared/cat-lore';
 import { FISH_FEED_GAIN, type Rarity } from '@/shared/fishing';
 import { itemDef } from '@/shared/items';
@@ -14,12 +14,13 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 };
 
 export type FeedKind = 'cat_food' | 'cat_treat' | 'fish' | 'cat_bed';
-export interface CatActions { pet(): void; /** 抱抱（挚友以上） */ hug(): void; /** 好感度满值时收服为精灵 / 和它「老吴对战」 */ tame(): void; duel(): void; /** 喂食；喂鱼可以指定哪一种（不指定 = 最常见的） */ feed(item: FeedKind, fishId?: string): void; /** 让它跟着我 / 回家 */ follow(on: boolean): void; /** 取专属名字（空 = 清除） */ nick(name: string): void; close(): void }
+export interface CatActions { pet(): void; /** 抱抱（挚友以上） */ hug(): void; /** 好感度满值时收服为精灵 / 和它「老吴对战」 */ tame(): void; duel(): void; /** 喂食；喂鱼可以指定哪一种（不指定 = 最常见的） */ feed(item: FeedKind, fishId?: string): void; /** 让它跟着我 / 回家 */ follow(on: boolean): void; /** 取专属名字（空 = 清除） */ nick(name: string): void; /** 接回宿舍养 / 送回校园（好感 ≥ 200） */ dorm?(on: boolean): void; close(): void }
 /** 面板需要知道的、和这只猫有关的额外状态 */
 export interface CatExtra {
   /** 这只猫已经被我收服过 / 我的队伍里有能战斗的猫系精灵 */ tamed?: boolean; hasCatSpirit?: boolean;
   /** 背包里的猫窝数量 / 这只猫是不是已经有我送的窝 */ bed?: number; hasBed?: boolean;
   /** 它现在正跟着我 */ following: boolean; /** 它正陪着别的玩家 */ withOther: boolean; /** 我给它取的专属名字 */ nick?: string;
+  /** 养在宿舍：它是不是已经住在我的宿舍里；能不能接（不能时写原因：没绑定楼栋 / 没有空猫窝 / 已满 / 它正跟着我…） */ dorm?: { inDorm: boolean; why?: string };
   /** 服务器给的"今天的状态"（连续探望、今天是否探望/抱/收过回礼、是否喂到过最爱） */ info?: CatInfo;
   /** 背包里的真鱼（喂鱼选择列表用），已按稀有度排序 */ fish?: { id: string; name: string; n: number; rarity: string }[];
 }
@@ -75,6 +76,7 @@ export class CatPanel {
   private bNick = el('button', 'btn', '取名 (6)');
   private bTame = el('button', 'btn', '');
   private bDuel = el('button', 'btn', '老吴对战 (9)');
+  private bDorm = el('button', 'btn', '');
   private perks = el('div', 'cat-perks'); private perksSig = '';
   private nickRow = el('div', 'cat-nick hidden');
   private nickInput = el('input');
@@ -87,7 +89,7 @@ export class CatPanel {
 
   constructor(private act: CatActions, private textures?: Phaser.Textures.TextureManager) {
     const bye = el('button', 'btn cat-bye', '走开 (Esc)');
-    for (const b of [this.bPet, this.bFood, this.bTreat, this.bFish, this.bBed, this.bHug, this.bFollow, this.bNick, this.bTame, this.bDuel, bye]) b.type = 'button';
+    for (const b of [this.bPet, this.bFood, this.bTreat, this.bFish, this.bBed, this.bHug, this.bFollow, this.bNick, this.bTame, this.bDuel, this.bDorm, bye]) b.type = 'button';
     this.bPet.addEventListener('click', () => this.act.pet());
     this.bFood.addEventListener('click', () => this.act.feed('cat_food'));
     this.bTreat.addEventListener('click', () => this.act.feed('cat_treat'));
@@ -98,6 +100,7 @@ export class CatPanel {
     this.bNick.addEventListener('click', () => this.openNick());
     this.bTame.addEventListener('click', () => this.act.tame());
     this.bDuel.addEventListener('click', () => this.act.duel());
+    this.bDorm.addEventListener('click', () => this.act.dorm?.(!this.last.ex.dorm?.inDorm));
     bye.addEventListener('click', () => this.act.close());
 
     // 头部
@@ -124,7 +127,7 @@ export class CatPanel {
     cancel.addEventListener('click', () => this.nickRow.classList.add('hidden'));
     this.nickInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.submitNick(this.nickInput.value); } else if (e.key === 'Escape') { e.stopPropagation(); this.nickRow.classList.add('hidden'); } });
     this.nickRow.append(this.nickInput, ok, clear, cancel);
-    const bond = el('div', 'cat-page hidden'); const g2 = el('div', 'cat-grid'); g2.append(this.bFollow, this.bNick, this.bTame, this.bDuel); bond.append(g2, this.nickRow, this.perks);
+    const bond = el('div', 'cat-page hidden'); const g2 = el('div', 'cat-grid'); g2.append(this.bFollow, this.bNick, this.bTame, this.bDuel, this.bDorm); bond.append(g2, this.nickRow, this.perks);
     this.pages.set('act', actPage); this.pages.set('dossier', dos); this.pages.set('bond', bond);
 
     this.root.append(head, this.msg, this.offline, tabs, actPage, dos, bond);
@@ -219,6 +222,13 @@ export class CatPanel {
     this.bTame.textContent = ex.tamed ? '已收服为精灵 ✓' : full ? '收服为精灵 (8)' : `收服：需「${LEVEL_NAMES[4]}」(${TAME_AT}点)`;
     this.bTame.disabled = !online || !full || !!ex.tamed;
     this.bDuel.disabled = !online || !ex.hasCatSpirit; this.bDuel.title = ex.hasCatSpirit ? '' : '要先有一只能战斗的猫系精灵在出战队伍里（好感度满了可以收服，也可以……先领一只初始精灵再说）';
+    { // 养在宿舍：好感到「知己」才出现；住着的显示「送回校园」，没住的显示能不能接、不能的原因
+      const dd = ex.dorm, enough = this.last.aff >= DORM_CAT_AT, show = enough || !!dd?.inDorm;
+      this.bDorm.classList.toggle('hidden', !show);
+      this.bDorm.textContent = dd?.inDorm ? '🏠 送回校园' : '🏠 接回宿舍养';
+      this.bDorm.disabled = !online || !this.act.dorm || (!dd?.inDorm && !!dd?.why);
+      this.bDorm.title = dd?.inDorm ? '它现在住在你的宿舍里；点一下让它回校园（在原来的地方等你）' : dd?.why ?? '把它接回你的宿舍：它会睡在宿舍猫窝里，你可以在宿舍里摸它、喂它、抱它（校园里的这只猫对别的同学照常在原地）';
+    }
     if (!this.canBond) { this.bFollow.title = this.bNick.title = `「${LEVEL_NAMES[BOND_LEVEL]}」（${LEVEL_AT[BOND_LEVEL]} 点）解锁`; } else this.bFollow.title = this.bNick.title = '';
   }
 

@@ -2,7 +2,7 @@ import type Phaser from 'phaser';
 import { itemDef, invList, type Gain, type Inv } from '@/shared/items';
 import { TRADE_COIN_MAX, TRADE_INVITE_TTL_MS, TRADE_MAX_ITEMS, tradable, type TradeSide } from '@/shared/trade';
 import type { NetClient } from '@/net/client';
-import { drawItem } from './sprites';
+import { itemImg } from './sprites';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -63,7 +63,8 @@ export class TradePanel {
   invite(uid: number) { this.net.tradeInvite(uid); }
   private reset() { this.tid = 0; this.waiting = false; this.st = null; this.mine.clear(); this.coin = 0; this.dirty = false; window.clearTimeout(this.sendTimer); }
   private open() { this.root.classList.remove('hidden'); this.render(); }
-  private close() { this.root.classList.add('hidden'); }
+  /** 关闭时把面板里的内容一并清掉（背包大时这棵树有上千个节点，留着隐藏会拖慢成交后的第一批画面） */
+  private close() { this.root.classList.add('hidden'); this.body.replaceChildren(); }
   private cancel() { if (this.tid) this.net.tradeCancel(this.tid); this.reset(); this.close(); }
 
   private btn(label: string, fn: () => void, primary = false, disabled = false) { const b = el('button', 'btn' + (primary ? ' primary' : ''), label); b.type = 'button'; b.disabled = disabled; b.addEventListener('click', fn); return b; }
@@ -95,7 +96,7 @@ export class TradePanel {
     const coins = mineSide ? this.coin : side.coins;
     if (!items.length && !coins) list.append(el('div', 'board-empty', mineSide ? '还没有摆出东西' : '对方还没有摆出东西'));
     for (const g of items) {
-      const row = el('div', 'trade-item'), c = el('canvas', 'shop-ico'); drawItem(c, this.textures, g.id, 2);
+      const row = el('div', 'trade-item'), c = itemImg(this.textures, g.id, 2, 'shop-ico');
       row.append(c, el('div', 'trade-name', `${itemDef(g.id)?.name ?? g.id} ×${g.n}`)); list.append(row);
     }
     if (coins) { const row = el('div', 'trade-item'); row.append(el('span', 'coin-ico'), el('div', 'trade-name', `${coins} 校园币`)); list.append(row); }
@@ -119,7 +120,7 @@ export class TradePanel {
     const bag = el('div', 'trade-bag'), inv = this.hooks.inv();
     for (const { def, n } of invList(inv)) {
       if (!tradable(def.id)) continue;
-      const row = el('div', 'trade-bagrow'), c = el('canvas', 'shop-ico'); drawItem(c, this.textures, def.id, 2);
+      const row = el('div', 'trade-bagrow'), c = itemImg(this.textures, def.id, 2, 'shop-ico');
       const q = this.mine.get(def.id) ?? 0;
       row.append(c, el('div', 'trade-name', `${def.name}（有 ${n}）`), this.btn('−10', () => this.setQty(def.id, q - 10), false, q <= 0), this.btn('−', () => this.setQty(def.id, q - 1), false, q <= 0), el('span', 'trade-q', String(q)), this.btn('+', () => this.setQty(def.id, q + 1), false, q >= n), this.btn('+10', () => this.setQty(def.id, q + 10), false, q >= n), this.btn('全部', () => this.setQty(def.id, n), false, q >= n));
       bag.append(row);

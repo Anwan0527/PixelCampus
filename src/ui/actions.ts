@@ -30,6 +30,11 @@ class Registry {
   badge(id: string, n: number) { if ((this.badges.get(id) ?? 0) !== n) { this.badges.set(id, n); this.emit(); } }
   badgeOf(id: string) { return this.badges.get(id) ?? 0; }
   total(filter: (a: UiAction) => boolean) { return this.list.filter(filter).reduce((s, a) => s + this.badgeOf(a.id), 0); }
+  /** 按 MENU_ORDER 排好序的入口（电脑菜单和手机菜单共用；没在表里的排在后面，保持注册顺序） */
+  ordered(filter: (a: UiAction) => boolean = () => true): UiAction[] {
+    const rank = (id: string) => { const i = MENU_ORDER.indexOf(id); return i < 0 ? MENU_ORDER.length : i; };
+    return this.list.filter(filter).map((a, i) => ({ a, i })).sort((x, y) => rank(x.a.id) - rank(y.a.id) || x.i - y.i).map((x) => x.a);
+  }
   /** 重新渲染所有入口（visible 条件变了时调用） */
   refresh() { this.emit(); }
   subscribe(fn: () => void) { this.subs.add(fn); return () => this.subs.delete(fn); }
@@ -43,6 +48,12 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   if (text !== undefined) e.textContent = text;
   return e;
 };
+
+/**
+ * 菜单里的入口顺序（高频在前）：背包（含精灵页）→ 图鉴（含成就 / 称号页）→ 任务 → 日历 → 组队 → 传送 → 宿舍 → 世界 → 名人堂 → 表情 → 拍照 → 设置（声音 / 聊天频道 / 画面与沉浸 / 账号与备份 / 关于）；
+ * 手机专用的地图、小地图、学生证、手持物排在后面。2026-11-10 起：精灵并入背包、成就并入图鉴、回宿舍 + 宿舍楼栋合成「宿舍」、声音 / 聊天频道 / 沉浸 / 全屏 / 关于并入「设置」。
+ */
+export const MENU_ORDER = ['bag', 'codex', 'quest', 'calendar', 'party', 'teleport', 'dorm', 'world', 'hall', 'emote', 'photo', 'friends', 'board', 'notice', 'settings', 'admin', 'map', 'card', 'held', 'minimap'];  // 好友 / 留言板 / 公告 / 管理 在电脑上钉在右侧，只影响手机菜单的顺序
 
 /** 一直放在右侧的入口：公告、留言板、好友（管理的入口只有管理员才看得到）。其余功能都收进左上角的「菜单」 */
 export const PINNED_IDS = new Set(['notice', 'board', 'friends', 'admin']);
@@ -69,9 +80,9 @@ export function mountSideButtons() {
     return b;
   };
   const render = () => {
-    const shown = ui.list.filter((x) => x.desktop !== false && x.visible?.() !== false);
+    const shown = ui.ordered((x) => x.desktop !== false && x.visible?.() !== false);
     box.replaceChildren(...shown.filter((a) => PINNED_IDS.has(a.id)).map((a) => item(a, 'box side-btn')));
-    const rest = shown.filter((a) => !PINNED_IDS.has(a.id));
+    const rest = shown.filter((a) => !PINNED_IDS.has(a.id));  // shown 已按 MENU_ORDER 排好
     pop.replaceChildren(...rest.map((a) => item(a, 'menu-item')));
     menuBtn.querySelector('.badge')?.remove();
     const total = rest.reduce((s, a) => s + ui.badgeOf(a.id), 0);
