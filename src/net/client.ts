@@ -7,7 +7,7 @@ import type { Notice } from '@/shared/notice';
 import type { ChatHistoryItem, DmMsg, FriendInfo, PersonInfo } from '@/shared/social';
 import type { Gain, Inv } from '@/shared/items';
 import type { DormCard } from '@/shared/dorm';
-import type { CatResult } from '@/shared/cats';
+import type { CatInfo, CatResult } from '@/shared/cats';
 import type { AchEvent } from '@/shared/achievements';
 import type { QuestState } from '@/shared/quests';
 import type { FishLog } from '@/shared/fishing';
@@ -105,7 +105,7 @@ export interface NetHandlers {
   monEncEnd?: () => void;
   monBt?: (m: Extract<ServerMsg, { t: 'mon_bt' }>) => void;
   /** 各只小猫对我的好感度（猫编号 → 点数） */
-  cats?: (aff: Record<string, number>, beds?: number[]) => void;
+  cats?: (aff: Record<string, number>, beds?: number[], info?: Record<string, CatInfo>, gifts?: { today: number; total: number }) => void;
   /** 校园币余额（gain = 这次刚得到的数量）；商店买卖结果 */
   coins?: (n: number, gain?: number) => void;
   shopResult?: (ok: boolean, msg: string) => void;
@@ -133,7 +133,7 @@ export interface NetHandlers {
   wallPending?: (n: number) => void;
   wallThread?: (post: WallPost, comments: WallComment[]) => void;
   wallResult?: (ok: boolean, msg: string) => void;
-  catResult?: (id: number, kind: 'pet' | 'feed', r: CatResult) => void;
+  catResult?: (id: number, kind: 'pet' | 'feed' | 'hug', r: CatResult) => void;
   /** 成就：全部解锁记录（成就 id → 时间）；fresh = 这次刚解锁的 */
   ach?: (unlocked: Record<string, number>, fresh?: string[]) => void;
   /** 服务器当前时间（毫秒）：用来校准游戏时钟 */
@@ -322,7 +322,7 @@ export class NetClient implements ChatTransport {
       case 'mon_enc': this.handlers.monEnc?.(m); break;
       case 'mon_enc_end': this.handlers.monEncEnd?.(); break;
       case 'mon_bt': this.handlers.monBt?.(m); break;
-      case 'cats': this.handlers.cats?.(m.aff, m.beds); break;
+      case 'cats': this.handlers.cats?.(m.aff, m.beds, m.info, m.gifts); break;
       case 'coins': this.handlers.coins?.(m.n, m.gain); break;
       case 'shop_result': this.handlers.shopResult?.(m.ok, m.msg); break;
       case 'bin_result': this.handlers.binResult?.(m); break;
@@ -467,6 +467,7 @@ export class NetClient implements ChatTransport {
   monAct(bid: string, turn: number, a: Extract<ClientMsg, { t: 'mon_act' }>['a']) { this.tx({ t: 'mon_act', bid, turn, a }); }
   catPet(id: number) { this.tx({ t: 'cat_pet', id }); }
   catFeed(id: number, item: string) { this.tx({ t: 'cat_feed', id, item }); }
+  catHug(id: number) { this.tx({ t: 'cat_hug', id }); }
   ride(on: boolean) { this.tx({ t: 'ride', on }); }
   getAch() { this.tx({ t: 'ach_get' }); }
   achEvent(ev: AchEvent, tz?: number) { this.tx({ t: 'ach_event', ev, ...(tz !== undefined ? { tz } : {}) }); }

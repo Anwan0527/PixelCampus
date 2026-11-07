@@ -8,7 +8,8 @@ import { availableNow, bundleViews, fishGroups, fishHint, gearRows, levelRows, m
 import { ROUTES, ROUTE_NAMES, XP_OVER_RATE, XP_SOFT_CAP, barBonus, routeBonus, routeSlots, type Route } from '@/shared/fishlevel';
 import { itemDef, type Inv } from '@/shared/items';
 import { tierProgress } from '@/shared/fishdex';
-import { COAT_LABELS, COAT_RARITY, LEVEL_NAMES, catLevel, type CatDef } from '@/shared/cats';
+import { COAT_LABELS, COAT_RARITY, LEVEL_NAMES, REAL_CAT_FIRST, REAL_CAT_COUNT, catLevel, type CatDef, type CatInfo } from '@/shared/cats';
+import { GROUP_NAMES, catProfile, likesKnown, realCatOf, storiesUnlocked } from '@/shared/cat-lore';
 import { drawFrame, drawItem } from './sprites';
 import { ui } from './actions';
 
@@ -42,7 +43,7 @@ export class CodexPanel {
     { id: 'fish', label: '钓鱼图鉴', render: (b) => this.renderFish(b) },
   ];
 
-  constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private deps: { cats: () => { defs: readonly CatDef[]; aff: Record<string, number>; nicks: Record<string, string> }; /** 背包、此刻正在用的竿和饵（神话鱼的条件要对照） */ inv: () => Inv; gear: () => { rod: string; bait: string } }) {
+  constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private deps: { cats: () => { defs: readonly CatDef[]; aff: Record<string, number>; nicks: Record<string, string>; info?: Record<string, CatInfo> }; /** 背包、此刻正在用的竿和饵（神话鱼的条件要对照） */ inv: () => Inv; gear: () => { rod: string; bait: string } }) {
     const panel = el('div', 'box codex');
     const head = el('div', 'board-head');
     const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭图鉴');
@@ -78,8 +79,9 @@ export class CodexPanel {
   }
 
   // ------------------------------------------------------------ 动物图鉴
+  private catSel = -1;
   private renderAnimals(box: HTMLElement) {
-    const { defs, aff, nicks } = this.deps.cats();
+    const { defs, aff, nicks, info } = this.deps.cats();
     const known = (d: CatDef) => (aff[d.id] ?? 0) > 0, met = defs.filter(known).length;
     // 毛色收集：某个毛色只要认识了一只这种毛色的猫，就算收集到
     const total = new Map<number, number>(), got = new Map<number, number>();
@@ -105,17 +107,43 @@ export class CodexPanel {
       }
       box.append(t, grid);
     }
-    // 每一只小猫
-    box.append(el('div', 'cx-group cx-cats', '每一只小猫'));
-    const grid = el('div', 'cx-grid');
-    for (const d of defs) {
-      const a2 = aff[d.id] ?? 0, has = a2 > 0, lv = catLevel(a2), cell = el('div', 'cx-cell' + (has ? ' got' : ''));
+    // 每一只小猫：校猫（真的住在新校区的）单独成组放最前面，按所在楼分小标题；点一只看档案
+    const detail = el('div', 'cx-catdetail hidden'), cellOf = new Map<number, HTMLElement>();
+    const showDetail = (d: CatDef) => {
+      const a2 = aff[d.id] ?? 0, lv = catLevel(a2), p = catProfile(d), fv = !!info?.[d.id]?.fv;
+      this.catSel = d.id; detail.classList.remove('hidden'); detail.replaceChildren();
+      for (const [id, c2] of cellOf) c2.classList.toggle('sel', id === d.id);
+      if (a2 <= 0) { detail.append(el('div', 'cx-dname', '？？？'), el('div', 'create-sub', `还没认识它。去${p.real ? p.place : '校园里'}找找看，摸一摸、喂一喂就能认识。`)); return; }
+      const name = el('div', 'cx-dname', `${nicks[d.id] ? `${nicks[d.id]}（${d.name}）` : d.name} · ${p.coatLabel} · ${LEVEL_NAMES[lv]}`);
+      detail.append(name);
+      if (p.real) detail.append(el('div', 'cx-dreal', '🏫 校猫 · 真的住在新校区'));
+      detail.append(el('div', 'cx-drow', `出没：${p.place}`), el('div', 'cx-drow', `样子：${p.look}`), el('div', 'cx-drow', `性格：${p.trait}`),
+        el('div', 'cx-drow', `爱吃：${likesKnown(lv, fv) ? p.likes.map((i) => itemDef(i)?.name ?? i).join('、') : '还不熟，它不肯告诉你'}`));
+      const n = storiesUnlocked(lv);
+      p.stories.forEach((st, i) => detail.append(el('div', 'cx-dstory' + (i < n ? '' : ' locked'), i < n ? `📖 ${st}` : `🔒 好感到「${LEVEL_NAMES[i + 1]}」解锁`)));
+    };
+    const cell = (d: CatDef) => {
+      const a2 = aff[d.id] ?? 0, has = a2 > 0, lv = catLevel(a2), cl = el('div', 'cx-cell cx-click' + (has ? ' got' : ''));
       const c = el('canvas'); try { drawFrame(c, this.textures, 'cats', `cat${d.coat}_sit_0`, 3); } catch { /* 图集没加载 */ }
-      const rar = COAT_RARITY[d.coat] ?? 'common'; if (has) cell.style.borderColor = RARITY_COLORS[rar];
-      cell.append(c, el('div', 'cx-name', has ? d.name : '？？？'), el('div', 'cx-sub', has ? `${COAT_LABELS[d.coat] ?? ''} · ${LEVEL_NAMES[lv]}${nicks[d.id] ? ` · 你叫它「${nicks[d.id]}」` : ''}` : '还没认识'));
-      grid.append(cell);
+      const rar = COAT_RARITY[d.coat] ?? 'common'; if (has) cl.style.borderColor = RARITY_COLORS[rar];
+      cl.append(c, el('div', 'cx-name', has ? d.name : '？？？'), el('div', 'cx-sub', has ? `${COAT_LABELS[d.coat] ?? ''} · ${LEVEL_NAMES[lv]}${nicks[d.id] ? ` · 你叫它「${nicks[d.id]}」` : ''}` : '还没认识'));
+      cl.addEventListener('click', () => showDetail(d)); cellOf.set(d.id, cl);
+      return cl;
+    };
+    const real = defs.filter((d) => d.id >= REAL_CAT_FIRST && d.id < REAL_CAT_FIRST + REAL_CAT_COUNT), others = defs.filter((d) => !real.includes(d));
+    if (real.length) {
+      const got = real.filter(known).length;
+      box.append(el('div', 'cx-group cx-cats', `校猫 · 真的住在新校区（已认识 ${got} / ${real.length}）`), el('div', 'create-sub', '它们是新校区里真实存在的小猫，在游戏里有了像素分身，名字是我们起的。去它们常出没的楼下找找看。'));
+      const order: string[] = []; for (const d of real) { const g = realCatOf(d.id)!.group; if (!order.includes(g)) order.push(g); }
+      for (const g of order) {
+        box.append(el('div', 'cx-subgroup', GROUP_NAMES[g as keyof typeof GROUP_NAMES]));
+        const gr = el('div', 'cx-grid'); for (const d of real.filter((x) => realCatOf(x.id)!.group === g)) gr.append(cell(d)); box.append(gr);
+      }
     }
-    box.append(grid);
+    box.append(el('div', 'cx-group cx-cats', real.length ? '校园里的其他小猫' : '每一只小猫'));
+    const grid = el('div', 'cx-grid'); for (const d of others) grid.append(cell(d)); box.append(grid);
+    box.append(detail);
+    const sel = defs.find((d) => d.id === this.catSel); if (sel) showDetail(sel);
   }
 
   // ------------------------------------------------------------ 钓鱼图鉴

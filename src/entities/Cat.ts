@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
-import { CAT_REACH, CAT_WANDER, LEVEL_NAMES, catLevel, type CatDef } from '@/shared/cats';
+import { CAT_LEASH, CAT_REACH, CAT_WANDER, LEVEL_NAMES, catLevel, clampToLeash, type CatDef } from '@/shared/cats';
+import { catProfile } from '@/shared/cat-lore';
 import type { WorldMap } from '@/world/WorldMap';
 import { redrawWhenGlyphsReady } from '@/ui/glyphs';
 
 type State = 'sit' | 'walk' | 'sleep' | 'eat' | 'happy' | 'flee' | 'act';
 
 /** 谁在靠近小猫：位置，以及是不是在"快速移动"（奔跑/骑车会吓到不熟的猫） */
-export interface Visitor { x: number; y: number; fast: boolean }
+export interface Visitor { x: number; y: number; fast: boolean; /** 玩家没在走动 */ still?: boolean; /** 玩家坐在长椅/座位上 */ sitting?: boolean }
 
 /** 天气与昼夜（WorldScene 每帧写入）：夜里猫更爱睡，雨雪停了会抖掉身上的水/雪 */
 export interface CatEnv { night: boolean; rain: boolean; snow: boolean }
@@ -47,6 +48,13 @@ export class Cat {
   /** 当前播放的动画 key 与"休闲动作"名；朝向视角（侧视 / 向下 / 向上）；上一帧的天气（用来判断雨雪刚停） */
   private curKey = ''; private act = ''; private view: 'side' | 'down' | 'up' = 'side';
   private wasRain = false; private wasSnow = false; private queued = ''; private chain = '';
+  /** 同伴列表（场景写入）：游走时避开别的猫、同组的猫夜里/雨天会凑在一起 */
+  static peers: Cat[] = [];
+  private walkSpeed = 26; private napMs = 600000;
+  /** 走到目标之后做什么：'nap' = 趴下睡（陪坐着的玩家 / 和同伴蜷在一起）；greeting = 正走向玩家 */
+  private arrive: '' | 'nap' = ''; private greetCd = 0; private napBeside = false;
+  /** 抱抱：到什么时候为止、抱在哪（玩家身上） */
+  private hugUntil = 0; private hugAt = { x: 0, y: 0 }; private hugHeart = 0;
 
   constructor(private scene: Phaser.Scene, readonly def: CatDef) {
     this.x = def.hx; this.y = def.hy; this.tx = this.x; this.ty = this.y;
@@ -63,6 +71,8 @@ export class Cat {
     if (on && !this.bed) this.bed = this.scene.add.image(this.def.hx, this.def.hy + 1, 'items', 'item_cat_bed').setScale(1.8).setDepth(this.def.hy - 2);
     else if (!on && this.bed) { this.bed.destroy(); this.bed = undefined; }
   }
+  /** 能被玩家选中互动：没被别人带走、看得见 */
+  get interactive() { return !this.away && this.sprite.visible; }
   /** 显示的名字：专属名字优先 */
   get label() { return this.nick || this.def.name; }
   /** 跟着的人暂时不在视野里：猫跟着他走了，这里先藏起来 */
@@ -122,6 +132,25 @@ export class Cat {
   pet() { const lv = this.lastLv; this.setState('happy', 2600, lv >= 3 ? 'rub' : 'blink'); this.hearts(3); }
   /** 被喂：低头吃，吃完开心 */
   eat() { this.setState('eat', 2400); this.hearts(0); }
+  /** 喂到最爱 / 升档：多冒一些爱心 */
+  loved() { this.hearts(8); }
+  leveledUp() { this.hearts(10); }
+  /** 收到回礼：喵一声（没被占着才做动作） */
+  giftMeow() { if (this.state !== 'eat') this.doAct('meow'); }
+  /** 抱抱：猫挪到玩家身上，蜷着不动约 5 秒并一直冒爱心；之后坐到玩家身边 */
+  hug(px: number, py: number, ms = 5000) {
+    this.hugUntil = this.scene.time.now + ms; this.hugAt = { x: px, y: py + 1 }; this.hugHeart = 0; this.chain = ''; this.arrive = '';
+    this.x = px; this.y = py + 1; this.view = 'side'; this.setState('sleep', ms, 'sleep_curl'); this.hearts(3); this.sync();
+  }
+  get hugging() { return this.hugUntil > 0; }
+  /** 面向玩家方向的"身边"位置：猫停在这儿（不压在玩家身上） */
+  private beside(v: Visitor, gap: number) {
+    const a = Math.atan2(this.y - v.y, this.x - v.x);
+    return clampToLeash(this.def.hx, this.def.hy, v.x + Math.cos(a) * gap, v.y + Math.sin(a) * gap * 0.5);
+  }
+  private goTo(x: number, y: number, speed: number, arrive: '' | 'nap' = '', napMs = 600000) {
+    this.tx = x; this.ty = y; this.walkSpeed = speed; this.arrive = arrive; this.napMs = napMs; this.setState('walk');
+  }
   private lastLv = 0;
   private hearts(n: number) {
     for (let i = 0; i < n; i++) {
@@ -137,6 +166,14 @@ export class Cat {
   update(dt: number, world: WorldMap, v: Visitor, aff: number, lead?: { x: number; y: number } | null) {
     const now = this.scene.time.now, dv = this.distTo(v.x, v.y), lv = catLevel(aff);
     this.lastLv = lv;
+    if (this.hugUntil) { // 抱抱中：趴在玩家身上
+      if (now < this.hugUntil) {
+        this.x = this.hugAt.x; this.y = this.hugAt.y;
+        if (now - this.hugHeart > 650) { this.hugHeart = now; this.hearts(1); }
+        this.sync(); this.sprite.setDepth(this.y + 1); return;
+      }
+      this.hugUntil = 0; if (!world.boxBlocked(this.x + 14, this.y)) this.x += 14; this.state = 'sit'; this.setState('sit', 3500); this.sync(); return;
+    }
     if (lead) { this.setAway(false); this.wasFollowing = true; this.showTag(true, aff); if (this.held) { this.faceVisitor(v); this.sync(); } else this.followLead(dt, world, lead); return; }
     if (this.wasFollowing) { this.wasFollowing = false; this.goHome(); }
     this.setAway(false);
@@ -148,14 +185,27 @@ export class Cat {
     else if (this.wasSnow && !env.snow && this.state !== 'sleep' && this.state !== 'eat') this.queued = 'shake_snow';
     this.wasRain = env.rain; this.wasSnow = env.snow;
     if (this.queued && this.state !== 'flee') { const q = this.queued; this.queued = ''; this.doAct(q); }
-    // 不熟的猫：被快速靠近就躲开（先炸毛没做，直接跑）
-    if (lv < 2 && v.fast && dv < 64 && this.state !== 'eat' && this.state !== 'happy' && this.state !== 'flee') {
-      this.chain = '';
-      const a = Math.atan2(this.y - v.y, this.x - v.x);
-      this.tx = this.x + Math.cos(a) * 52; this.ty = this.y + Math.sin(a) * 52; this.setState('flee', 1200);
+    // 不熟的猫（陌生/眼熟）：玩家快速靠近（跑/骑车）才躲开；玩家一停下它就不跑了。跑也不会超出牵绳（服务器按"家"判断够不够得着）
+    if (this.state === 'flee' && !v.fast) { this.view = 'side'; this.setState('sit', 800 + Math.random() * 1200); }
+    if (lv < 2 && v.fast && !v.still && dv < 64 && this.state !== 'eat' && this.state !== 'happy' && this.state !== 'flee') {
+      this.chain = ''; this.arrive = ''; this.napBeside = false;
+      const a = Math.atan2(this.y - v.y, this.x - v.x), t = clampToLeash(this.def.hx, this.def.hy, this.x + Math.cos(a) * 44, this.y + Math.sin(a) * 44);
+      this.tx = t.x; this.ty = t.y; this.setState('flee', 800);
     }
-    // 睡着的猫被走近会醒：先伸个懒腰
-    if (this.state === 'sleep' && dv < 34) { this.faceVisitor(v); this.doAct('stretch'); }
+    // 亲密以上：玩家安静待着 / 慢慢走近时，小跑过来蹭腿，到身边坐下
+    if (lv >= 3 && !v.fast && now >= this.greetCd && dv > 30 && dv < 140 && this.state !== 'sleep' && this.state !== 'eat' && this.state !== 'flee' && this.state !== 'happy' && !(v.sitting && lv >= 4)
+      && Math.hypot(v.x - this.def.hx, v.y - this.def.hy) < CAT_LEASH + 30) {
+      const t = this.beside(v, 22);
+      if (!world.boxBlocked(t.x, t.y)) { this.greetCd = now + 9000; this.chain = ''; this.faceVisitor(v); this.goTo(t.x, t.y, 62); }
+    }
+    // 挚友：玩家坐下时，走到脚边趴着睡
+    if (lv >= 4 && v.sitting && dv < 150 && !this.napBeside && this.state !== 'sleep' && this.state !== 'eat' && this.state !== 'flee' && Math.hypot(v.x - this.def.hx, v.y - this.def.hy) < CAT_LEASH + 30) {
+      const t = this.beside(v, 16);
+      if (!world.boxBlocked(t.x, t.y)) { this.napBeside = true; this.chain = ''; this.goTo(t.x, t.y, 50, 'nap'); }
+    }
+    if (this.napBeside && !v.sitting && (this.state === 'sleep' || this.state === 'walk')) { this.napBeside = false; this.arrive = ''; if (this.state === 'sleep') { this.faceVisitor(v); this.doAct('stretch'); } else this.setState('sit', 800); }
+    // 睡着的猫被走近会醒：先伸个懒腰（陪玩家睡的不算）
+    if (this.state === 'sleep' && dv < 34 && !this.napBeside) { this.faceVisitor(v); this.doAct('stretch'); }
     switch (this.state) {
       case 'sit': case 'happy': case 'eat': case 'sleep': case 'act':
         if (this.state === 'sit' && dv < 90) { const old = this.view; this.faceVisitor(v); if (old !== this.view) this.setState('sit', Math.max(0, this.until - now)); }
@@ -163,10 +213,11 @@ export class Cat {
         break;
       case 'walk': case 'flee': {
         const dx = this.tx - this.x, dy = this.ty - this.y, d = Math.hypot(dx, dy);
-        if (d < 1.5 || (this.state === 'flee' && now >= this.until)) { this.view = 'side'; this.setState('sit', 1500 + Math.random() * 3000); break; }
-        const speed = this.state === 'flee' ? 84 : 26, sp = speed * dt, mx = (dx / d) * Math.min(sp, d), my = (dy / d) * Math.min(sp, d);
+        if (d < 1.5 && this.arrive === 'nap') { this.arrive = ''; this.walkSpeed = 26; this.view = 'side'; if (this.napBeside) this.faceVisitor(v); this.setState('sleep', this.napMs, lv >= 4 ? 'sleep_side' : 'sleep_curl'); break; }
+        if (d < 1.5 || (this.state === 'flee' && now >= this.until)) { this.view = 'side'; this.walkSpeed = 26; this.arrive = ''; this.setState('sit', 1500 + Math.random() * 3000); break; }
+        const speed = this.state === 'flee' ? 84 : this.walkSpeed, sp = speed * dt, mx = (dx / d) * Math.min(sp, d), my = (dy / d) * Math.min(sp, d);
         const p = world.move(this.x, this.y, mx, my);
-        if (p.x === this.x && p.y === this.y) { this.view = 'side'; this.setState('sit', 1200 + Math.random() * 2000); break; } // 撞到东西了：停下
+        if (p.x === this.x && p.y === this.y) { this.view = 'side'; this.walkSpeed = 26; this.arrive = ''; this.setState('sit', 1200 + Math.random() * 2000); break; } // 撞到东西了：停下
         this.x = p.x; this.y = p.y;
         this.heading(dx, dy, speed);
         break;
@@ -208,7 +259,7 @@ export class Cat {
   /** 不再被带着：离家近就走回去，太远（>360 像素）直接回到家 */
   private goHome() {
     if (this.distTo(this.def.hx, this.def.hy) > 360) { this.x = this.def.hx; this.y = this.def.hy; this.view = 'side'; this.setState('sit', 1500); return; }
-    this.tx = this.def.hx; this.ty = this.def.hy; this.setState('walk');
+    this.napBeside = false; this.goTo(this.def.hx, this.def.hy, 40);
   }
 
   private doAct(name: string) {
@@ -221,8 +272,8 @@ export class Cat {
    * 睡醒会先伸懒腰、再打个哈欠。
    */
   private next(world: WorldMap, v: Visitor, lv: number, dv: number) {
-    if (this.distTo(this.def.hx, this.def.hy) > CAT_WANDER * 2) { this.view = 'side'; this.goHome(); return; } // 离家太远（刚被带过）：先回家
-    if (this.state === 'sleep') { this.doAct('stretch'); this.chain = 'yawn'; return; }
+    if (this.distTo(this.def.hx, this.def.hy) > CAT_WANDER + 8 && (dv > 60 || this.distTo(this.def.hx, this.def.hy) > CAT_LEASH)) { this.view = 'side'; this.goHome(); return; } // 离家太远（刚被带过 / 出来迎过人，人走了）：先回家
+    if (this.state === 'sleep') { this.napBeside = false; this.doAct('stretch'); this.chain = 'yawn'; return; }
     if (this.chain) { const q = this.chain; this.chain = ''; this.doAct(q); return; }   // 连招：伸懒腰→打哈欠、潜行→扑
     const env = Cat.env, near = dv < 70 && !v.fast, cozy = env.rain || env.snow;
     const table: [number, () => void][] = [
@@ -232,6 +283,7 @@ export class Cat {
       [lv >= 1 && dv < 90 ? 0.1 : 0, () => { this.faceVisitor(v); this.doAct('slow_blink'); }],
       [lv >= 2 && dv < 90 ? 0.05 : 0, () => { this.faceVisitor(v); this.doAct('meow'); }],
       [dv > 90 ? (env.night ? 0.42 : cozy ? 0.22 : 0.18) : 0, () => this.setState('sleep', 9000 + Math.random() * 12000, lv >= 3 ? 'sleep_side' : 'sleep_curl')],
+      [this.partner() && (env.night || cozy) && dv > 60 ? 0.3 : 0, () => { const q = this.partner()!, t = clampToLeash(this.def.hx, this.def.hy, q.x + (this.def.hx < q.def.hx ? -11 : 11), q.y); this.goTo(t.x, t.y, 30, 'nap', 14000 + Math.random() * 12000); }],
       [cozy || env.night ? 0.16 : 0.08, () => this.doAct('loaf')],
       [0.07, () => this.doAct('lick_paw')], [0.06, () => this.doAct('groom')], [0.04, () => this.doAct('scratch')],
       [0.03, () => this.doAct('yawn')], [0.025, () => { this.view = 'side'; this.doAct('stalk'); this.chain = 'pounce'; }], [0.02, () => { this.view = 'side'; this.doAct('chase_tail'); }], [0.04, () => this.doAct('look_back')], [0.04, () => this.doAct('stretch')],
@@ -242,10 +294,17 @@ export class Cat {
     for (const [w, fn] of table) { if (r < w) { fn(); return; } r -= w; }
     for (let i = 0; i < 6; i++) { // 在家附近挑一个能走的点
       const a = Math.random() * Math.PI * 2, rr = 10 + Math.random() * (CAT_WANDER - 10);
-      const tx = this.def.hx + Math.cos(a) * rr, ty = this.def.hy + Math.sin(a) * rr;
-      if (!world.boxBlocked(tx, ty)) { this.tx = tx; this.ty = ty; this.setState('walk'); return; }
+      const t = clampToLeash(this.def.hx, this.def.hy, this.def.hx + Math.cos(a) * rr, this.def.hy + Math.sin(a) * rr);
+      if (!world.boxBlocked(t.x, t.y) && !Cat.peers.some((o) => o !== this && o.interactive && Math.hypot(o.x - t.x, o.y - t.y) < 16)) { this.goTo(t.x, t.y, 26); return; }
     }
     this.setState('sit', 3000);
+  }
+
+  /** 同一组、一共两只的校猫（红烧&糖醋、大福&铜锣）互为伙伴：夜里 / 雨天会凑在一起蜷着 */
+  private partner(): Cat | undefined {
+    const g = catProfile(this.def).group; if (!g) return undefined;
+    const mates = Cat.peers.filter((o) => o !== this && catProfile(o.def).group === g);
+    return mates.length === 1 && mates[0].interactive ? mates[0] : undefined;
   }
 
   private showTag(near: boolean, aff: number) {

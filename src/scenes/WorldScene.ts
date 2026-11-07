@@ -72,7 +72,7 @@ import { fishData } from '@/ui/fishData';
 const KEEPER_LOOK = 5;
 import { PAX_NEAR, PAX_REACH } from '@/shared/party';
 import { GATES, RUN, inStartZone } from '@/shared/run';
-import { castTarget, fishDef, fmtKg, isFish, sizeTier, FISH, FISHING } from '@/shared/fishing';
+import { castTarget, fishDef, fmtKg, isFish, sizeTier, FISH, FISHING, REAL_FISH, RARITY_ORDER } from '@/shared/fishing';
 import type { ServerMsg } from '@/shared/protocol';
 import { lakeMask, type WaterMask } from '@/shared/water';
 import { questDef } from '@/shared/quests';
@@ -82,7 +82,7 @@ import { sfx } from '@/audio/sfx';
 import { ambient } from '@/audio/ambient';
 import { titleDef } from '@/shared/titles';
 import { ACH_TOTAL, achDef } from '@/shared/achievements';
-import { CAT_REACH, allCats } from '@/shared/cats';
+import { CAT_REACH, allCats, type CatInfo } from '@/shared/cats';
 import { HELD_MAX, heldDef } from '@/shared/held';
 import { gateBikes } from '@/shared/bikes';
 import { itemDef } from '@/shared/items';
@@ -131,6 +131,7 @@ export class WorldScene extends Phaser.Scene {
   private wallUi!: WallPanel;
   /** 送过猫窝的小猫编号（只有我自己看得到那些窝） */
   private catBeds = new Set<number>();
+  private catRo?: ResizeObserver;
   private noticeUi!: NoticePanel;
   private socialUi!: SocialUi;
   private backpackUi!: BackpackPanel;
@@ -186,6 +187,9 @@ export class WorldScene extends Phaser.Scene {
   private catAff: Record<string, number> = {};
   /** 我给各只小猫取的专属名字（猫编号 → 名字）；谁带着哪只猫（猫编号 → 玩家编号） */
   private catNick: Record<string, string> = {};
+  /** 服务器给的每只猫"今天的状态" / 今天和累计收到的回礼数 */
+  private catInfo: Record<string, CatInfo> = {};
+  private catGifts = { today: 0, total: 0 };
   private catWith = new Map<number, number>();
   /** 摆着共享单车的停车点（像素坐标）：走到旁边按 E 扫码骑行 */
   private bikeSpots: { x: number; y: number }[] = [];
@@ -347,7 +351,7 @@ export class WorldScene extends Phaser.Scene {
     this.socialUi.onTrade = (uid) => this.tradeUi.invite(uid);
     this.socialUi.onHand = (uid) => this.net.handInvite(uid);
     this.socialUi.onDorm = (uid, kind) => (kind === 'invite' ? this.net.dormInvite(uid) : this.net.dormKnock(uid));
-    this.codexUi = new CodexPanel(this.net, this.textures, { cats: () => ({ defs: allCats(this.wf.npcSpawns), aff: this.catAff, nicks: this.catNick }), inv: () => this.backpackUi.inv, gear: () => { const g = resolveGear(this.backpackUi.inv, this.backpackUi.equip, fishData.env()); return { rod: g.rod?.id ?? '', bait: g.bait?.id ?? '' }; } });
+    this.codexUi = new CodexPanel(this.net, this.textures, { cats: () => ({ defs: allCats(this.wf.npcSpawns), aff: this.catAff, nicks: this.catNick, info: this.catInfo }), inv: () => this.backpackUi.inv, gear: () => { const g = resolveGear(this.backpackUi.inv, this.backpackUi.equip, fishData.env()); return { rod: g.rod?.id ?? '', bait: g.bait?.id ?? '' }; } });
     this.achUi = new AchievementPanel(this.net, {
       onNew: (ids) => { for (const id of ids) { const a = achDef(id); if (!a) continue; this.hud.banner('🏆 成就达成', a.name); this.net.system(`🏆 成就达成：${a.name}`); sfx('achieve'); } },
       onCount: (n) => this.profileUi.setAch(n, ACH_TOTAL),
@@ -373,12 +377,13 @@ export class WorldScene extends Phaser.Scene {
     this.titleUi = new TitlePanel(this.net);
     this.net.onAdmin((ok) => this.titleUi.setAdmin(ok));
     this.catUi = new CatPanel({
-      pet: () => this.catAction('pet'), feed: (item) => this.catAction('feed', item), close: () => this.closeCat(),
+      pet: () => this.catAction('pet'), feed: (item, fishId) => this.catAction('feed', item, fishId), close: () => this.closeCat(),
       follow: (on) => { const c = this.catUi.current; if (c) this.net.catFollowCmd(c.id, on); },
       nick: (name) => { const c = this.catUi.current; if (c) this.net.catNick(c.id, name); },
+      hug: () => { const c = this.catUi.current; if (c) this.net.catHug(c.id); },
       tame: () => { const c = this.catUi.current; if (c) this.net.catTame(c.id); },
       duel: () => { const c = this.catUi.current; if (c) this.net.catBattle(c.id); },
-    });
+    }, this.textures);
     this.net.handlers.chatHistory = (items) => this.chatUi.addHistory(items);
     this.net.handlers.chatRecall = (mids) => { this.chatUi.recall(mids); this.adminUi?.onRecall(); };
     // 点场景里的玩家 → 资料卡（加好友 / 私聊）。点在界面上的不会到这里
@@ -429,8 +434,9 @@ export class WorldScene extends Phaser.Scene {
     h.sitResult = (ok, msg) => { if (!ok) { this.player.setSitting(false); this.hud.banner('🪑 长椅', msg ?? '现在不能坐下'); } };
     h.emote = (pid, e) => { const d = emoteDef(e); if (!d) return; if (pid === this.net.selfId) { this.player.emote(d); sfx('emote'); } else this.remotes.get(pid)?.emote(d); };
     h.rideResult = (ok, msg) => { if (!ok) { this.player.setRiding(false); this.hud.banner('🚲 共享单车', msg ?? '现在不能骑车'); } };
-    h.cats = (aff, beds) => {
+    h.cats = (aff, beds, info, gifts) => {
       this.catAff = aff; if (beds) { this.catBeds = new Set(beds); for (const c of this.cats) c.setBed(this.catBeds.has(c.def.id)); }
+      this.catInfo = info ?? {}; if (gifts) this.catGifts = gifts;
       this.refreshCatPanel(); this.codexUi.refresh();
     };
     h.wallPending = (n) => { this.hud.banner('📝 校园墙', `有新帖等待审核（共 ${n} 条）`); sfx('notify'); };
@@ -449,8 +455,15 @@ export class WorldScene extends Phaser.Scene {
     h.catFollow = (id, pid) => { if (pid) this.catWith.set(id, pid); else this.catWith.delete(id); this.refreshCatPanel(); };
     h.catMsg = (ok, msg) => { if (this.catUi.isOpen) this.catUi.say(msg, ok); else this.hud.banner('🐱 小猫', msg); };
     h.catResult = (id, kind, r) => {
-      if (this.catUi.current?.id === id) { this.catUi.say(r.msg, r.ok); }
-      if (r.ok) { const c = this.cats[id]; if (kind === 'pet') { c?.pet(); sfx('pet'); } else { c?.eat(); sfx('feed'); } }
+      if (this.catUi.current?.id === id) { this.catUi.say(r.msg, r.ok); if (r.ok) this.catUi.started(kind); }
+      if (!r.ok) return;
+      const c = this.cats[id];
+      if (kind === 'pet') { c?.pet(); sfx('pet'); }
+      else if (kind === 'hug') { c?.hug(this.player.x, this.player.y); sfx('pet'); }
+      else { c?.eat(); sfx('feed'); }
+      if (r.loved) { c?.loved(); sfx('catch'); }                       // 喂到最爱：一串爱心
+      if (r.leveled) { c?.leveledUp(); sfx('achieve'); }               // 升档：更多爱心
+      if (r.gift) c?.giftMeow();                                       // 有回礼：喵一声（物品由背包的"获得物品"横幅提示）
     };
     const onInv = h.inv; h.inv = (items, gain) => { onInv?.(items, gain); this.shopUi.setInv(items); this.refreshCatPanel(); };
     h.disconnected = () => { for (const r of this.remotes.values()) r.destroy(); this.remotes.clear(); this.player.setFishing(false); this.fishPhase = 'idle'; this.fightUi.close(); this.clearDropped(); };
@@ -766,6 +779,7 @@ export class WorldScene extends Phaser.Scene {
   /** 校园小猫：家和毛色、名字由 shared/cats 按固定种子从行人出生点里挑（服务器和所有玩家一致） */
   private spawnCats() {
     for (const d of allCats(this.wf.npcSpawns)) this.cats.push(new Cat(this, d));
+    Cat.peers = this.cats;
   }
 
   /** 车架旁停几辆共享单车（按车架坐标确定，所有玩家看到的一样）；这些位置也是上车点 */
@@ -813,10 +827,22 @@ export class WorldScene extends Phaser.Scene {
     this.catUi.open(c.def);
     this.hud.hint(null);
     this.refreshCatPanel();
+    this.time.delayedCall(0, () => this.reframeForCatPanel());
+    const root = document.querySelector('.cat-panel');
+    if (root && !this.catRo) { this.catRo = new ResizeObserver(() => { if (this.catUi.isOpen) this.reframeForCatPanel(); }); this.catRo.observe(root); } // 换页签面板变高 / 变矮：镜头跟着重新取景
+  }
+  /** 猫面板打开时把镜头往面板另一侧挪一点，别让面板盖住人和猫（竖屏：面板在下方，画面往上挪；手机横屏面板靠右停靠，画面往左挪） */
+  private reframeForCatPanel() {
+    const cam = this.cameras.main, root = document.querySelector('.cat-panel') as HTMLElement | null;
+    if (!this.catUi.isOpen || !root) { cam.setFollowOffset(0, 0); return; }
+    const r = root.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, z = cam.zoom || 1;
+    if (r.left > vw * 0.4 && r.width < vw * 0.6) cam.setFollowOffset(-(r.width / 2) / z, 0);      // 靠右停靠
+    else cam.setFollowOffset(0, -Math.max(0, vh / 2 + 60 - r.top) / z);                         // 在下方：把人推到面板上沿之上（再留 60 像素，猫在人的南边也看得到）
   }
   private closeCat() {
     const id = this.catUi.current?.id;
     this.catUi.close();
+    this.cameras.main.setFollowOffset(0, 0);
     this.player.setCrouch(false);
     if (id !== undefined) this.cats[id]?.hold(false);
   }
@@ -824,14 +850,19 @@ export class WorldScene extends Phaser.Scene {
     const cat = this.catUi?.current; if (!cat) return;
     const inv = this.backpackUi.inv;
     const pid = this.catWith.get(cat.id);
-    this.catUi.update(this.catAff[cat.id] ?? 0, inv.cat_food ?? 0, inv.cat_treat ?? 0, this.fishCount(), this.net.status === 'online', { bed: inv.cat_bed ?? 0, hasBed: this.catBeds.has(cat.id), following: pid === this.net.selfId && pid !== undefined, withOther: pid !== undefined && pid !== this.net.selfId, nick: this.catNick[cat.id], tamed: this.monUi.tamed.includes(cat.id), hasCatSpirit: this.monUi.hasCatSpirit });
+    this.catUi.update(this.catAff[cat.id] ?? 0, inv.cat_food ?? 0, inv.cat_treat ?? 0, this.fishCount(), this.net.status === 'online', { info: this.catInfo[cat.id], fish: this.fishList(), bed: inv.cat_bed ?? 0, hasBed: this.catBeds.has(cat.id), following: pid === this.net.selfId && pid !== undefined, withOther: pid !== undefined && pid !== this.net.selfId, nick: this.catNick[cat.id], tamed: this.monUi.tamed.includes(cat.id), hasCatSpirit: this.monUi.hasCatSpirit });
   }
   /** 背包里能喂猫的鱼（真鱼，不含杂物）总数 */
   private fishCount() { return Object.entries(this.backpackUi.inv).reduce((n, [id, c]) => n + (isFish(id) ? c : 0), 0); }
   /** 喂鱼时先拿最常见的（稀有的留着）：FISH 目录按常见到稀有排好 */
   private pickFish(): string | undefined { return FISH.find((f) => isFish(f.id) && (this.backpackUi.inv[f.id] ?? 0) > 0)?.id; }
-  private catAction(kind: 'pet' | 'feed', which?: 'cat_food' | 'cat_treat' | 'fish' | 'cat_bed') {
-    const item = which === 'fish' ? this.pickFish() : which;
+  /** 背包里的真鱼（喂鱼选择列表用），按稀有度从常见到稀有排 */
+  private fishList(): { id: string; name: string; n: number; rarity: string }[] {
+    const inv = this.backpackUi.inv, ord = (r: string) => { const i = (RARITY_ORDER as readonly string[]).indexOf(r); return i < 0 ? 99 : i; };
+    return REAL_FISH.filter((f) => (inv[f.id] ?? 0) > 0).map((f) => ({ id: f.id, name: f.name, n: inv[f.id], rarity: f.rarity })).sort((a, b) => ord(a.rarity) - ord(b.rarity));
+  }
+  private catAction(kind: 'pet' | 'feed', which?: 'cat_food' | 'cat_treat' | 'fish' | 'cat_bed', fishId?: string) {
+    const item = which === 'fish' ? (fishId && isFish(fishId) && (this.backpackUi.inv[fishId] ?? 0) > 0 ? fishId : this.pickFish()) : which;
     const cat = this.catUi.current; if (!cat) return;
     if (this.net.status !== 'online') { // 单人模式：摸摸只有动画，不记好感，也不能喂
       if (kind === 'pet') { this.cats[cat.id]?.pet(); this.catUi.say('（没连上服务器，好感度不会记录）', true); }
@@ -872,7 +903,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateKeeper(dt, _t);
     { const c = this.cameras.main, rx = c.width / c.zoom / 2 + 900, ry = c.height / c.zoom / 2 + 900; // 远处的行人、小猫不更新
       for (const n of this.npcs) { if (Math.abs(n.x - c.midPoint.x) > rx || Math.abs(n.y - c.midPoint.y) > ry) continue; n.update(dt, this.world, this.rand); }
-      const visitor = { x: this.player.x, y: this.player.y, fast: this.player.riding || this.runNow };
+      const visitor = { x: this.player.x, y: this.player.y, fast: this.player.riding || this.runNow, still: !this.player.moving && !this.player.riding, sitting: this.player.sitting };
       for (const cat of this.cats) {
         const pid = this.catWith.get(cat.def.id);
         if (pid) { // 正被某个玩家带着走：跟着他（自己，或视野里的别的玩家）；他不在视野里就先藏起来
@@ -1267,7 +1298,7 @@ export class WorldScene extends Phaser.Scene {
     this.nearBuilding = near;
     // 最近的行人
     let cat: Cat | null = null, cd = CAT_REACH;
-    for (const c of this.cats) { const dd = c.distTo(this.player.x, this.player.y); if (dd < cd) { cd = dd; cat = c; } }
+    for (const c of this.cats) { if (!c.interactive) continue; const dd = c.distTo(this.player.x, this.player.y); if (dd < cd) { cd = dd; cat = c; } }   // 被别人带走、藏起来的猫选不中
     const seat = nearestSeat(this.seats, this.player.x, this.player.y, SIT_REACH);
     const bin = this.net.status === 'online' ? nearestBin(this.bins, this.player.x, this.player.y) : -1; // 站在垃圾桶旁：按 E 翻一翻
     const fishSpot = this.water && this.net.status === 'online' ? castTarget(this.water.at, this.player.x, this.player.y, this.player.facing) : null; // 站在岸边、面朝湖水
@@ -1281,7 +1312,11 @@ export class WorldScene extends Phaser.Scene {
     for (const n of this.npcs) { const dd = Math.hypot(n.x - this.player.x, n.y - this.player.y); if (dd < nd) { nd = dd; npc = n; } }
     const egg = (this.wf.interacts ?? []).find((i) => this.player.x >= i.x && this.player.x <= i.x + i.w && this.player.y >= i.y && this.player.y <= i.y + i.h);
     const press = Phaser.Input.Keyboard.JustDown(this.keys.e) || Phaser.Input.Keyboard.JustDown(this.keys.space) || this.touchPress;
-    if (near) {
+    // 站在猫身边按 E 一定能和它玩：猫排在彩蛋区、队友单车前面；站在建筑门口时，猫够近（<0.75 个够得着的距离）才抢占提示
+    if (cat && !this.player.riding && (!near || cd < CAT_REACH * 0.75)) {
+      this.hud.hint(`E  和「${cat.label}」玩`);
+      if (press) this.openCat(cat);
+    } else if (near) {
       const home = near.name === this.dormUi.building && this.net.status === 'online'; // 自己绑定的宿舍楼：门口按 E 回宿舍
       this.hud.hint(home ? `E  回宿舍（${near.name}）` : `E  ${near.interior ? '进入' : '查看'}：${near.name}`);
       if (press) {
@@ -1309,9 +1344,6 @@ export class WorldScene extends Phaser.Scene {
       if (press) this.net.paxJoin(mateBike.uid);
     } else if (mateFar && !cat && !bike && !seat && !fishSpot) {
       this.hud.hint(`${mateFar.info.name} 在骑车：走近他的车，按 E 坐后座`);
-    } else if (cat) {
-      this.hud.hint(`E  和「${cat.label}」玩`);
-      if (press) this.openCat(cat);
     } else if (bike) {
       this.hud.hint('E  扫码骑行：共享单车');
       if (press) this.mount();
