@@ -444,6 +444,11 @@ export const CAT_PRESETS: { name: string; rarity: '常见' | '少见' | '稀有'
   { name: '布偶', rarity: '稀有', look: { coat: '#f0e6d4', coat2: '#6a5446', pattern: 'point', white: 2, eye: '#4a90d8', fur: 'long' } },
   { name: '异瞳白猫', rarity: '稀有', look: { coat: '#f6f2ea', pattern: 'solid', eye: '#4a90d8', eye2: '#d8b838' } },
   { name: '胖橘', rarity: '常见', look: { coat: '#e8a040', coat2: '#c0702a', pattern: 'mackerel', eye: '#4a8a3a', build: 'chonky', acc: 'bell', accColor: '#d6405c' } },
+  // 20 起是「校猫」专用毛色（照真猫的照片补的，见 src/shared/campus-cats.ts）：灰白狸花（胡椒）、白底橘斑（芝士）、奶白长毛深尾（蒲公英）、青眼燕尾服（领结）
+  { name: '灰白狸花', rarity: '常见', look: { coat: '#7f838e', coat2: '#383b46', pattern: 'mackerel', white: 3, eye: '#c8b040', build: 'slim' } },
+  { name: '白底橘斑', rarity: '常见', look: { coat: '#e8a040', coat2: '#c0702a', pattern: 'van', white: 4, eye: '#c89a38' } },
+  { name: '奶白长毛', rarity: '少见', look: { coat: '#5e5c68', coat2: '#46444e', pattern: 'van', eye: '#c89030', fur: 'long', tail: 'fluffy' } },
+  { name: '青眼燕尾服', rarity: '常见', look: { coat: '#2e2b36', pattern: 'solid', white: 3, eye: '#58b4a0' } },
 ];
 
 /* ───────── 两只猫互动（成对渲染：两张图按偏移叠放，其中一只镜像） ───────── */

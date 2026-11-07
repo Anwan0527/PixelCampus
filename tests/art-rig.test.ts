@@ -68,7 +68,7 @@ describe('人物 Rig', () => {
 });
 
 describe('小猫 Rig', () => {
-  it('侧视 / 正面 / 背面每一帧：尺寸 = CAT_FRAME，不为空，不碰画布边缘（20 种预置毛色）', () => {
+  it('侧视 / 正面 / 背面每一帧：尺寸 = CAT_FRAME，不为空，不碰画布边缘（24 种预置毛色）', () => {
     for (const c of CAT_PRESETS) {
       for (const a of CAT_ANIMS) a.frames.forEach((p, i) => {
         const { img } = renderCat(c.look, p);

@@ -1,5 +1,5 @@
 /**
- * 猫系精灵（客户端与服务器共用）：校园里 20 种毛色各自一条进化线（幼崽 → 成年 → 王者），
+ * 猫系精灵（客户端与服务器共用）：校园里 24 种毛色（含 4 种校猫专用毛色）各自一条进化线（幼崽 → 成年 → 王者），
  * 每条线有自己的属性、种族值体系和美术（tools/mons/cat-art.ts 按毛色程序化生成正面/背面 64×64）。
  * 技能是"老吴"系列（老吴咆哮、老吴撼地掌……）：每个属性 4 个——物理/特殊 × 普通/终极。
  * 全部由下面的表算出来，不需要逐个物种手写；物种 id = c<毛色两位><阶段 a/b/c>，如 c00a = 橘猫幼崽。
@@ -8,7 +8,7 @@ import { COAT_LABELS, COAT_RARITY } from './cats';
 import type { Base, Move, MoveCat, Species } from './mons';
 
 export const CAT_EVO_LV = [16, 32] as const;
-const STEM = ['橘', '黑', '白', '三花', '奶牛', '灰', '狸花', '橘白', '蓝白', '燕尾', '玳瑁', '银渐', '金渐', '银虎', '蓝', '奶油', '暹罗', '布偶', '异瞳', '胖橘'] as const;
+const STEM = ['橘', '黑', '白', '三花', '奶牛', '灰', '狸花', '橘白', '蓝白', '燕尾', '玳瑁', '银渐', '金渐', '银虎', '蓝', '奶油', '暹罗', '布偶', '异瞳', '胖橘', '胡椒', '芝士', '蒲公英', '领结'] as const;
 const SUFFIX = ['崽', '猫', '猫王'] as const;
 const TIER = ['a', 'b', 'c'] as const;
 
@@ -40,6 +40,10 @@ const LINE: { types: [string] | [string, string]; arche: Arche; blurb: string }[
   { types: ['妖精', '冰'], arche: 'tank', blurb: '布偶猫软得像一团云，倒下去能压扁一排对手。' },
   { types: ['超能力', '妖精'], arche: 'glass', blurb: '一蓝一黄的异色瞳，盯着你看时世界都慢了半拍。' },
   { types: ['一般'], arche: 'tank', blurb: '胖橘：能躺着绝不坐着，一顿能吃三顿的量。' },
+  { types: ['草'], arche: 'speed', blurb: '灰白狸花，背上的条纹像撒了一把黑胡椒，一阵风似的窜过草丛。' },
+  { types: ['一般', '妖精'], arche: 'tank', blurb: '白底橘斑，脸上像打翻了一勺芝士酱；吃饭的时候谁也别想靠近。' },
+  { types: ['妖精', '飞行'], arche: 'mage', blurb: '奶白长毛配深色的大尾巴，像一朵会走路的蒲公英，一阵风就飘起来。' },
+  { types: ['一般', '超能力'], arche: 'balanced', blurb: '白胸口像系着领结，青色的眼睛有点狡黠，谁路过都想跟它握个手。' },
 ];
 const RARITY_BONUS = { common: 0, uncommon: 15, rare: 30, epic: 40, legendary: 50, mythic: 60, junk: 0 } as const;
 const STAGE_BST = [300, 400, 500] as const;

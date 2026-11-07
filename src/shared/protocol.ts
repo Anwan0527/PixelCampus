@@ -13,7 +13,7 @@ import type { WallComment, WallPost } from './wall';
 import type { Notice } from './notice';
 import type { ChatHistoryItem, DmMsg, FriendInfo, PersonInfo } from './social';
 import type { Gain, Inv } from './items';
-import type { CatResult } from './cats';
+import type { CatInfo, CatResult } from './cats';
 import type { AchEvent } from './achievements';
 import type { QuestState } from './quests';
 import type { FishLog } from './fishing';
@@ -166,6 +166,8 @@ export type ClientMsg =
   | { t: 'cats_get' }
   | { t: 'cat_pet'; id: number }
   | { t: 'cat_feed'; id: number; item: string }
+  /** 抱抱（挚友以上；服务器回 cat_result，kind = 'hug'） */
+  | { t: 'cat_hug'; id: number }
   /** 让亲密的小猫跟着我 / 回家；给它取专属名字（空 = 清除） */
   | { t: 'cat_follow'; id: number; on: boolean }
   | { t: 'cat_nick'; id: number; name: string }
@@ -351,7 +353,7 @@ export type ServerMsg =
   /** 整个背包（物品 id → 数量）；gain 带上"这次新得到的东西"，客户端据此提示 */
   | { t: 'inv'; items: Inv; gain?: Gain[] }
   /** 各只小猫对我的好感度（猫编号 → 点数） */
-  | { t: 'cats'; aff: Record<string, number>; /** 我送过猫窝的小猫编号 */ beds?: number[] }
+  | { t: 'cats'; aff: Record<string, number>; /** 我送过猫窝的小猫编号 */ beds?: number[]; /** 每只猫"今天的状态"（连续探望天数、今天是否探望/抱过/收过回礼、是否喂到过最爱）；只发有内容的 */ info?: Record<string, CatInfo>; /** 今天已收到几份回礼 / 累计收到几份 */ gifts?: { today: number; total: number } }
   /** 校园币余额；gain = 这次刚得到的数量 */
   | { t: 'coins'; n: number; gain?: number }
   | { t: 'shop_result'; ok: boolean; msg: string }
@@ -384,7 +386,7 @@ export type ServerMsg =
   | { t: 'wall_pending'; n: number }
   | { t: 'wall_thread'; post: WallPost; comments: WallComment[] }
   | { t: 'wall_result'; ok: boolean; msg: string }
-  | { t: 'cat_result'; id: number; kind: 'pet' | 'feed'; r: CatResult }
+  | { t: 'cat_result'; id: number; kind: 'pet' | 'feed' | 'hug'; r: CatResult }
   /** 服务器当前时间（毫秒时间戳）：进来时发一次，之后每 30 秒一次；客户端据此校准游戏时钟，让全服时间一致 */
   | { t: 'time'; now: number }
   /** 跟随/取名的结果提示 */
