@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { CatDef, CatInfo } from '@/shared/cats';
+import type { CatDef, CatInfo, CatResult } from '@/shared/cats';
 import { BOND_LEVEL, CAT_NICK_MAX, FEED_COOLDOWN_MS, HUG_LEVEL, LEVEL_AT, LEVEL_NAMES, LEVEL_PERKS, PET_COOLDOWN_MS, TAME_AT, catLevel, catNext } from '@/shared/cats';
 import { catProfile, isLiked, levelName, likesKnown, storiesUnlocked } from '@/shared/cat-lore';
 import { FISH_FEED_GAIN, type Rarity } from '@/shared/fishing';
@@ -25,6 +25,14 @@ export interface CatExtra {
 }
 type Tab = 'act' | 'dossier' | 'bond';
 type Cd = { pet: number; feed: number; hug: number };
+/** 操作记录的一条：时间、文字、是否出错 */
+interface LogEntry { t: number; text: string; ok: boolean }
+const LOG_MAX = 20, LOG_SHOWN = 3;
+/** 相对时间：刚刚 / N 秒前 / N 分钟前 / N 小时前 */
+export function ago(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return s < 10 ? '刚刚' : s < 60 ? `${s} 秒前` : s < 3600 ? `${Math.floor(s / 60)} 分钟前` : `${Math.floor(s / 3600)} 小时前`;
+}
 
 /**
  * 和小猫互动的小面板：屏幕下方一块，不挡住场景（能看着猫的反应）。
@@ -41,6 +49,11 @@ export class CatPanel {
   private lvLine = el('div', 'cat-lvline');
   private prog = el('div', 'cat-prog'); private progFill = el('div', 'cat-prog-fill');
   private tags = el('div', 'cat-tags');
+  private logHead = el('button', 'cat-loghead'); private logList = el('div', 'cat-loglist');
+  /** 每只猫最近的互动记录（本次会话内保留，切到别的猫看别的猫的） */
+  private logs = new Map<number, LogEntry[]>(); private logOpen = false; private logSig = '';
+  /** 每只猫最近一次已知的好感度：用来算"这次涨了多少" */
+  private affSeen = new Map<number, number>();
   private msg = el('div', 'cat-msg');
   private offline = el('div', 'cat-offline hidden', '没连上服务器：只能摸一摸看看动画，好感度不会记录');
   private tabBtns = new Map<Tab, HTMLButtonElement>();
@@ -89,7 +102,8 @@ export class CatPanel {
 
     // 头部
     this.prog.append(this.progFill);
-    const main = el('div', 'cat-head-main'); main.append(this.title, this.hearts, this.lvLine, this.prog, this.tags);
+    const lvrow = el('div', 'cat-lvrow'); lvrow.append(this.hearts, this.lvLine);
+    const main = el('div', 'cat-head-main'); main.append(this.title, lvrow, this.prog, this.tags);
     const head = el('div', 'cat-head'); head.append(this.pic, main, bye);
     // 页签
     const tabs = el('div', 'cat-tabs');
@@ -97,7 +111,8 @@ export class CatPanel {
       const b = el('button', 'cat-tab', label); b.type = 'button'; b.addEventListener('click', () => this.setTab(id)); this.tabBtns.set(id, b); tabs.append(b);
     }
     // 互动页
-    const actPage = el('div', 'cat-page'); const grid = el('div', 'cat-grid'); grid.append(this.bPet, this.bHug, this.bFood, this.bTreat, this.bFish, this.bBed); actPage.append(grid, this.fishList);
+    const actPage = el('div', 'cat-page'); const grid = el('div', 'cat-grid'); grid.append(this.bPet, this.bHug, this.bFood, this.bTreat, this.bFish, this.bBed); this.logHead.type = 'button'; this.logHead.addEventListener('click', () => { this.logOpen = !this.logOpen; this.logSig = ''; this.renderLog(); });
+    actPage.append(grid, this.fishList, this.logHead, this.logList);
     // 档案页
     const dos = el('div', 'cat-page hidden'); dos.append(this.dossier);
     // 羁绊页
@@ -124,10 +139,11 @@ export class CatPanel {
   get isOpen() { return !this.root.classList.contains('hidden'); }
   get current() { return this.cat; }
   open(cat: CatDef) {
-    this.cat = cat; this.msg.textContent = ''; this.msg.classList.remove('bad'); this.nickRow.classList.add('hidden'); this.fishOpen = false; this.fishSig = ''; this.dossierSig = ''; this.perksSig = '';
+    this.cat = cat; this.logOpen = false; this.logSig = ''; this.msg.textContent = ''; this.msg.classList.remove('bad'); this.nickRow.classList.add('hidden'); this.fishOpen = false; this.fishSig = ''; this.dossierSig = ''; this.perksSig = '';
     this.root.classList.remove('hidden'); this.setTab('act');
     try { if (this.textures) drawFrame(this.pic, this.textures, 'cats', `cat${cat.coat}_sit_0`, 3); } catch { /* 图集没加载：不显示头像 */ }
     window.clearInterval(this.timer); this.timer = window.setInterval(() => this.tick(), 250);
+    this.renderLog();
   }
   close() { this.cat = null; this.root.classList.add('hidden'); window.clearInterval(this.timer); }
 
@@ -155,7 +171,7 @@ export class CatPanel {
     this.tick();
   }
   private left(t: number) { return Math.max(0, Math.ceil((t - Date.now()) / 1000)); }
-  private tick() { if (this.cat) this.paintButtons(); }
+  private tick() { if (this.cat) { this.paintButtons(); this.renderLog(); } }
 
   // ------------------------------------------------------------ 刷新
   /** 刷新好感度条、按钮上的数量与可用状态、档案 */
@@ -163,6 +179,7 @@ export class CatPanel {
     if (!this.cat) return;
     this.last = { aff, food, treat, fish, online, ex };
     const lv = catLevel(aff), next = catNext(aff), info = ex.info;
+    this.affSeen.set(this.cat.id, aff);
     this.lv = lv; this.canBond = lv >= BOND_LEVEL; this.following = ex.following; this.online = online; this.hasFish = fish;
     const prof = catProfile(this.cat);
     this.title.textContent = ex.nick ? `${ex.nick}（${this.cat.name}）` : this.cat.name;
@@ -175,7 +192,7 @@ export class CatPanel {
     if (info?.st && info.st > 0) tags.push(`📅 连续探望 ${info.st} 天`);
     if (info?.vt) tags.push('今日已探望 ✓'); if (info?.hg) tags.push('今日已抱 ✓'); if (info?.gf) tags.push('🎁 今日回礼 ✓');
     else if (lv >= BOND_LEVEL) tags.push('今天还没收到回礼');
-    this.tags.textContent = tags.join('　');
+    this.tags.textContent = tags.join('　'); this.tags.classList.toggle('hidden', !tags.length);
     this.offline.classList.toggle('hidden', online);
     this.paintButtons();
     this.renderFish();
@@ -249,5 +266,41 @@ export class CatPanel {
     });
   }
 
-  say(text: string, ok = true) { this.msg.textContent = text; this.msg.classList.toggle('bad', !ok); }
+  /** 最新一句反馈：显示在 msg 区，同时记进当前这只猫的记录 */
+  say(text: string, ok = true) {
+    this.msg.textContent = text; this.msg.classList.toggle('bad', !ok);
+    if (this.cat && text) this.addLog(this.cat.id, ok ? text : `⚠ ${text}`, ok);
+  }
+
+  /** 服务器回了一次互动的结果（任何一只猫的）：记下"做了什么、涨了多少、收到什么、升档"；当前这只猫还要更新 msg 区 */
+  result(id: number, kind: 'pet' | 'feed' | 'hug', r: CatResult) {
+    const cur = this.cat?.id === id;
+    if (cur) { this.msg.textContent = r.msg; this.msg.classList.toggle('bad', !r.ok); }
+    if (!r.ok) { this.addLog(id, `⚠ ${r.msg}`, false); return; }
+    const before = this.affSeen.get(id), gain = before === undefined ? 0 : r.aff - before;
+    this.affSeen.set(id, r.aff);
+    const verb = kind === 'pet' ? '摸了摸' : kind === 'hug' ? '抱了抱' : '喂食';
+    this.addLog(id, `${verb}${gain > 0 ? ` 好感 +${gain}` : ''}：${r.msg}`, true);
+    if (r.loved) this.addLog(id, '♥ 正中它的最爱，好感翻倍', true);
+    if (r.gifts.length) this.addLog(id, `🎁 收到：${r.gifts.map((g) => `${itemDef(g.id)?.name ?? g.id} ×${g.n}`).join('、')}`, true);
+    if (r.leveled) this.addLog(id, `⬆ 升到「${LEVEL_NAMES[r.level] ?? r.level}」`, true);
+  }
+
+  private addLog(id: number, text: string, ok: boolean) {
+    const list = this.logs.get(id) ?? []; this.logs.set(id, list);
+    list.push({ t: Date.now(), text, ok }); if (list.length > LOG_MAX) list.splice(0, list.length - LOG_MAX);
+    this.logSig = ''; if (this.cat?.id === id) this.renderLog();
+  }
+  /** 「📜 最近记录」：新的在上，默认只显示最近 3 条，点标题展开全部（可滚动）；时间每 250ms 检查一次，文字变了才重画 */
+  private renderLog() {
+    const list = this.logs.get(this.cat?.id ?? -1) ?? [], now = Date.now();
+    const shown = (this.logOpen ? list.slice().reverse() : list.slice(-LOG_SHOWN).reverse());
+    const sig = `${this.logOpen}|${list.length}|${shown.map((e) => `${e.t}:${ago(now - e.t)}`).join(',')}`;
+    if (sig === this.logSig) return; this.logSig = sig;
+    this.logHead.textContent = `📜 最近记录（${list.length}）${list.length > LOG_SHOWN ? (this.logOpen ? ' ▴ 收起' : ' ▾ 展开全部') : ''}`;
+    this.logHead.disabled = !list.length;
+    this.logList.classList.toggle('open', this.logOpen); this.logList.classList.toggle('hidden', !list.length);
+    this.logList.replaceChildren();
+    for (const e of shown) { const r = el('div', 'cat-logrow' + (e.ok ? '' : ' bad')); r.append(el('span', 'cat-logt', ago(now - e.t)), el('span', 'cat-logx', e.text)); this.logList.append(r); }
+  }
 }

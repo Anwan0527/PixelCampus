@@ -91,7 +91,7 @@ export function gearSummary(g: Gear): string[] {
   if (g.sonar) out.push('声呐');
   if (g.ignoreEnv) out.push('无视季节 / 天气 / 昼夜');
   if (g.only) out.push('只钓指定的鱼');
-  if (g.mythicBait) out.push('神话饵');
+  if (g.mythicBait) out.push('只钓史诗及以上');
   return out;
 }
 

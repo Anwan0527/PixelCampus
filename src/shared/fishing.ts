@@ -214,11 +214,16 @@ export const FISHING = {
  * mul = 装备给的额外倍率（特殊竿 / 夜光饵 / 应季饵，见 gear.ts 的 resolveGear）；ignoreEnv = 万能饵（无视夜 / 雨 / 季节，传说和神话除外）
  * only = 指名饵：这一杆只会咬这一种；mythic = 判断这条神话鱼的条件是不是都满足了（不传 = 神话鱼不出现）
  */
-export interface FishEnv { night: boolean; rain?: boolean; season?: Season; luck?: number; mul?: (f: FishDef) => number; ignoreEnv?: boolean; only?: string; mythic?: (f: FishDef) => boolean }
+export interface FishEnv { night: boolean; rain?: boolean; season?: Season; luck?: number; mul?: (f: FishDef) => number; ignoreEnv?: boolean; only?: string; mythic?: (f: FishDef) => boolean;
+  /** 最低稀有度（神话饵 = 'epic'：稀有及以下的鱼、杂物都不会出现）；这一档以上在当前环境下一条都抽不到时，会放宽夜 / 雨 / 季节再抽，见 rollFish */
+  floor?: Rarity }
+/** 稀有度的高低（杂物最低） */
+const rarityRank = (r: Rarity): number => (r === 'junk' ? -1 : FISH_TIERS.indexOf(r));
 /** 一条鱼在这个环境下的抽中权重（0 = 抽不到） */
 export function fishWeight(f: FishDef, env: FishEnv): number {
   if (f.source === 'box') return 0;
   if (env.only) return f.id === env.only ? 1 : 0;
+  if (env.floor && rarityRank(f.rarity) < rarityRank(env.floor)) return 0; // 神话饵：稀有及以下一律不出
   if (f.rarity === 'mythic') return env.mythic?.(f) ? f.weight : 0;
   const luck = env.luck ?? 1, lk = f.rarity === 'rare' ? luck : f.rarity === 'epic' || f.rarity === 'legendary' ? luck ** 1.5 : 1;
   const base = baseWeight(f) * lk;
@@ -227,8 +232,13 @@ export function fishWeight(f: FishDef, env: FishEnv): number {
 }
 /** 抽一条鱼（还没拉上来，只决定是什么、多大）。rnd 返回 [0,1)；尺寸偏小的更常见（取两个随机数里较小的） */
 export function rollFish(rnd: () => number, env: FishEnv): { def: FishDef; cm: number } {
-  const w = FISH.map((f) => fishWeight(f, env));
-  const total = w.reduce((a, b) => a + b, 0);
+  let w = FISH.map((f) => fishWeight(f, env));
+  let total = w.reduce((a, b) => a + b, 0);
+  if (total <= 0 && env.floor) { // 兜底：这一档以上在当前夜 / 雨 / 季节下一条都抽不到——放宽环境倍率，只按基础权重抽（仍然不会出稀有及以下，也不白白浪费神话饵）
+    const relaxed: FishEnv = { night: false, luck: env.luck, floor: env.floor, mythic: env.mythic, ignoreEnv: true };
+    w = FISH.map((f) => (f.rarity === 'legendary' && !f.seasons ? baseWeight(f) : fishWeight(f, relaxed)));
+    total = w.reduce((a, b) => a + b, 0);
+  }
   let r = rnd() * total, i = 0, last = -1;
   for (; i < FISH.length; i++) { if (w[i] <= 0) continue; last = i; if (r < w[i]) break; r -= w[i]; }
   if (i >= FISH.length) i = last >= 0 ? last : FISH.findIndex((f) => f.id === 'junk_bottle');

@@ -59,7 +59,7 @@ export class TouchControls {
       for (const a of ui.list.filter((x) => x.touch !== false && x.visible?.() !== false)) {
         const b = el('button', 'tm-item', a.label); b.type = 'button';
         const n = ui.badgeOf(a.id); if (n > 0) b.append(el('span', 'badge', n > 99 ? '99+' : String(n)));
-        b.addEventListener('click', () => { this.menu.classList.remove('open'); a.run(); });
+        b.addEventListener('click', () => { this.menu.classList.remove('open'); ui.invoke(a); });
         this.menu.append(b);
       }
       this.menu.append(this.more);

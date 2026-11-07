@@ -32,7 +32,7 @@ export class ShopPanel {
   private tabRow = el('div', 'seg-row');
   private titleEl = el('div', 'board-title', '校园商店');
   private subEl = el('div', 'create-sub');
-  /** shop = 图书馆广场的校园商店；stall = 精工湖的钓具摊（只卖钓鱼用品、不收鱼，另有委托） */
+  /** shop = 图书馆广场的校园商店；stall = 精工湖的钓具摊（只卖钓鱼用品，另有委托；收鱼 / 收杂物和主商店一样） */
   private mode: 'shop' | 'stall' = 'shop';
   private tab: 'buy' | 'sell' | 'craft' | 'comm' = 'sell';
   private craftParam = '';
@@ -59,9 +59,9 @@ export class ShopPanel {
     fishData.listeners.add(() => { if (this.isOpen) this.render(); });
   }
 
-  /** 标签页：校园商店 = 卖鱼 / 买东西 / 合成；钓具摊 = 委托 / 买钓具 / 合成 */
+  /** 标签页：校园商店 = 卖鱼 / 买东西 / 合成；钓具摊 = 委托 / 买钓具 / 卖鱼 / 合成 */
   private buildTabs() {
-    const defs: [typeof this.tab, string][] = this.mode === 'stall' ? [['comm', '委托'], ['buy', '买钓具'], ['craft', '合成']] : [['sell', '卖鱼'], ['buy', '买东西'], ['craft', '合成']];
+    const defs: [typeof this.tab, string][] = this.mode === 'stall' ? [['comm', '委托'], ['buy', '买钓具'], ['sell', '卖鱼'], ['craft', '合成']] : [['sell', '卖鱼'], ['buy', '买东西'], ['craft', '合成']];
     if (!defs.some(([k]) => k === this.tab)) this.tab = defs[0][0];
     this.tabRow.replaceChildren(...defs.map(([k, name]) => {
       const b = el('button', 'seg' + (k === this.tab ? ' on' : ''), name); b.type = 'button';
@@ -74,7 +74,7 @@ export class ShopPanel {
   open(mode: 'shop' | 'stall' = 'shop') {
     this.mode = mode; this.shownKey = ''; this.root.classList.remove('hidden'); this.msg.textContent = '';
     this.titleEl.textContent = mode === 'stall' ? '钓具摊 · 钓具老板' : '校园商店';
-    this.subEl.textContent = mode === 'stall' ? '「钓鱼的人，装备和耐心一样要紧。」摊子卖全套钓鱼用品、能合成，每天和每周有委托；卖鱼要去图书馆广场的校园商店。' : '钓上来的鱼、翻垃圾桶翻出来的东西都可以在这里卖钱；赚到的校园币能买鱼饵、猫粮、猫条、猫窝和更好的鱼竿。';
+    this.subEl.textContent = mode === 'stall' ? '「钓鱼的人，装备和耐心一样要紧。」摊子卖全套钓鱼用品、能合成，每天和每周有委托；钓上来的鱼和杂物也能直接在这里卖（价格、行情和校园商店一样）。' : '钓上来的鱼、翻垃圾桶翻出来的东西都可以在这里卖钱；赚到的校园币能买鱼饵、猫粮、猫条、猫窝和更好的鱼竿。';
     this.buildTabs(); this.net.getInv(); this.net.getCoins(); this.net.getFx(); if (mode === 'stall') this.net.getWq(); this.render();
   }
   close() { this.root.classList.add('hidden'); }

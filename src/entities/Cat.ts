@@ -7,7 +7,7 @@ import { redrawWhenGlyphsReady } from '@/ui/glyphs';
 type State = 'sit' | 'walk' | 'sleep' | 'eat' | 'happy' | 'flee' | 'act';
 
 /** 谁在靠近小猫：位置，以及是不是在"快速移动"（奔跑/骑车会吓到不熟的猫） */
-export interface Visitor { x: number; y: number; fast: boolean; /** 玩家没在走动 */ still?: boolean; /** 玩家坐在长椅/座位上 */ sitting?: boolean }
+export interface Visitor { x: number; y: number; fast: boolean; /** 玩家没在走动 */ still?: boolean; /** 玩家坐在长椅/座位上 */ sitting?: boolean; /** 玩家正在钓鱼（沉浸：猫保持原地，不主动走过来） */ fishing?: boolean }
 
 /** 天气与昼夜（WorldScene 每帧写入）：夜里猫更爱睡，雨雪停了会抖掉身上的水/雪 */
 export interface CatEnv { night: boolean; rain: boolean; snow: boolean }
@@ -193,13 +193,13 @@ export class Cat {
       this.tx = t.x; this.ty = t.y; this.setState('flee', 800);
     }
     // 亲密以上：玩家安静待着 / 慢慢走近时，小跑过来蹭腿，到身边坐下
-    if (lv >= 3 && !v.fast && now >= this.greetCd && dv > 30 && dv < 140 && this.state !== 'sleep' && this.state !== 'eat' && this.state !== 'flee' && this.state !== 'happy' && !(v.sitting && lv >= 4)
+    if (lv >= 3 && !v.fast && !v.fishing && now >= this.greetCd && dv > 30 && dv < 140 && this.state !== 'sleep' && this.state !== 'eat' && this.state !== 'flee' && this.state !== 'happy' && !(v.sitting && lv >= 4)
       && Math.hypot(v.x - this.def.hx, v.y - this.def.hy) < CAT_LEASH + 30) {
       const t = this.beside(v, 22);
       if (!world.boxBlocked(t.x, t.y)) { this.greetCd = now + 9000; this.chain = ''; this.faceVisitor(v); this.goTo(t.x, t.y, 62); }
     }
     // 挚友：玩家坐下时，走到脚边趴着睡
-    if (lv >= 4 && v.sitting && dv < 150 && !this.napBeside && this.state !== 'sleep' && this.state !== 'eat' && this.state !== 'flee' && Math.hypot(v.x - this.def.hx, v.y - this.def.hy) < CAT_LEASH + 30) {
+    if (lv >= 4 && v.sitting && !v.fishing && dv < 150 && !this.napBeside && this.state !== 'sleep' && this.state !== 'eat' && this.state !== 'flee' && Math.hypot(v.x - this.def.hx, v.y - this.def.hy) < CAT_LEASH + 30) {
       const t = this.beside(v, 16);
       if (!world.boxBlocked(t.x, t.y)) { this.napBeside = true; this.chain = ''; this.goTo(t.x, t.y, 50, 'nap'); }
     }

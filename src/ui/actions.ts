@@ -18,6 +18,12 @@ export interface UiAction {
 
 class Registry {
   readonly list: UiAction[] = [];
+  /** 入口守卫：返回一句话 = 现在不让开（比如钓鱼中）；null = 放行。场景设置 */
+  guard: ((a: UiAction) => string | null) | null = null;
+  /** 被守卫挡下时怎么提示 */
+  onBlocked: ((msg: string) => void) | null = null;
+  /** 点入口：先问守卫，再执行 */
+  invoke(a: UiAction) { const m = this.guard?.(a) ?? null; if (m) { this.onBlocked?.(m); return; } a.run(); }
   private badges = new Map<string, number>();
   private subs = new Set<() => void>();
   add(a: UiAction) { const i = this.list.findIndex((x) => x.id === a.id); if (i >= 0) this.list[i] = a; else this.list.push(a); this.emit(); }
@@ -59,7 +65,7 @@ export function mountSideButtons() {
     const b = el('button', cls, a.key ? `${a.label} (${a.key})` : a.label); b.type = 'button';
     const n = ui.badgeOf(a.id);
     if (n > 0) b.append(el('span', 'badge', n > 99 ? '99+' : String(n)));
-    b.addEventListener('click', () => { close(); a.run(); });
+    b.addEventListener('click', () => { close(); ui.invoke(a); });
     return b;
   };
   const render = () => {

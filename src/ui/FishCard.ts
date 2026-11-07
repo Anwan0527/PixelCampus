@@ -23,6 +23,8 @@ export class FishCard {
     this.root.addEventListener('pointerdown', () => this.hide());
     (document.getElementById('hud') ?? document.body).append(this.root);
   }
+  /** 卡片还在屏幕上 */
+  get isOpen() { return !this.root.classList.contains('hidden'); }
   hide() { window.clearTimeout(this.timer); this.root.classList.add('hidden'); }
   show(m: CatchInfo) {
     const d = fishDef(m.id); if (!d) return;

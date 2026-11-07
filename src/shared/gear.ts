@@ -69,7 +69,7 @@ export const BAITS: readonly BaitDef[] = [
   { id: 'bait_magnet', name: '磁铁饵', wait: 1, luck: 1, treasure: 2, eff: '钓到盲盒的概率 ×2', how: '商店 60 币 ×5；盲盒' },
   { id: 'bait_any', name: '万能饵', wait: 1, luck: 1, ignoreEnv: true, eff: '无视季节、天气和昼夜：所有鱼按基础概率出现（传说、神话除外），用来补图鉴', how: '盲盒（不卖）' },
   { id: 'bait_name', name: '指名饵', wait: 1, luck: 1, named: true, eff: '在装备栏指定一种鱼：这一杆只会咬它（限常见 / 少见 / 稀有，且图鉴里已有）', how: '合成：3 条同种鱼；盲盒' },
-  { id: 'bait_myth', name: '神话饵', wait: 1, luck: 1, mythic: true, eff: '神话鱼的条件之一：只有它能引来传说里的东西', how: '合成：龙鳞 + 珍珠 + 稀有鱼；沉船箱' },
+  { id: 'bait_myth', name: '神话饵', wait: 1, luck: 1, mythic: true, eff: '只会钓到史诗、传说和神话鱼（稀有及以下的鱼和杂物都不会咬钩）；也是神话鱼的条件之一：只有它能引来传说里的东西', how: '合成：龙鳞 + 珍珠 + 稀有鱼；沉船箱' },
 ];
 const BAIT_BY_ID = new Map(BAITS.map((b) => [b.id, b]));
 export const baitDef = (id: unknown): BaitDef | undefined => (typeof id === 'string' ? BAIT_BY_ID.get(id) : undefined);

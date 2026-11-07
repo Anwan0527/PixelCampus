@@ -4,6 +4,7 @@ import { WorldMap } from '@/world/WorldMap';
 import { Player } from '@/entities/Player';
 import { Npc } from '@/entities/Npc';
 import { GameClock } from '@/systems/clock';
+import { FISHING_BLOCK_MSG, fishingBlocksInteract, fishingBlocksUi, fishingPrefersCast, fishingRodOut, type FishLockState } from '@/systems/fishlock';
 import { Hud } from '@/ui/Hud';
 import { TILE, ZOOMS, DEFAULT_ZOOM_INDEX } from '@/core/const';
 import { WD } from '@/core/paths';
@@ -257,6 +258,7 @@ export class WorldScene extends Phaser.Scene {
     this.spawnCats();
     this.spawnKeeper();
     this.buildBikes();
+    this.registry.set('tickClock', (dt: number) => this.updateClock(dt)); // 进了宿舍 / 室内：校园场景在睡觉，由室内场景每帧代为推进时钟（时间显示、天气播报才不会停）
     this.events.on('wake', () => {
       this.entering = false; this.touchPress = false; this.registry.set('touchPress', false); // 室内里按过的互动键别带回外面（否则一出来又"进入"了）
       if (this.registry.get('dormForced')) this.registry.set('dormForced', false); // 在宿舍里被传走：位置已经是服务器给的新位置，别再放回门口
@@ -393,6 +395,8 @@ export class WorldScene extends Phaser.Scene {
     ui.add({ id: 'map', label: '地图', desktop: false, run: () => this.hud.toggleMap() });
     ui.add({ id: 'minimap', label: '小地图', desktop: false, run: () => this.hud.setMiniMap(!this.hud.miniMapOn) });
     ui.add({ id: 'card', label: '学生证', desktop: false, run: () => this.profileUi.toggle() });
+    ui.guard = (a) => (fishingBlocksUi(this.fishLockState(), a.id) ? FISHING_BLOCK_MSG : null); // 钓鱼中：会打断钓鱼的菜单入口不响应（背包、地图、声音等仍可用）
+    ui.onBlocked = () => this.fishBlocked();
     mountSideButtons();
     mountImmersive(); // 沉浸模式：藏起所有界面，只剩画面（菜单「沉浸模式」/ Z / 右上角 ⤢）
     this.net.onMessage((m) => {
@@ -455,7 +459,8 @@ export class WorldScene extends Phaser.Scene {
     h.catFollow = (id, pid) => { if (pid) this.catWith.set(id, pid); else this.catWith.delete(id); this.refreshCatPanel(); };
     h.catMsg = (ok, msg) => { if (this.catUi.isOpen) this.catUi.say(msg, ok); else this.hud.banner('🐱 小猫', msg); };
     h.catResult = (id, kind, r) => {
-      if (this.catUi.current?.id === id) { this.catUi.say(r.msg, r.ok); if (r.ok) this.catUi.started(kind); }
+      this.catUi.result(id, kind, r);                                  // 记进这只猫的操作记录（当前这只猫同时更新 msg 区）
+      if (this.catUi.current?.id === id && r.ok) this.catUi.started(kind);
       if (!r.ok) return;
       const c = this.cats[id];
       if (kind === 'pet') { c?.pet(); sfx('pet'); }
@@ -865,7 +870,7 @@ export class WorldScene extends Phaser.Scene {
     const item = which === 'fish' ? (fishId && isFish(fishId) && (this.backpackUi.inv[fishId] ?? 0) > 0 ? fishId : this.pickFish()) : which;
     const cat = this.catUi.current; if (!cat) return;
     if (this.net.status !== 'online') { // 单人模式：摸摸只有动画，不记好感，也不能喂
-      if (kind === 'pet') { this.cats[cat.id]?.pet(); this.catUi.say('（没连上服务器，好感度不会记录）', true); }
+      if (kind === 'pet') { this.cats[cat.id]?.pet(); this.catUi.say('摸了摸（单机模式，好感度不会记录）', true); }
       return;
     }
     if (kind === 'pet') this.net.catPet(cat.id); else if (item) this.net.catFeed(cat.id, item); else this.catUi.say('背包里没有鱼了', false);
@@ -903,7 +908,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateKeeper(dt, _t);
     { const c = this.cameras.main, rx = c.width / c.zoom / 2 + 900, ry = c.height / c.zoom / 2 + 900; // 远处的行人、小猫不更新
       for (const n of this.npcs) { if (Math.abs(n.x - c.midPoint.x) > rx || Math.abs(n.y - c.midPoint.y) > ry) continue; n.update(dt, this.world, this.rand); }
-      const visitor = { x: this.player.x, y: this.player.y, fast: this.player.riding || this.runNow, still: !this.player.moving && !this.player.riding, sitting: this.player.sitting };
+      const visitor = { x: this.player.x, y: this.player.y, fast: this.player.riding || this.runNow, still: !this.player.moving && !this.player.riding, sitting: this.player.sitting, fishing: this.fishPhase !== 'idle' };
       for (const cat of this.cats) {
         const pid = this.catWith.get(cat.def.id);
         if (pid) { // 正被某个玩家带着走：跟着他（自己，或视野里的别的玩家）；他不在视野里就先藏起来
@@ -952,29 +957,30 @@ export class WorldScene extends Phaser.Scene {
       const kx = (k.right.isDown || k.d.isDown ? 1 : 0) - (k.left.isDown || k.a.isDown ? 1 : 0);
       const ky = (k.down.isDown || k.s.isDown ? 1 : 0) - (k.up.isDown || k.w.isDown ? 1 : 0);
       const ix = kx || (joy?.x ?? 0), iy = ky || (joy?.y ?? 0); // 键盘优先，没按键时用摇杆
+      const fl = fishingRodOut(this.fishLockState()); // 钓鱼沉浸：会打断钓鱼的界面快捷键先不响应（背包 I、地图 M、钓鱼图鉴 G、聊天 Enter、缩放照常）
       if (this.player.sitting && (ix !== 0 || iy !== 0)) this.standUp(); // 坐着时一推方向就起身
       if ((this.fishPhase === 'wait' || this.fishPhase === 'bite') && (ix !== 0 || iy !== 0)) { this.net.fishCancel(); this.stopFishing(); } // 钓鱼时一走动就收线
       this.player.update(dt, ix, iy, k.shift.isDown || (joy?.run ?? false), this.world);
-      if (Phaser.Input.Keyboard.JustDown(k.x)) this.emoteUi.toggle();
-      if (Phaser.Input.Keyboard.JustDown(k.p)) this.photo.open();
+      if (Phaser.Input.Keyboard.JustDown(k.x)) { if (fl) this.fishBlocked(); else this.emoteUi.toggle(); }
+      if (Phaser.Input.Keyboard.JustDown(k.p)) { if (fl) this.fishBlocked(); else this.photo.open(); }
       if (Phaser.Input.Keyboard.JustDown(k.m)) this.hud.toggleMap();
-      if (Phaser.Input.Keyboard.JustDown(k.c)) this.profileUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.b)) this.boardUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.n)) this.noticeUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.f)) this.socialUi.open();
+      if (Phaser.Input.Keyboard.JustDown(k.c)) { if (fl) this.fishBlocked(); else this.profileUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.b)) { if (fl) this.fishBlocked(); else this.boardUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.n)) { if (fl) this.fishBlocked(); else this.noticeUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.f)) { if (fl) this.fishBlocked(); else this.socialUi.open(); }
       if (Phaser.Input.Keyboard.JustDown(k.i)) this.backpackUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.h)) this.codexUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.v)) this.cycleHeld();
+      if (Phaser.Input.Keyboard.JustDown(k.h)) { if (fl) this.fishBlocked(); else this.codexUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.v)) { if (fl) this.fishBlocked(); else this.cycleHeld(); }
       if (Phaser.Input.Keyboard.JustDown(k.g)) this.codexUi.open('fish');
-      if (Phaser.Input.Keyboard.JustDown(k.j)) this.achUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.l)) this.hallUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.q)) this.questUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.t)) this.partyUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.r)) this.monUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.y)) this.tpUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.u)) this.dormUi.goHome();
-      if (Phaser.Input.Keyboard.JustDown(k.o)) this.worldUi.open();
-      if (Phaser.Input.Keyboard.JustDown(k.k) && this.net.isAdmin) this.adminUi.open();
+      if (Phaser.Input.Keyboard.JustDown(k.j)) { if (fl) this.fishBlocked(); else this.achUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.l)) { if (fl) this.fishBlocked(); else this.hallUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.q)) { if (fl) this.fishBlocked(); else this.questUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.t)) { if (fl) this.fishBlocked(); else this.partyUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.r)) { if (fl) this.fishBlocked(); else this.monUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.y)) { if (fl) this.fishBlocked(); else this.tpUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.u)) { if (fl) this.fishBlocked(); else this.dormUi.goHome(); }
+      if (Phaser.Input.Keyboard.JustDown(k.o)) { if (fl) this.fishBlocked(); else this.worldUi.open(); }
+      if (Phaser.Input.Keyboard.JustDown(k.k) && this.net.isAdmin) { if (fl) this.fishBlocked(); else this.adminUi.open(); }
       if (Phaser.Input.Keyboard.JustDown(k.enter)) this.chatUi.focus();
       if (Phaser.Input.Keyboard.JustDown(k.plus) || Phaser.Input.Keyboard.JustDown(k.plus2)) this.changeZoom(1);
       if (Phaser.Input.Keyboard.JustDown(k.minus) || Phaser.Input.Keyboard.JustDown(k.minus2)) this.changeZoom(-1);
@@ -1196,6 +1202,7 @@ export class WorldScene extends Phaser.Scene {
     }
     const bobber = this.bobber;
     this.fightUi.close(); this.stopFishing();
+    if (m.s === 'catch') this.catchUntil = this.time.now + 1400; // 鱼飞出水面 + 卡片弹出之前，也算钓鱼流程
     if (m.s === 'catch' && m.id) {
       const d = fishDef(m.id), name = d?.name ?? '东西', kg = m.kg ?? 0;
       this.playCatch(m.id, bobber, d?.rarity ?? 'common', !!m.junk, () => this.fishCard.show({ id: m.id!, cm: m.cm ?? 0, kg, isNew: m.isNew, record: m.record, junk: m.junk, perfect: m.perfect, msg: m.msg, twin: m.twin, box: m.box, pearl: m.pearl, first: m.first, xp: m.xp, lv: m.lv }));
@@ -1245,6 +1252,13 @@ export class WorldScene extends Phaser.Scene {
       } });
   }
   private stopFishing() { this.fishPhase = 'idle'; this.player.setFishing(false); }
+  /** 钓鱼沉浸用的状态：阶段 + 结算卡片 / 鱼飞出水面 + 现在能不能抛竿 */
+  private catchUntil = 0; private fishBlockAt = 0;
+  private fishLockState(): FishLockState {
+    return { phase: this.fishPhase, cardOpen: this.fishCard?.isOpen ?? false, catching: this.time.now < this.catchUntil };
+  }
+  /** 钓鱼中按了会打断画面的键 / 点了入口：提示一句（别刷屏） */
+  private fishBlocked() { if (this.time.now - this.fishBlockAt < 1500) return; this.fishBlockAt = this.time.now; this.hud.banner('🎣 钓鱼中', FISHING_BLOCK_MSG); }
 
   /** 骑车撞墙：镜头抖一下、响一声；每 20 秒最多报一次（服务器会核对他在骑车且身边真有障碍） */
   private onBikeCrash() {
@@ -1312,6 +1326,11 @@ export class WorldScene extends Phaser.Scene {
     for (const n of this.npcs) { const dd = Math.hypot(n.x - this.player.x, n.y - this.player.y); if (dd < nd) { nd = dd; npc = n; } }
     const egg = (this.wf.interacts ?? []).find((i) => this.player.x >= i.x && this.player.x <= i.x + i.w && this.player.y >= i.y && this.player.y <= i.y + i.h);
     const press = Phaser.Input.Keyboard.JustDown(this.keys.e) || Phaser.Input.Keyboard.JustDown(this.keys.space) || this.touchPress;
+    // 钓鱼沉浸：结算卡片 / 鱼飞出水面时，只剩"再抛一竿"；站在能抛竿的岸边（有竿有饵）时，抛竿优先于猫、单车、垃圾桶、长椅、NPC、校园跑起点
+    const rodP = pickRod(this.backpackUi.inv, this.backpackUi.equip), baitP = pickBait(this.backpackUi.inv, this.backpackUi.equip);
+    const lockSt: FishLockState = { ...this.fishLockState(), castable: !!fishSpot && !!rodP && !!baitP && !(baitP === 'bait_name' && !this.backpackUi.equip.target) };
+    if (fishingBlocksInteract(lockSt)) { if (fishSpot) this.fishSpotHint(press); else this.hud.hint(null); return; }
+    if (fishingPrefersCast(lockSt) && !near && !egg) { this.fishSpotHint(press); return; }
     // 站在猫身边按 E 一定能和它玩：猫排在彩蛋区、队友单车前面；站在建筑门口时，猫够近（<0.75 个够得着的距离）才抢占提示
     if (cat && !this.player.riding && (!near || cd < CAT_REACH * 0.75)) {
       this.hud.hint(`E  和「${cat.label}」玩`);
@@ -1357,11 +1376,7 @@ export class WorldScene extends Phaser.Scene {
       this.hud.hint('E  校园跑：东区田径场');
       if (press) this.runUi.open();
     } else if (fishSpot) {
-      const inv = this.backpackUi.inv, eq = this.backpackUi.equip, rod = pickRod(inv, eq), bait = pickBait(inv, eq); // 装备栏选的；没选就是最低级的（香饵不会在你不知情时被用掉）
-      if (!rod) this.hud.hint('这里可以钓鱼（需要鱼竿：每天登录会送）');
-      else if (!bait) this.hud.hint('鱼饵用完了（明天登录、做每日任务会送，商店也有卖）');
-      else if (bait === 'bait_name' && !eq.target) this.hud.hint('指名饵要先在背包的装备栏里指定一种鱼');
-      else { this.hud.hint(`E  抛竿钓鱼（${itemDef(rod.id)?.name}，${itemDef(bait)?.name} ×${inv[bait]}）`); if (press) this.net.fishCast(); }
+      this.fishSpotHint(press);
     } else if (npc) {
       this.hud.hint('E  和同学聊聊');
       if (press) {
@@ -1372,6 +1387,15 @@ export class WorldScene extends Phaser.Scene {
         this.hud.openDialog(npc.name, npc.lines);
       }
     } else this.hud.hint(null);
+  }
+
+  /** 站在岸边面朝湖水：提示 / 按 E 抛竿（装备栏选的；没选就是最低级的，香饵不会在你不知情时被用掉） */
+  private fishSpotHint(press: boolean) {
+    const inv = this.backpackUi.inv, eq = this.backpackUi.equip, rod = pickRod(inv, eq), bait = pickBait(inv, eq);
+    if (!rod) this.hud.hint('这里可以钓鱼（需要鱼竿：每天登录会送）');
+    else if (!bait) this.hud.hint('鱼饵用完了（明天登录、做每日任务会送，商店也有卖）');
+    else if (bait === 'bait_name' && !eq.target) this.hud.hint('指名饵要先在背包的装备栏里指定一种鱼');
+    else { this.hud.hint(`E  抛竿钓鱼（${itemDef(rod.id)?.name}，${itemDef(bait)?.name} ×${inv[bait]}）`); if (press) this.net.fishCast(); }
   }
 
   private updatePlace() {
