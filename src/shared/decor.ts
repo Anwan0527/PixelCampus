@@ -13,6 +13,8 @@
  * 房间尺寸要和 data/interiors/dorm*.json 一致（tests 核对）。
  */
 
+import { isDyeIdx } from './dye';
+
 export type Rot = 0 | 90 | 180 | 270;
 export type DecorCat = '桌椅' | '柜架' | '电器' | '软装' | '地毯' | '墙饰' | '小件' | '固有';
 /** floor = 占地的地面家具；rug = 地毯（铺在地上、不挡路）；mat = 门垫（小地毯，叠在地毯上面）；wall = 北墙上的挂件（窗、画、空调…）；top = 摆在桌面上的小件（1×1） */
@@ -34,6 +36,7 @@ export interface DecorDef {
   /** 功能（床睡觉、衣柜换装、宝箱仓库、鱼缸养鱼、空调、门牌改名）：摆在哪儿就在哪儿用 */ act?: DecorAct;
   /** 固有家具：每人一份、不卖、不能交易、不能退货（可以收回背包再摆） */ starter?: boolean;
   /** 能坐的椅子 / 凳子 / 沙发 */ seat?: boolean;
+  /** 能染色（见 dye.ts；DYE 集合里的家具） */ dye?: boolean;
   /** 小件摆在这张桌子上时再抬高多少像素（一行深的桌子，桌面比脚印高） */ lift?: number;
   /** 画的时候向左偏移多少像素（窗帘比窗框宽，向两边伸出去） */ ox?: number;
   note: string;
@@ -124,7 +127,17 @@ const FACE = new Set(['dc_desk', 'dc_deskpc', 'dc_table2', 'dc_dtable', 'dc_dtab
   'dc_fridge', 'dc_tv', 'dc_tank', 'dc_wardrobe', 'dc_chest', 'dc_bear', 'dc_guitar', 'dc_laptop', 'dc_pc']);
 const TURN_FLAT = new Set(['dc_rug_red', 'dc_rug_blue', 'dc_rug_paw', 'dc_mat_welcome', 'dc_mat_paw', 'dc_mat_towel', 'dc_mat_door', 'dc_rug_home']); // 圆形的（圆形地毯、草编圆垫）转了一样，不设
 const BASE: Record<string, Rot> = { dc_chairup: 180 };
-export const DECOR: readonly DecorDef[] = RAW.map((d) => (FACE.has(d.id) ? { ...d, face: true, ...(BASE[d.id] ? { base: BASE[d.id] } : {}) } : TURN_FLAT.has(d.id) ? { ...d, turn: true } : d));
+/**
+ * 能染色的家具（见 dye.ts）：有"主体色"的桌椅、柜架、沙发、玩偶、地毯门垫、衣柜宝箱。
+ * 不能染的：带屏幕 / 会发光的（电脑桌、电视、台灯、落地灯）、画和挂钟和白板和校旗（画面本身就是内容）、窗（窗帘颜色有单独的款式卖）、
+ * 鱼缸（缸里的鱼和水）、床（睡觉时盖在上面的被子是另一张图，染了会对不上）、空调和门牌（功能件）、绿植和仙人掌（本来就是植物的颜色）、桌上的小件、吉他。
+ */
+const DYE = new Set(['dc_desk', 'dc_table2', 'dc_dtable', 'dc_dtable3', 'dc_chair', 'dc_chairup', 'dc_stool', 'dc_gamechair', 'dc_beanbag', 'dc_sofa', 'dc_shelf2', 'dc_shelf3', 'dc_cab2', 'dc_shoebox', 'dc_coatrack',
+  'dc_fridge', 'dc_bear', 'dc_bin', 'dc_rug_red', 'dc_rug_blue', 'dc_rug_round', 'dc_rug_paw', 'dc_mat_welcome', 'dc_mat_paw', 'dc_mat_straw', 'dc_mat_towel', 'dc_wardrobe', 'dc_chest', 'dc_rug_home', 'dc_mat_door']);
+export const DECOR: readonly DecorDef[] = RAW.map((d) => {
+  const x: DecorDef = FACE.has(d.id) ? { ...d, face: true, ...(BASE[d.id] ? { base: BASE[d.id] } : {}) } : TURN_FLAT.has(d.id) ? { ...d, turn: true } : d;
+  return DYE.has(d.id) ? { ...x, dye: true } : x;
+});
 const BY_ID = new Map(DECOR.map((d) => [d.id, d]));
 export const decorDef = (id: unknown): DecorDef | undefined => (typeof id === 'string' ? BY_ID.get(id) : undefined);
 export const isDecorId = (id: unknown): id is string => typeof id === 'string' && BY_ID.has(id);
@@ -149,9 +162,17 @@ export interface Rect { x: number; y: number; w: number; h: number }
 export const doorKeep = (level: number = 0): Rect => ({ x: 7, y: roomDims(level).h - 3, w: 2, h: 2 });
 export const DOOR_KEEP: Rect = doorKeep(0);
 
-export const DECOR_MAX = 72;
+/**
+ * 一间宿舍最多摆几件（2026-11-08 起按房间大小：小屋 160 / 中屋 200 / 大屋 240；以前不分大小都是 72）。
+ * 一件约 30 字节，满了也就 7KB，存档和访客收到的消息都不大；客户端每件一张贴图，几百件没问题。
+ * 数量只是兜底，真正限制的是地面格子、桌面格子和北墙。
+ */
+export const DECOR_MAX_BY_LEVEL = [160, 200, 240] as const;
+export const decorMax = (level: number = 0): number => DECOR_MAX_BY_LEVEL[isRoomLevel(level) ? level : 0];
+/** 所有房间里最大的上限（清洗存档时先按它截一刀） */
+export const DECOR_MAX = DECOR_MAX_BY_LEVEL[2];
 
-export interface Placed { d: string; x: number; y: number; r?: Rot }
+export interface Placed { d: string; x: number; y: number; r?: Rot; /** 染色色号（1..12；缺省 = 原色，见 dye.ts） */ c?: number }
 export const isRot = (r: unknown): r is Rot => r === 0 || r === 90 || r === 180 || r === 270;
 /** 这件家具能不能转向 */
 export const canTurn = (def: DecorDef): boolean => !!(def.turn || def.face);
@@ -182,7 +203,7 @@ const key = (x: number, y: number) => y * KW + x;
 
 /** 摆放是否合法：返回第一个问题（给玩家看的话），没问题返回 null。服务器和客户端用同一个函数 */
 export function layError(lay: readonly Placed[], level: number = 0): string | null {
-  if (lay.length > DECOR_MAX) return `最多摆 ${DECOR_MAX} 件`;
+  if (lay.length > decorMax(level)) return `这间屋最多摆 ${decorMax(level)} 件`;
   const { x0, x1, y0, y1 } = roomDims(level), DOOR = doorKeep(level);
   const keep = new Set<number>(), floor = new Set<number>(), layers = new Map<number, number>(), surf = new Set<number>(), top = new Set<number>();
   for (let j = 0; j < DOOR.h; j++) for (let i = 0; i < DOOR.w; i++) keep.add(key(DOOR.x + i, DOOR.y + j));
@@ -193,6 +214,7 @@ export function layError(lay: readonly Placed[], level: number = 0): string | nu
     if (!Number.isInteger(p.x) || !Number.isInteger(p.y)) return '位置不对';
     if (p.r !== undefined && !isRot(p.r)) return '方向不对';
     if (p.r && !canTurn(def)) return `${def.name}不能转方向`;
+    if (p.c !== undefined) { if (!isDyeIdx(p.c)) return '颜色不对'; if (!def.dye) return `${def.name}不能染色`; }
     if (def.starter) { if (seenIds.has(def.id)) return `${def.name}只有一件`; seenIds.add(def.id); } // 固有家具每人一份
     if (def.act) acts.push({ def, p });
     const { fw, fh } = footOf(def, p.r);
@@ -248,17 +270,19 @@ export function layError(lay: readonly Placed[], level: number = 0): string | nu
 export function cleanLay(raw: unknown, level: number = 0): Placed[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const cand: Placed[] = [];
-  for (const e of raw.slice(0, DECOR_MAX * 2)) {
+  const cap = decorMax(level);
+  for (const e of raw.slice(0, cap * 2)) {
     if (!e || typeof e !== 'object') continue;
     const r = e as Record<string, unknown>;
     if (!isDecorId(r.d) || !Number.isInteger(r.x) || !Number.isInteger(r.y)) continue;
     const p: Placed = { d: r.d as string, x: r.x as number, y: r.y as number };
     if (isRot(r.r) && r.r) p.r = r.r;
+    if (isDyeIdx(r.c) && decorDef(p.d)!.dye) p.c = r.c as number; // 不能染的家具、不合法的色号：丢掉颜色，家具照留
     cand.push(p);
   }
   cand.sort((a, b) => Number(decorDef(a.d)!.kind === 'top') - Number(decorDef(b.d)!.kind === 'top'));
   const out: Placed[] = [];
-  for (const p of cand) { if (out.length >= DECOR_MAX) break; const next = [...out, p]; if (!layError(next, level)) out.push(p); }
+  for (const p of cand) { if (out.length >= cap) break; const next = [...out, p]; if (!layError(next, level)) out.push(p); }
   return out;
 }
 

@@ -7,7 +7,9 @@ import { dormRoom } from '@/shared/dorm';
 import type { ServerMsg } from '@/shared/protocol';
 import { ITEMS, type Inv } from '@/shared/items';
 import { drawItem } from '@/ui/sprites';
+import { DYES, DYE_ITEM, dyeCss, dyeName } from '@/shared/dye';
 import { spotOf } from './decorview';
+import { dyedKey } from './dyetex';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -28,7 +30,7 @@ export class DecorEditor {
   active = false;
   private root = el('div', 'decor-tray hidden');
   private listEl = el('div', 'decor-list'); private tabsEl = el('div', 'decor-tabs'); private infoEl = el('div', 'decor-info'); private msgEl = el('div', 'decor-msg');
-  private btnRot = el('button', 'btn', '转向 R'); private btnPick = el('button', 'btn', '收回 Del'); private btnCancel = el('button', 'btn', '取消 Esc');
+  private btnDye = el('button', 'btn', '🎨 染色 C'); private dyeOpen = false; private dyePrev = 0; private btnRot = el('button', 'btn', '转向 R'); private btnPick = el('button', 'btn', '收回 Del'); private btnCancel = el('button', 'btn', '取消 Esc');
   private sel: Sel = null; private rot: Rot = 0; private cat: DecorCat | '全部' = '全部';
   private mode: 'furn' | 'w' | 'f' | 'room' = 'furn'; private modesEl = el('div', 'decor-tabs decor-modes'); private armed = ''; private coins = -1; private prevCoins?: NetClient['handlers']['coins'];
   private hover: { x: number; y: number } | null = null; private inv: Inv = {};
@@ -39,9 +41,10 @@ export class DecorEditor {
     const head = el('div', 'decor-head'), done = el('button', 'btn primary', '完成'); done.type = 'button'; done.addEventListener('click', () => this.close());
     head.append(el('div', 'decor-title', '🛋 装修'), this.infoEl, done);
     const acts = el('div', 'decor-acts');
-    for (const b of [this.btnRot, this.btnPick, this.btnCancel]) b.type = 'button';
+    for (const b of [this.btnRot, this.btnPick, this.btnCancel, this.btnDye]) b.type = 'button';
+    this.btnDye.addEventListener('click', () => this.dyeClick());
     this.btnRot.addEventListener('click', () => this.turn()); this.btnPick.addEventListener('click', () => this.pick()); this.btnCancel.addEventListener('click', () => this.cancel());
-    acts.append(this.btnRot, this.btnPick, this.btnCancel);
+    acts.append(this.btnRot, this.btnDye, this.btnPick, this.btnCancel);
     // 手机装修专用的方向键：手指点房间只是预览，用这几个键一格一格挪虚影，再点「放这里」；装修时摇杆和互动键是隐藏的（不会误触走路）
     const pad = el('div', 'decor-pad');
     for (const [label, dx, dy] of [['◀', -1, 0], ['▲', 0, -1], ['▼', 0, 1], ['▶', 1, 0]] as const) { const b = el('button', 'btn decor-arrow', label); b.type = 'button'; b.setAttribute('aria-label', '挪动虚影'); b.addEventListener('click', () => this.nudge(dx, dy)); pad.append(b); }
@@ -56,7 +59,7 @@ export class DecorEditor {
 
   open() {
     if (this.active) return;
-    this.active = true; this.sel = null; this.rot = 0; this.hover = null; this.msgEl.textContent = '';
+    this.active = true; this.sel = null; this.rot = 0; this.hover = null; this.dyeOpen = false; this.msgEl.textContent = '';
     this.root.classList.remove('hidden');
     const net = this.net; net.getInv(); this.prevInv = net.handlers.inv;
     net.handlers.inv = (items, gain) => { this.prevInv?.(items, gain); this.inv = items; this.refresh(); };
@@ -100,23 +103,60 @@ export class DecorEditor {
     const owned = ITEMS.filter((d) => d.kind === 'decor' && (this.inv[d.id] ?? 0) > 0);
     const cats = DECOR_CATS.filter((c) => owned.some((d) => decorDef(d.id)?.cat === c));
     if (this.cat !== '全部' && !cats.includes(this.cat)) this.cat = '全部';
-    this.tabsEl.replaceChildren(...(['全部', ...cats] as const).map((c) => { const b = el('button', 'seg' + (c === this.cat ? ' on' : ''), c); b.type = 'button'; b.addEventListener('click', () => { this.cat = c; this.render(); }); return b; }));
+    this.tabsEl.replaceChildren(...(['全部', ...cats] as const).map((c) => { const b = el('button', 'seg' + (c === this.cat ? ' on' : ''), c); b.type = 'button'; b.addEventListener('click', () => { this.cat = c; this.dyeOpen = false; this.render(); }); return b; }));
     this.tabsEl.style.display = cats.length > 1 ? '' : 'none';
+    const sdef = this.selDef();
+    if (this.dyeOpen && this.sel?.kind === 'move' && sdef?.dye) { this.renderDye(sdef); return; }
+    this.dyeOpen = false;
     const shown = owned.filter((d) => this.cat === '全部' || decorDef(d.id)?.cat === this.cat);
     this.listEl.replaceChildren();
     if (!owned.length) this.listEl.append(el('div', 'decor-empty', '背包里还没有家具。去图书馆广场的校园商店，在「买东西」页买；已经摆在房里的，点一下它就能挪动或收回。'));
     for (const d of shown) {
       const b = el('button', 'decor-item' + (this.sel?.kind === 'new' && this.sel.id === d.id ? ' on' : '')); b.type = 'button'; b.title = `${d.name}（${decorDef(d.id)?.cat}）`;
       const c = el('canvas'); drawItem(c, this.scene.textures, d.id, 2); b.append(c, el('span', 'decor-name', d.name), el('span', 'decor-n', `×${this.inv[d.id]}`));
-      b.addEventListener('click', () => { this.sel = { kind: 'new', id: d.id }; this.rot = 0; this.msgEl.textContent = ''; this.render(); this.drawGhost(); });
+      b.addEventListener('click', () => { this.sel = { kind: 'new', id: d.id }; this.rot = 0; this.dyeOpen = false; this.msgEl.textContent = ''; this.render(); this.drawGhost(); });
       this.listEl.append(b);
     }
     const def = this.selDef();
     this.infoEl.textContent = !this.sel ? `已摆 ${this.api.lay().length} 件 · 点背包里的家具来摆，点房里的家具来挪动/收回` : this.sel.kind === 'new' ? `正在摆：${def?.name}${this.facing(def)}（再点一下房间里的格子放下）` : `选中了：${def?.name}${this.facing(def)}（点别处挪过去，或点「收回」）`;
     const vis = (b: HTMLElement, on: boolean) => { b.style.visibility = on ? 'visible' : 'hidden'; }; // 用 visibility 不用 display：托盘高度不跟着变，房间不会跳
     vis(this.btnRot, !!def); vis(this.btnPick, this.sel?.kind === 'move'); vis(this.btnCancel, !!this.sel);
+    this.btnDye.style.display = this.sel?.kind === 'move' && def?.dye ? '' : 'none'; this.btnDye.textContent = '🎨 染色 C'; this.btnDye.disabled = false;
     if (!this.sel) this.say('点背包里的家具来摆；点房里的家具来挪动 / 收回');
     this.reserveSpace();
+  }
+  /**
+   * 染色页：选中一件能染的已摆家具后点「染色」，列表换成调色板（原色 + 12 种颜色，横向滚动）；点一种颜色 = 在房间里预览（虚影盖在它上面），
+   * 再点「确认」才真染（用 1 份染料；染回原色免费）。托盘高度不变，所以房间不会跳。
+   */
+  private renderDye(def: DecorDef) {
+    const cur = this.api.lay()[(this.sel as { i: number }).i]?.c ?? 0, have = this.inv[DYE_ITEM] ?? 0;
+    this.listEl.replaceChildren(); this.listEl.style.display = '';
+    for (let c = 0; c <= DYES.length; c++) {
+      const b = el('button', 'decor-item decor-dyeitem' + (c === this.dyePrev ? ' on' : '')); b.type = 'button'; b.title = dyeName(c);
+      const sw = el('div', 'decor-dyesw' + (c === 0 ? ' orig' : '')); if (c) sw.style.background = dyeCss(c);
+      b.append(sw, el('span', 'decor-name', dyeName(c) + (c === cur ? ' ✓' : '')));
+      b.addEventListener('click', () => { this.dyePrev = c; this.render(); this.drawGhost(); });
+      this.listEl.append(b);
+    }
+    this.infoEl.textContent = `染色：${def.name} · 现在是${dyeName(cur)}（有 ${have} 份染料）`;
+    const same = this.dyePrev === cur, need = this.dyePrev !== 0 && have < 1;
+    this.btnDye.textContent = same ? '已是此色' : this.dyePrev === 0 ? '染回原色·免费' : need ? '没有染料' : '确认染色·用1份';
+    this.btnDye.disabled = same || need; this.btnDye.style.display = '';
+    const vis = (b: HTMLElement, on: boolean) => { b.style.visibility = on ? 'visible' : 'hidden'; };
+    vis(this.btnRot, false); vis(this.btnPick, false); vis(this.btnCancel, true);
+    this.say(need && !same ? '背包里没有染料了：去图书馆广场的校园商店买（3 份 40 校园币）' : same ? '点一种颜色预览，满意再点「确认染色」' : this.dyePrev === 0 ? '预览：原色' : `预览：${dyeName(this.dyePrev)}（确认才会真的染上）`, need && !same);
+    this.reserveSpace();
+  }
+  /** 「染色」按钮：第一下进入调色板；在调色板里 = 确认 */
+  private dyeClick() {
+    const def = this.selDef(); if (this.sel?.kind !== 'move' || !def?.dye) return;
+    if (!this.dyeOpen) { this.dyeOpen = true; this.dyePrev = this.api.lay()[this.sel.i]?.c ?? 0; this.hover = null; this.render(); this.drawGhost(); return; }
+    const cur = this.api.lay()[this.sel.i]?.c ?? 0, now = performance.now();
+    if (this.dyePrev === cur || now < this.busyUntil) return;
+    if (this.dyePrev !== 0 && (this.inv[DYE_ITEM] ?? 0) < 1) { this.say('背包里没有染料了：去图书馆广场的校园商店买', true); return; }
+    this.busyUntil = now + 900;
+    this.net.dormLay({ op: 'dye', i: this.sel.i, c: this.dyePrev });
   }
   /** 当前朝向的说明：能转的家具显示朝哪边，转向前后一眼看得出 */
   private facing(def?: DecorDef): string {
@@ -159,6 +199,7 @@ export class DecorEditor {
     }
     this.infoEl.textContent = this.mode === 'room' ? '扩建房间：更大的地板、更长的北墙' : `换${SKIN_KIND_NAMES[this.mode as SkinKind]}：点一种；没买过的要花校园币（买一次永久拥有）`;
     for (const b of [this.btnRot, this.btnPick, this.btnCancel]) b.style.visibility = 'hidden';
+    this.btnDye.style.display = 'none';
     if (!this.armed) this.say(coin);
     this.reserveSpace();
   }
@@ -201,11 +242,19 @@ export class DecorEditor {
       const q = this.api.lay()[this.sel.i], d = decorDef(q?.d);
       if (q && d) { mark.lineStyle(2, 0xffd24a, 0.9); if (d.kind === 'wall') { const r = wallRect(d, q); mark.strokeRect(r.x * 16, r.y * 16, r.w * 16, r.h * 16); } else { const f = footOf(d, q.r); mark.strokeRect(q.x * 16, q.y * 16, f.fw * 16, f.fh * 16); } }
     }
+    if (this.dyeOpen && this.sel?.kind === 'move') { // 染色预览：虚影原地盖在选中的家具上，换上预览的颜色
+      const q = this.api.lay()[this.sel.i], spot = q ? spotOf(this.scene.textures, this.api.lay(), { ...q, c: undefined }) : null;
+      if (!spot) { ghost.setVisible(false); return; }
+      const key = this.dyePrev ? dyedKey(this.scene.textures, spot.frame, this.dyePrev) : null;
+      if (key) ghost.setTexture(key); else ghost.setTexture('furniture', spot.frame);
+      ghost.setPosition(spot.x, spot.y).setVisible(true).clearTint().setAlpha(1).setDepth(8600);
+      return;
+    }
     const p = this.target();
     if (!p) { ghost.setVisible(false); return; }
     const spot = spotOf(this.scene.textures, this.api.lay(), p); if (!spot) { ghost.setVisible(false); return; }
     const err = layError(this.candidate(p), this.api.level());
-    ghost.setFrame(spot.frame).setPosition(spot.x, spot.y).setVisible(true).setTint(err ? 0xff6a6a : 0x9cff9c).setAlpha(err ? 0.65 : 0.85);
+    ghost.setTexture('furniture', spot.frame).setPosition(spot.x, spot.y).setVisible(true).setTint(err ? 0xff6a6a : 0x9cff9c).setAlpha(err ? 0.65 : 0.85);
     this.say(err ?? (this.sel?.kind === 'move' ? '可以挪到这里' : '可以放在这里'), !!err);
   }
 
@@ -214,10 +263,11 @@ export class DecorEditor {
     const w = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
     return { x: Math.floor(w.x / 16), y: Math.floor(w.y / 16) };
   }
-  private onMove = (pointer: Phaser.Input.Pointer) => { if (!this.active || this.mode !== 'furn' || pointer.wasTouch) return; this.hover = this.cellAt(pointer); this.drawGhost(); };
+  private onMove = (pointer: Phaser.Input.Pointer) => { if (!this.active || this.mode !== 'furn' || pointer.wasTouch || this.dyeOpen) return; this.hover = this.cellAt(pointer); this.drawGhost(); };
   private onDown = (pointer: Phaser.Input.Pointer) => {
     if (!this.active || this.mode !== 'furn') return;
     if (pointer.rightButtonDown()) { this.cancel(); return; }
+    if (this.dyeOpen) return; // 调色板开着：点房间不挪也不换选中，免得误操作
     const cell = this.cellAt(pointer), touch = pointer.wasTouch;
     if (!this.sel) { this.grab(cell); return; }
     if (touch && (!this.hover || this.hover.x !== cell.x || this.hover.y !== cell.y)) { this.hover = cell; this.drawGhost(); return; } // 手机：第一下只是预览位置
@@ -235,7 +285,7 @@ export class DecorEditor {
       if (on && r >= rank) { best = i; rank = r; } // 叠在一起的地毯 / 门垫：点中最上面（摆得最晚）的那一件
     });
     if (best < 0) return;
-    this.sel = { kind: 'move', i: best }; this.rot = lay[best].r ?? 0; this.hover = c; this.render(); this.drawGhost();
+    this.sel = { kind: 'move', i: best }; this.rot = lay[best].r ?? 0; this.hover = c; this.dyeOpen = false; this.render(); this.drawGhost();
   }
   private commit() {
     const p = this.target(), now = performance.now(); if (!p || now < this.busyUntil) return;
@@ -261,11 +311,12 @@ export class DecorEditor {
     if (this.sel?.kind !== 'move') return;
     this.net.dormLay({ op: 'pick', i: this.sel.i }); this.sel = null; this.render(); this.drawGhost();
   }
-  private cancel() { this.sel = null; this.ghost?.setVisible(false); this.mark?.clear(); this.say(''); this.render(); }
+  private cancel() { this.dyeOpen = false; this.sel = null; this.ghost?.setVisible(false); this.mark?.clear(); this.say(''); this.render(); }
   private onKey = (e: KeyboardEvent) => {
     if (!this.active || (e.target instanceof HTMLInputElement) || (e.target instanceof HTMLTextAreaElement)) return;
-    if (e.key === 'r' || e.key === 'R') { this.turn(); e.preventDefault(); }
-    else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'x' || e.key === 'X') { this.pick(); e.preventDefault(); }
+    if (e.key === 'r' || e.key === 'R') { if (!this.dyeOpen) this.turn(); e.preventDefault(); }
+    else if (e.key === 'c' || e.key === 'C') { if (this.sel?.kind === 'move' && this.selDef()?.dye) this.dyeClick(); e.preventDefault(); }
+    else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'x' || e.key === 'X') { if (!this.dyeOpen) this.pick(); e.preventDefault(); }
     else if (e.key === 'Escape') { if (this.sel) this.cancel(); else this.close(); e.preventDefault(); e.stopPropagation(); }
   };
 }

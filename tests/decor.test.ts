@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DECOR, DECOR_MAX, canTurn, nextRot, DOOR_KEEP, LEGACY_STARTERS, cleanLay, decorDef, decorRefund, defaultLay, doorKeep, footOf, isStarter, layCounts, layError, seatsOf, topRaise, wallRect, type Placed } from '../src/shared/decor';
+import { DECOR, DECOR_MAX, DECOR_MAX_BY_LEVEL, decorMax, canTurn, nextRot, DOOR_KEEP, LEGACY_STARTERS, cleanLay, decorDef, decorRefund, defaultLay, doorKeep, footOf, isStarter, layCounts, layError, seatsOf, topRaise, wallRect, type Placed } from '../src/shared/decor';
 import { cleanDorm, layApply, layOf, type DormSave } from '../src/shared/dorm';
 import { ITEMS, itemDef, STACK_MAX, type Inv } from '../src/shared/items';
 import { SHOP, sellPrice, sellable, shopItem, shopItemsValid, sellList } from '../src/shared/economy';
@@ -148,7 +148,19 @@ describe('摆放规则 layError', () => {
     const under = [8, 9, 10, 11].flatMap((x) => [3, 4].map((y) => P('dc_stool', x, y)));
     expect(layError([...BASE.filter((p) => p.d !== 'dc_wardrobe' && p.d !== 'dc_chest'), ...under])).toContain('堵住');
   });
-  it('数量上限', () => { expect(layError(Array.from({ length: DECOR_MAX + 1 }, () => P('dc_rug_paw', 1, 3)))).toContain('最多'); });
+  it('数量上限：按房间大小 160 / 200 / 240（以前不分大小都是 72）', () => {
+    expect(DECOR_MAX_BY_LEVEL).toEqual([160, 200, 240]); expect(DECOR_MAX).toBe(240); expect([0, 1, 2, 9].map(decorMax)).toEqual([160, 200, 240, 160]);
+    for (const lv of [0, 1, 2]) { expect(layError(Array.from({ length: decorMax(lv) + 1 }, () => P('dc_rug_paw', 1, 3)), lv)).toContain(`${decorMax(lv)}`); }
+    // 超过旧上限 72 的摆法现在合法：整间屋铺满三层门垫（每层 7×7 = 49 块，共 147 件）
+    const mats = [0, 1, 2].flatMap(() => Array.from({ length: 7 }, (_, i) => Array.from({ length: 7 }, (_, j) => P('dc_mat_welcome', 1 + i * 2, 3 + j))).flat());
+    expect(mats.length).toBe(147); expect(layError(mats, 0)).toBeNull();
+    expect(layError(Array.from({ length: 161 }, (_, i) => P('dc_mat_welcome', 1 + (i % 7) * 2, 3 + (i % 8))), 0)).toContain('160');
+  });
+  it('存档体积：摆满一间大屋（240 件）序列化后不到 16KB，清洗时按级别截断', () => {
+    const full = Array.from({ length: 240 }, (_, i) => ({ d: 'dc_mat_welcome', x: 1 + (i % 11) * 2, y: 3 + (i % 12), c: 1 + (i % 12) }));
+    expect(JSON.stringify(full).length).toBeLessThan(16000);
+    expect(cleanLay(full, 0)!.length).toBeLessThanOrEqual(160); expect(cleanLay(full, 2)!.length).toBeLessThanOrEqual(240);
+  });
 });
 
 describe('椅子能坐', () => {

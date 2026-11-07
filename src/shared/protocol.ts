@@ -288,7 +288,7 @@ export type ClientMsg =
   | { t: 'dorm_skin'; kind: 'w' | 'f'; i: number; op: 'buy' | 'use' }
   | { t: 'dorm_expand' }
   | { t: 'dorm_pub'; on: boolean }
-  | { t: 'dorm_lay'; op: 'place' | 'move' | 'pick'; d?: string; i?: number; x?: number; y?: number; r?: number }
+  | { t: 'dorm_lay'; op: 'place' | 'move' | 'pick' | 'dye'; d?: string; i?: number; x?: number; y?: number; r?: number; /** 染色：色号 1..12，0 = 染回原色 */ c?: number }
   /** 宿舍做客：邀请好友来我的宿舍（我得在自己宿舍里）/ 敲好友宿舍的门（好友得在宿舍里）/ 回应别人的邀请或敲门 / 房主改门牌 / 在宿舍里报自己的位置（屋里的坐标，像素） */
   /** 切换世界：public = 公共世界，solo = 个人世界；remember = 下次登录也默认进这个世界 */
   | { t: 'world_set'; kind: 'public' | 'solo'; /** 记住这次的选择，下次登录就进这个世界（默认记） */ remember?: boolean }

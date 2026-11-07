@@ -251,7 +251,7 @@ export class Character {
     const bub = this.bubble; redrawWhenGlyphsReady(text, () => { if (bub.active) { bub.updateText(); this.syncSprite(); } });
     this.syncSprite();
   }
-  destroy() { this.fzImg?.destroy(); this.heldImg?.destroy(); this.skinToken++; this.skinHandle?.release(); this.umb?.destroy(); this.fishG?.destroy(); this.fishMark?.destroy(); this.seatStrip?.destroy(); this.emoteTxt?.destroy(); this.sprite.scene.tweens.killTweensOf(this.fx); this.sprite.scene.tweens.killTweensOf(this.emo); this.tag?.destroy(); this.titleTag?.destroy(); this.bubble?.destroy(); this.bikeBack?.destroy(); this.bikeFront?.destroy(); this.sprite.destroy(); }
+  destroy() { this.fzImg?.destroy(); this.heldImg?.destroy(); this.skinToken++; this.skinHandle?.release(); this.umb?.destroy(); this.fishG?.destroy(); this.fishMark?.destroy(); this.seatStrip?.destroy(); this.emoteTxt?.destroy(); { const tw = this.sprite.scene?.tweens; tw?.killTweensOf(this.fx); tw?.killTweensOf(this.emo); } /* 场景正在关闭时 tweens 已经没了（宿舍里还有别人时，退出会在这里抛错，校园场景就醒不过来 = 黑屏） */ this.tag?.destroy(); this.titleTag?.destroy(); this.bubble?.destroy(); this.bikeBack?.destroy(); this.bikeFront?.destroy(); this.sprite.destroy(); }
   /** 换外观：先显示预置造型（look），有自定义外观（app）就在后台生成，好了再换上 */
   setLook(look: number, app?: Appearance) {
     this.look = look; this.umb?.destroy(); this.umb = undefined;

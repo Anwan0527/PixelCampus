@@ -27,6 +27,7 @@ const BASE_ITEMS: readonly ItemDef[] = [
   { id: 'rod_carbon', name: '碳素鱼竿', desc: '又轻又韧的碳素鱼竿：拉鱼更轻松、咬钩更快、稀有鱼更多。有多根竿时自动用最好的。', kind: 'tool', stack: 1 },
   { id: 'rod_golden', name: '金龙鱼竿', desc: '传说中的金色鱼竿：拉鱼大幅放宽、咬钩最快、稀有鱼显著增多。', kind: 'tool', stack: 1 },
   { id: 'cat_bed', name: '猫窝', desc: '软软的猫窝。在小猫面板里送给一只小猫：它有了自己的窝（只有你看得到），好感度 +20。', kind: 'food', stack: STACK_MAX },
+  { id: 'dye', name: '染料', desc: '一瓶染料。进「装修」点一件已经摆好的家具，选一种颜色，就能把它染成喜欢的样子：一件用一份；染回原色不花染料；把家具收回背包，颜色会褪掉。桌椅、柜子、沙发、地毯、玩偶都能染（电器、画、窗、鱼缸、床不能）。商店 3 份 40 校园币。', kind: 'tool', stack: STACK_MAX },
   { id: 'fish_crucian', name: '鲫鱼', desc: '精工湖里最常见的鱼，个头不大，劲儿不小。', kind: 'fish', stack: STACK_MAX },
   { id: 'fish_carp', name: '鲤鱼', desc: '红尾巴的大鲤鱼，湖边的老住户。', kind: 'fish', stack: STACK_MAX },
   { id: 'fish_grass', name: '草鱼', desc: '爱吃水草的草鱼，长得又长又结实。', kind: 'fish', stack: STACK_MAX },

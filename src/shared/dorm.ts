@@ -9,6 +9,7 @@
 import { itemDef, type Inv } from './items';
 import { fishDef, type Rarity } from './fishing';
 import { cleanText } from './profile';
+import { DYE_ITEM, dyeName, isDyeIdx } from './dye';
 import { LEGACY_STARTERS, cleanLay, decorDef, defaultLay, footOf, isRoomLevel, layError, ROOM_SIZES, type Placed, type Rot, type RoomLevel } from './decor';
 import { FLOOR_SKINS, ROOM_NAMES, ROOM_PRICES, SKINS, WALL_SKINS, type SkinKind } from './dormskin';
 
@@ -243,12 +244,13 @@ export const glowDensity = (v: BathView): number => Math.min(1, 0.15 + v.r.reduc
 /** 房间里现在的摆放：装修过就用存档里的，没装修过用原来的默认布局 */
 export const layOf = (d: DormSave | undefined): Placed[] => d?.lay ?? defaultLay(roomLevel(d));
 
-export type LayOp = { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number };
+export type LayOp = { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number } | { op: 'dye'; i: number; c: number };
 const asRot = (r: unknown): Rot | undefined => (r === 90 || r === 180 || r === 270 ? r : undefined);
 
 /**
  * 装修一步（原地修改存档 d 和背包 inv；校验失败什么都不改）：
- * place = 从背包拿一件摆上去；move = 把已摆的一件挪个位置/转个方向；pick = 收回背包。
+ * place = 从背包拿一件摆上去；move = 把已摆的一件挪个位置/转个方向（颜色跟着走）；pick = 收回背包（会褪色）；
+ * dye = 给已摆的一件染色（c = 1..12 花 1 份染料；c = 0 染回原色免费；已经是这个颜色就什么都不花）。
  * 摆完整体再校验一遍（layError：不重叠、不堵路、小件在桌上…），所以改任何一件都不会让房间变成非法状态。
  */
 export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: string } {
@@ -266,9 +268,20 @@ export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: 
     const old = cur[op.i], def = decorDef(old.d)!;
     if (op.op === 'move') {
       const p: Placed = { d: old.d, x: op.x, y: op.y }; const r = asRot(op.r); if (r) p.r = r;
+      if (old.c) p.c = old.c; // 挪动、转向不褪色
       // 地毯、门垫是按摆放顺序叠的（摆得晚的在上面）：挪动它就是把它拿起来重新铺，所以放到最上面去
       next = def.kind === 'rug' || def.kind === 'mat' ? [...cur.filter((_, i) => i !== op.i), p] : cur.map((q, i) => (i === op.i ? p : q)); done = `挪好了${def.name}`;
       const err = layError(next, lv); if (err) return bad(err);
+    } else if (op.op === 'dye') {
+      const c = op.c;
+      if (c !== 0 && !isDyeIdx(c)) return bad('颜色不对');
+      if (!def.dye) return bad(`${def.name}不能染色`);
+      if ((old.c ?? 0) === c) return bad(`${def.name}已经是${dyeName(c)}了`);
+      if (c !== 0 && (inv[DYE_ITEM] ?? 0) < 1) return bad('背包里没有染料了，去校园商店买');
+      const p: Placed = { ...old }; if (c) p.c = c; else delete p.c;
+      next = cur.map((q, i) => (i === op.i ? p : q)); done = c ? `${def.name}染成了${dyeName(c)}` : `${def.name}染回了原色`;
+      const err = layError(next, lv); if (err) return bad(err);
+      if (c !== 0) { inv[DYE_ITEM] -= 1; if (inv[DYE_ITEM] <= 0) delete inv[DYE_ITEM]; }
     } else {
       if (def.surface) { const { fw, fh } = footOf(def, old.r); if (cur.some((q) => decorDef(q.d)?.kind === 'top' && q.x >= old.x && q.y >= old.y && q.x < old.x + fw && q.y < old.y + fh)) return bad('桌子上还有东西，先把桌上的小件收起来'); }
       const have = inv[def.id] ?? 0; if (have + 1 > STACKCAP) return bad(`背包里的${def.name}放不下了`);

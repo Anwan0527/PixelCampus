@@ -15,11 +15,12 @@ import { ensureSkin, skinTextureKey } from '@/systems/dormskin';
 import { RemotePlayer } from '@/entities/RemotePlayer';
 import { BathFx } from '@/systems/bathfx';
 import { DecorEditor } from '@/systems/decoredit';
-import { spotOf } from '@/systems/decorview';
+import { addDecorImage, spotOf } from '@/systems/decorview';
 import { topRaise } from '@/shared/decor';
 import { decorDef, defaultLay, footOf, seatsOf, type Placed } from '@/shared/decor';
 import type { BathView } from '@/shared/dorm';
 import { packFlags, type RoomWho, type ServerMsg } from '@/shared/protocol';
+import { festData } from '@/ui/festivalData';
 
 export interface InteriorDef {
   id: string; name: string; w: number; h: number; bg: string; desc?: string;
@@ -58,6 +59,7 @@ export class InteriorScene extends Phaser.Scene {
   private visit: Extract<ServerMsg, { t: 'dorm_visit' }> | null = null;
   private remotes = new Map<number, RemotePlayer>();
   private hostName = ''; private titleRaw = ''; private signText?: Phaser.GameObjects.Text; private signAt = { x: 0, y: 0 };
+  private prevFz?: NetClient['handlers']['fz']; private prevHeld?: NetClient['handlers']['held']; private unFest?: () => void;
   private sleepWho?: Character; private rt = { t: 0, x: -1, y: -1, f: -1 };
   /** 我是不是房主（自己的宿舍） */
   private get isHost() { return !this.visit; }
@@ -87,6 +89,7 @@ export class InteriorScene extends Phaser.Scene {
     this.player = new Player(this, d.spawn.x * TILE, d.spawn.y * TILE, this.dorm && me ? me.look : 0, this.dorm ? me?.app : undefined); // 宿舍里是你自己的样子（换装后也跟着变）
     Character.umbrella = false; // 屋里不打伞（外面下雨时，校园场景每帧会把它设回去，所以这里只管室内）
     this.player.facing = 'up'; this.player.sprite.setFrame('c0_up_0');
+    if (this.dorm) this.player.setFz(festData.on); // 自己戴着的节日装扮：在宿舍里（自己的、别人的）也要显示
 
     const cam = this.cameras.main;
     cam.startFollow(this.player.sprite, true, 0.15, 0.15);
@@ -126,6 +129,10 @@ export class InteriorScene extends Phaser.Scene {
       const h = this.net.handlers;
       h.roomJoin = (w) => { this.addRemote(w); if (this.editor?.active) { this.editor.close(); this.hud.banner('🛋 装修', `${w.p.name} 进来了，装修先停一下`); } };
       h.roomLeave = (id) => this.removeRemote(id);
+      this.prevFz = h.fz; this.prevHeld = h.held;
+      h.fz = (pid, c) => this.remotes.get(pid)?.setFz(c);          // 屋里别人换了节日装扮 / 手持物：校园场景的处理函数管的是校园里的人，这里自己接
+      h.held = (pid, hv) => this.remotes.get(pid)?.setHeld(hv);
+      this.unFest = festData.subscribe(() => this.player.setFz(festData.on));
       h.roomPos = (id, x, y, f) => { if (id === this.selfId) { this.player.x = x; this.player.y = y; return; } this.remotes.get(id)?.push(x, y, f, performance.now()); }; // 发给自己的 = 被服务器拉回
       h.roomState = (m) => {
         this.setTitle(m.title); this.setAc(m.ac); this.setBath(m.bv); if (!this.isHost) this.setSkin(m.sk?.w ?? 0, m.sk?.f ?? 0);
@@ -145,20 +152,31 @@ export class InteriorScene extends Phaser.Scene {
     this.prevFindSeat = RemotePlayer.findSeat; RemotePlayer.findSeat = (x, y) => { const t = this.seats.find((q) => Math.hypot(q.x - x, q.y - y) < 6); return t ? { bx: t.bx, by: t.by, strip: false } : undefined; }; // 屋里别人坐在哪把椅子上
     if (this.isHost && this.net) this.setupDecorUi(this.net);
     if (this.visit && this.net) this.setupLikeUi(this.net, this.visit);
-    this.events.once('shutdown', () => {
-      this.registry.set('roomSay', null); this.registry.set('dormVisit', null);
-      if (this.net) { const h = this.net.handlers; h.roomJoin = h.roomLeave = h.roomPos = h.roomState = undefined; }
-      this.dormUi?.closeSign();
-      for (const r of this.remotes.values()) r.destroy(); this.remotes.clear();
-      if (this.chat && this.chatFocus) this.chat.onFocus = this.chatFocus;
-      if (this.net) this.net.handlers.dormOut = undefined;
-      if (this.dormUi) { this.dormUi.onData = () => {}; this.dormUi.onResult = () => {}; this.dormUi.close(); this.dormUi.closeChest(); }
-      this.acTimer?.remove(); this.zzTimer?.remove();
-      RemotePlayer.findSeat = this.prevFindSeat; this.sitting = false;
-      this.editor?.destroy(); this.editor = undefined; this.decorBtn?.remove(); this.decorBtn = undefined; this.likeBtn?.remove(); this.likeBtn = undefined;
-      if (this.net) this.net.handlers.dormLikes = this.prevLikes;
+    this.events.once('shutdown', () => { // 每一步单独兜底：这里任何一步抛错，Phaser 会放弃后面排队的"唤醒校园场景"，人就卡在黑屏里
+      const safe = (f: () => void) => { try { f(); } catch (e) { console.warn('宿舍场景收尾出错（已忽略）', e); } };
+      safe(() => { this.registry.set('roomSay', null); this.registry.set('dormVisit', null); });
+      safe(() => { if (this.net) { const h = this.net.handlers; h.roomJoin = h.roomLeave = h.roomPos = h.roomState = undefined; h.fz = this.prevFz; h.held = this.prevHeld; } });
+      safe(() => { this.unFest?.(); this.unFest = undefined; });
+      safe(() => this.dormUi?.closeSign());
+      safe(() => this.clearRemotes());
+      safe(() => { if (this.chat && this.chatFocus) this.chat.onFocus = this.chatFocus; });
+      safe(() => { if (this.net) this.net.handlers.dormOut = undefined; });
+      safe(() => { if (this.dormUi) { this.dormUi.onData = () => {}; this.dormUi.onResult = () => {}; this.dormUi.close(); this.dormUi.closeChest(); } });
+      safe(() => { this.acTimer?.remove(); this.zzTimer?.remove(); });
+      safe(() => { RemotePlayer.findSeat = this.prevFindSeat; this.sitting = false; });
+      safe(() => { this.editor?.destroy(); this.editor = undefined; this.decorBtn?.remove(); this.decorBtn = undefined; this.likeBtn?.remove(); this.likeBtn = undefined; });
+      safe(() => { if (this.net) this.net.handlers.dormLikes = this.prevLikes; });
     });
   }
+  /** 回校园：先清掉屋里的人，再关室内、唤醒校园场景；万一唤醒没成功（关闭阶段抛了别的错），1.5 秒后兜底再唤醒一次，绝不让人卡在黑屏里 */
+  private backToWorld() {
+    const mgr = this.scene.manager;
+    this.clearRemotes(); this.hud.showMinimap(true);
+    this.scene.stop('Interior'); this.scene.wake('World');
+    window.setTimeout(() => { try { const w = mgr.getScene('World'); if (w && w.sys.isSleeping() && !mgr.isActive('Interior')) mgr.wake('World'); } catch { /* 忽略 */ } }, 1500);
+  }
+  /** 把屋里其他人的画面都销毁（要在场景还活着的时候调；关闭阶段 tweens 等插件已经没了） */
+  private clearRemotes() { for (const r of this.remotes.values()) { try { r.destroy(); } catch (e) { console.warn('销毁屋里的人出错（已忽略）', e); } } this.remotes.clear(); this.sleepWho = undefined; }
 
   /** 空调：0 关 / 1 制冷 / 2 制热。状态灯换色，出风口持续飘出冷风（蓝白风丝+雪点）或暖风（橙色热气） */
   private bathFx?: BathFx; private bathView?: BathView;
@@ -336,9 +354,14 @@ export class InteriorScene extends Phaser.Scene {
     this.player.x = seat.x; this.player.y = seat.y; this.player.halt();
     this.player.setSitting(true, { bx: seat.bx, by: seat.by, strip: false }); this.sitting = true; this.rt.f = -1; this.hud.hint(null);
   }
-  private standUp() {
+  /** 起身：按着方向键起身时，优先站到那个方向前面（不然就近找一个空位——可能在椅子的另一侧，按着方向键只能原地迈步） */
+  private standUp(dirX = 0, dirY = 0) {
     if (!this.sitting) return;
     this.player.setSitting(false); this.sitting = false; this.rt.f = -1;
+    if (dirX || dirY) {
+      const len = Math.hypot(dirX, dirY);
+      for (const d of [10, 14, 18, 24]) { const nx = this.player.x + (dirX / len) * d, ny = this.player.y + (dirY / len) * d; if (!this.map.boxBlocked(nx, ny)) { this.player.x = nx; this.player.y = ny; return; } }
+    }
     const spot = standNear((px, py) => this.map.boxBlocked(px, py), this.player.x, this.player.y, 48); if (spot) { this.player.x = spot.x; this.player.y = spot.y; }
   }
 
@@ -364,7 +387,7 @@ export class InteriorScene extends Phaser.Scene {
     const rows = this.baseCollision.map((r) => r.split(''));
     for (const p of lay) {
       const def = decorDef(p.d), spot = spotOf(this.textures, lay, p); if (!def || !spot) continue;
-      this.decorObjs.push(this.add.image(spot.x, spot.y, 'furniture', spot.frame).setOrigin(0).setDepth(spot.depth));
+      this.decorObjs.push(addDecorImage(this, spot));
       if (def.act && def.kind === 'wall') this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + def.fw) * 16 + 8, y0: 0, y1: Math.max((p.y + 3) * 16, 80), title: def.name, text: '', act: def.act }); // 墙上的空调、门牌：走到它下面按 E
       if (def.kind === 'top' && def.say) { const raise = topRaise(lay, p); this.decorTalk.push({ x0: p.x * 16 - 8, x1: (p.x + 1) * 16 + 8, y0: p.y * 16 - 8 - raise, y1: (p.y + 1) * 16 + 16, title: def.name, text: def.say }); }
       if (def.kind !== 'floor') continue;
@@ -393,6 +416,7 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   override update(_t: number, delta: number) {
+    (this.registry.get('tickClock') as ((dt: number) => void) | undefined)?.(Math.min(0.1, delta / 1000)); // 时钟 / 天气 / 节日由校园场景算，它睡着时这里代为推进
     this.bathFx?.update(Math.min(0.1, delta / 1000));
     const dt = Math.min(delta, 50) / 1000, k = this.keys, joy = this.touchState(), tap = this.takeTouchPress();
     if (this.dorm && this.dormFrame(dt, k, joy, tap)) return;
@@ -405,7 +429,7 @@ export class InteriorScene extends Phaser.Scene {
     const kx = (k.right.isDown || k.d.isDown ? 1 : 0) - (k.left.isDown || k.a.isDown ? 1 : 0);
     const ky = (k.down.isDown || k.s.isDown ? 1 : 0) - (k.up.isDown || k.w.isDown ? 1 : 0);
     const ix = kx || (joy?.x ?? 0), iy = ky || (joy?.y ?? 0); // 键盘优先，没按键时用手机摇杆（之前室内只读键盘，手机进了 214 室就动不了）
-    if (this.sitting && (ix || iy)) this.standUp(); // 坐着时一推方向就起身
+    if (this.sitting && (ix || iy)) this.standUp(ix, iy); // 坐着时一推方向就起身（站到那个方向前面）
     if (!this.leaving) this.player.update(dt, ix, iy, k.shift.isDown || (joy?.run ?? false), this.map);
 
     const press = Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.space) || tap;
@@ -470,19 +494,17 @@ export class InteriorScene extends Phaser.Scene {
     this.leaving = true; this.registry.set('dormForced', true);
     this.endSleep(false); this.hud.hint(null);
     this.editor?.close(); this.dormUi?.close(); this.dormUi?.closeChest(); (this.registry.get('tpUi') as TeleportPanel | undefined)?.close();
-    this.cameras.main.fadeOut(240, 20, 14, 10);
-    this.cameras.main.once('camerafadeoutcomplete', () => { this.hud.showMinimap(true); this.scene.stop('Interior'); this.scene.wake('World'); });
+    this.cameras.main.fadeEffect.reset(); this.cameras.main.fadeOut(240, 20, 14, 10); // 刚进屋的淡入还没播完就退出：不先 reset，淡出会被忽略，"淡出完成"永远不触发，人就卡在屋里（Phaser 的淡入淡出同一时间只能有一个）
+    this.cameras.main.once('camerafadeoutcomplete', () => { this.backToWorld(); });
   }
 
   private leave() {
     this.leaving = true;
     this.hud.hint(null);
     if (this.dorm) { this.endSleep(); this.net?.dormLeave(); }
-    this.cameras.main.fadeOut(240, 20, 14, 10);
+    this.cameras.main.fadeEffect.reset(); this.cameras.main.fadeOut(240, 20, 14, 10); // 刚进屋的淡入还没播完就退出：不先 reset，淡出会被忽略，"淡出完成"永远不触发，人就卡在屋里（Phaser 的淡入淡出同一时间只能有一个）
     this.cameras.main.once('camerafadeoutcomplete', () => {
-      this.hud.showMinimap(true);
-      this.scene.stop('Interior');
-      this.scene.wake('World');
+      this.backToWorld();
     });
   }
 }
