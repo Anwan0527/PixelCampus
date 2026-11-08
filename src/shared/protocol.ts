@@ -9,7 +9,7 @@ import type { Profile } from './profile';
 import type { BathView, DormCard } from './dorm';
 import type { Placed } from './decor';
 import type { BoardItem } from './board';
-import type { WallComment, WallPost } from './wall';
+import type { WallComment, WallPost, WallSort } from './wall';
 import type { Notice } from './notice';
 import type { ChatHistoryItem, DmMsg, FriendInfo, PersonInfo } from './social';
 import type { Gain, Inv } from './items';
@@ -220,7 +220,7 @@ export type ClientMsg =
   | ({ t: 'trade_offer'; tid: number } & TradeOffer)
   | { t: 'trade_ready'; tid: number; on: boolean }
   /** 校园墙：看一页帖子 / 打开一条帖子 / 发帖（anon = 匿名）/ 评论 / 点赞（再点取消）/ 删除（c = 评论 id）/ 举报 / 管理员删某作者全部 */
-  | { t: 'wall_list'; before?: number; /** 管理员：只看待审核的 */ pending?: boolean }
+  | { t: 'wall_list'; before?: number; /** 管理员：只看待审核的 */ pending?: boolean; /** 排序：new（默认）/ hot；hot 翻页用 off（偏移）+ at（第一页返回的时间，保证翻页时排名不变） */ sort?: WallSort; off?: number; at?: number }
   | { t: 'wall_review'; id: number; ok: boolean }
   | { t: 'wall_open'; id: number }
   | { t: 'wall_post'; text: string; anon: boolean }
@@ -385,7 +385,7 @@ export type ServerMsg =
   | { t: 'trade_end'; tid: number; ok: boolean; msg: string }
   /** 交易里的一条提示（报价不合法、邀请被拒之类，不结束交易） */
   | { t: 'trade_note'; msg: string }
-  | { t: 'wall_posts'; items: WallPost[]; more: boolean; append?: boolean; /** 管理员：待审核的帖子数 */ pending?: number }
+  | { t: 'wall_posts'; items: WallPost[]; more: boolean; append?: boolean; /** 管理员：待审核的帖子数 */ pending?: number; /** 这页是按什么排的、是不是待审核栏、热度排序的下一页偏移和排名时间 */ sort?: WallSort; tab?: 'pub' | 'pending'; next?: number; at?: number }
   /** 管理员：有新帖等着审核 */
   | { t: 'wall_pending'; n: number }
   | { t: 'wall_thread'; post: WallPost; comments: WallComment[] }

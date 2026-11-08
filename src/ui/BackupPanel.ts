@@ -40,6 +40,8 @@ export class BackupPanel {
 
   get isOpen() { return !this.root.classList.contains('hidden'); }
   open(mode: BackupMode = 'show') { this.root.classList.remove('hidden'); this.setMode(mode); }
+  /** Esc：正在处理（busy）时不许关，和原来一致 */
+  escape() { if (!this.busy) this.close(); }
   close() { this.root.classList.add('hidden'); }
 
   private setMode(m: BackupMode) {

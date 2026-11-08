@@ -98,6 +98,9 @@ export class AdminPanel {
   onRecall() { if (this.tab === 'logs' && this.isOpen) this.queryLogs(); }
   /** 点公屏里的名字（管理员）：弹出这个人的管理菜单 */
   openUserMenu(uid: number, ctx: UserMenuCtx) { this.menu.open(uid, ctx); }
+  /** 点人弹出的管理小菜单（全局 Esc 要能关它） */
+  get userMenuOpen() { return this.menu.isOpen; }
+  closeUserMenu() { this.menu.close(); }
   /** 打开管理面板看某人的公屏记录 / 私聊会话 */
   openLogs(uid: number) { this.root.classList.remove('hidden'); this.tab = 'logs'; this.logUid = String(uid); this.logQ = ''; this.queryLogs(); this.render(); }
   openDm(uid: number) { this.root.classList.remove('hidden'); this.tab = 'dm'; this.dmUidText = String(uid); this.dm = null; this.dmItems = []; this.net.adm({ op: 'log_dm', uid }); this.render(); }

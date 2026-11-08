@@ -18,6 +18,9 @@ export class EmotePanel {
 
   constructor(private onPick: (id: number) => void) {
     this.root.id = 'emote-bar';
+    const head = el('div', 'emote-head'), x = el('button', 'esc-x', '✕'); x.type = 'button'; x.title = '关闭（Esc）'; x.setAttribute('aria-label', '关闭');
+    x.addEventListener('click', () => this.close());
+    head.append(el('span', 'emote-title', '表情'), x); this.root.append(head);
     for (const g of EMOTE_GROUPS) {
       const sec = el('div', 'emote-group'), row = el('div', 'emote-row');
       sec.append(el('div', 'emote-gname', g.name), row);

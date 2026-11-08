@@ -2,7 +2,7 @@ import { cleanChatText, type ChatMessage } from '@/shared/chat';
 import { DEFAULT_CHANNEL_STATES, OFFLINE_CHANNEL_STATES, type ChannelId, type ChannelState } from '@/shared/channels';
 import { hueOf, type Profile } from '@/shared/profile';
 import type { BoardItem } from '@/shared/board';
-import type { WallComment, WallPost } from '@/shared/wall';
+import type { WallComment, WallPost, WallSort } from '@/shared/wall';
 import type { Notice } from '@/shared/notice';
 import type { ChatHistoryItem, DmMsg, FriendInfo, PersonInfo } from '@/shared/social';
 import type { Gain, Inv } from '@/shared/items';
@@ -131,7 +131,7 @@ export interface NetHandlers {
   /** 喂水禽的结果 */
   birdResult?: (m: Extract<ServerMsg, { t: 'bird_result' }>) => void;
   /** 校园墙：一页帖子（append = 接在后面）/ 一条帖子和它的评论 / 操作结果 */
-  wallPosts?: (items: WallPost[], more: boolean, append: boolean, pending?: number) => void;
+  wallPosts?: (items: WallPost[], more: boolean, append: boolean, pending?: number, meta?: { sort?: WallSort; tab?: 'pub' | 'pending'; next?: number; at?: number }) => void;
   wallPending?: (n: number) => void;
   wallThread?: (post: WallPost, comments: WallComment[]) => void;
   wallResult?: (ok: boolean, msg: string) => void;
@@ -346,7 +346,7 @@ export class NetClient implements ChatTransport {
       case 'trade_end': this.handlers.tradeEnd?.(m.tid, m.ok, m.msg); break;
       case 'trade_note': this.handlers.tradeNote?.(m.msg); break;
       case 'bird_result': this.handlers.birdResult?.(m); break;
-      case 'wall_posts': this.handlers.wallPosts?.(m.items, m.more, m.append === true, m.pending); break;
+      case 'wall_posts': this.handlers.wallPosts?.(m.items, m.more, m.append === true, m.pending, { sort: m.sort, tab: m.tab, next: m.next, at: m.at }); break;
       case 'wall_pending': this.handlers.wallPending?.(m.n); break;
       case 'wall_thread': this.handlers.wallThread?.(m.post, m.comments); break;
       case 'wall_result': this.handlers.wallResult?.(m.ok, m.msg); break;
@@ -416,7 +416,7 @@ export class NetClient implements ChatTransport {
   tradeCancel(tid: number) { this.tx({ t: 'trade_cancel', tid }); }
   tradeOffer(tid: number, items: Gain[], coins: number) { this.tx({ t: 'trade_offer', tid, items, coins }); }
   tradeReady(tid: number, on: boolean) { this.tx({ t: 'trade_ready', tid, on }); }
-  wallList(before?: number, pending = false) { this.tx({ t: 'wall_list', ...(before ? { before } : {}), ...(pending ? { pending: true } : {}) }); }
+  wallList(before?: number, pending = false, opt: { sort?: WallSort; off?: number; at?: number } = {}) { this.tx({ t: 'wall_list', ...(before ? { before } : {}), ...(pending ? { pending: true } : {}), ...(opt.sort === 'hot' ? { sort: 'hot' as const } : {}), ...(opt.off ? { off: opt.off } : {}), ...(opt.at ? { at: opt.at } : {}) }); }
   wallReview(id: number, ok: boolean) { this.tx({ t: 'wall_review', id, ok }); }
   wallOpen(id: number) { this.tx({ t: 'wall_open', id }); }
   wallPost(text: string, anon: boolean) { this.tx({ t: 'wall_post', text, anon }); }

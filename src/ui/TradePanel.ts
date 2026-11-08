@@ -65,6 +65,8 @@ export class TradePanel {
   private open() { this.root.classList.remove('hidden'); this.render(); }
   /** 关闭时把面板里的内容一并清掉（背包大时这棵树有上千个节点，留着隐藏会拖慢成交后的第一批画面） */
   private close() { this.root.classList.add('hidden'); this.body.replaceChildren(); }
+  /** Esc：取消交易（对方也会收到取消） */
+  escape() { this.cancel(); }
   private cancel() { if (this.tid) this.net.tradeCancel(this.tid); this.reset(); this.close(); }
 
   private btn(label: string, fn: () => void, primary = false, disabled = false) { const b = el('button', 'btn' + (primary ? ' primary' : ''), label); b.type = 'button'; b.disabled = disabled; b.addEventListener('click', fn); return b; }

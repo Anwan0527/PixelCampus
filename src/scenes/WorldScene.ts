@@ -55,9 +55,11 @@ import { Character } from '@/entities/Player';
 import { SettingsPanel } from '@/ui/SettingsPanel';
 import { mountWatermark } from '@/ui/AboutPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
+import { commClaimable } from '@/ui/commissionsView';
 import { CalendarPanel } from '@/ui/CalendarPanel';
 import { FestivalFx } from '@/systems/festival';
 import { festData } from '@/ui/festivalData';
+import { escStack, installEscStack, type EscTarget } from '@/ui/escstack';
 import { festivalByCode } from '@/shared/calendar';
 import { RunPanel } from '@/ui/RunPanel';
 import { AdminPanel } from '@/ui/AdminPanel';
@@ -324,7 +326,7 @@ export class WorldScene extends Phaser.Scene {
       this.hud.banner('🎣 钓鱼升级！', text); this.net.system(`🎣 钓鱼升到 Lv.${up.to}（${text}）`); sfx('achieve');
       if ((up.from < 5 && up.to >= 5) || (up.from < 10 && up.to >= 10)) window.setTimeout(() => { this.hud.banner('🎣 解锁了新的路线槽', '在图鉴的「等级」页选择：渔夫（卖鱼价 +10%）或寻宝（盲盒 ×1.3）'); }, 3200);
     };
-    this.shopUi = new ShopPanel(this.net, this.textures, () => marketDay(Date.now() + this.clock.offset));
+    this.shopUi = new ShopPanel(this.net, this.textures, () => marketDay(Date.now() + this.clock.offset), { openQuests: (tab) => this.questUi.open(tab) }); // 钓具摊的「📋 钓鱼委托」：打开任务面板的钓鱼页
     this.fightUi = new FishFightUi();
     this.fishCard = new FishCard(this.textures);
     this.fishCard.onRelease = (id) => this.net.fishRelease(id);
@@ -423,6 +425,7 @@ export class WorldScene extends Phaser.Scene {
     ui.onBlocked = () => this.fishBlocked();
     mountSideButtons();
     mountImmersive(); // 沉浸模式：藏起所有界面，只剩画面（菜单「沉浸模式」/ Z / 右上角 ⤢）
+    this.registerEsc();
     this.net.onMessage((m) => {
       if (m.kind !== 'chat') return;
       const style = this.chatUi.bubbleOf(m); if (!style) return; // 静音 / 关闭的频道不冒气泡
@@ -518,6 +521,23 @@ export class WorldScene extends Phaser.Scene {
     // ?offline 可关掉联机（开发调试：传送等操作会被服务器校验拉回）
     if (!new URLSearchParams(location.search).has('offline')) this.net.connect();
     else this.net.system('离线调试模式（?offline）：没有连接服务器。');
+  }
+
+  /**
+   * 全局 Esc：把所有会"调出来"的面板登记进 escStack，Esc 一次关最上面（最后打开）的一个（见 ui/escstack.ts）。
+   * 新面板怎么接入：有 isOpen（getter）和 close() 就 `reg(面板)`；Esc 要特殊处理（先关子页 / 取消）就再给它一个 escape()。
+   * 不在这里的（对话框、拉鱼取消、装修模式、战斗、建角色）由各自原有的 Esc 逻辑处理。
+   */
+  private registerEsc() {
+    const reg = (t: EscTarget) => escStack.register(t);
+    for (const p of [this.profileUi, this.boardUi, this.shopUi, this.wallUi, this.noticeUi, this.socialUi, this.backpackUi, this.boxUi, this.codexUi, this.backupUi, this.questUi, this.calUi, this.runUi, this.partyUi, this.adminUi, this.settingsUi, this.photo, this.hallUi, this.tpUi, this.worldUi, this.emoteUi, this.reportUi, this.dormUi]) reg(p as EscTarget);
+    const hud = this.hud, adm = this.adminUi, trade = this.tradeUi, cat = this.catUi, card = this.fishCard;
+    reg({ get isOpen() { return hud.mapOpen; }, close: () => { if (hud.mapOpen) hud.toggleMap(); } });         // 大地图
+    reg({ get isOpen() { return adm.userMenuOpen; }, close: () => adm.closeUserMenu() });                    // 管理员点人弹出的小菜单
+    reg({ get isOpen() { return trade.isOpen; }, close: () => trade.escape() });                             // 交易：Esc = 取消
+    reg({ get isOpen() { return cat.isOpen; }, close: () => this.closeCat() });                              // 小猫面板：要走 closeCat（猫恢复自由、人站起来）
+    reg({ get isOpen() { return card.isOpen && this.fishPhase !== 'fight'; }, close: () => card.hide() });    // 钓到鱼的小卡片（拉鱼时 Esc 仍是放弃，不被它抢走）
+    installEscStack();
   }
 
   /** 有没有面板/弹窗盖在游戏上（有的话点击不该穿透到场景） */
@@ -801,11 +821,11 @@ export class WorldScene extends Phaser.Scene {
     this.keeperTag = this.add.text(n.x, n.y - 44, '钓具老板', st).setOrigin(0.5, 1).setDepth(n.y + 2000);
     this.keeperMark = this.add.text(n.x, n.y - 58, '！', { ...st, fontSize: '18px', color: '#ffd35a' }).setOrigin(0.5, 1).setDepth(n.y + 2001).setVisible(false);
   }
-  /** 每帧：钓具老板静止 / 头顶的「！」在有可领的委托奖励时上下跳 */
+  /** 每帧：钓具老板静止 / 头顶的「！」在有可领的委托奖励时上下跳（奖励在「任务」面板的钓鱼页领） */
   private updateKeeper(dt: number, now: number) {
     const k = this.keeper; if (!k) return;
     k.update(dt, this.world, this.rand);
-    const wq = fishData.wq, can = !!wq && ((wq.daily.done && !wq.daily.claimed) || wq.list.some((c) => c.done && !c.claimed));
+    const can = commClaimable(fishData.wq); // 有可领的委托奖励：头顶冒「！」（去「任务」面板的钓鱼页领）
     this.keeperMark?.setVisible(can).setY(k.y - 58 + Math.sin(now / 220) * 2);
   }
   /** 校园小猫：家和毛色、名字由 shared/cats 按固定种子从行人出生点里挑（服务器和所有玩家一致） */

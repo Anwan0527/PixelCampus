@@ -120,6 +120,8 @@ export class DormPanel {
   }
   private hideAsk() { window.clearTimeout(this.askTimer); this.ask.classList.add('hidden'); }
   open() { this.say('', true); this.net.dormGet(); this.render(); this.root.classList.remove('hidden'); }
+  /** Esc：先关最上面的子面板（门牌 / 鱼缸 / 宝箱），都没开再关宿舍面板 */
+  escape() { if (this.signOpen) this.closeSign(); else if (this.bathOpen) this.closeBath(); else if (this.chestOpen) this.closeChest(); else if (this.isOpen) this.close(); }
   close() { this.root.classList.add('hidden'); }
   toggle() { this.isOpen ? this.close() : this.open(); }
   openChest() { this.chestSay('', true); this.renderChest(); this.chestRoot.classList.remove('hidden'); }

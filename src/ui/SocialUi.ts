@@ -105,6 +105,8 @@ export class SocialUi {
     this.net.friendNote(uid, v.trim());
   }
   open(tab: Tab = 'friends') { this.root.classList.remove('hidden'); this.conv = null; this.tab = tab; this.msgLine.textContent = ''; this.net.getSocial(); this.render(); }
+  /** Esc：有资料卡弹窗先关弹窗，否则关好友面板 */
+  escape() { if (!this.pop.classList.contains('hidden')) this.closePlayer(); else this.close(); }
   close() { this.root.classList.add('hidden'); this.pop.classList.add('hidden'); this.popUid = 0; this.conv = null; }
   toggle() { this.root.classList.contains('hidden') ? this.open() : this.close(); }
   private updateBadge() { ui.badge('friends', this.incoming.length + this.friends.reduce((s, f) => s + f.unread, 0)); }

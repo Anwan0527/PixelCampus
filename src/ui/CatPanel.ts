@@ -235,8 +235,11 @@ export class CatPanel {
   /** 喂鱼的选择列表：背包里的真鱼，每项显示好感 +N；它的最爱打 ♥（爱吃什么还没揭晓时不标） */
   private renderFish() {
     const list = this.last.ex.fish ?? [], cat = this.cat;
-    this.fishList.classList.toggle('hidden', !this.fishOpen || !cat);
-    if (!this.fishOpen || !cat) return;
+    const opened = this.fishOpen && !!cat, was = !this.fishList.classList.contains('hidden');
+    this.fishList.classList.toggle('hidden', !opened);
+    this.pages.get('act')?.classList.toggle('fish-open', opened);   // 选鱼列表展开时页面不再限高（否则列表被夹在两层滚动里，手指拖不动）
+    if (!opened) return;
+    if (!was) window.setTimeout(() => this.fishList.scrollIntoView({ block: 'nearest' }), 0);   // 刚展开：把列表滚到能看见的位置
     const known = likesKnown(this.lv, !!this.last.ex.info?.fv), sig = `${cat.id}|${known}|${list.map((f) => `${f.id}:${f.n}`).join(',')}`;
     if (sig === this.fishSig) return;
     this.fishSig = sig; this.fishList.replaceChildren();
