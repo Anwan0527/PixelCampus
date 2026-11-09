@@ -23,6 +23,9 @@ export const RECIPES: readonly Recipe[] = [
   { id: 'myth_bait', name: '神话饵', desc: '龙鳞 + 珍珠 + 1 条稀有鱼 → 2 个神话饵', out: { id: 'bait_myth', n: 2 }, coins: 0, needs: [{ id: 'dragon_scale', n: 1 }, { id: 'pearl', n: 1 }, { group: 'rare', n: 1 }], minLevel: RECIPE_LEVEL.myth_bait },
   { id: 'bone_rod', name: '龙骨竿', desc: '金龙鱼竿 + 4 片龙鳞 + 1500 币 → 龙骨竿（顶级，2 个配件槽）', out: { id: 'rod_bone', n: 1 }, coins: 1500, needs: [{ id: 'rod_golden', n: 1 }, { id: 'dragon_scale', n: 4 }], minLevel: RECIPE_LEVEL.bone_rod },
   { id: 'glow_bait', name: '夜光饵自制', desc: '3 个鱼饵 + 2 条河虾 → 2 个夜光饵', out: { id: 'bait_glow', n: 2 }, coins: 0, needs: [{ id: 'bait', n: 3 }, { id: 'fish_shrimp', n: 2 }], minLevel: RECIPE_LEVEL.glow_bait },
+  // 盲盒合成：多余的低档盒子往上凑（3 合 1，不花币）；合出来的盒子要在背包里点「打开」才揭晓
+  { id: 'crate_up', name: '旧木箱合成', desc: '3 个漂流瓶 → 1 个旧木箱（合成出的是没开的盒子，背包里点「打开」才揭晓）', out: { id: 'box_crate', n: 1 }, coins: 0, needs: [{ id: 'box_bottle', n: 3 }], minLevel: RECIPE_LEVEL.crate_up },
+  { id: 'wreck_up', name: '沉船箱合成', desc: '3 个旧木箱 → 1 个沉船箱（里面可能有特殊鱼竿、龙鳞和神话饵）', out: { id: 'box_wreck', n: 1 }, coins: 0, needs: [{ id: 'box_crate', n: 3 }], minLevel: RECIPE_LEVEL.wreck_up },
 ];
 export const recipeDef = (id: unknown): Recipe | undefined => RECIPES.find((r) => r.id === id);
 

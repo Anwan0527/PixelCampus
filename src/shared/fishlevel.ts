@@ -71,7 +71,7 @@ export function routeBonus(rt: readonly Route[], lv: number): { sell: number; tr
 }
 
 // ------------------------------------------------------------ 配方等级门槛
-export const RECIPE_LEVEL: Record<string, number> = { junk_bait: 1, small_bait: 2, named_bait: 5, pro_bait: 7, myth_bait: 10, bone_rod: 12, glow_bait: 13 };
+export const RECIPE_LEVEL: Record<string, number> = { junk_bait: 1, small_bait: 2, named_bait: 5, pro_bait: 7, myth_bait: 10, bone_rod: 12, glow_bait: 13, crate_up: 3, wreck_up: 6 };
 
 // ------------------------------------------------------------ 档案
 /** 档案里的钓鱼等级数据：xp 总经验、rt 两个路线槽、rel 放生次数、wk 周委托全勤周数、xd 今天已算过的基础经验（软上限用） */
