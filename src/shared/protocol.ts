@@ -148,6 +148,8 @@ export type ClientMsg =
   | { t: 'notice_publish'; title: string; body: string }
   | { t: 'notice_edit'; id: number; title: string; body: string }
   | { t: 'notice_del'; id: number }
+  /** 站长编写「关于」页的致谢（thanks = null：恢复默认） */
+  | { t: 'about_thanks_set'; thanks: string[] | null }
   | { t: 'social_get' }
   | { t: 'whois'; uid: number }
   | { t: 'friend_req'; uid: number }
@@ -339,6 +341,8 @@ export type ServerMsg =
   | { t: 'board_del'; ids: number[] }
   /** 公告列表（新的在前）。newId 只在"刚发布了新公告"时带上：在线的玩家据此提示，而不是每次改动都弹窗 */
   | { t: 'notices'; items: Notice[]; newId?: number }
+  /** 「关于」页的致谢（null = 用游戏自带的默认）：进来时发一次，站长改了就广播 */
+  | { t: 'about_thanks'; thanks: string[] | null }
   /** 好友面板的全部数据：好友（含在线/未读/最近一条）、待我处理的申请、我屏蔽的人 */
   | { t: 'social'; friends: FriendInfo[]; incoming: PersonInfo[]; blocked: PersonInfo[] }
   | { t: 'presence'; uid: number; online: boolean }

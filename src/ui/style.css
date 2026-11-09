@@ -1349,3 +1349,12 @@ body.touch .set-row .btn { min-height: 40px; }
 @media (max-width: 560px) { .wall-head-r { gap: 4px; } .wall .btn, .wall .seg { padding: 2px 7px; } .wall .board-title { font-size: 17px; } .wall-grid { grid-template-columns: repeat(2, 1fr); gap: 12px 8px; } .wall-note { min-height: 104px; } .wall .btn, .wall .seg { min-height: 30px; } }
 body.touch .wall-feed { max-height: calc(100dvh - 200px); }
 @media (max-height: 460px) and (orientation: landscape) { body.touch .wall-feed { max-height: calc(100dvh - 120px); } .wall-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+
+/* 「关于」页：站长编写致谢 */
+.about-edit-btn { margin-top: 6px; min-height: 30px; padding: 4px 10px; font-family: inherit; font-size: 13px; color: var(--ink); }
+.about-edit-btn.hidden, .about-edit.hidden { display: none; }
+.about-edit { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.about-edit-area { width: 100%; box-sizing: border-box; padding: 7px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 14px; line-height: 1.5; color: var(--ink); border-radius: 0; outline: none; resize: vertical; touch-action: pan-y; }
+.about-edit-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.about-edit-bar .btn { min-height: 30px; padding: 4px 12px; font-family: inherit; font-size: 13px; color: var(--ink); }
+.about-edit-note { min-height: 16px; font-size: 12px; color: #2a7a1a; }

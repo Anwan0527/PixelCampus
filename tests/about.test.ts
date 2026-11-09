@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { ABOUT, CREDITS, copyrightLine } from '../src/shared/about';
+import { ABOUT, CREDITS, THANKS, THANKS_LINE_MAX, THANKS_MAX_LINES, cleanThanks, copyrightLine } from '../src/shared/about';
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 
@@ -25,5 +25,12 @@ describe('作者声明 / 许可 / 致谢', () => {
   });
   it('页面带着作者与版权元信息', () => {
     const h = read('index.html'); expect(h).toContain('name="author" content="EXIST-D"'); expect(h).toContain('name="copyright"'); expect(h).toContain('loading-credit');
+  });
+  it('致谢可由站长编写：cleanThanks 收敛每一行、限行数和字数；不是数组 = 用默认；默认里有开屏图案的感谢', () => {
+    expect(cleanThanks(undefined)).toBeNull(); expect(cleanThanks('x')).toBeNull();
+    expect(cleanThanks(['  a\nb ', '', 5, 'c\u0000'])).toEqual(['a b', 'c']);
+    expect(cleanThanks(['x'.repeat(THANKS_LINE_MAX + 50)])![0].length).toBe(THANKS_LINE_MAX);
+    expect(cleanThanks(Array.from({ length: 50 }, (_, i) => `第${i}行`))!.length).toBe(THANKS_MAX_LINES);
+    expect(THANKS.some((t) => t.includes('开屏页面动画图案'))).toBe(true);
   });
 });

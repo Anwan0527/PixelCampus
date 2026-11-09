@@ -37,6 +37,7 @@ export interface NetHandlers {
   board?: (items: BoardItem[]) => void;
   boardNew?: (item: BoardItem) => void;
   boardResult?: (ok: boolean, msg: string) => void;
+  aboutThanks?: (thanks: string[] | null) => void;
   /** 留言被管理员删除（全员收到） */
   boardDel?: (ids: number[]) => void;
   /** 公告列表（新的在前）；newId = 刚发布的那条（只在发布时有） */
@@ -305,6 +306,7 @@ export class NetClient implements ChatTransport {
       case 'chat_history': this.handlers.chatHistory?.(m.items); break;
       case 'notices': this.handlers.notices?.(m.items, m.newId);
         break;
+      case 'about_thanks': this.handlers.aboutThanks?.(m.thanks); break;
       case 'inv': this.handlers.inv?.(m.items, m.gain); break;
       case 'mon_data': this.handlers.mon?.(m); break;
       case 'mon_result': this.handlers.monResult?.(m.ok, m.msg); break;
@@ -390,6 +392,7 @@ export class NetClient implements ChatTransport {
   postBoard(cat: number, text: string) { if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'board_post', cat, text })); }
   /** 管理员状态变化（登录/恢复/退出）的监听，可以有多个 */
   onAdmin(cb: (ok: boolean, msg?: string) => void) { this.adminCbs.push(cb); }
+  aboutThanksSet(thanks: string[] | null) { if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'about_thanks_set', thanks })); }
   noticePublish(title: string, body: string) { if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'notice_publish', title, body })); }
   noticeEdit(id: number, title: string, body: string) { if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'notice_edit', id, title, body })); }
   noticeDel(id: number) { if (this.status === 'online') this.ws?.send(JSON.stringify({ t: 'notice_del', id })); }

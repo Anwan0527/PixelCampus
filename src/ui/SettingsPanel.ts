@@ -34,10 +34,11 @@ export class SettingsPanel {
   private tab: SettingsTab = 'sound';
   private sound = new SoundSection();
   private chans: ChannelSection;
-  private about = new AboutSection();
+  private about: AboutSection;
   private tabs: { id: SettingsTab; label: string; view: () => HTMLElement }[];
 
   constructor(private net: NetClient, chat: ChatPanel, private hooks: SettingsHooks) {
+    this.about = new AboutSection(net);
     this.chans = new ChannelSection(net, chat);
     this.chans.visible = () => this.isOpen && this.tab === 'chat';
     this.tabs = [

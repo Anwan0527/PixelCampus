@@ -1,3 +1,4 @@
+import { cleanText } from './profile';
 /** 作者声明、链接、许可与致谢：游戏里的「关于」面板、水印、照片水印、控制台署名都从这里取，改一处全都更新。 */
 export const ABOUT = {
   title: '像素校园 · 河北工程大学新校区',
@@ -39,3 +40,17 @@ export const THANKS = [
   '感谢维生酥鱼老师为开屏页面动画图案所做的贡献。',
   '地图依据公开的卫星影像与 OpenStreetMap 量测复原；本项目是个人学习作品，与河北工程大学没有隶属或官方关系，校名、地名仅用于描述真实地点。',
 ] as const;
+
+/**
+ * 致谢文字可以由站长在游戏里自己编写（「设置」→「关于」→「编辑致谢」）：服务器存一份，没写过就用上面的 THANKS 当默认。
+ * 每行是一段话，最多 THANKS_MAX_LINES 行、每行最多 THANKS_LINE_MAX 个字；从网络 / 磁盘来的内容用 cleanThanks 收敛。
+ */
+export const THANKS_MAX_LINES = 20;
+export const THANKS_LINE_MAX = 200;
+/** 清洗致谢：不是数组返回 null（= 用默认）；数组则每行去掉控制字符、压空白、截长，丢掉空行，最多 THANKS_MAX_LINES 行 */
+export function cleanThanks(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out: string[] = [];
+  for (const x of raw) { const t = cleanText(x, THANKS_LINE_MAX); if (t) out.push(t); if (out.length >= THANKS_MAX_LINES) break; }
+  return out;
+}
