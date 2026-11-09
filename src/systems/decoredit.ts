@@ -36,10 +36,14 @@ export class DecorEditor {
   private hover: { x: number; y: number } | null = null; private inv: Inv = {};
   private grid?: Phaser.GameObjects.Graphics; private ghost?: Phaser.GameObjects.Image; private mark?: Phaser.GameObjects.Graphics;
   private busyUntil = 0; private prevInv?: NetClient['handlers']['inv'];
+  /** 一键还原 / 撤回：还原要点两次确认（防误触），还原之后有一段时间能撤回 */
+  private btnReset = el('button', 'btn', '🧹 还原'); private btnUndo = el('button', 'btn', '↩ 撤回还原'); private confirmEl = el('div', 'decor-confirm hidden');
 
   constructor(private scene: Phaser.Scene, private net: NetClient, private api: { lay: () => Placed[]; /** 房间级别 */ level: () => number; /** 我的宿舍数据（墙纸、地板、级别） */ data: () => Extract<ServerMsg, { t: 'dorm_data' }> | null; banner: (title: string, text: string) => void; onToggle: (on: boolean) => void; /** 托盘占了屏幕底部（竖屏）或右侧（手机横屏）多少像素：场景据此把房间缩放到剩下的空间里 */ reserve: (px: number, side?: number) => void }) {
     const head = el('div', 'decor-head'), done = el('button', 'btn primary', '完成'); done.type = 'button'; done.addEventListener('click', () => this.close());
-    head.append(el('div', 'decor-title', '🛋 装修'), this.infoEl, done);
+    this.btnReset.type = 'button'; this.btnReset.title = '全部家具收回背包，房间摆回刚住进来的样子（要确认两次，还能撤回）'; this.btnReset.addEventListener('click', () => this.askReset(1));
+    this.btnUndo.type = 'button'; this.btnUndo.style.display = 'none'; this.btnUndo.addEventListener('click', () => { this.net.dormLay({ op: 'undo' }); });
+    head.append(el('div', 'decor-title', '🛋 装修'), this.infoEl, this.btnUndo, this.btnReset, done);
     const acts = el('div', 'decor-acts');
     for (const b of [this.btnRot, this.btnPick, this.btnCancel, this.btnDye]) b.type = 'button';
     this.btnDye.addEventListener('click', () => this.dyeClick());
@@ -51,11 +55,11 @@ export class DecorEditor {
     const put = el('button', 'btn primary decor-put', '放这里'); put.type = 'button'; put.addEventListener('click', () => this.commit()); pad.append(put);
     acts.append(pad);
     this.root.append(head, this.modesEl, this.tabsEl, this.listEl, acts, this.msgEl);
-    (document.getElementById('hud') ?? document.body).append(this.root);
+    (document.getElementById('hud') ?? document.body).append(this.root, this.confirmEl);
     window.addEventListener('keydown', this.onKey);
   }
 
-  destroy() { this.close(); window.removeEventListener('keydown', this.onKey); this.root.remove(); }
+  destroy() { this.close(); window.removeEventListener('keydown', this.onKey); this.root.remove(); this.confirmEl.remove(); }
 
   open() {
     if (this.active) return;
@@ -75,7 +79,7 @@ export class DecorEditor {
   }
   close() {
     if (!this.active) return;
-    this.active = false; this.root.classList.add('hidden');
+    this.active = false; this.root.classList.add('hidden'); this.confirmEl.classList.add('hidden');
     this.scene.input.off('pointermove', this.onMove); this.scene.input.off('pointerdown', this.onDown);
     this.grid?.destroy(); this.mark?.destroy(); this.ghost?.destroy(); this.grid = this.mark = undefined; this.ghost = undefined;
     if (this.prevInv !== undefined || this.net.handlers.inv) this.net.handlers.inv = this.prevInv;
@@ -94,7 +98,24 @@ export class DecorEditor {
   setInv(inv: Inv) { this.inv = inv; this.refresh(); }
 
   // ------------------------------------------------------------ 界面
+  /**
+   * 一键还原的确认：第 1 步说明会发生什么，第 2 步再问一次；两步都点「继续 / 确认」才真的发请求。
+   * 还原之后服务器会在 dorm_data 里带 ru，「撤回还原」按钮就出现，一段时间内都能撤回。
+   */
+  private askReset(step: 1 | 2) {
+    const c = this.confirmEl; c.replaceChildren(); c.classList.remove('hidden');
+    const box = el('div', 'decor-confirm-box'), row = el('div', 'decor-confirm-row');
+    const no = el('button', 'btn', '取消'); no.type = 'button'; no.addEventListener('click', () => c.classList.add('hidden'));
+    const go = el('button', 'btn primary', step === 1 ? '是，继续' : '确认还原'); go.type = 'button';
+    go.addEventListener('click', () => { if (step === 1) { this.askReset(2); return; } c.classList.add('hidden'); this.sel = null; this.dyeOpen = false; this.net.dormLay({ op: 'reset' }); });
+    box.append(el('div', 'decor-confirm-title', step === 1 ? '一键还原房间？' : '再确认一次'),
+      el('div', 'decor-confirm-text', step === 1
+        ? `现在摆着 ${this.api.lay().length} 件家具。还原会把它们全部收回背包，房间摆回刚住进来时的样子（默认的桌椅、地毯、门垫、绿植、垃圾桶用你自己的那份摆回去）。染过的颜色会褪掉。`
+        : '真的要还原吗？还原之后 30 分钟内、没有再装修的话，可以点「撤回还原」恢复成现在的样子。'));
+    row.append(no, go); box.append(row); c.append(box);
+  }
   private render() {
+    this.btnUndo.style.display = this.api.data()?.ru ? '' : 'none';
     // 顶上一排：家具 / 墙纸 / 地板 / 扩建
     const MODES: [typeof this.mode, string][] = [['furn', '🛋 家具'], ['w', '🎨 墙纸'], ['f', '🪵 地板'], ['room', '🏠 扩建']];
     this.modesEl.replaceChildren(...MODES.map(([k, name]) => { const b = el('button', 'seg' + (k === this.mode ? ' on' : ''), name); b.type = 'button'; b.addEventListener('click', () => { if (this.mode === k) return; this.mode = k; this.armed = ''; this.sel = null; this.ghost?.setVisible(false); this.mark?.clear(); this.grid?.setVisible(k === 'furn'); this.render(); }); return b; }));
@@ -317,6 +338,6 @@ export class DecorEditor {
     if (e.key === 'r' || e.key === 'R') { if (!this.dyeOpen) this.turn(); e.preventDefault(); }
     else if (e.key === 'c' || e.key === 'C') { if (this.sel?.kind === 'move' && this.selDef()?.dye) this.dyeClick(); e.preventDefault(); }
     else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'x' || e.key === 'X') { if (!this.dyeOpen) this.pick(); e.preventDefault(); }
-    else if (e.key === 'Escape') { if (this.sel) this.cancel(); else this.close(); e.preventDefault(); e.stopPropagation(); }
+    else if (e.key === 'Escape') { if (!this.confirmEl.classList.contains('hidden')) this.confirmEl.classList.add('hidden'); else if (this.sel) this.cancel(); else this.close(); e.preventDefault(); e.stopPropagation(); }
   };
 }

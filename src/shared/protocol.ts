@@ -285,14 +285,14 @@ export type ClientMsg =
   | { t: 'dorm_chest'; op: 'put' | 'take'; id: string; n: number }
   /** 浴缸放鱼 / 取回（只有房主在自己宿舍里能用） */
   | { t: 'dorm_bath'; op: 'put' | 'take'; id: string; n: number }
-  /** 装修：place = 从背包摆一件（d = 家具物品 id）/ move = 挪动或转向已摆的第 i 件 / pick = 收回第 i 件 */
+  /** 装修：place = 从背包摆一件（d = 家具物品 id）/ move = 挪动或转向已摆的第 i 件 / pick = 收回第 i 件 / reset = 一键还原（全部收回背包、房间摆回刚住进来的样子）/ undo = 撤回刚才的一键还原 */
   /** 给 TA 的宿舍点赞 / 取消赞；设置我的宿舍要不要在资料卡上展示 */
   | { t: 'dorm_like'; uid: number }
   /** 买 / 换墙纸（kind = w）和地板（kind = f）：i = 样式下标；扩建房间 */
   | { t: 'dorm_skin'; kind: 'w' | 'f'; i: number; op: 'buy' | 'use' }
   | { t: 'dorm_expand' }
   | { t: 'dorm_pub'; on: boolean }
-  | { t: 'dorm_lay'; op: 'place' | 'move' | 'pick' | 'dye'; d?: string; i?: number; x?: number; y?: number; r?: number; /** 染色：色号 1..12，0 = 染回原色 */ c?: number }
+  | { t: 'dorm_lay'; op: 'place' | 'move' | 'pick' | 'dye' | 'reset' | 'undo'; d?: string; i?: number; x?: number; y?: number; r?: number; /** 染色：色号 1..12，0 = 染回原色 */ c?: number }
   /** 宿舍做客：邀请好友来我的宿舍（我得在自己宿舍里）/ 敲好友宿舍的门（好友得在宿舍里）/ 回应别人的邀请或敲门 / 房主改门牌 / 在宿舍里报自己的位置（屋里的坐标，像素） */
   /** 切换世界：public = 公共世界，solo = 个人世界；remember = 下次登录也默认进这个世界 */
   | { t: 'world_set'; kind: 'public' | 'solo'; /** 记住这次的选择，下次登录就进这个世界（默认记） */ remember?: boolean }
@@ -477,7 +477,7 @@ export type ServerMsg =
   | { t: 'mon_result'; ok: boolean; msg: string }
   | { t: 'tp_result'; ok: boolean; msg: string }
   /** 我的宿舍：楼栋（没绑定 = 没有）、今天还能不能改楼栋、空调、宝箱；options = 能选的楼栋（按社区分组） */
-  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 房间级别（1 中屋 / 2 大屋，没有 = 小屋）、墙纸地板（w、f 正在用的样式；ow、of 已拥有的样式，按位记） */ rm?: 1 | 2; sk?: { w?: number; f?: number; ow?: number; of?: number }; /** 我的宿舍收到的赞数 */ likes?: number; /** 养在宿舍的小猫编号 */ dc?: number[]; options: { group: string; names: string[] }[] }
+  | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 房间级别（1 中屋 / 2 大屋，没有 = 小屋）、墙纸地板（w、f 正在用的样式；ow、of 已拥有的样式，按位记） */ rm?: 1 | 2; sk?: { w?: number; f?: number; ow?: number; of?: number }; /** 我的宿舍收到的赞数 */ likes?: number; /** 养在宿舍的小猫编号 */ dc?: number[]; /** true = 刚做过一键还原、还能撤回 */ ru?: boolean; options: { group: string; names: string[] }[] }
   /** 可以进屋了（x、y = 我在宿舍楼门口的位置，像素）/ 宿舍操作的结果 */
   | { t: 'dorm_in'; x: number; y: number }
   /** 服务器把人从宿舍里带走了（传送、队友传送、被管理员传走…）：客户端要离开室内、留在新位置 */

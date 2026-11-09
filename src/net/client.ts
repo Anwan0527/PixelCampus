@@ -492,7 +492,7 @@ export class NetClient implements ChatTransport {
   dormPub(on: boolean) { this.tx({ t: 'dorm_pub', on }); }
   dormSkin(kind: 'w' | 'f', i: number, op: 'buy' | 'use') { this.tx({ t: 'dorm_skin', kind, i, op }); }
   dormExpand() { this.tx({ t: 'dorm_expand' }); }
-  dormLay(m: { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number } | { op: 'dye'; i: number; c: number }) { this.tx({ t: 'dorm_lay', ...m }); }
+  dormLay(m: { op: 'place'; d: string; x: number; y: number; r?: number } | { op: 'move'; i: number; x: number; y: number; r?: number } | { op: 'pick'; i: number } | { op: 'dye'; i: number; c: number } | { op: 'reset' } | { op: 'undo' }) { this.tx({ t: 'dorm_lay', ...m }); }
   fzGet() { this.tx({ t: 'fz_get' }); }
   fzSet(c: number) { this.tx({ t: 'fz_set', c }); }
   /** 举报：kind = chat / dm / board / wall / user；ref 见 ReportDialog */

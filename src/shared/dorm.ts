@@ -331,6 +331,48 @@ export function layApply(d: DormSave, inv: Inv, op: LayOp): { ok: boolean; msg: 
 }
 const STACKCAP = 999;
 
+/** 一键还原时记下的"之前的样子"：撤回用。lay = 之前的摆放（undefined = 之前还是默认布局）；delta = 还原让背包里每种家具多了 / 少了几件（负 = 从背包里拿去摆回默认位置了） */
+export interface ResetSnap { lay: Placed[] | undefined; v: 2 | undefined; delta: Record<string, number>; ts: number }
+/** 撤回还原的有效时间（毫秒）：期间没有再装修就还能撤回 */
+export const RESET_UNDO_MS = 30 * 60_000;
+
+const sameLay = (a: readonly Placed[], b: readonly Placed[]) => a.length === b.length && a.every((p, i) => p.d === b[i].d && p.x === b[i].x && p.y === b[i].y && (p.r ?? 0) === (b[i].r ?? 0) && (p.c ?? 0) === (b[i].c ?? 0));
+
+/**
+ * 一键还原：把房间里所有家具收回背包，再把房间摆回"刚住进来时"的样子（默认布局）。
+ * 默认布局里的东西用的是你自己的那一份（收回来的 / 背包里本来就有的），所以不会凭空多出家具；你没有的（比如把默认书桌卖掉了）就不摆。
+ * 染色会褪掉（和单件收回一样）。成功时返回撤回用的快照；失败什么都不改。
+ */
+export function layReset(d: DormSave, inv: Inv, now = Date.now()): { ok: boolean; msg: string; snap?: ResetSnap } {
+  const bad = (msg: string) => ({ ok: false, msg }), cur = layOf(d), lv = roomLevel(d);
+  const target0 = defaultLay(lv);
+  if (sameLay(cur, target0)) return bad('房间已经是刚住进来的样子了');
+  const before: Inv = { ...inv }, back: Inv = { ...inv };
+  for (const p of cur) back[p.d] = (back[p.d] ?? 0) + 1;
+  for (const [id, n] of Object.entries(back)) if (decorDef(id) && n > STACKCAP) return bad(`背包里的${decorDef(id)!.name}放不下了（最多 ${STACKCAP} 件）`);
+  const target: Placed[] = [];
+  for (const p of target0) { if ((back[p.d] ?? 0) < 1) continue; back[p.d] -= 1; if (back[p.d] <= 0) delete back[p.d]; target.push({ ...p }); }
+  const err = layError(target, lv); if (err) return bad(err);
+  const delta: Record<string, number> = {};
+  for (const id of new Set([...Object.keys(before), ...Object.keys(back)])) { const k = (back[id] ?? 0) - (before[id] ?? 0); if (k) delta[id] = k; }
+  const snap: ResetSnap = { lay: d.lay ? d.lay.map((p) => ({ ...p })) : undefined, v: d.v, delta, ts: now };
+  for (const k of Object.keys(inv)) delete inv[k]; Object.assign(inv, back);
+  d.lay = target; d.v = 2;
+  return { ok: true, msg: `房间还原了：${cur.length} 件家具里，能摆回默认位置的摆好了，其余都收进了背包（可以撤回）`, snap };
+}
+/** 撤回一键还原：摆放和背包都回到还原之前。还原时收回来的家具要还在背包里（卖了 / 用了就撤不了）；超时、之后又装修过都撤不了（调用方清掉快照） */
+export function layUndo(d: DormSave, inv: Inv, snap: ResetSnap, now = Date.now()): { ok: boolean; msg: string } {
+  const bad = (msg: string) => ({ ok: false, msg });
+  if (now - snap.ts > RESET_UNDO_MS) return bad('撤回的时间已经过了');
+  for (const [id, k] of Object.entries(snap.delta)) if (k > 0 && (inv[id] ?? 0) < k) return bad(`撤回不了：背包里的${decorDef(id)?.name ?? id}已经不够了（卖掉或者用掉了）`);
+  for (const [id, k] of Object.entries(snap.delta)) if (k < 0 && (inv[id] ?? 0) - k > STACKCAP) return bad(`撤回不了：背包里的${decorDef(id)?.name ?? id}放不下了`);
+  if (snap.lay && layError(snap.lay, roomLevel(d))) return bad('撤回不了：房间的大小变了，原来的摆法放不进去');
+  for (const [id, k] of Object.entries(snap.delta)) { const n = (inv[id] ?? 0) - k; if (n > 0) inv[id] = n; else delete inv[id]; }
+  if (snap.lay) { d.lay = snap.lay.map((p) => ({ ...p })); d.v = snap.v ?? 2; } else { delete d.lay; if (snap.v === undefined) delete d.v; else d.v = snap.v; }
+  return { ok: true, msg: '撤回了：房间回到还原之前的样子' };
+}
+
+
 // ------------------------------------------------------------------ 资料卡上的宿舍与点赞
 /** 资料卡上展示的宿舍：门牌、楼栋、家具摆放（没装修过 = 默认布局）、赞数、我有没有赞过 */
 export interface DormCard { title?: string; b: string; lay: Placed[]; likes: number; liked: boolean; /** 房间级别、墙纸/地板（缩略图按它画） */ rm?: 1 | 2; sk?: { w?: number; f?: number } }
