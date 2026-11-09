@@ -44,6 +44,14 @@ body.touch #minimap.big #minimap-close { display: block; }
 #dialog-foot { text-align: right; font-size: 13px; opacity: .6; margin-top: 6px; }
 #loading { position: absolute; inset: 0; background: #1f3a24; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #f7e3b0; pointer-events: auto; z-index: 10; }
 #loading.done { display: none; }
+/* 开屏小动画：校园插画（维生酥鱼老师贡献）先从下面浮上来、淡入，之后轻轻上下浮动；标题和进度条稍后淡入 */
+#loading-art { width: min(560px, 84vw); max-height: 44vh; object-fit: contain; margin-bottom: 2px; filter: drop-shadow(0 6px 0 rgba(20, 40, 24, .45)); animation: splash-in .9s cubic-bezier(.2, .8, .2, 1) both, splash-float 4.2s ease-in-out .9s infinite; }
+#loading-title, #loading-bar, #loading-text { animation: splash-fade .7s ease-out .35s both; }
+@keyframes splash-in { from { opacity: 0; transform: translateY(22px) scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes splash-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes splash-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-height: 460px) { #loading-art { max-height: 34vh; } #loading { gap: 8px; } #loading-title { font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) { #loading-art, #loading-title, #loading-bar, #loading-text { animation: none; } }
 #loading-title { font-size: 40px; text-shadow: 3px 3px 0 #3b1f10; letter-spacing: 6px; }
 #loading-bar { width: 320px; height: 22px; border: 4px solid var(--wood); background: #2a1a0e; box-shadow: 0 0 0 3px var(--wood-d); padding: 2px; }
 #loading-fill { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #8fd05a 0 8px, #6cb040 8px 16px); }

@@ -36,5 +36,6 @@ export const CREDITS: readonly Credit[] = [
 export const THANKS = [
   '感谢所有来玩、提意见、留言反馈的同学和朋友。',
   '感谢维生酥鱼老师开源。',
+  '感谢维生酥鱼老师为开屏页面动画图案所做的贡献。',
   '地图依据公开的卫星影像与 OpenStreetMap 量测复原；本项目是个人学习作品，与河北工程大学没有隶属或官方关系，校名、地名仅用于描述真实地点。',
 ] as const;
