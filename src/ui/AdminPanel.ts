@@ -8,6 +8,8 @@ import type { NetClient } from '@/net/client';
 import { ui } from './actions';
 import { drawFrame } from './sprites';
 import type Phaser from 'phaser';
+import { placeThumb } from './PlacePanel';
+import type { PlacePost } from '@/shared/place';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
   const e = document.createElement(tag);
@@ -17,7 +19,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 };
 const COATS = ['橘猫', '黑猫', '白猫', '三花', '奶牛猫', '灰猫'];
 const ago = (ts: number) => { const s = (Date.now() - ts) / 1000; return s < 90 ? '刚刚' : s < 3600 ? `${Math.floor(s / 60)} 分钟前` : s < 86400 ? `${Math.floor(s / 3600)} 小时前` : `${Math.floor(s / 86400)} 天前`; };
-type Tab = 'players' | 'worlds' | 'reports' | 'cats' | 'filter' | 'logs' | 'dm' | 'audit' | 'tools';
+type Tab = 'players' | 'worlds' | 'reports' | 'places' | 'cats' | 'filter' | 'logs' | 'dm' | 'audit' | 'tools';
 const WORLD_ICON = { public: '🌍', solo: '🏠', group: '👥' } as const;
 const WORLD_NAME = { public: '公共世界', solo: '个人世界', group: '好友世界' } as const;
 /** 公屏记录里的世界标记：w 是世界编号（solo:校园号 / group:校园号） */
@@ -46,6 +48,9 @@ export class AdminPanel {
   // 举报 / 世界 / 公屏记录的世界筛选
   private reports: ReportEntry[] = []; private repMore = false; private repOpen = 0; private repOnlyOpen = true; private repPaging = false;
   private worlds: AdminWorld[] = []; private worldMine = '';
+  // 地点留言总览：筛选（全部 / 待审核 / 带图 + 某个地点）、当前列表、统计、有留言的地点
+  private plTab: 'all' | 'pending' | 'img' = 'all'; private plKey = ''; private plItems: PlacePost[] = []; private plMore = false; private plPaging = false;
+  private plStat = { pending: 0, total: 0, images: 0 }; private plPlaces: { key: string; name: string; n: number }[] = [];
   private logWorld = '';
   /** 公屏记录的频道筛选（'' = 全部） */
   private logCh: '' | 'world' | 'near' | 'party' = '';
@@ -58,7 +63,7 @@ export class AdminPanel {
   private timer = 0;
 
   /** hooks.openMap：关掉控制台并打开大地图（管理员在大地图上点哪里就传送到哪里） */
-  constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private hooks: { openMap(): void; showCard(uid: number): void }) {
+  constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private hooks: { openMap(): void; showCard(uid: number): void; /** 管理员总览里点「看评论」：在留言板面板里打开这条留言 */ openPlaceThread(id: number): void; /** 留言板面板 / 大图开着（Esc 先关它们） */ placeOpen(): boolean }) {
     this.menu = new AdminUserMenu(net, { showCard: (u) => hooks.showCard(u), openLogs: (u) => this.openLogs(u), openDm: (u) => this.openDm(u), openDossier: (u) => this.openDossier(u) });
     this.dossier = new AdminDossier(net, { back: () => { this.dossier.clearCode(); this.dosUid = 0; this.render(); this.fetch(); }, open: (u) => this.openDossier(u), openLogs: (u) => this.openLogs(u), openDm: (u) => this.openDm(u), showCard: (u) => hooks.showCard(u), openReports: () => { this.dosUid = 0; this.tab = 'reports'; this.fetchReports(); this.render(); } });
     const panel = el('div', 'box adm');
@@ -68,7 +73,7 @@ export class AdminPanel {
     panel.append(head, this.tabs, this.msg, this.body);
     this.root.append(panel);
     this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen && !this.hooks.placeOpen()) this.close(); });
     (document.getElementById('hud') ?? document.body).append(this.root);
     ui.add({ id: 'admin', label: '管理', key: 'K', visible: () => this.net.isAdmin, run: () => this.toggle() });
     net.onAdmin((ok) => { ui.refresh(); if (!ok) this.close(); });
@@ -85,6 +90,14 @@ export class AdminPanel {
       this.dmPaging = false; if (this.tab === 'dm' && this.isOpen) this.render();
     };
     h.admInfo = (i) => this.menu.setInfo(i);
+    h.placeAdminList = (m) => {
+      if (m.tab !== this.plTab || (m.key ?? '') !== this.plKey) return; // 旧请求的回包（切了筛选）：丢掉
+      this.plItems = m.append ? [...this.plItems, ...m.items.filter((x) => !this.plItems.some((y) => y.id === x.id))] : m.items; this.plMore = m.more; this.plPaging = false;
+      this.plStat = { pending: m.pending, total: m.total, images: m.images }; this.plPlaces = m.places; ui.badge('admin', m.pending);
+      if (this.tab === 'places' && this.isOpen) this.render();
+    };
+    h.placePending = (n) => { this.plStat.pending = n; ui.badge('admin', n); if (this.isOpen && !this.editing()) { if (this.tab === 'places') this.fetchPlaces(); else this.render(); } };
+    { const prev = h.placeResult; h.placeResult = (ok, text) => { prev?.(ok, text); if (this.isOpen && this.tab === 'places') { this.msg.textContent = text; this.msg.classList.toggle('bad', !ok); this.fetchPlaces(); } }; }
     h.admReports = (m) => { this.reports = m.append ? [...this.reports, ...m.items] : m.items; this.repMore = m.more; this.repOpen = m.open; this.repPaging = false; if (this.isOpen && !this.editing()) this.render(); };
     h.repN = (n) => { const changed = n !== this.repOpen; this.repOpen = n; if (this.isOpen && !this.editing() && (changed || this.tab === 'reports')) { if (this.tab === 'reports') this.fetchReports(); else this.render(); } };
     h.admWorlds = (items, mine) => { this.worlds = items; this.worldMine = mine; if (this.tab === 'worlds' && this.isOpen && !this.editing()) this.render(); };
@@ -114,20 +127,21 @@ export class AdminPanel {
   close() { this.root.classList.add('hidden'); window.clearInterval(this.timer); this.dossier.clearCode(); }
   toggle() { this.isOpen ? this.close() : this.open(); }
   private fetch() { this.net.adm({ op: 'players', offline: this.withOffline }); this.net.adm({ op: 'cats' }); if (this.tab === 'filter') this.net.adm({ op: 'filter_get' }); if (this.tab === 'worlds') this.net.adm({ op: 'worlds' }); if (this.tab === 'reports') this.fetchReports(); }
+  private fetchPlaces(before?: number) { this.plPaging = before !== undefined; this.net.placeAdmin(this.plTab, this.plKey || undefined, before); }
   private fetchReports(before?: number) { this.repPaging = before !== undefined; this.net.adm({ op: 'reports', open: this.repOnlyOpen, ...(before ? { before } : {}) }); }
   /** 正在输入框里打字时不要重绘（会把没写完的字清掉） */
   private editing() { const a = document.activeElement; return !!a && a.tagName === 'INPUT' && this.root.contains(a); }
 
   private render() {
     this.tabs.replaceChildren(); this.body.replaceChildren();
-    const defs: [Tab, string][] = [['players', `玩家 ${this.online}`], ['worlds', '世界'], ['reports', `举报${this.repOpen ? ` (${this.repOpen})` : ''}`], ['cats', `小猫 ${this.cats.length}`], ['filter', '敏感词'], ['logs', '公屏记录'], ['dm', '私聊记录'], ['audit', '操作记录'], ['tools', '广播与设置']];
+    const defs: [Tab, string][] = [['players', `玩家 ${this.online}`], ['worlds', '世界'], ['reports', `举报${this.repOpen ? ` (${this.repOpen})` : ''}`], ['places', `📍 地点留言${this.plStat.pending ? ` (${this.plStat.pending})` : ''}`], ['cats', `小猫 ${this.cats.length}`], ['filter', '敏感词'], ['logs', '公屏记录'], ['dm', '私聊记录'], ['audit', '操作记录'], ['tools', '广播与设置']];
     const need: Partial<Record<Tab, Parameters<NetClient['can']>[0]>> = { filter: 'filter_get', dm: 'log_dm', tools: 'say' }; // 这几页的操作只有站长能做：协管员看不到入口
     if (this.tab !== 'players' && need[this.tab] && !this.net.can(need[this.tab]!)) this.tab = 'players';
     for (const [t, label] of defs.filter(([t]) => !need[t] || this.net.can(need[t]!))) {
-      const b = el('button', 'seg' + (t === this.tab ? ' on' : ''), label); b.type = 'button'; b.addEventListener('click', () => { this.tab = t; this.msg.textContent = ''; if (t === 'filter') this.net.adm({ op: 'filter_get' }); if (t === 'worlds') this.net.adm({ op: 'worlds' }); if (t === 'reports') this.fetchReports(); if (t === 'logs') this.queryLogs(); if (t === 'audit') { this.auditPaging = false; this.net.adm({ op: 'audit' }); this.net.adm({ op: 'bans' }); } this.render(); }); this.tabs.append(b);
+      const b = el('button', 'seg' + (t === this.tab ? ' on' : ''), label); b.type = 'button'; b.addEventListener('click', () => { this.tab = t; this.msg.textContent = ''; if (t === 'filter') this.net.adm({ op: 'filter_get' }); if (t === 'worlds') this.net.adm({ op: 'worlds' }); if (t === 'reports') this.fetchReports(); if (t === 'places') this.fetchPlaces(); if (t === 'logs') this.queryLogs(); if (t === 'audit') { this.auditPaging = false; this.net.adm({ op: 'audit' }); this.net.adm({ op: 'bans' }); } this.render(); }); this.tabs.append(b);
     }
     this.tabs.classList.toggle('hidden', this.tab === 'players' && this.dosUid > 0); // 看某位玩家的档案时收起上面一排页签（档案里有「返回列表」），给档案多留点高度
-    if (this.tab === 'players') this.renderPlayers(); else if (this.tab === 'worlds') this.renderWorlds(); else if (this.tab === 'reports') this.renderReports(); else if (this.tab === 'cats') this.renderCats(); else if (this.tab === 'filter') this.renderFilter(); else if (this.tab === 'logs') this.renderLogs(); else if (this.tab === 'dm') this.renderDm(); else if (this.tab === 'audit') this.renderAudit(); else this.renderTools();
+    if (this.tab === 'players') this.renderPlayers(); else if (this.tab === 'worlds') this.renderWorlds(); else if (this.tab === 'reports') this.renderReports(); else if (this.tab === 'places') this.renderPlaces(); else if (this.tab === 'cats') this.renderCats(); else if (this.tab === 'filter') this.renderFilter(); else if (this.tab === 'logs') this.renderLogs(); else if (this.tab === 'dm') this.renderDm(); else if (this.tab === 'audit') this.renderAudit(); else this.renderTools();
   }
 
   private btn(label: string, fn: () => void, primary = false) { const b = el('button', 'btn' + (primary ? ' primary' : ''), label); b.type = 'button'; b.addEventListener('click', fn); return b; }
@@ -216,6 +230,60 @@ export class AdminPanel {
     for (const r of this.reports) b.append(this.reportCard(r));
     if (this.repMore) b.append(this.btn('加载更早的', () => this.fetchReports(this.reports[this.reports.length - 1]?.id)));
   }
+  /**
+   * 地点留言总览：所有地点的留言（新的在前）一页看完。筛选：全部 / 待审核 / 带图 + 某个地点；缩略图点开看大图；
+   * 通过 / 驳回（带图留言默认先审后发）、删除、删此人全部、看评论。内容都只用 textContent 显示。
+   */
+  private renderPlaces() {
+    const b = this.body, st = this.plStat;
+    const top = el('div', 'adm-top');
+    top.append(el('span', undefined, `待审核 ${st.pending} · 全部 ${st.total} 条 · 图片 ${st.images} 张`), this.btn('刷新', () => this.fetchPlaces()));
+    b.append(top);
+    const bar = el('div', 'adm-actions place-adm-filter');
+    for (const [t, label] of [['all', '全部'], ['pending', `待审核${st.pending ? ` (${st.pending})` : ''}`], ['img', '带图']] as const) {
+      const x = el('button', 'seg' + (this.plTab === t ? ' on' : ''), label); x.type = 'button';
+      x.addEventListener('click', () => { if (this.plTab === t) return; this.plTab = t; this.plItems = []; this.plMore = false; this.fetchPlaces(); this.render(); });
+      bar.append(x);
+    }
+    const sel = el('select'); sel.setAttribute('aria-label', '按地点筛选');
+    const all = el('option', undefined, '所有地点'); all.value = ''; sel.append(all);
+    const known = this.plPlaces.some((p) => p.key === this.plKey);
+    if (this.plKey && !known) { const o = el('option', undefined, this.plKey.slice(2)); o.value = this.plKey; sel.append(o); }
+    for (const p of this.plPlaces) { const o = el('option', undefined, `${p.name}（${p.n}）`); o.value = p.key; sel.append(o); }
+    sel.value = this.plKey;
+    sel.addEventListener('change', () => { this.plKey = sel.value; this.plItems = []; this.plMore = false; this.fetchPlaces(); this.render(); });
+    bar.append(sel); b.append(bar);
+    if (!this.plItems.length) b.append(el('div', 'board-empty', this.plTab === 'pending' ? '没有待审核的留言 🎉' : '还没有符合条件的留言。'));
+    const list = el('div', 'place-adm-list');
+    for (const p of this.plItems) list.append(this.placeRow(p));
+    b.append(list);
+    if (this.plMore) b.append(this.btn('加载更早的', () => { if (this.plPaging) return; this.fetchPlaces(this.plItems[this.plItems.length - 1]?.id); }));
+  }
+  private placeRow(p: PlacePost): HTMLElement {
+    const row = el('div', 'place-adm-item' + (p.pending ? ' is-pending' : '') + ((p.reports ?? 0) > 0 ? ' reported' : ''));
+    const top = el('div', 'place-adm-top');
+    top.append(el('span', 'rep-tag', `📍 ${p.place ?? p.key}`));
+    if (p.pending) top.append(el('span', 'rep-tag n', '待审核'));
+    if (p.hidden) top.append(el('span', 'rep-tag n', '已折叠'));
+    if ((p.reports ?? 0) > 0) top.append(el('span', 'rep-tag n', `⚠ ${p.reports} 人举报`));
+    top.append(el('span', 'adm-uid', `#${p.id} · ${when(p.ts)}`));
+    row.append(top);
+    const who = el('div', 'adm-where'); who.append(document.createTextNode(`${p.real ?? p.name}`));
+    if (p.uid) { const t = el('span', 'chat-who clickable', `（#${p.uid}）`); t.addEventListener('click', () => this.openDossier(p.uid!)); who.append(t); }
+    if (p.real && p.real !== p.name) who.append(document.createTextNode(` · 显示名：${p.name}`));
+    row.append(who);
+    if (p.text) row.append(el('div', 'place-adm-text', p.text));
+    if (p.img) row.append(placeThumb(p.img));
+    row.append(el('div', 'adm-where', `❤ ${p.likes} · 💬 ${p.comments}`));
+    const acts = el('div', 'adm-actions');
+    if (p.pending) {
+      acts.append(this.btn('通过', () => this.net.placeReview(p.id, true), true), this.btn('驳回', () => { if (confirm('驳回并删除这条留言？')) this.net.placeReview(p.id, false); }));
+    }
+    acts.append(this.btn('看评论', () => this.hooks.openPlaceThread(p.id)), this.btn('删除', () => { if (confirm('删除这条留言（连同评论）？')) this.net.placeDel(p.id); }));
+    acts.append(this.btn('删此人全部', () => { if (confirm(`删除「${p.real ?? p.name}」在所有地点的全部留言和评论？此操作不能恢复。`)) { if (confirm('再确认一次：真的删除这个人的全部地点留言？')) this.net.placeDelBy(p.id); } }));
+    row.append(acts);
+    return row;
+  }
   private reportCard(r: ReportEntry): HTMLElement {
     const card = el('div', 'rep-item' + (r.done ? ' done' : ''));
     const top = el('div', 'rep-top');
@@ -239,6 +307,7 @@ export class AdminPanel {
     const act = (label: string, run: () => void, action: string, opts: { primary?: boolean; confirm?: string } = {}) => bar.append(this.btn(label, () => { if (opts.confirm && !confirm(opts.confirm)) return; run(); finish('done', action); }, opts.primary));
     if (r.kind === 'chat') act('撤回这条', () => this.net.adm({ op: 'recall', mid: r.ref }), '撤回消息', { primary: true });
     if (r.kind === 'board') act('删除这条留言', () => this.net.delBoard(r.ref), '删除留言', { primary: true });
+    if (r.kind === 'place') act(r.cid ? '删除这条评论' : '删除这条留言', () => this.net.placeDel(r.ref, r.cid), r.cid ? '删除评论' : '删除留言', { primary: true });
     if (r.kind === 'wall') act(r.cid ? '删除这条评论' : '删除这个帖子', () => this.net.wallDel(r.ref, r.cid), r.cid ? '删除评论' : '删除帖子', { primary: true });
     if (r.target) {
       const t = r.target, n = r.targetName;

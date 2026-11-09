@@ -10,6 +10,7 @@ import type { BathView, DormCard } from './dorm';
 import type { Placed } from './decor';
 import type { BoardItem } from './board';
 import type { WallComment, WallPost, WallSort } from './wall';
+import type { PlaceComment, PlacePost } from './place';
 import type { Notice } from './notice';
 import type { ChatHistoryItem, DmMsg, FriendInfo, PersonInfo } from './social';
 import type { Gain, Inv } from './items';
@@ -231,6 +232,19 @@ export type ClientMsg =
   | { t: 'wall_del'; id: number; c?: number }
   | { t: 'wall_report'; id: number; c?: number }
   | { t: 'wall_del_by'; by: string }
+  /** 地点留言板（规则见 shared/place.ts；非管理员要站在这个地点附近才能用）：place_up = 要一张一次性上传券（POST 图片用）；place_open = 打开某地点的留言板 / 翻页（before = 只看比这个 id 更早的；hot 排序翻页用 off + at）；place_thread = 看一条留言和它的评论 */
+  | { t: 'place_up'; key: string }
+  | { t: 'place_open'; key: string; sort?: WallSort; before?: number; off?: number; at?: number }
+  | { t: 'place_thread'; id: number }
+  | { t: 'place_post'; key: string; text: string; /** 已经上传好的图片（place_up 券 + POST 返回的 img）；文字和图片至少要有一样 */ img?: string }
+  | { t: 'place_comment'; id: number; text: string }
+  | { t: 'place_like'; id: number }
+  | { t: 'place_del'; id: number; c?: number }
+  | { t: 'place_report'; id: number; c?: number }
+  /** 管理员：所有地点的留言总览（tab = all 全部 / pending 待审核 / img 带图的；key 只看某个地点；before = 翻页）；审核（ok = 通过 / 驳回删除）；删某条留言作者的全部留言和评论（id = 那条留言） */
+  | { t: 'place_admin'; tab: 'all' | 'pending' | 'img'; key?: string; before?: number }
+  | { t: 'place_review'; id: number; ok: boolean }
+  | { t: 'place_del_by'; id: number }
   | { t: 'fish_cancel' }
   | { t: 'fishdex_get' }
   /** 校园跑：单人计时 / 先开一场候场（再邀请好友）/ 邀请好友 / 接受 / 拒绝 / 房主开始 / 退出 / 读取我的成绩 */
@@ -394,6 +408,13 @@ export type ServerMsg =
   | { t: 'wall_pending'; n: number }
   | { t: 'wall_thread'; post: WallPost; comments: WallComment[] }
   | { t: 'wall_result'; ok: boolean; msg: string }
+  /** 地点留言板：上传券（POST 到 url，网页根目录下的相对地址，body = packPlaceImg 的包；返回 JSON { ok, img?, msg? }）；一页留言；一条留言和评论；操作结果；管理员总览 */
+  | { t: 'place_up_ticket'; key: string; ticket: string; url: string }
+  | { t: 'place_posts'; key: string; name: string; items: PlacePost[]; more: boolean; append?: boolean; sort: WallSort; at: number; next?: number; /** 这个地点已发布的留言总数 */ total: number }
+  | { t: 'place_thread'; post: PlacePost; comments: PlaceComment[] }
+  | { t: 'place_result'; ok: boolean; msg: string }
+  | { t: 'place_admin_list'; tab: 'all' | 'pending' | 'img'; key?: string; items: PlacePost[]; more: boolean; append?: boolean; /** 待审核的留言数 */ pending: number; /** 全部留言数（含待审核）、图片总数 */ total: number; images: number; /** 有留言的地点（key、名字、条数），做筛选用 */ places: { key: string; name: string; n: number }[] }
+  | { t: 'place_pending'; n: number }
   | { t: 'cat_result'; id: number; kind: 'pet' | 'feed' | 'hug'; r: CatResult }
   /** 服务器当前时间（毫秒时间戳）：进来时发一次，之后每 30 秒一次；客户端据此校准游戏时钟，让全服时间一致 */
   | { t: 'time'; now: number }

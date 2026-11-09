@@ -3,6 +3,7 @@ import { DEFAULT_CHANNEL_STATES, OFFLINE_CHANNEL_STATES, type ChannelId, type Ch
 import { hueOf, type Profile } from '@/shared/profile';
 import type { BoardItem } from '@/shared/board';
 import type { WallComment, WallPost, WallSort } from '@/shared/wall';
+import type { PlaceComment, PlacePost } from '@/shared/place';
 import type { Notice } from '@/shared/notice';
 import type { ChatHistoryItem, DmMsg, FriendInfo, PersonInfo } from '@/shared/social';
 import type { Gain, Inv } from '@/shared/items';
@@ -136,6 +137,13 @@ export interface NetHandlers {
   wallPending?: (n: number) => void;
   wallThread?: (post: WallPost, comments: WallComment[]) => void;
   wallResult?: (ok: boolean, msg: string) => void;
+  /** 地点留言板：上传券 / 一页留言 / 一条留言和评论 / 操作结果 / 管理员总览 / 待审核数 */
+  placeUpTicket?: (key: string, ticket: string, url: string) => void;
+  placePosts?: (m: Extract<ServerMsg, { t: 'place_posts' }>) => void;
+  placeThread?: (post: PlacePost, comments: PlaceComment[]) => void;
+  placeResult?: (ok: boolean, msg: string) => void;
+  placeAdminList?: (m: Extract<ServerMsg, { t: 'place_admin_list' }>) => void;
+  placePending?: (n: number) => void;
   catResult?: (id: number, kind: 'pet' | 'feed' | 'hug', r: CatResult) => void;
   /** 成就：全部解锁记录（成就 id → 时间）；fresh = 这次刚解锁的 */
   ach?: (unlocked: Record<string, number>, fresh?: string[]) => void;
@@ -352,6 +360,12 @@ export class NetClient implements ChatTransport {
       case 'wall_pending': this.handlers.wallPending?.(m.n); break;
       case 'wall_thread': this.handlers.wallThread?.(m.post, m.comments); break;
       case 'wall_result': this.handlers.wallResult?.(m.ok, m.msg); break;
+      case 'place_up_ticket': this.handlers.placeUpTicket?.(m.key, m.ticket, m.url); break;
+      case 'place_posts': this.handlers.placePosts?.(m); break;
+      case 'place_thread': this.handlers.placeThread?.(m.post, m.comments); break;
+      case 'place_result': this.handlers.placeResult?.(m.ok, m.msg); break;
+      case 'place_admin_list': this.handlers.placeAdminList?.(m); break;
+      case 'place_pending': this.handlers.placePending?.(m.n); break;
       case 'cat_result': this.handlers.catResult?.(m.id, m.kind, m.r); break;
       case 'ride_result': this.handlers.rideResult?.(m.ok, m.msg); break;
       case 'ach': this.handlers.ach?.(m.unlocked, m.new); break;
@@ -428,6 +442,17 @@ export class NetClient implements ChatTransport {
   wallDel(id: number, c?: number) { this.tx({ t: 'wall_del', id, ...(c ? { c } : {}) }); }
   wallReport(id: number, c?: number) { this.tx({ t: 'wall_report', id, ...(c ? { c } : {}) }); }
   wallDelBy(by: string) { this.tx({ t: 'wall_del_by', by }); }
+  placeUp(key: string) { this.tx({ t: 'place_up', key }); }
+  placeOpen(key: string, opt: { sort?: WallSort; before?: number; off?: number; at?: number } = {}) { this.tx({ t: 'place_open', key, ...(opt.sort === 'hot' ? { sort: 'hot' as const } : {}), ...(opt.before ? { before: opt.before } : {}), ...(opt.off ? { off: opt.off } : {}), ...(opt.at ? { at: opt.at } : {}) }); }
+  placeThread(id: number) { this.tx({ t: 'place_thread', id }); }
+  placePost(key: string, text: string, img?: string) { this.tx({ t: 'place_post', key, text, ...(img ? { img } : {}) }); }
+  placeComment(id: number, text: string) { this.tx({ t: 'place_comment', id, text }); }
+  placeLike(id: number) { this.tx({ t: 'place_like', id }); }
+  placeDel(id: number, c?: number) { this.tx({ t: 'place_del', id, ...(c ? { c } : {}) }); }
+  placeReport(id: number, c?: number) { this.tx({ t: 'place_report', id, ...(c ? { c } : {}) }); }
+  placeAdmin(tab: 'all' | 'pending' | 'img', key?: string, before?: number) { this.tx({ t: 'place_admin', tab, ...(key ? { key } : {}), ...(before ? { before } : {}) }); }
+  placeReview(id: number, ok: boolean) { this.tx({ t: 'place_review', id, ok }); }
+  placeDelBy(id: number) { this.tx({ t: 'place_del_by', id }); }
   whois(uid: number) { this.tx({ t: 'whois', uid }); }
   friendReq(uid: number) { this.tx({ t: 'friend_req', uid }); }
   friendAccept(uid: number) { this.tx({ t: 'friend_accept', uid }); }

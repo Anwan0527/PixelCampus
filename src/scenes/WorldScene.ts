@@ -66,6 +66,9 @@ import { AdminPanel } from '@/ui/AdminPanel';
 import { PartyPanel } from '@/ui/PartyPanel';
 import { CodexPanel } from '@/ui/CodexPanel';
 import { HallPanel } from '@/ui/HallPanel';
+import { PlacePanel, closeLightbox, lightboxOpen } from '@/ui/PlacePanel';
+import { buildPlaces, placeAt, type PlaceDef } from '@/shared/place';
+import { placeBtnState } from '@/ui/placebtn';
 import { TradePanel } from '@/ui/TradePanel';
 import { nearestBin } from '@/shared/trash';
 import { FishFightUi } from '@/ui/FishFightUi';
@@ -121,6 +124,8 @@ export class WorldScene extends Phaser.Scene {
   private zoomIndex = DEFAULT_ZOOM_INDEX;
   private lastPlace = '';
   private nearBuilding: BuildingOut | null = null;
+  /** 地点留言板：地点表、玩家现在所在的地点、入口按钮 */
+  private placeUi!: PlacePanel; private places: PlaceDef[] = []; private curPlace: PlaceDef | null = null; private placeBtn?: HTMLButtonElement; private placeChkAt = 0; private placeKey?: Phaser.Input.Keyboard.Key;
   private npcs: Npc[] = [];
   /** 精工湖钓具摊旁的固定 NPC「钓具老板」+ 名字牌 + 头顶的「！」（有委托奖励可以领时） */
   private keeper: Npc | null = null; private keeperTag: Phaser.GameObjects.Text | null = null; private keeperMark: Phaser.GameObjects.Text | null = null;
@@ -253,11 +258,13 @@ export class WorldScene extends Phaser.Scene {
       esc: K.ESC, v: K.V, m: K.M, c: K.C, b: K.B, n: K.N, f: K.F, i: K.I, j: K.J, k: K.K, q: K.Q, t: K.T, x: K.X, p: K.P, h: K.H, g: K.G, r: K.R, y: K.Y, u: K.U, o: K.O, l: K.L, enter: K.ENTER, plus: K.PLUS, minus: K.MINUS, plus2: K.NUMPAD_ADD, minus2: K.NUMPAD_SUBTRACT,
     }) as Keys;
     // 主键盘 =/- 的 keyCode
+    this.placeKey = kb.addKey(190); // 句号键 .：打开地点留言板（字母键都被占满了）
     kb.addKey(187).on('down', () => this.changeZoom(1));
     kb.addKey(189).on('down', () => this.changeZoom(-1));
     this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => { if (!this.hud.dialogOpen) this.changeZoom(dy < 0 ? 1 : -1); });
 
     this.water = lakeMask(this.wf.waterRuns, this.wf.width, this.wf.height, this.wf.pois);
+    this.places = buildPlaces(this.wf.buildings, this.wf.pois); // 地点留言板：有名字的建筑 + 地标
     this.seats = seatSpots(this.wf.objects.filter((o) => o.k === 'bench'), this.world);
     this.bins = this.wf.objects.filter((o) => o.k === 'bin').map((o) => ({ x: o.x, y: o.y }));
     RemotePlayer.findSeat = (x, y) => { const s = nearestSeat(this.seats, x, y, 30); return s && { bx: s.bx, by: s.by }; };
@@ -295,6 +302,8 @@ export class WorldScene extends Phaser.Scene {
     this.chatUi.onFocus = () => this.input.keyboard!.resetKeys();
     this.boardUi = new BoardPanel(this.net, (uid, ctx) => this.adminUi.openUserMenu(uid, ctx));
     this.wallUi = new WallPanel(this.net);
+    this.placeUi = new PlacePanel(this.net);
+    this.setupPlaceBtn();
     this.noticeUi = new NoticePanel(this.net, (title) => { this.hud.banner('📢 新公告', title); this.net.system(`📢 新公告：${title}（点「公告」查看）`); });
     setDormDefs(() => this.cache.json.get('interiors'));
     this.socialUi = new SocialUi(this.net, this.textures, (t) => { if (!t.startsWith('💬')) this.hud.banner('👥 好友', t); this.net.system(t); sfx('notify'); });
@@ -375,7 +384,7 @@ export class WorldScene extends Phaser.Scene {
       onDone: (ids) => { for (const id of ids) { const q = questDef(id); if (q) { this.hud.banner('📋 任务完成', q.name); this.net.system(`📋 任务完成：${q.name}`); sfx('catch'); } } },
     });
     this.calUi = new CalendarPanel({ now: () => Date.now() + this.clock.offset, wear: (c) => { if (this.net.status === 'online') this.net.fzSet(c); else this.hud.banner('离线中', '连上服务器才能换节日装扮'); } });
-    this.adminUi = new AdminPanel(this.net, this.textures, { openMap: () => { if (!this.hud.mapOpen) this.hud.toggleMap(); }, showCard: (uid) => this.socialUi.showPlayer(uid) });
+    this.adminUi = new AdminPanel(this.net, this.textures, { openMap: () => { if (!this.hud.mapOpen) this.hud.toggleMap(); }, showCard: (uid) => this.socialUi.showPlayer(uid), openPlaceThread: (id) => this.placeUi.openThread(id), placeOpen: () => this.placeUi.isOpen || lightboxOpen() });
     // 管理员：大地图上点哪里就传送到哪里（服务器会再检查是不是管理员，并把落点挪到能站的地方）
     this.net.onAdmin((ok) => this.hud.setMapPicker(ok ? (tx, ty) => { this.net.adm({ op: 'tp', x: tx * TILE, y: ty * TILE }); if (this.hud.mapOpen) this.hud.toggleMap(); } : null));
     this.settingsUi = new SettingsPanel(this.net, this.chatUi, { // 声音 / 聊天频道 / 沉浸模式 / 全屏 / 小地图 / 账号与备份 / 关于 都在「设置」里
@@ -530,8 +539,9 @@ export class WorldScene extends Phaser.Scene {
    */
   private registerEsc() {
     const reg = (t: EscTarget) => escStack.register(t);
-    for (const p of [this.profileUi, this.boardUi, this.shopUi, this.wallUi, this.noticeUi, this.socialUi, this.backpackUi, this.boxUi, this.codexUi, this.backupUi, this.questUi, this.calUi, this.runUi, this.partyUi, this.adminUi, this.settingsUi, this.photo, this.hallUi, this.tpUi, this.worldUi, this.emoteUi, this.reportUi, this.dormUi]) reg(p as EscTarget);
+    for (const p of [this.profileUi, this.boardUi, this.shopUi, this.wallUi, this.placeUi, this.noticeUi, this.socialUi, this.backpackUi, this.boxUi, this.codexUi, this.backupUi, this.questUi, this.calUi, this.runUi, this.partyUi, this.adminUi, this.settingsUi, this.photo, this.hallUi, this.tpUi, this.worldUi, this.emoteUi, this.reportUi, this.dormUi]) reg(p as EscTarget);
     const hud = this.hud, adm = this.adminUi, trade = this.tradeUi, cat = this.catUi, card = this.fishCard;
+    reg({ get isOpen() { return lightboxOpen(); }, close: () => { closeLightbox(); } });                      // 留言图片的大图（灯箱）
     reg({ get isOpen() { return hud.mapOpen; }, close: () => { if (hud.mapOpen) hud.toggleMap(); } });         // 大地图
     reg({ get isOpen() { return adm.userMenuOpen; }, close: () => adm.closeUserMenu() });                    // 管理员点人弹出的小菜单
     reg({ get isOpen() { return trade.isOpen; }, close: () => trade.escape() });                             // 交易：Esc = 取消
@@ -541,7 +551,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /** 有没有面板/弹窗盖在游戏上（有的话点击不该穿透到场景） */
-  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.calUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.settingsUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
+  private anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.placeUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.calUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.settingsUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
 
   /** 点中的位置（世界坐标）有没有别的玩家：有就弹出资料卡；多个重叠时取最靠前（y 最大）的 */
   private pickPlayerAt(wx: number, wy: number) {
@@ -934,6 +944,31 @@ export class WorldScene extends Phaser.Scene {
     if (kind === 'pet') this.net.catPet(cat.id); else if (item) this.net.catFeed(cat.id, item); else this.catUi.say('背包里没有鱼了', false);
   }
 
+  // ------------------------------------------------------------ 地点留言板入口
+  /** 屏幕上的浮动按钮「📝 留言板·地点名」：站在建筑 / 地标附近才出现，不改变按 E 的原有行为 */
+  private setupPlaceBtn() {
+    const b = document.createElement('button'); b.type = 'button'; b.id = 'place-btn'; b.className = 'btn place-fab hidden';
+    b.addEventListener('click', () => this.openPlaceBoard());
+    (document.getElementById('hud') ?? document.body).append(b); this.placeBtn = b;
+    this.events.on('shutdown', () => { b.remove(); this.placeBtn = undefined; });
+    this.events.on('sleep', () => b.classList.add('hidden')); // 进室内 / 宿舍：校园场景睡觉，按钮收起来
+  }
+  private openPlaceBoard() {
+    const d = this.curPlace; if (!d) return;
+    if (this.net.status !== 'online') { this.hud.banner('📝 留言板', '连上服务器后才能留言（单机模式用不了）'); return; }
+    if (this.placeUi.isOpen || this.hud.dialogOpen) return;
+    this.hud.hint(null); this.placeUi.open({ key: d.key, name: d.name });
+  }
+  /** 每 200ms 看一眼玩家站在哪个地点，更新入口按钮 */
+  private updateBoardEntry() {
+    const b = this.placeBtn; if (!b || this.time.now < this.placeChkAt) return;
+    this.placeChkAt = this.time.now + 200;
+    this.curPlace = placeAt(this.places, this.player.x / TILE, this.player.y / TILE);
+    const st = placeBtnState({ place: this.curPlace?.name ?? null, online: this.net.status === 'online', fishing: this.fishPhase !== 'idle', riding: this.player.riding, entering: this.entering, blocked: this.anyOverlay() });
+    b.classList.toggle('hidden', !st.show);
+    if (st.show) { const t = `📝 留言板·${st.label}${document.body.classList.contains('touch') ? '' : ' [.]'}`; if (b.textContent !== t) b.textContent = t; }
+  }
+
   private enterInterior(b: BuildingOut) {
     if (this.entering || !b.interior) return;
     this.entering = true;
@@ -995,6 +1030,7 @@ export class WorldScene extends Phaser.Scene {
       if (this.codexUi.isOpen && Phaser.Input.Keyboard.JustDown(k.h)) this.codexUi.close();
       if (this.achUi.isOpen && Phaser.Input.Keyboard.JustDown(k.j)) this.achUi.close();
       if (this.hallUi.isOpen && Phaser.Input.Keyboard.JustDown(k.l)) this.hallUi.close();
+      if (this.placeUi.isOpen && this.placeKey && Phaser.Input.Keyboard.JustDown(this.placeKey)) this.placeUi.close();
       if (this.questUi.isOpen && Phaser.Input.Keyboard.JustDown(k.q)) this.questUi.close();
       if (this.partyUi.isOpen && Phaser.Input.Keyboard.JustDown(k.t)) this.partyUi.close();
       if (this.monUi.isOpen && Phaser.Input.Keyboard.JustDown(k.r)) this.monUi.close();
@@ -1035,6 +1071,7 @@ export class WorldScene extends Phaser.Scene {
       if (Phaser.Input.Keyboard.JustDown(k.g)) this.codexUi.open('fish');
       if (Phaser.Input.Keyboard.JustDown(k.j)) { if (fl) this.fishBlocked(); else this.achUi.open(); }
       if (Phaser.Input.Keyboard.JustDown(k.l)) { if (fl) this.fishBlocked(); else this.hallUi.open(); }
+      if (this.placeKey && Phaser.Input.Keyboard.JustDown(this.placeKey)) { if (fl) this.fishBlocked(); else this.openPlaceBoard(); }
       if (Phaser.Input.Keyboard.JustDown(k.q)) { if (fl) this.fishBlocked(); else this.questUi.open(); }
       if (Phaser.Input.Keyboard.JustDown(k.t)) { if (fl) this.fishBlocked(); else this.partyUi.open(); }
       if (Phaser.Input.Keyboard.JustDown(k.r)) { if (fl) this.fishBlocked(); else this.monUi.open(); }
@@ -1058,6 +1095,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateAudio(dt);
     this.runUi.tick(); this.drawRunMark();
     this.updatePlace();
+    this.updateBoardEntry();
     this.hud.setPlayerOnMap(this.player.x / TILE, this.player.y / TILE);
     this.touchPress = false;
   }

@@ -5,7 +5,7 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
 export default defineConfig({
   resolve: { alias: { '@': r('./src'), '@data': r('./data') } },
-  server: { host: '127.0.0.1', port: 5173, proxy: { '/ws': { target: 'ws://127.0.0.1:8787', ws: true } } }, // 联机：把 /ws 转给 npm run server
+  server: { host: '127.0.0.1', port: 5173, proxy: { '/ws': { target: 'ws://127.0.0.1:8787', ws: true }, '/up': { target: 'http://127.0.0.1:8787', changeOrigin: false }, '/img': { target: 'http://127.0.0.1:8787', changeOrigin: false } } }, // 联机：把 /ws 转给 npm run server；地点留言板的图片上传（/up）和读取（/img）也转过去，和线上一样同源
   build: {
     target: 'es2022', chunkSizeWarningLimit: 2000,
     // Phaser 单独打成一个文件（约 1.2 MB 原始 / 330 KB 压缩）：它几乎不变，文件名里的哈希也就不变，
