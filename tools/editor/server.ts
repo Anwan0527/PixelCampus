@@ -31,8 +31,15 @@ function rebuild(script = 'tools/world/compile.ts') { // 默认重新生成整�
   job.proc = p;
   const add = (d: Buffer) => { job.log = (job.log + d.toString()).slice(-4000); };
   p.stdout.on('data', add); p.stderr.on('data', add);
-  p.on('close', (code) => { job.running = false; job.ok = code === 0; });
   p.on('error', (e) => { job.running = false; job.ok = false; job.log += String(e); });
+  p.on('close', (code) => {
+    if (code !== 0) { job.running = false; job.ok = false; return; }
+    // 游戏和编辑器加载的是 WebP：生成完 PNG 要接着转一遍，否则图集还是旧的、新建筑会显示成一块块乱拼的碎片（2026-11-09 主人新建四栋楼时遇到）
+    const w = spawn('npx', ['tsx', 'tools/assets/webp.ts'], { cwd: ROOT, env: { ...process.env } });
+    w.stdout.on('data', add); w.stderr.on('data', add);
+    w.on('close', (c2) => { job.running = false; job.ok = c2 === 0; });
+    w.on('error', (e) => { job.running = false; job.ok = false; job.log += String(e); });
+  });
 }
 
 async function bundle(entry = 'main') {
