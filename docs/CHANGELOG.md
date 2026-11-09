@@ -5,7 +5,7 @@
 
 ---
 
-## 2026.11.15（盲盒合成 + 宿舍一键还原 + 地点留言板；未部署）更新内容
+## 2026.11.15（盲盒合成 + 宿舍一键还原 + 地点留言板；2026-11-09 16:39 已部署）更新内容
 **新增：盲盒合成**
 - 合成页（校园商店 / 钓具摊）多两条配方：**3 个漂流瓶 → 1 个旧木箱**（钓鱼 3 级）、**3 个旧木箱 → 1 个沉船箱**（钓鱼 6 级），不花币；合出来的是没开的盒子，背包里点「打开」才揭晓。规则在 `shared/craft.ts` / `shared/fishlevel.ts`（`RECIPE_LEVEL`）；`tests/craft-boxes.test.ts`。
 **新增：宿舍一键还原 / 撤回**
@@ -20,7 +20,7 @@
 - 管理员总览：管理面板新增「📍 地点留言」页——所有地点的留言按时间倒序，筛选 全部 / 待审核 / 带图 + 地点下拉，缩略图点开看大图，通过 / 驳回 / 删除 / 删此人全部留言 / 看评论；`place_pending` 推送待审核数。
 - 数据：服务器数据目录新增 `place.jsonl`（追加日志，启动重放）和 `place-img/`（图片；删除的移到 `place-img/deleted/` 留证；上传未发布的 1 小时后清理）——**备份时要一起备份**。压力评估见私有方案 `docs/private/plans/PLACE_BOARD_PLAN.md`（结论：增量带宽 < 1%，服务器不转码、不把图片读进内存）。
 - 协议：`place_up / place_open / place_thread / place_post / place_comment / place_like / place_del / place_report / place_admin / place_review / place_del_by` 与 `place_up_ticket / place_posts / place_thread / place_result / place_admin_list / place_pending`；规则在 `shared/place.ts`；举报类别增加 `place`。
-- **部署注意**：nginx 的 `/pixel/` 现有 `client_max_body_size 16k`，要给 `/pixel/up/` 单独放宽到 160k（新增 `location ^~ /pixel/up/`，只改我们自己的 `snippets/pixelcampus.conf`，先备份、`nginx -t`、再 reload）；服务端同步改了（`server/place.ts`、`index.ts`、`game.ts`）。
+- **部署记录**：nginx 已给 `/pixel/up/` 单独放宽到 160k（新增 `location ^~ /pixel/up/`，只改我们自己的 `snippets/pixelcampus.conf`，已备份 `/root/pixelcampus.snippet.bak-202611091637`，`nginx -t` 通过后 reload；其余 `/pixel/` 仍是 16k）；部署前备份了 `players.json(.log).bak-202611091637`；线上 100KB POST 能穿过 nginx 到达游戏进程。服务端同步改了（`server/place.ts`、`index.ts`、`game.ts`）。
 - 微调（同日）：留言文字上限 800 字；每条留言最多 9 张图（`place_post` 的 `img` 改为 `imgs` 数组，一张一张上传、全部传完才发布，灯箱可翻页，选图支持一次多选）；每人每天 20 条留言 / 30 张图；全服每天 1000 条 / 1500 张图；图片存储上限 7GB（原 2GB 再增加 5GB）；作者不管审核有没有通过都能自己删（带图的审核中留言也能删，图片移入 `deleted/`）。
 **测试稳定性**
 - `server.test.ts` 喂水禽用例：背包饵数改以服务器当前值为准（登录礼物到账时机偶发导致失败）。
