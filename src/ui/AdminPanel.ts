@@ -8,7 +8,7 @@ import type { NetClient } from '@/net/client';
 import { ui } from './actions';
 import { drawFrame } from './sprites';
 import type Phaser from 'phaser';
-import { placeThumb } from './PlacePanel';
+import { placeThumbs } from './PlacePanel';
 import type { PlacePost } from '@/shared/place';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -273,7 +273,7 @@ export class AdminPanel {
     if (p.real && p.real !== p.name) who.append(document.createTextNode(` · 显示名：${p.name}`));
     row.append(who);
     if (p.text) row.append(el('div', 'place-adm-text', p.text));
-    if (p.img) row.append(placeThumb(p.img));
+    if (p.imgs?.length) row.append(placeThumbs(p.imgs));
     row.append(el('div', 'adm-where', `❤ ${p.likes} · 💬 ${p.comments}`));
     const acts = el('div', 'adm-actions');
     if (p.pending) {

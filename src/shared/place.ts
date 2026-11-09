@@ -13,15 +13,16 @@ import { cleanText } from './profile';
 import { wallHotScore } from './wall';
 
 // ------------------------------------------------------------ 限制
-export const PLACE_TEXT_MAX = 120;            // 一条留言最多字数
+export const PLACE_TEXT_MAX = 800;            // 一条留言最多字数
+export const PLACE_IMG_PER_POST = 9;          // 一条留言最多几张图
 export const PLACE_COMMENT_MAX = 80;          // 一条评论最多字数
 export const PLACE_POST_COOLDOWN_MS = 20_000; // 同一个人两条留言的最短间隔
-export const PLACE_POST_DAILY = 12;           // 同一个人 24 小时内最多几条留言
-export const PLACE_IMG_DAILY = 3;             // 同一个人 24 小时内最多传几张图
+export const PLACE_POST_DAILY = 20;           // 同一个人 24 小时内最多几条留言
+export const PLACE_IMG_DAILY = 30;            // 同一个人 24 小时内最多传几张图
 export const PLACE_COMMENT_COOLDOWN_MS = 5_000;
 export const PLACE_COMMENT_DAILY = 80;
-export const PLACE_DAY_CAP = 600;             // 全服每天最多收多少条留言（防刷）
-export const PLACE_IMG_DAY_CAP = 300;         // 全服每天最多收多少张图
+export const PLACE_DAY_CAP = 1000;            // 全服每天最多收多少条留言（防刷）
+export const PLACE_IMG_DAY_CAP = 1500;        // 全服每天最多收多少张图
 export const PLACE_PAGE = 10;                 // 一页留言数（每条可能带一张缩略图，所以页不大）
 export const PLACE_THREAD_MAX = 100;          // 一条留言下最多显示的评论数
 export const PLACE_REPORT_HIDE = 3;           // 被这么多人举报，普通玩家就看不到了（等管理员处理）
@@ -39,7 +40,7 @@ export const PLACE_IMG = {
   /** 上传券有效期（毫秒）、同时在传的最多几张 */
   TICKET_MS: 60_000, CONCURRENT: 3,
   /** 图片存储总上限（字节）：超过就不再收新图，等管理员清理 */
-  TOTAL_MAX: 2 * 1024 * 1024 * 1024,
+  TOTAL_MAX: 7 * 1024 * 1024 * 1024,
 } as const;
 
 // ------------------------------------------------------------ 地点
@@ -93,7 +94,7 @@ export const placeHot = wallHotScore;
 /** 一条留言（发给玩家的样子）。admin 字段只发给管理员 */
 export interface PlacePost {
   id: number; /** 地点 key */ key: string; name: string; hue: number; text: string; ts: number;
-  /** 图片：`<24 位十六进制>.<webp|jpg>`；缩略图地址见 placeThumbName */ img?: string;
+  /** 图片（最多 PLACE_IMG_PER_POST 张）：每张 `<24 位十六进制>.<webp|jpg>`；缩略图地址见 placeThumbName */ imgs?: string[];
   likes: number; liked: boolean; comments: number; mine: boolean;
   /** 带图、还在等管理员审核：只有作者本人和管理员看得到 */ pending?: boolean;
   /** 被举报多次、暂时折叠（管理员和作者本人才看得到内容） */ hidden?: boolean;

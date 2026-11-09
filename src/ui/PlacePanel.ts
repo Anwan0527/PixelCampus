@@ -1,4 +1,4 @@
-import { PLACE_COMMENT_MAX, PLACE_TEXT_MAX, type PlaceComment, type PlacePost } from '@/shared/place';
+import { PLACE_COMMENT_MAX, PLACE_IMG_PER_POST, PLACE_TEXT_MAX, type PlaceComment, type PlacePost } from '@/shared/place';
 import { wallRelTime, type WallSort } from '@/shared/wall';
 import type { NetClient } from '@/net/client';
 import type { ServerMsg } from '@/shared/protocol';
@@ -19,30 +19,49 @@ let lightEl: HTMLElement | null = null;
 /** 灯箱：点大图（或空白处）关闭；返回 true 表示这次关掉了一个灯箱（给 Esc 判断用） */
 export function closeLightbox(): boolean { if (!lightEl) return false; lightEl.remove(); lightEl = null; return true; }
 export const lightboxOpen = () => !!lightEl;
-/** 看大图（留言板和管理员总览共用）。图片地址由调用方给（placeImgSrc） */
-export function showLightbox(src: string) {
+/** 看大图（留言板和管理员总览共用）。imgs = 这条留言的全部图片名，i = 先看哪一张；多张时有 ◀ ▶（和键盘左右键也可以翻） */
+export function showLightbox(imgs: string[], i = 0) {
   closeLightbox();
-  const box = el('div', 'place-lightbox'), img = el('img', 'place-lightbox-img'); img.src = src; img.alt = '留言图片';
+  const box = el('div', 'place-lightbox'); let cur = Math.max(0, Math.min(imgs.length - 1, i));
+  const show = () => {
+    const img = el('img', 'place-lightbox-img'); img.src = placeImgSrc(imgs[cur]); img.alt = '留言图片';
+    img.addEventListener('error', () => { img.replaceWith(el('div', 'place-lightbox-err', '图片加载失败（可能已被删除）')); });
+    box.querySelector('.place-lightbox-img, .place-lightbox-err')?.remove(); box.prepend(img);
+    if (n) n.textContent = `${cur + 1} / ${imgs.length}`;
+  };
   const x = el('button', 'btn place-lightbox-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', '关闭大图');
-  box.append(img, x); box.addEventListener('click', () => closeLightbox());
-  img.addEventListener('error', () => { img.replaceWith(el('div', 'place-lightbox-err', '图片加载失败（可能已被删除）')); });
+  let n: HTMLElement | null = null;
+  box.append(x); box.addEventListener('click', () => closeLightbox());
+  if (imgs.length > 1) {
+    n = el('div', 'place-lightbox-n');
+    for (const [label, d, cls] of [['◀', -1, 'place-lightbox-prev'], ['▶', 1, 'place-lightbox-next']] as const) {
+      const b = el('button', `btn ${cls}`, label); b.type = 'button'; b.setAttribute('aria-label', d < 0 ? '上一张' : '下一张');
+      b.addEventListener('click', (e) => { e.stopPropagation(); cur = (cur + d + imgs.length) % imgs.length; show(); }); box.append(b);
+    }
+    box.append(n);
+  }
+  show();
   (document.getElementById('hud') ?? document.body).append(box); lightEl = box;
 }
 
-/** 缩略图（点开看大图）。加载失败显示占位；懒加载：滚到才下载 */
-export function placeThumb(img: string): HTMLElement {
-  const b = el('button', 'place-thumb'); b.type = 'button'; b.setAttribute('aria-label', '看大图');
-  const i = el('img'); i.loading = 'lazy'; i.decoding = 'async'; i.alt = '留言图片'; i.src = placeThumbSrc(img);
-  i.addEventListener('error', () => { b.replaceChildren(el('span', 'place-thumb-err', '图片加载失败')); b.disabled = true; });
-  b.append(i); b.addEventListener('click', (e) => { e.stopPropagation(); showLightbox(placeImgSrc(img)); });
-  return b;
+/** 缩略图们（点哪张就从哪张开始看大图）。加载失败显示占位；懒加载：滚到才下载；最多 9 张排成网格 */
+export function placeThumbs(imgs: string[]): HTMLElement {
+  const g = el('div', 'place-thumbs' + (imgs.length > 1 ? ' multi' : ''));
+  imgs.forEach((img, k) => {
+    const b = el('button', 'place-thumb'); b.type = 'button'; b.setAttribute('aria-label', `看大图 ${k + 1}/${imgs.length}`);
+    const i = el('img'); i.loading = 'lazy'; i.decoding = 'async'; i.alt = '留言图片'; i.src = placeThumbSrc(img);
+    i.addEventListener('error', () => { b.replaceChildren(el('span', 'place-thumb-err', '图片加载失败')); b.disabled = true; });
+    b.append(i); b.addEventListener('click', (e) => { e.stopPropagation(); showLightbox(imgs, k); });
+    g.append(b);
+  });
+  return g;
 }
 
 type Awaiting = '' | 'post' | 'comment' | 'del' | 'delc' | 'review';
 
 /**
  * 地点留言板：站在建筑 / 地标附近，点屏幕上的「📝 留言板」按钮（或按句号键 .）打开。
- * 一个地点一块板：留言带文字和至多一张图，可以点赞、评论、举报；最新 / 最热排序；带图的留言要管理员审核后别人才看得到（自己看得到「审核中」）。
+ * 一个地点一块板：留言带文字（≤800 字）和至多 9 张图，可以点赞、评论、举报；最新 / 最热排序；带图的留言要管理员审核后别人才看得到（自己看得到「审核中」）。
  * 管理员（也能从管理面板的「地点留言」页进来看某条留言，不受位置限制）可以通过 / 驳回、删除。
  * 玩家写的字一律 textContent；图片地址只由图片名（24 位十六进制 + 扩展名）拼出来。真正的限制（频率、位置、格式）都在服务器。
  */
@@ -65,7 +84,7 @@ export class PlacePanel {
   private items: PlacePost[] = []; private total = 0; private hasMore = false; private sort: WallSort = loadSort(); private nextOff = 0; private rankAt = 0;
   private open_: { post: PlacePost; comments: PlaceComment[] } | null = null;
   private view: 'list' | 'thread' | null = null; private listTop = 0;
-  private picked: (Packed & { url: string }) | null = null; private busy = false; private awaiting: Awaiting = ''; private threadOnly = false;
+  private picks: (Packed & { url: string })[] = []; private uploaded: string[] = []; private upI = 0; private busy = false; private awaiting: Awaiting = ''; private threadOnly = false;
   private upTimer = 0;
 
   constructor(private net: NetClient) {
@@ -79,14 +98,14 @@ export class PlacePanel {
     this.area.rows = 3; this.area.maxLength = PLACE_TEXT_MAX + 20; this.area.placeholder = '在这里留句话吧：打卡、感想、提醒后来的同学……请友善。'; this.area.spellcheck = false;
     this.area.addEventListener('input', () => this.renderCount());
     this.area.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); this.submit(); } else if (e.key === 'Escape') { this.area.blur(); this.collapse(); } });
-    this.file.type = 'file'; this.file.accept = 'image/*'; this.file.className = 'hidden';
-    this.file.addEventListener('change', () => { const f = this.file.files?.[0]; this.file.value = ''; if (f) void this.pick(f); });
+    this.file.type = 'file'; this.file.accept = 'image/*'; this.file.multiple = true; this.file.className = 'hidden';
+    this.file.addEventListener('change', () => { const fs = Array.from(this.file.files ?? []); this.file.value = ''; if (fs.length) void this.pickMany(fs); });
     this.pickBtn.type = 'button'; this.pickBtn.addEventListener('click', () => this.file.click());
     this.send.type = 'button'; this.send.addEventListener('click', () => this.submit());
     const fold = el('button', 'btn', '收起'); fold.type = 'button'; fold.addEventListener('click', () => this.collapse());
     const foot = el('div', 'place-compose-foot'), l = el('div', 'place-foot-l'), r = el('div', 'place-foot-r');
     l.append(this.pickBtn, this.count); r.append(fold, this.send); foot.append(l, r);
-    this.composer.append(el('div', 'place-compose-tip', '带图片的留言要管理员审核后别人才看得到；文字留言直接发布。图片会在你的手机 / 电脑上先压缩。'), this.area, this.prev, this.file, foot);
+    this.composer.append(el('div', 'place-compose-tip', `最多 ${PLACE_IMG_PER_POST} 张图。带图片的留言要管理员审核后别人才看得到；文字留言直接发布。图片会在你的手机 / 电脑上先压缩。`), this.area, this.prev, this.file, foot);
     this.composeBtn.type = 'button'; this.composeBtn.addEventListener('click', () => this.expand());
     this.more.type = 'button'; this.more.addEventListener('click', () => this.fetchMore());
 
@@ -173,43 +192,64 @@ export class PlacePanel {
   private back() { if (this.threadOnly) { this.close(); return; } this.open_ = null; this.renderFeed(); this.fetch(); }
   private setMsg(t: string, ok: boolean) { this.msg.textContent = t; this.msg.classList.toggle('bad', !ok); }
   private renderCount() { this.count.textContent = `${Array.from(this.area.value).length}/${PLACE_TEXT_MAX}`; }
-  private setBusy(b: boolean) { this.busy = b; this.send.disabled = b || !this.online(); this.pickBtn.disabled = b; if (!b) this.send.textContent = '发布'; }
+  private setBusy(b: boolean) { this.busy = b; this.send.disabled = b || !this.online(); this.pickBtn.disabled = b || this.picks.length >= PLACE_IMG_PER_POST; if (!b) this.send.textContent = '发布'; this.renderPicks(); }
 
   // ------------------------------------------------------------ 选图、上传、发布
-  private clearPick() { if (this.picked) URL.revokeObjectURL(this.picked.url); this.picked = null; this.prev.replaceChildren(); this.prev.classList.add('hidden'); this.pickBtn.textContent = '🖼 添加图片'; }
-  private async pick(f: File) {
-    this.setMsg('正在处理图片…', true); this.pickBtn.disabled = true;
-    const r = await compressImage(f);
-    this.pickBtn.disabled = this.busy;
-    if (typeof r === 'string') { this.setMsg(r, false); return; }
-    this.clearPick();
-    const url = URL.createObjectURL(r.thumb); this.picked = { ...r, url };
-    const im = el('img', 'place-prev-img'); im.src = url; im.alt = '已选图片';
-    const kb = Math.max(1, Math.round(r.body.length / 1024)), rm = el('button', 'btn', '✕ 移除'); rm.type = 'button'; rm.addEventListener('click', () => { this.clearPick(); this.setMsg('', true); });
-    this.prev.replaceChildren(im, el('span', 'place-prev-note', `已压缩，约 ${kb}KB`), rm); this.prev.classList.remove('hidden'); this.pickBtn.textContent = '🖼 换一张';
-    this.setMsg('图片准备好了，写点文字（也可以不写）点「发布」。', true);
+  private clearPick() { for (const p of this.picks) URL.revokeObjectURL(p.url); this.picks = []; this.uploaded = []; this.upI = 0; this.renderPicks(); }
+  private renderPicks() {
+    this.prev.replaceChildren();
+    this.picks.forEach((p, k) => {
+      const cell = el('div', 'place-prev-cell'), im = el('img', 'place-prev-img'); im.src = p.url; im.alt = `已选图片 ${k + 1}`;
+      const rm = el('button', 'place-prev-x', '✕'); rm.type = 'button'; rm.setAttribute('aria-label', '移除这张'); rm.disabled = this.busy;
+      rm.addEventListener('click', () => { if (this.busy) return; URL.revokeObjectURL(p.url); this.picks.splice(k, 1); this.renderPicks(); this.setMsg('', true); });
+      cell.append(im, rm); this.prev.append(cell);
+    });
+    const kb = Math.round(this.picks.reduce((a, p) => a + p.body.length, 0) / 1024);
+    if (this.picks.length) this.prev.append(el('span', 'place-prev-note', `${this.picks.length}/${PLACE_IMG_PER_POST} 张，压缩后共约 ${kb}KB`));
+    this.prev.classList.toggle('hidden', !this.picks.length);
+    this.pickBtn.textContent = this.picks.length ? `🖼 再加图（${this.picks.length}/${PLACE_IMG_PER_POST}）` : '🖼 添加图片';
+    this.pickBtn.disabled = this.busy || this.picks.length >= PLACE_IMG_PER_POST;
+  }
+  /** 一次选了几张：按顺序压缩，加到上限为止 */
+  private async pickMany(files: File[]) {
+    const room = PLACE_IMG_PER_POST - this.picks.length;
+    if (room <= 0) { this.setMsg(`一条留言最多 ${PLACE_IMG_PER_POST} 张图`, false); return; }
+    const take = files.slice(0, room); let bad = '';
+    this.pickBtn.disabled = true;
+    for (let k = 0; k < take.length; k++) {
+      this.setMsg(`正在处理图片 ${k + 1}/${take.length}…`, true);
+      const r = await compressImage(take[k]);
+      if (typeof r === 'string') { bad = r; continue; }
+      this.picks.push({ ...r, url: URL.createObjectURL(r.thumb) });
+    }
+    this.renderPicks();
+    this.setMsg(bad ? bad : files.length > room ? `最多 ${PLACE_IMG_PER_POST} 张，多选的几张没加进来` : '图片准备好了，写点文字（也可以不写）点「发布」。', !bad && files.length <= room);
   }
   private submit() {
     if (this.busy) return;
     const text = this.area.value.trim();
-    if (!text && !this.picked) { this.setMsg('写点文字，或者加一张图片吧', false); return; }
+    if (!text && !this.picks.length) { this.setMsg('写点文字，或者加一张图片吧', false); return; }
     if (!this.online()) { this.setMsg('没连上服务器，现在不能留言', false); return; }
-    this.setBusy(true);
-    if (this.picked) {
-      this.send.textContent = '上传中…'; this.setMsg('正在上传图片…', true);
-      this.net.placeUp(this.key);
-      window.clearTimeout(this.upTimer); this.upTimer = window.setTimeout(() => { if (this.busy && this.awaiting !== 'post') { this.setBusy(false); this.setMsg('没有拿到上传许可，再试一次', false); } }, 8000);
-    } else { this.awaiting = 'post'; this.net.placePost(this.key, text); this.guard(); }
+    this.setBusy(true); this.uploaded = []; this.upI = 0;
+    if (this.picks.length) this.nextUpload(); else { this.awaiting = 'post'; this.net.placePost(this.key, text); this.guard(); }
+  }
+  /** 一张一张传：先要这一张的上传券（每人同时只有一张有效），传好再要下一张；全部传完才发布 */
+  private nextUpload() {
+    this.send.textContent = `上传中 ${this.upI + 1}/${this.picks.length}…`; this.setMsg(`正在上传图片 ${this.upI + 1}/${this.picks.length}…`, true);
+    this.net.placeUp(this.key);
+    window.clearTimeout(this.upTimer); this.upTimer = window.setTimeout(() => { if (this.busy && this.awaiting !== 'post') { this.setBusy(false); this.setMsg('没有拿到上传许可，再试一次（已经传好的图片不会重复传）', false); } }, 8000);
   }
   private async doUpload(ticket: string, url: string) {
-    const p = this.picked; if (!p || !this.busy) return;
+    const p = this.picks[this.upI]; if (!p || !this.busy) return;
     window.clearTimeout(this.upTimer);
     const ctl = new AbortController(), t = window.setTimeout(() => ctl.abort(), 30000);
     const r = await uploadPacked(url, p.body, ctl.signal); window.clearTimeout(t);
     if (!this.busy) return;
-    if (!r.ok) { this.setBusy(false); this.setMsg(r.msg, false); return; }
-    this.setMsg('图片上传好了，正在发布…', true); this.awaiting = 'post';
-    this.net.placePost(this.key, this.area.value.trim(), r.img); this.guard();
+    if (!r.ok) { this.setBusy(false); this.setMsg(`第 ${this.upI + 1} 张没传成功：${r.msg}`, false); return; }
+    this.uploaded.push(r.img); this.upI++;
+    if (this.upI < this.picks.length) { this.nextUpload(); return; }
+    this.setMsg('图片都上传好了，正在发布…', true); this.awaiting = 'post';
+    this.net.placePost(this.key, this.area.value.trim(), this.uploaded); this.guard();
     void ticket;
   }
   /** 发出请求后 6 秒没回话就把按钮放开（防止卡住） */
@@ -244,7 +284,7 @@ export class PlacePanel {
     c.append(top);
     const real = this.realTag(p.real, p.uid, p.by); if (real) c.append(real);
     c.append(el('div', 'place-text', p.hidden ? '（被多人举报，已折叠，等管理员处理）' : p.text));
-    if (p.img && !p.hidden) c.append(placeThumb(p.img));
+    if (p.imgs?.length && !p.hidden) c.append(placeThumbs(p.imgs));
     c.append(this.actions(p, false));
     if (p.pending && this.admin) c.append(this.reviewBar(p));
     if (!p.pending || p.mine || this.admin) c.addEventListener('click', () => this.net.placeThread(p.id));
@@ -291,7 +331,7 @@ export class PlacePanel {
     if (this.admin && p.place) card.append(el('div', 'wall-real', `📍 ${p.place}`));
     const real = this.realTag(p.real, p.uid, p.by); if (real) card.append(real);
     card.append(el('div', 'place-text full', p.hidden ? '（被多人举报，已折叠，等管理员处理）' : p.text));
-    if (p.img && !p.hidden) card.append(placeThumb(p.img));
+    if (p.imgs?.length && !p.hidden) card.append(placeThumbs(p.imgs));
     card.append(this.actions(p, true));
     if (p.pending) { card.append(el('div', 'wall-pending', this.admin ? '⏳ 带图留言，等你审核' : '⏳ 管理员通过后别人才看得到，到时才能点赞评论')); if (this.admin) card.append(this.reviewBar(p)); this.feed.append(back, card); return; }
     this.feed.append(back, card);

@@ -236,7 +236,7 @@ export type ClientMsg =
   | { t: 'place_up'; key: string }
   | { t: 'place_open'; key: string; sort?: WallSort; before?: number; off?: number; at?: number }
   | { t: 'place_thread'; id: number }
-  | { t: 'place_post'; key: string; text: string; /** 已经上传好的图片（place_up 券 + POST 返回的 img）；文字和图片至少要有一样 */ img?: string }
+  | { t: 'place_post'; key: string; text: string; /** 已经上传好的图片（每张：place_up 券 + POST 返回的 img；最多 9 张，不能重复）；文字和图片至少要有一样 */ imgs?: string[] }
   | { t: 'place_comment'; id: number; text: string }
   | { t: 'place_like'; id: number }
   | { t: 'place_del'; id: number; c?: number }

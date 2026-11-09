@@ -445,7 +445,7 @@ export class NetClient implements ChatTransport {
   placeUp(key: string) { this.tx({ t: 'place_up', key }); }
   placeOpen(key: string, opt: { sort?: WallSort; before?: number; off?: number; at?: number } = {}) { this.tx({ t: 'place_open', key, ...(opt.sort === 'hot' ? { sort: 'hot' as const } : {}), ...(opt.before ? { before: opt.before } : {}), ...(opt.off ? { off: opt.off } : {}), ...(opt.at ? { at: opt.at } : {}) }); }
   placeThread(id: number) { this.tx({ t: 'place_thread', id }); }
-  placePost(key: string, text: string, img?: string) { this.tx({ t: 'place_post', key, text, ...(img ? { img } : {}) }); }
+  placePost(key: string, text: string, imgs?: string[]) { this.tx({ t: 'place_post', key, text, ...(imgs?.length ? { imgs } : {}) }); }
   placeComment(id: number, text: string) { this.tx({ t: 'place_comment', id, text }); }
   placeLike(id: number) { this.tx({ t: 'place_like', id }); }
   placeDel(id: number, c?: number) { this.tx({ t: 'place_del', id, ...(c ? { c } : {}) }); }

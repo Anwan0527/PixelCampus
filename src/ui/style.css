@@ -1380,7 +1380,15 @@ body.touch .wall-feed { max-height: calc(100dvh - 200px); }
 .place-compose textarea { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 15px; border-radius: 0; outline: none; resize: vertical; }
 .place-compose-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .place-foot-l, .place-foot-r { display: flex; align-items: center; gap: 8px; }
-.place-prev { display: flex; align-items: center; gap: 10px; }
+.place-prev { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.place-prev-cell { position: relative; line-height: 0; }
+.place-prev-x { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; padding: 0; line-height: 18px; font-size: 12px; border: 2px solid var(--wood); background: #f3d9a8; border-radius: 50%; cursor: pointer; }
+.place-thumbs { display: flex; flex-wrap: wrap; gap: 6px; }
+.place-thumbs.multi .place-thumb { max-width: 31%; }
+.place-thumbs.multi .place-thumb img { width: 100%; height: 84px; max-width: none; max-height: none; object-fit: cover; }
+.place-lightbox-prev, .place-lightbox-next { position: absolute; top: 50%; transform: translateY(-50%); }
+.place-lightbox-prev { left: 10px; } .place-lightbox-next { right: 10px; }
+.place-lightbox-n { position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); color: #fff; font-size: 14px; }
 .place-prev-img { width: 72px; height: 72px; object-fit: cover; border: 2px solid var(--wood); background: #fff; }
 .place-prev-note { font-size: 12px; opacity: .8; }
 .place-feed { max-height: min(60vh, 480px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; border-top: 2px dashed var(--wood-l); padding: 8px 2px 2px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 8px; }

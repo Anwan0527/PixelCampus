@@ -15,12 +15,13 @@
 - 注意：服务端同步改了（`server/dorm.ts`、`game.ts`）；改了 `src/shared/*`（craft、fishlevel、dorm、protocol）。
 **新增：地点留言板**
 - 每栋有名字的建筑（同名楼翼合并，约 65 栋）和每个有名字的地标（出生点除外）都有一块留言板：站在建筑外扩 3 格以内 / 地标半径内，屏幕下方出现「📝 留言板·地点名 [.]」按钮（快捷键句号 `.`，不影响按 E 进门 / 查看）；管理员不受位置限制。
-- 留言：文字 ≤ 120 字 + 至多 1 张图；评论 ≤ 80 字；点赞；举报（进管理员举报列表，类别「地点留言」，被 3 人举报自动折叠）；作者和管理员可删；排序最新 / 最热。限制：留言间隔 20 秒、每人每天 12 条 / 3 张图；全服每天 600 条 / 300 张图；被禁言不能发；文字过敏感词库。
-- 图片：浏览器里压成 WebP（不支持就 JPEG，约 40~90KB 大图 + 240px 缩略图，去 EXIF），先在 WebSocket 里要一张 60 秒有效的一次性上传券，再 POST 到 `/up/<券>`；GET `/img/<名>` 公开读取（永久缓存）；服务器按魔数 + 体积检查，不转码；图片总量上限 2GB。**带图留言先审后发**（`PLACE_IMG_PRE_REVIEW`）：作者自己和管理员马上看得到，别人要等管理员通过；文字留言直接发布。
+- 留言：文字 ≤ 800 字 + 至多 9 张图（灯箱里可翻页）；评论 ≤ 80 字；点赞；举报（进管理员举报列表，类别「地点留言」，被 3 人举报自动折叠）；作者和管理员可删；排序最新 / 最热。限制：留言间隔 20 秒、每人每天 20 条 / 30 张图；全服每天 1000 条 / 1500 张图；被禁言不能发；文字过敏感词库。
+- 图片：浏览器里压成 WebP（不支持就 JPEG，约 40~90KB 大图 + 240px 缩略图，去 EXIF），先在 WebSocket 里要一张 60 秒有效的一次性上传券，再 POST 到 `/up/<券>`；GET `/img/<名>` 公开读取（永久缓存）；服务器按魔数 + 体积检查，不转码；图片总量上限 7GB。**带图留言先审后发**（`PLACE_IMG_PRE_REVIEW`）：作者自己和管理员马上看得到，别人要等管理员通过；文字留言直接发布。
 - 管理员总览：管理面板新增「📍 地点留言」页——所有地点的留言按时间倒序，筛选 全部 / 待审核 / 带图 + 地点下拉，缩略图点开看大图，通过 / 驳回 / 删除 / 删此人全部留言 / 看评论；`place_pending` 推送待审核数。
 - 数据：服务器数据目录新增 `place.jsonl`（追加日志，启动重放）和 `place-img/`（图片；删除的移到 `place-img/deleted/` 留证；上传未发布的 1 小时后清理）——**备份时要一起备份**。压力评估见私有方案 `docs/private/plans/PLACE_BOARD_PLAN.md`（结论：增量带宽 < 1%，服务器不转码、不把图片读进内存）。
 - 协议：`place_up / place_open / place_thread / place_post / place_comment / place_like / place_del / place_report / place_admin / place_review / place_del_by` 与 `place_up_ticket / place_posts / place_thread / place_result / place_admin_list / place_pending`；规则在 `shared/place.ts`；举报类别增加 `place`。
 - **部署注意**：nginx 的 `/pixel/` 现有 `client_max_body_size 16k`，要给 `/pixel/up/` 单独放宽到 160k（新增 `location ^~ /pixel/up/`，只改我们自己的 `snippets/pixelcampus.conf`，先备份、`nginx -t`、再 reload）；服务端同步改了（`server/place.ts`、`index.ts`、`game.ts`）。
+- 微调（同日）：留言文字上限 800 字；每条留言最多 9 张图（`place_post` 的 `img` 改为 `imgs` 数组，一张一张上传、全部传完才发布，灯箱可翻页，选图支持一次多选）；每人每天 20 条留言 / 30 张图；全服每天 1000 条 / 1500 张图；图片存储上限 7GB（原 2GB 再增加 5GB）；作者不管审核有没有通过都能自己删（带图的审核中留言也能删，图片移入 `deleted/`）。
 **测试稳定性**
 - `server.test.ts` 喂水禽用例：背包饵数改以服务器当前值为准（登录礼物到账时机偶发导致失败）。
 
