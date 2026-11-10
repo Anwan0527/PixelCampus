@@ -28,6 +28,8 @@ const deps = (mons: () => MonData | null) => ({
 
 const cells = () => [...document.querySelectorAll('.mon-dex-cell')] as HTMLElement[];
 const cellOf = (text: string) => cells().find((c) => (c.textContent ?? '').includes(text));
+const dropdown = (label: string) => [...document.querySelectorAll('.mon-dex-dd-btn')].find((b) => (b.textContent ?? '').includes(label)) as HTMLButtonElement;
+const option = (text: string) => [...document.querySelectorAll('.mon-dex-dd-opt')].find((b) => (b.textContent ?? '').includes(text)) as HTMLButtonElement;
 const detail = () => document.querySelector('.mon-dex-detail')?.textContent ?? '';
 
 let net: FakeNet;
@@ -78,20 +80,20 @@ describe('精灵图鉴 · CodexPanel', () => {
   it('P11：关闭图鉴后筛选重置，「全部」恢复', () => {
     const panel = make(() => data({ o01: { s: 1, c: 0 }, o02: { s: 1, c: 0 } }));
     panel.open('mons');
-    const sel = document.querySelector('select[aria-label="按属性筛选"]') as HTMLSelectElement;
-    sel.value = '火'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    dropdown('属性').click();
+    option('火').click();
     expect(cells().length).toBe(1);
     panel.close();
     panel.open('mons');
-    expect((document.querySelector('select[aria-label="按属性筛选"]') as HTMLSelectElement).value).toBe('');
+    expect(dropdown('属性').textContent).toContain('属性：全部');
     expect(cells().length).toBe(83);
   });
 
   it('N8：筛选为空显示「没有符合条件的精灵」', () => {
     const panel = make(() => data({ o01: { s: 1, c: 0 } }));
     panel.open('mons');
-    const sel = document.querySelector('select[aria-label="按属性筛选"]') as HTMLSelectElement;
-    sel.value = '水'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    dropdown('属性').click();
+    option('水').click();
     expect(cells()).toHaveLength(0);
     expect(document.querySelector('.mon-dex-empty')?.textContent).toContain('没有符合条件的精灵');
   });

@@ -115,3 +115,16 @@
   .mon-dex-img.big { width: 48px; height: 48px; }
   .mon-dex-grid { grid-template-columns: repeat(3, 1fr); }
 }
+.mon-dex-dd { position: relative; }
+.mon-dex-dd-btn { padding: 2px 8px; border: 2px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; border-radius: 3px; }
+.mon-dex-dd-btn.on { background: var(--wood-l); }
+.mon-dex-dd-menu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; display: grid; grid-template-columns: repeat(6, 52px); gap: 4px; padding: 6px; background: var(--paper); border: 3px solid var(--wood); box-shadow: 3px 4px 0 rgba(0,0,0,.25); max-height: 168px; overflow: auto; }
+
+.mon-dex-dd-menu.zone { grid-template-columns: 1fr; max-height: 168px; }
+.mon-dex-dd-opt { display: flex; align-items: center; justify-content: center; min-height: 30px; padding: 2px 4px; border: 2px solid var(--wood-l); background: #fffaf0; font-family: inherit; font-size: 12px; color: var(--ink); cursor: pointer; text-align: center; white-space: nowrap; }
+.mon-dex-dd-opt.all { grid-column: span 2; }
+.mon-dex-dd-opt:hover { background: var(--paper-d); }
+@media (max-width: 560px) {
+  .mon-dex-dd-menu { grid-template-columns: repeat(4, 52px); max-width: 90vw; max-height: 150px; }
+  .mon-dex-dd-menu.zone { grid-template-columns: 1fr; }
+}

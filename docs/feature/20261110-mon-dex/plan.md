@@ -130,7 +130,7 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 - `renderMons(box)`：
   - 无数据 →「读取中…」。
   - 顶部：`已见 X / 总数 · 已收服 Y / 总数` + 进度条。
-  - 筛选条：属性 select（全部 + 18 属性）、「只看已收服」checkbox、区域 select（`monDexZoneOptions(ZONES)` + 校园猫 + 登录赠送）。
+  - 筛选条：属性 / 区域用像素风下拉（按钮 + 面板，不用原生 `<select>` 弹层）；属性 18 个、区域 = 三野外 + 校园猫 + 登录赠送；「只看已收服」checkbox。
   - 分组标题 + `cx-grid`；卡片：未见过剪影 + No. +「？？？」；见过 `img` + 名字 + No. + 属性徽章 + `收服 ×N` / `见过 ×N`。
   - 点击设置 `monSel` 并重绘；详情 `renderMonDetail`。
   - 关闭时 `monFilter = {}`、`monSel = null`；同一次打开里切 tab 保留。
@@ -230,5 +230,6 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
   - 卡片只保留「图 + 名字 + No. · 见过 / 收服次数」，属性徽章收进详情，和现有图鉴一样紧凑。
   - 未见过用物种图 `brightness(0)` 做灰度剪影（和现有 canvas 剪影一致），不再用深色圆块。
   - 分组标题按来源上色（开放包绿 / 猫系红 / 登录赠送紫），详情沿用现有 `cx-detail` 虚线卡片。
+  - 属性 / 区域筛选从原生 `<select>` 改成像素风下拉（按钮 + 面板），和游戏内其他面板一致。
 - **验证**：`npm test` 59 文件 553 通过 / 3 跳过；`npx vitest run --config server/vitest.config.ts` 90 文件 1056 通过 / 5 跳过；`npx vite build` 绿。测试服 E2E：5 列（94.59px）、83 个图鉴位、82 个剪影、详情 / 筛选 / 844×390 横屏正常。
 - **状态**：测试服已部署；样式 PR [#15](https://github.com/EXIST-D/PixelCampus/pull/15) 待合并。
