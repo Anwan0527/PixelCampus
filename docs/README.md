@@ -77,6 +77,7 @@ docs/
 | [feature/spec.md](feature/spec.md) | **需求规格模板**（背景目标、场景、编号需求、规则、界面、数据协议、安全、性能、验收标准、未决问题）+ 开发流程 |
 | [feature/plan.md](feature/plan.md) | **实施计划模板**（方案比较、任务拆分、协议与数据变更、测试、上线与回滚、风险、进度） |
 | [feature/20261110-staging-env/](feature/20261110-staging-env/spec.md) | 第一份实例：测试环境（已上线） |
+| [feature/20261110-staging-self-deploy/](feature/20261110-staging-self-deploy/spec.md) | 协作者自助部署到测试环境（待确认） |
 - 每个新功能复制成 `docs/feature/<YYYYMMDD-功能名>/spec.md` + `plan.md`；**先 spec、主人确认，再 plan、主人确认，再写代码**。
 - 2026-11-10 起 spec 和 plan **都进公开仓库**：不要写服务器地址、口令、玩家数据（运维细节写到私有文档）。
 
