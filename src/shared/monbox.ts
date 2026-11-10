@@ -2,7 +2,7 @@
  * 玩家的精灵存档与整理规则（客户端与服务器共用，纯函数）：出战队伍 sq（≤6，第 1 只是首发）、精灵背包 bx（≤60）、
  * 图鉴 dex（物种 id → 见过/收服次数）。所有改动都由服务器按这里的规则执行，客户端只发"想做什么"。
  */
-import { MON, STAT_KEYS, maxHp, moveSlots, newMon, restore, type Content, type Mon, type Rng } from './mons';
+import { MON, STAT_KEYS, learnsetOf, maxHp, moveSlots, newMon, restore, type Content, type Mon, type Rng, type Species } from './mons';
 import { WILD } from './wild';
 import { catSpeciesId, isCatSpecies } from './cat-mons';
 import { cleanText } from './profile';
@@ -70,6 +70,85 @@ const find = (s: MonSave, id: string): { m: Mon; where: 'sq' | 'bx'; i: number }
 export const findMon = (s: MonSave, id: string): Mon | null => find(s, id)?.m ?? null;
 export const monCount = (s: MonSave): number => s.sq.length + s.bx.length;
 const fail = (msg: string): OpResult => ({ ok: false, msg });
+
+// ------------------------------------------------------------------ 技能更换（B 方案）
+/**
+ * 当前物种 + 已经过的前序阶段（不含未来阶段）。优先用物种自带的 chain，
+ * 没有 chain 时沿 evo.to 反向找；最多 8 步，防止数据成环。
+ */
+export function evolutionLine(ct: Content, sp: Species): Species[] {
+  const chain = sp.chain;
+  if (chain?.length) {
+    const i = chain.indexOf(sp.id);
+    if (i >= 0) {
+      const line = chain.slice(0, i + 1).map((id) => ct.species.get(id)).filter((x): x is Species => !!x);
+      if (line.length) return line;
+    }
+  }
+  const line = [sp];
+  let cur = sp;
+  for (let n = 0; n < 8; n++) {
+    const prev = [...ct.species.values()].find((s) => s.evo?.to === cur.id);
+    if (!prev || line.includes(prev)) break;
+    line.unshift(prev);
+    cur = prev;
+  }
+  return line;
+}
+
+/**
+ * 当前等级能学、但当前没带的技能：当前阶段 + 已过的前序阶段，`lv <= 当前等级`。
+ * 不含未来阶段、不含当前 mv 里的技能；按学习等级、id 排序。
+ */
+export function learnableMoves(ct: Content, m: Mon): string[] {
+  const sp = ct.species.get(m.sp);
+  if (!sp) return [];
+  const known = new Set(m.mv.map((x) => x.id));
+  const best = new Map<string, number>();
+  for (const stage of evolutionLine(ct, sp)) {
+    for (const e of learnsetOf(ct, stage)) {
+      if (e.lv > m.lv || known.has(e.id)) continue;
+      const old = best.get(e.id);
+      if (old === undefined || e.lv < old) best.set(e.id, e.lv);
+    }
+  }
+  return [...best.entries()].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0])).map(([id]) => id);
+}
+
+/** 给 `mon_data.learnable` 用的批量可学列表：只放非空的（精灵 id → 技能 id）。 */
+export function learnableMap(ct: Content, mons: readonly Mon[]): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const m of mons) {
+    const list = learnableMoves(ct, m);
+    if (list.length) out[m.id] = list;
+  }
+  return out;
+}
+
+/**
+ * 学 / 换一个技能：`move` 必须在 `learnableMoves()` 里。
+ * `drop = -1` 放进空槽（满槽拒绝）；`drop >= 0` 替换该下标。
+ * 不产生重复技能、不超过技能槽；失败不改任何东西。
+ */
+export function learnMove(ct: Content, s: MonSave, id: string, move: string, drop: number): OpResult {
+  const m = findMon(s, id);
+  if (!m) return fail('找不到这只精灵');
+  if (!Number.isInteger(drop) || drop < -1) return fail('要替换的技能不对');
+  const sp = ct.species.get(m.sp);
+  if (!sp) return fail('找不到这只精灵');
+  const md = ct.moves.get(move);
+  if (!md || !learnableMoves(ct, m).includes(move)) return fail('这个技能现在学不了');
+  const slots = moveSlots(sp);
+  if (drop === -1) {
+    if (m.mv.length >= slots) return fail('技能已满，请选择要替换的技能');
+    m.mv.push({ id: move, pp: md.pp });
+    return { ok: true, msg: `学会了${md.name}` };
+  }
+  if (drop >= slots || drop >= m.mv.length) return fail('要替换的技能不对');
+  const old = m.mv[drop];
+  m.mv[drop] = { id: move, pp: md.pp };
+  return { ok: true, msg: `忘记了${ct.moves.get(old.id)?.name ?? old.id}，学会了${md.name}` };
+}
 
 /** 图鉴记账：见过 / 收服 */
 export function dexMark(s: MonSave, spId: string, caught: boolean): void {

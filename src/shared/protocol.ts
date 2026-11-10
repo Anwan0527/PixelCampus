@@ -280,6 +280,8 @@ export type ClientMsg =
   | { t: 'mon_order'; ids: string[] }
   | { t: 'mon_nick'; id: string; name: string }
   | { t: 'mon_free'; id: string }
+  /** 学 / 换技能：move 必须是服务器下发的 learnable 里的；drop = -1 放空槽，>= 0 替换该下标 */
+  | { t: 'mon_replace'; id: string; move: string; drop: number }
   /** 野外遭遇：迎战 / 走开；战斗行动（bid 与回合号必须是服务器当前的；捕捉的倍率由服务器按背包里的道具定） */
   /** 手拉手：邀请好友 / 接受（uid = 邀请我的人）/ 拒绝 / 松手 */
   | { t: 'hand_invite'; uid: number }
@@ -494,7 +496,7 @@ export type ServerMsg =
   /** 我的称号：已获得（称号 id → 时间）与正在佩戴的；new = 这次刚得到的（客户端据此弹提示） */
   | { t: 'titles'; own: Record<string, number>; sel: string; new?: string[] }
   /** 我的精灵：出战队伍、精灵背包、图鉴、是否领过初始精灵；starters = 可选的初始精灵（只在没领过时有用） */
-  | { t: 'mon_data'; sq: Mon[]; bx: Mon[]; dex: Record<string, DexEntry>; starter: boolean; starters: string[]; /** 已经收服过的校园猫编号 */ tamed: number[] }
+  | { t: 'mon_data'; sq: Mon[]; bx: Mon[]; dex: Record<string, DexEntry>; starter: boolean; starters: string[]; /** 已经收服过的校园猫编号 */ tamed: number[]; /** 服务端算好的可学技能（精灵 id → 技能 id，按等级排序）；没有就不显示更换入口 */ learnable?: Record<string, string[]> }
   | { t: 'mon_result'; ok: boolean; msg: string }
   | { t: 'tp_result'; ok: boolean; msg: string }
   /** 我的宿舍：楼栋（没绑定 = 没有）、今天还能不能改楼栋、空调、宝箱；options = 能选的楼栋（按社区分组） */
