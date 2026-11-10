@@ -154,3 +154,10 @@
 **服务端**：`Progress.fx / addXp / catchXp / setRoute / release / comm / commView / commEvent / commClaim`；`fishCatch` 结算经验与委托进度（含软上限 `fx.xd`），`afterXp` 处理升级（成就、奖励）；`onShop` 按离哪个摊子近分模式（`nearSpot('fishshop')`：摊子必须真的存在）；`onWqClaim` 要站在摊子前；登录时老玩家折算（`backfillFishLevel`）。
 **消息**：C→S `fx_get / fx_route {slot, route} / wq_get / wq_claim {id} / fish_release {id}`；S→C `fx {xp, lv, into, need, rt, rel, wk, today, up?}`、`wq {week, list, daily, allDone, allClaimed}`、`wq_result`、`release_result`；`fish_state` catch 带 `xp {total, base, perfect, isNew, capped?}` 和 `lv`。
 **地图**：`data/campus/terrain/35-fish-stall.json`（摊子、牌子、互动区 `fishshop`）、`pois.json` 的 `fish-stall`（传送落点）；美术 `tools/art/plaza.ts` 的 `fishStall()`；钓具老板是客户端 NPC（`WorldScene.spawnKeeper`，站在 `fishStall` 道具右边）。
+
+## 精灵对战第一批（2026-11-10，协议版本 11，additive）
+**共享规则**：`src/shared/monbox.ts` 新增 `evolutionLine()`（当前阶段 + 已经过的前序阶段，不含未来阶段）、`learnableMoves()`（`lv <= 当前等级`、排除当前 `mv`、按等级排序）、`learnableMap()`（给 `mon_data` 用的批量表）、`learnMove()`（`drop = -1` 放空槽，`drop >= 0` 替换该下标；校验可学列表、不重复、不超过 `moveSlots`）。`src/shared/battle.ts` 的 `evolveCheck()` 在技能满时也发 `learn{full:true}`（只提示）。
+**消息**：S→C `mon_data` 增加 `learnable?: Record<string, string[]>`（精灵 id → 技能 id，服务端算、不持久化）；C→S 新增 `mon_replace { id, move, drop }`；S→C 复用 `mon_result { ok, msg }` 并推回 `mon_data`。`PROTOCOL_VERSION` 不升。
+**校验**：服务器确认精灵存在、技能在 `learnable` 里、当前没带、`drop` 合法（`-1` 仅空槽；`>= 0` 下标存在）、不在战斗中；成功后更新 `mv`（新技能满 PP）并推回 `mon_data`。不需要新增存档字段。
+**客户端**：`MonPanel` 在当前技能旁显示「更换」、空槽显示「学习新技能」，选择后发 `mon_replace`，等 `mon_data` 再刷新；没有 `learnable` 时不显示入口。`BattleUi` 出招菜单显示属性 / 物理特殊 / 威力 / 命中 / PP / 克制，对手显示 `hp/max`，战斗结束显示结算摘要，增加快进（`localStorage`）。
+**服务端**：本地已实现（私有服务端仓库 `develop`）：`mon_data` 带 `learnableMap()`、`mon_replace` 走共享 `learnMove()`，`run()` 的战斗保护会拒绝战斗中更换；**测试服已部署（2026-11-10），正式服待部署**。

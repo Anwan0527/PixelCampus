@@ -1,7 +1,7 @@
 <!-- 本文件由 npm run protocol:doc 根据 src/shared/protocol.ts 生成，不要手改（改了协议后重新生成） -->
 # 联机协议索引
 
-> 共 153 种客户端消息、124 种服务器消息（另有位置上报 / 快照两种二进制帧，见 protocol.ts 的 encodePos / decodeSnapshot）。
+> 共 154 种客户端消息、124 种服务器消息（另有位置上报 / 快照两种二进制帧，见 protocol.ts 的 encodePos / decodeSnapshot）。
 > 字段定义以 [`src/shared/protocol.ts`](../../src/shared/protocol.ts) 为准；规则细节在 `src/shared/` 对应文件；每批功能的设计背景见 [MULTIPLAYER.md](../design/MULTIPLAYER.md) 与 [CHANGELOG.md](../CHANGELOG.md)。
 > 新增消息：在 protocol.ts 的联合类型里加一行并写注释 → `npm run protocol:doc` → 服务端在对应 handler 里登记。
 
@@ -157,7 +157,7 @@
 | `fz` | → 客户端 | 别人的节日装扮变了（c = 编号，0 = 脱下） |
 | `fz_state` | → 客户端 | 自己的节日装扮：own = 已获得的编号，on = 戴着的；news = 刚获得的（用来弹提示）；gift = 刚领到的节日礼物 |
 
-## 精灵（13）
+## 精灵（14）
 
 | 消息 | 方向 | 说明 |
 |---|---|---|
@@ -167,6 +167,7 @@
 | `mon_order` | → 服务器 | — |
 | `mon_nick` | → 服务器 | — |
 | `mon_free` | → 服务器 | — |
+| `mon_replace` | → 服务器 | 学 / 换技能：move 必须是服务器下发的 learnable 里的；drop = -1 放空槽，>= 0 替换该下标 |
 | `mon_go` | → 服务器 | — |
 | `mon_act` | → 服务器 | — |
 | `mon_data` | → 客户端 | 我的精灵：出战队伍、精灵背包、图鉴、是否领过初始精灵；starters = 可选的初始精灵（只在没领过时有用） |

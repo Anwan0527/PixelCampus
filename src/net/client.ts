@@ -475,6 +475,7 @@ export class NetClient implements ChatTransport {
   monOrder(ids: string[]) { this.tx({ t: 'mon_order', ids }); }
   monNick(id: string, name: string) { this.tx({ t: 'mon_nick', id, name }); }
   monFree(id: string) { this.tx({ t: 'mon_free', id }); }
+  monReplace(id: string, move: string, drop: number) { this.tx({ t: 'mon_replace', id, move, drop }); }
   catTame(id: number) { this.tx({ t: 'cat_tame', id }); }
   catBattle(id: number) { this.tx({ t: 'cat_battle', id }); }
   tpGo(id: string) { this.tx({ t: 'tp_go', id }); }

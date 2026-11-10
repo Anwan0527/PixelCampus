@@ -58,6 +58,23 @@
 .mon-enc { position: absolute; left: 50%; top: 130px; transform: translateX(-50%); z-index: 15; pointer-events: auto; width: min(460px, 92vw); padding: 6px 10px 4px; background: var(--paper); border: 4px solid var(--wood); box-shadow: inset 0 0 0 3px var(--wood-l), 3px 6px 0 3px rgba(0,0,0,.3); }
 .mon-enc-row { display: flex; align-items: center; gap: 8px; } .mon-enc-text { flex: 1; min-width: 0; }
 .mon-enc .btn { padding: 4px 12px; }
+
+/* 技能更换（IR #5） */
+.mon-move .btn { margin-left: auto; }
+.mon-pend { margin-top: 8px; padding: 6px; border: 3px solid var(--wood-l); background: var(--paper-d); }
+.mon-learn { display: grid; grid-template-columns: 1fr; gap: 4px; margin: 4px 0; }
+.mon-learn-btn { display: flex; align-items: center; gap: 6px; text-align: left; font-size: 14px; padding: 5px 8px; }
+.mon-learn-btn .mon-mmeta { opacity: .75; font-size: 13px; }
+
+/* 战斗信息 / 结算 / 快进（IR #5） */
+.bt-menu .bt-move { border-width: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; text-align: left; }
+.bt-menu .bt-move .mon-mname { font-weight: bold; }
+.bt-mmeta { opacity: .75; font-size: 13px; }
+.bt-eff { font-weight: bold; color: #b02a1a; }
+.bt-fast { position: absolute; right: 6px; top: 6px; z-index: 4; font-size: 12px; padding: 2px 6px; }
+.bt-summary { grid-column: 1 / -1; padding: 6px 8px; border: 3px solid var(--wood-l); background: var(--paper-d); font-size: 14px; line-height: 1.5; }
+.bt-sum-title { font-weight: bold; margin-bottom: 3px; }
+.bt-sum-row { opacity: .9; }
 .mon-enc-timer { height: 4px; margin-top: 4px; background: var(--wood); transform-origin: left; animation: mon-enc-shrink linear forwards; }
 @keyframes mon-enc-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 @media (max-width: 560px) { .bt-stage { height: 240px; } .bt-img.foe { width: 96px; height: 96px; } .bt-img.me { width: 128px; height: 128px; } .bt-card { min-width: 150px; font-size: 13px; } .mon-enc { top: 120px; } }

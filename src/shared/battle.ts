@@ -179,8 +179,10 @@ export function evolveCheck(ct: Content, m: Mon, i: number, ev: BEvent[]): void 
     m.sp = e.to; m.hp += Math.max(0, maxHp(ct, m) - before);
     ev.push({ t: 'evolve', i, to: e.to });
     for (const l of learnsetOf(ct, ct.species.get(e.to)!)) {
-      if (l.lv > m.lv || m.mv.some((x) => x.id === l.id) || m.mv.length >= moveSlots(ct.species.get(m.sp))) continue;
-      m.mv.push({ id: l.id, pp: ct.moves.get(l.id)!.pp }); ev.push({ t: 'learn', i, move: l.id, full: false });
+      if (l.lv > m.lv || m.mv.some((x) => x.id === l.id)) continue;
+      const full = m.mv.length >= moveSlots(ct.species.get(m.sp));
+      if (!full) m.mv.push({ id: l.id, pp: ct.moves.get(l.id)!.pp });
+      ev.push({ t: 'learn', i, move: l.id, full });
     }
   }
 }

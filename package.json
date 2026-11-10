@@ -22,7 +22,7 @@
     "guide": "tsx tools/docs/gen-fishing-guide.ts",
     "protocol:doc": "tsx tools/docs/gen-protocol.ts",
     "assets:webp": "tsx tools/assets/webp.ts",
-    "assets:art":"tsx tools/art/index.ts",
+    "assets:art": "tsx tools/art/index.ts",
     "assets:world": "tsx tools/world/compile.ts",
     "assets:interiors": "tsx tools/world/interiors.ts",
     "server": "tsx server/index.ts",
@@ -42,6 +42,7 @@
   "devDependencies": {
     "@types/node": "^22.20.5",
     "@types/ws": "^8.18.2",
+    "happy-dom": "^21.0.4",
     "sharp": "^0.35.5",
     "tsx": "^4.23.15",
     "typescript": "~5.9.3",

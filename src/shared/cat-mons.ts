@@ -118,18 +118,17 @@ export function catBattleLevel(catId: number, coat: number): number {
 /**
  * 「耄耋」：网络上"圆头耄耋"的梗——一只脾气很大的橘色流浪猫，生气时耳朵压平、脑袋看起来是圆的，
  * 动不动就哈气，弓起背来像一条龙。这里把它做成一只强力的、技能全面的一般系猫精灵（只借梗的形象，画面是我们自己画的）：
- * 10 个技能槽，开局 10 级就会全部技能——一般系的哈气、咆哮、冲撞，加上格斗/地面/火/水/电/冰的老吴系列，打什么对手都有招。
+ * 5 个技能槽：默认带哈气、圆头冲撞、一般系的两招和格斗；地面/火/水/电/冰的老吴技能可以随时在精灵面板换上来。
  */
 export const DM_MOVES: Move[] = [
   { id: 'dm:hiss', name: '耄耋哈气', type: '一般', cat: 'special', power: 70, acc: 100, pp: 20 },
   { id: 'dm:round', name: '圆头冲撞', type: '一般', cat: 'physical', power: 75, acc: 95, pp: 20 },
 ];
 export const DM_SPECIES: Species = {
-  id: DM_ID, no: 99, name: '耄耋', types: ['一般'], base: [78, 82, 72, 82, 72, 80], catch: 0.02, noShiny: true, coat: 0, moveSlots: 10,
+  id: DM_ID, no: 99, name: '耄耋', types: ['一般'], base: [78, 82, 72, 82, 72, 80], catch: 0.02, noShiny: true, coat: 0, moveSlots: 5,
   desc: '圆头耄耋：耳朵一压，脑袋就圆了；背一弓，像条龙；一开口就是哈——气。传说它的叫声听上去像“老吴”。',
   learnset: [
-    { lv: 1, id: catMoveId('一般', 'p50') }, { lv: 1, id: catMoveId('一般', 's50') }, { lv: 1, id: 'dm:hiss' }, { lv: 1, id: 'dm:round' },
-    { lv: 2, id: catMoveId('格斗', 'p50') }, { lv: 3, id: catMoveId('地面', 'p50') }, { lv: 4, id: catMoveId('火', 's50') }, { lv: 5, id: catMoveId('水', 's50') },
-    { lv: 6, id: catMoveId('电', 's50') }, { lv: 7, id: catMoveId('冰', 's50') },
+    { lv: 1, id: catMoveId('地面', 'p50') }, { lv: 1, id: catMoveId('火', 's50') }, { lv: 2, id: catMoveId('水', 's50') }, { lv: 2, id: catMoveId('电', 's50') }, { lv: 2, id: catMoveId('冰', 's50') },
+    { lv: 3, id: catMoveId('一般', 'p50') }, { lv: 4, id: catMoveId('一般', 's50') }, { lv: 5, id: 'dm:hiss' }, { lv: 6, id: 'dm:round' }, { lv: 7, id: catMoveId('格斗', 'p50') },
   ],
 };
