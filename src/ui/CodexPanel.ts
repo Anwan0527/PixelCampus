@@ -1,5 +1,9 @@
 import type Phaser from 'phaser';
 import type { NetClient } from '@/net/client';
+import type { ServerMsg } from '@/shared/protocol';
+import { CONTENT, ZONES } from '@/shared/mons-content';
+import { elementName } from '@/shared/mons';
+import { monDexGroups, monDexProgress, monDexRows, monDexZoneOptions, type MonDexFilter, type MonDexRow } from './mondexModel';
 import { REAL_FISH, RARITY_COLORS, RARITY_NAMES, RARITY_ORDER, MOVE_NAMES, diffStars, fishDef, fmtKg, habitat, habitatText, type FishDef, type FishLog } from '@/shared/fishing';
 import { fishPrice } from '@/shared/economy';
 import { boxDef } from '@/shared/boxes';
@@ -21,7 +25,12 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 };
 
-export type CodexTab = 'animals' | 'fish' | 'ach' | 'titles';
+export type CodexTab = 'animals' | 'fish' | 'mons' | 'ach' | 'titles';
+type MonData = Extract<ServerMsg, { t: 'mon_data' }>;
+const COLOR = new Map(CONTENT.elements.elements.map((e) => [e.id, e.color]));
+const typeBadge = (id: string) => { const b = el('span', 'mon-type', elementName(CONTENT.elements, id)); b.style.background = COLOR.get(id) ?? '#aaa'; return b; };
+const dexNo = (no: number) => `No.${String(no).padStart(3, '0')}`;
+const addOption = (sel: HTMLSelectElement, label: string, value: string) => { const o = el('option'); o.textContent = label; o.value = value; sel.append(o); };
 interface TabDef { id: CodexTab; label: string; render: (box: HTMLElement) => void; /** 切到这一页时调用（取数据） */ enter?: () => void }
 
 /**
@@ -39,12 +48,16 @@ export class CodexPanel {
   private fishView: 'all' | 'now' = 'all';
   private filter: FishFilter = {};
   private bundleMsg = '';
+  /** 精灵图鉴：筛选 / 选中的精灵（关闭图鉴时重置） */
+  private monFilter: MonDexFilter = {};
+  private monSel: string | null = null;
   private tabs: TabDef[] = [
     { id: 'animals', label: '动物图鉴', render: (b) => this.renderAnimals(b) },
     { id: 'fish', label: '钓鱼图鉴', render: (b) => this.renderFish(b) },
+    { id: 'mons', label: '精灵图鉴', render: (b) => this.renderMons(b), enter: () => this.net.monGet() },
   ];
 
-  constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private deps: { cats: () => { defs: readonly CatDef[]; aff: Record<string, number>; nicks: Record<string, string>; info?: Record<string, CatInfo> }; /** 背包、此刻正在用的竿和饵（神话鱼的条件要对照） */ inv: () => Inv; gear: () => { rod: string; bait: string } }) {
+  constructor(private net: NetClient, private textures: Phaser.Textures.TextureManager, private deps: { cats: () => { defs: readonly CatDef[]; aff: Record<string, number>; nicks: Record<string, string>; info?: Record<string, CatInfo> }; /** 背包、此刻正在用的竿和饵（神话鱼的条件要对照） */ inv: () => Inv; gear: () => { rod: string; bait: string }; /** 精灵图鉴：只读 MonPanel 的 mon_data */ mons: () => MonData | null }) {
     const panel = el('div', 'box codex');
     const head = el('div', 'board-head');
     const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭图鉴');
@@ -71,7 +84,7 @@ export class CodexPanel {
     this.tabs.push({ id, label, render: (b) => b.append(section.view), enter: () => section.enter() });
     section.attach({ open: (t) => this.open(t), close: () => this.close(), isOpenOn: (t) => this.isOpen && this.tab === t });
   }
-  close() { this.root.classList.add('hidden'); }
+  close() { this.root.classList.add('hidden'); this.monFilter = {}; this.monSel = null; }
   toggle() { this.isOpen ? this.close() : this.open(); }
   /** 数据变了（小猫好感度、钓鱼记录）就刷新 */
   refresh() { if (this.isOpen) this.render(); }
@@ -85,6 +98,66 @@ export class CodexPanel {
     this.body.replaceChildren();
     this.tabs.find((t) => t.id === this.tab)?.render(this.body);
   }
+
+  // ------------------------------------------------------------ 精灵图鉴
+  private renderMons(box: HTMLElement) {
+    const data = this.deps.mons();
+    if (!data) { box.append(el('div', 'cx-dim mon-dex-empty', '读取中…')); return; }
+    const all = monDexRows(CONTENT, data.dex, ZONES);
+    const p = monDexProgress(all);
+    box.append(el('div', 'cx-sum mon-dex-sum', `精灵图鉴　已见 ${p.seen} / ${p.total}　·　已收服 ${p.caught} / ${p.total}`));
+    const bar = el('div', 'cx-pbar big mon-dex-pbar'), fill = el('div', 'cx-pfill');
+    fill.style.width = `${p.total ? Math.round((p.seen / p.total) * 100) : 0}%`; bar.append(fill); box.append(bar);
+    const filterBar = el('div', 'cx-filter mon-dex-filter');
+    const typeSel = el('select'); typeSel.setAttribute('aria-label', '按属性筛选'); addOption(typeSel, '全部属性', '');
+    for (const e of CONTENT.elements.elements) addOption(typeSel, e.name, e.id);
+    typeSel.value = this.monFilter.type ?? '';
+    typeSel.addEventListener('change', () => { this.monFilter.type = typeSel.value || undefined; this.render(); });
+    const caughtLabel = el('label', 'cx-chk'); const caught = el('input'); caught.type = 'checkbox'; caught.checked = !!this.monFilter.caughtOnly;
+    caught.addEventListener('change', () => { this.monFilter.caughtOnly = caught.checked || undefined; this.render(); });
+    caughtLabel.append(caught, document.createTextNode('只看已收服'));
+    const zoneSel = el('select'); zoneSel.setAttribute('aria-label', '按区域筛选'); addOption(zoneSel, '全部区域', '');
+    for (const z of monDexZoneOptions(ZONES)) addOption(zoneSel, z.name, z.id);
+    zoneSel.value = this.monFilter.zone ?? '';
+    zoneSel.addEventListener('change', () => { this.monFilter.zone = zoneSel.value || undefined; this.render(); });
+    filterBar.append(typeSel, caughtLabel, zoneSel); box.append(filterBar);
+    const groups = monDexGroups(CONTENT, data.dex, ZONES, this.monFilter).filter((g) => g.rows.length);
+    if (!groups.length) box.append(el('div', 'cx-dim mon-dex-empty', '没有符合条件的精灵'));
+    for (const g of groups) {
+      const title = el('div', 'cx-group mon-dex-group', `${g.title}　见过 ${g.seen} / ${g.total} · 收服 ${g.caught} / ${g.total}`);
+      const grid = el('div', 'cx-grid mon-dex-grid');
+      for (const row of g.rows) {
+        const cell = el('button', 'cx-cell mon-dex-cell' + (row.seen ? ' got' : '') + (this.monSel === row.sp.id ? ' on' : '')); cell.type = 'button';
+        if (!row.seen) {
+          cell.append(el('div', 'mon-dex-silhouette'), el('div', 'cx-name', '？？？'), el('div', 'cx-sub', dexNo(row.no)));
+        } else {
+          const im = el('img', 'mon-img mon-dex-img'); im.src = row.art ?? ''; im.alt = ''; im.draggable = false;
+          const types = el('div', 'mon-types'); types.append(...row.types.map(typeBadge));
+          cell.append(im, el('div', 'cx-name', row.name), el('div', 'cx-sub', dexNo(row.no)), types, el('div', 'cx-sub', row.caught ? `收服 ×${row.caught}` : `见过 ×${row.seenCount}`));
+        }
+        cell.addEventListener('click', () => { this.monSel = row.sp.id; this.render(); });
+        grid.append(cell);
+      }
+      box.append(title, grid);
+    }
+    box.append(this.renderMonDetail(all));
+  }
+  private renderMonDetail(rows: MonDexRow[]): HTMLElement {
+    const d = el('div', 'cx-detail mon-dex-detail');
+    const row = this.monSel ? rows.find((r) => r.sp.id === this.monSel) : undefined;
+    if (!row) { d.append(el('div', 'cx-dim', '点一只精灵看详情。')); return d; }
+    if (!row.seen) {
+      d.append(el('div', 'mon-dex-silhouette big'), el('div', 'cx-dname', '？？？'), el('div', 'cx-dline', dexNo(row.no)), el('div', 'cx-dim', '还没遇到'));
+      return d;
+    }
+    const top = el('div', 'cx-d-top'); top.append(el('span', 'cx-d-name', row.name), el('span', 'board-tag', dexNo(row.no)));
+    const types = el('div', 'mon-types'); types.append(...row.types.map(typeBadge));
+    d.append(top, types, el('div', 'cx-d-desc', row.desc));
+    if (row.chain.length) d.append(el('div', 'cx-d-line mon-dex-chain', `进化链：${row.chain.map((c) => `${c.name}${c.lv !== undefined ? `（Lv.${c.lv}）` : ''}`).join(' → ')}`));
+    d.append(el('div', 'cx-d-line', `栖息地：${row.habitat}`), el('div', 'cx-d-line', `我的记录：见过 ${row.seenCount} 次　·　收服 ${row.caught} 次`));
+    return d;
+  }
+
 
   // ------------------------------------------------------------ 动物图鉴
   private catSel = -1;

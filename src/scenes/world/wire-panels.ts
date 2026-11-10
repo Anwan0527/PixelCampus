@@ -158,7 +158,7 @@ export function wireDorm(sc: WorldScene) {
   sc.net.handlers.dormVisit = (m) => { sc.registry.set('dormVisit', m); enterDorm(sc, sc.player.x, sc.player.y); }; // 去好友的宿舍做客：出来时回到现在站的地方
   sc.registry.set('net', sc.net); sc.registry.set('dormUi', sc.dormUi); sc.registry.set('chat', sc.chatUi); sc.registry.set('editProfile', () => sc.editProfile(true)); sc.registry.set('tpUi', sc.tpUi); // 宿舍（室内场景）要用
   sc.battleUi.onOpen = () => closeCat(sc); // 对战开始：收起和小猫互动的小面板
-  sc.monUi.onData = () => { refreshCatPanel(sc); sc.backpackUi.refreshTabs(); };
+  sc.monUi.onData = () => { refreshCatPanel(sc); sc.backpackUi.refreshTabs(); sc.codexUi?.refresh(); };
   { const prev = sc.net.handlers.monResult; sc.net.handlers.monResult = (ok, msg) => { prev?.(ok, msg); if (sc.catUi?.isOpen) sc.catUi.say(msg, ok); }; }
 }
 
@@ -172,7 +172,7 @@ export function wireHallTradeCodex(sc: WorldScene) {
   sc.socialUi.onTrade = (uid) => sc.tradeUi.invite(uid);
   sc.socialUi.onHand = (uid) => sc.net.handInvite(uid);
   sc.socialUi.onDorm = (uid, kind) => (kind === 'invite' ? sc.net.dormInvite(uid) : sc.net.dormKnock(uid));
-  sc.codexUi = new CodexPanel(sc.net, sc.textures, { cats: () => ({ defs: allCats(sc.wf.npcSpawns), aff: sc.catAff, nicks: sc.catNick, info: sc.catInfo }), inv: () => sc.backpackUi.inv, gear: () => { const g = resolveGear(sc.backpackUi.inv, sc.backpackUi.equip, fishData.env()); return { rod: g.rod?.id ?? '', bait: g.bait?.id ?? '' }; } });
+  sc.codexUi = new CodexPanel(sc.net, sc.textures, { cats: () => ({ defs: allCats(sc.wf.npcSpawns), aff: sc.catAff, nicks: sc.catNick, info: sc.catInfo }), inv: () => sc.backpackUi.inv, gear: () => { const g = resolveGear(sc.backpackUi.inv, sc.backpackUi.equip, fishData.env()); return { rod: g.rod?.id ?? '', bait: g.bait?.id ?? '' }; }, mons: () => sc.monUi.monData });
 }
 
 export function wireProgressPanels(sc: WorldScene) {

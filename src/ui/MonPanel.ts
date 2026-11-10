@@ -53,6 +53,8 @@ export class MonPanel implements Section {
   attach(host: Host<'mons'>) { this.host = host; }
   /** 还没领初始精灵（背包的「精灵」页签上亮红点用） */
   get needsStarter() { return !!this.data && !this.data.starter; }
+  /** 只读：给图鉴页取 dex（不改数据） */
+  get monData(): MonData | null { return this.data; }
   get isOpen() { return !!this.host?.isOpenOn('mons'); }
   /** 已经收服过的校园猫编号 / 队伍里有没有还能战斗的猫系精灵（「老吴对战」的条件） */
   get tamed(): readonly number[] { return this.data?.tamed ?? []; }
