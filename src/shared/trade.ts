@@ -1,7 +1,7 @@
 /**
  * 玩家交易（客户端与服务器共用）：面对面的"双方摆出东西 → 各自确认 → 一起成交"。
  * 规则在服务器执行（server/trade.ts）：双方都得在线、站得近；摆出去的东西必须真的有；任何一方改了报价，双方的确认都作废；
- * 成交是原子的（要么全换，要么一件不动）；成交不收税、不改价。设计见 docs/ECONOMY.md「玩家交易」。
+ * 成交是原子的（要么全换，要么一件不动）；成交不收税、不改价。设计见 docs/design/ECONOMY.md「玩家交易」。
  */
 import { isStarter } from './decor';
 import { itemDef, type Gain } from './items';

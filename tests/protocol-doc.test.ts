@@ -10,7 +10,7 @@ describe('协议索引文档', () => {
     const types = new Set([...src.matchAll(/^\s{2}\| \{ t: '([a-z_0-9]+)'/gm)].map((m) => m[1]));
     for (const t of types) expect(md, t).toContain(`\`${t}\``);
   });
-  it.skipIf(!existsSync(join(root, 'docs', 'PROTOCOL.md')))('docs/PROTOCOL.md 是最新生成的（改了协议后运行 npm run protocol:doc）', () => {
-    expect(readFileSync(join(root, 'docs', 'PROTOCOL.md'), 'utf8')).toBe(buildProtocolDoc(root));
+  it.skipIf(!existsSync(join(root, 'docs', 'architecture', 'PROTOCOL.md')))('docs/architecture/PROTOCOL.md 是最新生成的（改了协议后运行 npm run protocol:doc）', () => {
+    expect(readFileSync(join(root, 'docs', 'architecture', 'PROTOCOL.md'), 'utf8')).toBe(buildProtocolDoc(root));
   });
 });

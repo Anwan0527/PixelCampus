@@ -11,7 +11,7 @@ describe('钓鱼攻略（玩家手册）', () => {
     for (const h of ['常见', '少见', '稀有', '史诗', '传说', '神话']) expect(md).toContain(h);
     expect(md.match(/^\| \d+ \| \d+ \|/gm)!.length).toBeGreaterThanOrEqual(30); // 30 级的等级表
   });
-  it.skipIf(!existsSync(join(root, 'docs', 'FISHING_GUIDE.md')))('docs/FISHING_GUIDE.md 是最新生成的（改了鱼表 / 装备 / 等级 / 价格后运行 npm run guide 重新生成）', () => {
-    expect(readFileSync(join(root, 'docs', 'FISHING_GUIDE.md'), 'utf8')).toBe(buildGuide(root));
+  it.skipIf(!existsSync(join(root, 'docs', 'guide', 'FISHING_GUIDE.md')))('docs/guide/FISHING_GUIDE.md 是最新生成的（改了鱼表 / 装备 / 等级 / 价格后运行 npm run guide 重新生成）', () => {
+    expect(readFileSync(join(root, 'docs', 'guide', 'FISHING_GUIDE.md'), 'utf8')).toBe(buildGuide(root));
   });
 });

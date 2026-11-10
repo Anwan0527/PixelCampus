@@ -1,7 +1,7 @@
 # 更新记录
 
 > 每次更新（做完并提交/部署）在**最上面**加一节，标题格式 `## 2026.11.2 更新内容`，下面按 **新增 / 调整 / 修复 / 移除** 分条写；末尾注明提交号和是否已部署。
-> 当前有哪些功能见 [FEATURES.md](FEATURES.md)，设计细节见 [MULTIPLAYER.md](MULTIPLAYER.md)。
+> 当前有哪些功能见 [FEATURES.md](FEATURES.md)，设计细节见 [MULTIPLAYER.md](design/MULTIPLAYER.md)。
 
 ---
 
@@ -13,7 +13,8 @@
 **新增：玩家档案冻结（服务端）**
 - 离线 10 分钟且已落盘的档案在内存里冻结成压缩的 JSON，用到时再解冻；对外接口不变，全表扫描临时解析不保留。用线上备份（8550 份）实测每份约 5.0KB → 2.2KB，省约 57%。`/healthz` 增加 `heapMB`、`rssMB`、`profiles`、`frozen`；档案达到 18000 份时警告一次（2 万份时评估换 SQLite，见私有方案）。
 **文档整理**
-- 新增 `docs/README.md`（文档索引：每份文档的内容 / 状态 / 维护方式）、`docs/PROTOCOL.md`（联机消息索引，`npm run protocol:doc` 从 `protocol.ts` 生成，`tests/protocol-doc.test.ts` 检查是否最新）、`docs/feature/spec.md` + `plan.md`（新功能的需求与计划模板，规定「先 spec → 主人确认 → 再 plan → 主人确认 → 再开发」）；刷新 README / HANDOFF / ARCHITECTURE / MAP_PIPELINE，MULTIPLAYER 标注为历史设计记录；CLAUDE.md 加入新功能开发规范。
+- **docs 按工程化目录重新整理**：`architecture/`（架构、协议）、`design/`（系统设计）、`map/`、`art/`（含 `img/`）、`guide/`、`process/`（协作流程、**新增服务端协作指南**）、`adr/`（**新增 9 份架构决策记录**）、`feature/`（需求 + 计划，**spec 和 plan 都进公开仓库**，第一份实例：测试环境 `20261110-staging-env`）；`HANDOFF / FEATURES / CHANGELOG` 留在 docs 根部；所有交叉引用、生成器路径、测试已同步；`.github` PR 模板加入 spec / plan / 协议自查项。
+- 新增 `docs/README.md`（文档索引：每份文档的内容 / 状态 / 维护方式）、`docs/architecture/PROTOCOL.md`（联机消息索引，`npm run protocol:doc` 从 `protocol.ts` 生成，`tests/protocol-doc.test.ts` 检查是否最新）、`docs/feature/spec.md` + `plan.md`（新功能的需求与计划模板，规定「先 spec → 主人确认 → 再 plan → 主人确认 → 再开发」）；刷新 README / HANDOFF / ARCHITECTURE / MAP_PIPELINE，MULTIPLAYER 标注为历史设计记录；CLAUDE.md 加入新功能开发规范。
 **清理**
 - 删除 `.cache` 一次性对照图与脚本（约 440MB）、`dist`、脱敏前的旧文档备份；旧版归档移出项目；服务器上的备份文件保留最近 5 份（先下载了完整备份）。
 - 注意：服务端同步改了（`server/store.ts`、`game.ts`、`handlers/*`、`index.ts`）；客户端与服务端行为不变，可以一起部署。
@@ -263,7 +264,7 @@
 - 协议（additive）：`dorm_bath`（放 / 取），`dorm_data.bt / bv`，`room_state.bv`，`dorm_visit.bv`；档案 `Saved.dm.bt`。宿舍房间 `dorm.json` 新增 `dbath`（act `bath`）；新美术 `tools/art/furniture-dorm.ts: dbath`（要 `npm run assets` 重新生成）。
 - 测试：`tests/dorm.test.ts` 新增 2 项（规则、服务器：不在自己宿舍不能放 / 放进去背包里没了卖不掉 / 重连还在 / 取回）。
 **新增：钓鱼攻略（玩家手册）**
-- `docs/FISHING_GUIDE.md`：完整的钓鱼玩家手册——一分钟上手、怎么钓与拉鱼、环境（昼夜 / 天气 / 季节 / 预报 / 节日）、全部鱼的概率表（按季节、夜里、雨天）、神话鱼条件与攻略、鱼竿 / 鱼饵 / 配件、推荐搭配、盲盒掉落与保底、合成、1–30 级经验与奖励、路线、委托、赚钱（行情 / 渔夫路线 / 浴缸）、册页与里程碑、进阶技巧、常见问题。
+- `docs/guide/FISHING_GUIDE.md`：完整的钓鱼玩家手册——一分钟上手、怎么钓与拉鱼、环境（昼夜 / 天气 / 季节 / 预报 / 节日）、全部鱼的概率表（按季节、夜里、雨天）、神话鱼条件与攻略、鱼竿 / 鱼饵 / 配件、推荐搭配、盲盒掉落与保底、合成、1–30 级经验与奖励、路线、委托、赚钱（行情 / 渔夫路线 / 浴缸）、册页与里程碑、进阶技巧、常见问题。
 - **表格由脚本生成**：叙述写在 `docs/guide/FISHING_GUIDE.template.md`，里面的 `{{table:xxx}}` / `{{v:xxx}}` 由 `tools/docs/fishing-guide.ts` 按 `src/shared` 的真实规则填充；改了鱼表、装备、配方、等级、价格后运行 `npm run guide` 重新生成。`tests/fishing-guide.test.ts` 会检查手册是不是最新的（过期了测试会红）。
 
 - 新文件：`src/shared/calendar.ts`（游戏日历与节日表，前后端共用）、`src/ui/CalendarPanel.ts`；`src/shared/season.ts` 新增 `skyAt / forecast / nextWet`。测试：`tests/weather-calendar.test.ts`（10 项）。
@@ -271,7 +272,7 @@
 ## 2026.11.5（「关于」加入地图参考致谢，已部署 2026-11-05）更新内容
 **调整（后续）**：地图参考的链接改为 https://mab.suyu.ink，一般性致谢改成「感谢维生酥鱼老师开源。」（已部署 2026-11-05）。
 **新增**
-- 「关于」面板的致谢名单加入**河北工程大学全景图（地图参考）**：维生酥鱼老师开源分享的 VR 全景（链接可点），并在一般性致谢里写上「感谢维生酥鱼老师开源的河北工程大学全景图，为本项目做了许多参考」；`docs/ASSETS_AND_LICENSES.md` 同步。仅作布局参考，不复制其图像。**已部署**。
+- 「关于」面板的致谢名单加入**河北工程大学全景图（地图参考）**：维生酥鱼老师开源分享的 VR 全景（链接可点），并在一般性致谢里写上「感谢维生酥鱼老师开源的河北工程大学全景图，为本项目做了许多参考」；`docs/art/ASSETS_AND_LICENSES.md` 同步。仅作布局参考，不复制其图像。**已部署**。
 
 ---
 
@@ -383,7 +384,7 @@
 **调整**
 - 新仓库 **EXIST-D/PixelCampus 转为公开**：任何人都可以 fork、提 PR，不需要被邀请；主仓库只有主人有写权限。
 - **`main` 分支保护**：必须通过 PR；至少 1 次批准且必须来自代码负责人（`.github/CODEOWNERS` = 主人）；CI 必须通过；不允许强推和删除；来自 fork 的 PR 第一次跑 CI 需要主人点「Approve and run」；Actions 默认只读权限。主人自己仍可直接推送（管理员豁免）。
-- `docs/COLLABORATION.md` 改成公开仓库的 fork + PR 流程；PR 模板加了「同意贡献按 LICENSE 授权给作者」；README 加了仓库地址。
+- `docs/process/COLLABORATION.md` 改成公开仓库的 fork + PR 流程；PR 模板加了「同意贡献按 LICENSE 授权给作者」；README 加了仓库地址。
 - 上线部署仍然只由主人手动执行，合并不会自动上线。
 
 ---
@@ -653,7 +654,7 @@
 - **图书馆西侧**：西南裸土地改成**花草地**（粉/黄花斑，自动种树避开）；补一条**景观水渠 + 四座小亭**（卫星图描摹）。
 **新增**
 - **两个荷塘**：信电学院西侧（斜长）、文法/管商学院西侧（竖长），水面 + 睡莲（`12-lotus-ponds.json`）。
-- `tools/reference/glb/retro.mjs`；`docs/GLB_REFERENCE.md` 增补第二批与对位参数。
+- `tools/reference/glb/retro.mjs`；`docs/map/GLB_REFERENCE.md` 增补第二批与对位参数。
 - **地图编辑器同步**（开发工具，不随部署）：「跳到…」增加 11 个新片区；荷塘/图书馆西侧花草地进「绿地」类、太极广场进「广场铺装」类，可点选改删；新楼（体育与健康学院等）与脚印建筑照常在「改建筑」里编辑。
 **测试**：新增西操场同款、西侧楼群、荷塘、图书馆西侧花草地与小亭 4 项；田径场断言只取东操场；共 346 项全绿。
 **注意**：体育与健康学院是哪一栋、"马克思主义学院"并入后的名称，模型没给出对应，**未核对**。
@@ -666,7 +667,7 @@
 - **太极广场/海棠园**：圆形太极广场、西侧 4 道弧形坐阶、八卦、两座方亭、三个圆形小广场和一圈园路按卫星特写重画（原来的圆台在卫星上偏南约 4 格）；POI"太极花园"随之挪动。
 **新增**
 - **配套用房**（`se-annex`）：留学生公寓东北侧的彩钢棚式用房（卫星图可见，蓝图原先缺失）。
-- **GLB 工具与说明**：`tools/reference/glb/`（读模型、对位、脚印转翼体）、`docs/GLB_REFERENCE.md`（模型是什么、能信多少、这次怎么用的）；模型文件本身不入库（`.gitignore`）。
+- **GLB 工具与说明**：`tools/reference/glb/`（读模型、对位、脚印转翼体）、`docs/map/GLB_REFERENCE.md`（模型是什么、能信多少、这次怎么用的）；模型文件本身不入库（`.gitignore`）。
 **测试**：楼数断言改为一、二社区各 5 栋并新增"楼形取自模型/44 号楼"两项；门牌测试里的楼名、建筑总数下限、门旁花坛下限（16→8，C/U 形楼的门多在内院）随之调整；342 项全绿。
 **注意**：建筑名称按模型改了一批，**未经用户逐栋核对**（模型来源不明）；"一社区北浴室""留学生公寓"尤其需要确认。
 
@@ -765,7 +766,7 @@
 - 手动层新增 `fields` / `fences` / `bp`（hide、edit），折线 `flat`/`mark`；编译、校验、部署后并入（bake）都支持；蓝图条目有稳定 id（文件#序号:内容指纹），`terrain.ts` 的折线支持"两端切平"。
 - 围栏分格逻辑抽成共用函数 `fenceCells`，蓝图围栏改用它：**生成的 world.json 与改前逐字节相同**（实测）。
 **测试**：新增 `tests/manual-fields.test.ts`（模板展开、围栏分格、新字段校验）。
-**说明**：运动场的碰撞块（蓝图 `blocks`）暂不随编辑；详见 docs/MAP_EDITOR.md「运动场地、围栏围墙、斜路」。
+**说明**：运动场的碰撞块（蓝图 `blocks`）暂不随编辑；详见 docs/map/MAP_EDITOR.md「运动场地、围栏围墙、斜路」。
 
 ## 2026.11.3（编辑器第六批：三社区超市、后勤区、校医院等）更新内容（已部署 2026-11-03）
 **调整（地图，用编辑器手工完成）**
@@ -854,7 +855,7 @@
 **新增**
 - **地图编辑器** `npm run editor`（http://127.0.0.1:5174）：把编译好的当前地图载入浏览器，主人可以手动涂地面（矩形/椭圆/多边形）、画方头的路、摆/删/移树和小品、沿线连排摆放、框选擦除，随时撤销；「保存并生成预览」后直接看到游戏里的真实画面。改动保存在 `data/campus/manual.json`，由 Claude 读取、生成、测试、推送。
 - **手动层**：`src/shared/manual.ts`（格式与校验）+ `tools/world/compile.ts` 最后处理：地面盖在所有蓝图地面之上，擦除和手摆物件在所有自动清理之后执行（不会被"路灯变稀"等规则去掉）。
-- `docs/MAP_EDITOR.md`：用法、手动层说明、已知限制（建筑暂不可编辑）、给 Claude 的处理流程。
+- `docs/map/MAP_EDITOR.md`：用法、手动层说明、已知限制（建筑暂不可编辑）、给 Claude 的处理流程。
 **测试**：新增 `tests/manual.test.ts`（校验、沿线取点、调色板里每种物件在图集里都有图）；288 项全绿。编译在手动层为空时和原来完全一致（对象数不变）。
 **说明**：只加了开发工具和一个空的 `manual.json`，游戏本身没变，不需要部署。
 
@@ -912,7 +913,7 @@
 
 ## 2026.11.2（GitHub 仓库与协作流程）更新内容（已推送）
 **新增**
-- GitHub 私有仓库 `EXIST-D/PixelHue`，本地 30 个提交全部推送；协作与部署流程见 [COLLABORATION.md](COLLABORATION.md)。
+- GitHub 私有仓库 `EXIST-D/PixelHue`，本地 30 个提交全部推送；协作与部署流程见 [COLLABORATION.md](process/COLLABORATION.md)。
 - CI（`.github/workflows/ci.yml`）：每个 PR 自动生成资源、类型检查、跑全部测试、构建；PR 模板带自查清单。
 - `deploy.sh` 防呆：本地落后 GitHub main 时拒绝部署，有未推送/未提交内容时提示。
 - `deploy.sh` 再加一道防呆：拉取了新的美术/地图/数据却没重新生成资源时拒绝部署（两台电脑合作时防止把旧地图部署上去）；协作文档新增「两台电脑都是主人」一节。
@@ -973,7 +974,7 @@
 
 ## 2026.11.2（校园商店 · 校园墙 · 货币系统）更新内容（已部署）
 **新增**
-- **校园币**：左上角常驻余额；来源有卖鱼、每日任务、成就、校园跑；完整设计见 [ECONOMY.md](ECONOMY.md)。
+- **校园币**：左上角常驻余额；来源有卖鱼、每日任务、成就、校园跑；完整设计见 [ECONOMY.md](design/ECONOMY.md)。
 - **校园商店**（图书馆广场西侧的大建筑，门口按 E）：卖鱼（按今日行情，一键卖出）；买鱼饵、香饵、猫粮、猫条、猫窝、碳素鱼竿、金龙鱼竿。
 - **鱼竿分级**：竹节（每天送）→ 碳素 → 金龙，拉鱼更轻松、咬钩更快、稀有鱼更多；香饵抛竿时优先用。
 - **猫窝**：在小猫面板里送给一只猫（好感 +20，每只一次），那只猫的家里出现一个窝（只有本人看得到）。

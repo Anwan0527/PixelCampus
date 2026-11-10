@@ -4,6 +4,8 @@
 ## 自查
 - [ ] 本地 `npm test` 全过、`npm run build` 通过
 - [ ] 同步改了 `docs/FEATURES.md`（现有功能）和 `docs/CHANGELOG.md`（顶部按日期加一节）
+- [ ] 新功能 / 较大调整：有 `docs/feature/<日期-名称>/spec.md` + `plan.md`（模板见 `docs/feature/`），并经主人确认
+- [ ] 改了 `src/shared/protocol.ts` → 已运行 `npm run protocol:doc`；涉及服务端 / 存档字段 → 已按 `docs/process/SERVER_COLLABORATION.md` 自查
 - [ ] 改了 `src/shared/*`（客户端和服务器共用）→ 在下面说明：需要服务端一起部署
 - [ ] 改了 `tools/world/compile.ts`、`data/campus/*` 或美术 → 说明：合并后要重新 `npm run assets`
 - [ ] 没提交 `public/assets/generated*`、`data/server/`、口令/密钥/令牌

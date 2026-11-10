@@ -39,7 +39,7 @@ export class AboutSection {
     const dev = el('div', 'about-sec'); dev.append(el('div', 'about-h', '一起开发'));
     dev.append(el('div', 'about-p', '这个游戏的代码公开在 GitHub，欢迎一起协作开发：fork 仓库，在自己的分支里改好，提交 Pull Request；经作者审核同意后才会合并，上线由作者统一部署。想法和建议也可以在仓库里提 Issue。'));
     const devLinks = el('div', 'about-links');
-    devLinks.append(link('如何参与（协作流程）', `${ABOUT.repo}/blob/main/docs/COLLABORATION.md`), link('提想法 / 报问题', `${ABOUT.repo}/issues`));
+    devLinks.append(link('如何参与（协作流程）', `${ABOUT.repo}/blob/main/docs/process/COLLABORATION.md`), link('提想法 / 报问题', `${ABOUT.repo}/issues`));
     dev.append(devLinks); body.append(dev);
 
     const lic = el('div', 'about-sec'); lic.append(el('div', 'about-h', '许可'));

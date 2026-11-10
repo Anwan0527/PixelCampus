@@ -1,7 +1,7 @@
 /**
  * 协议索引生成器：从 src/shared/protocol.ts 的 ClientMsg / ServerMsg 联合类型里取出每种消息的类型名、方向、
- * 紧挨着它上面的注释，按前缀分组生成 docs/PROTOCOL.md。
- * 用法：npm run protocol:doc；测试 tests/protocol-doc.test.ts 会检查 docs/PROTOCOL.md 是不是最新的（加了消息没重新生成会失败）。
+ * 紧挨着它上面的注释，按前缀分组生成 docs/architecture/PROTOCOL.md。
+ * 用法：npm run protocol:doc；测试 tests/protocol-doc.test.ts 会检查 docs/architecture/PROTOCOL.md 是不是最新的（加了消息没重新生成会失败）。
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -48,7 +48,7 @@ export function buildProtocolDoc(root: string): string {
     '<!-- 本文件由 npm run protocol:doc 根据 src/shared/protocol.ts 生成，不要手改（改了协议后重新生成） -->',
     '# 联机协议索引', '',
     `> 共 ${c.length} 种客户端消息、${s.length} 种服务器消息（另有位置上报 / 快照两种二进制帧，见 protocol.ts 的 encodePos / decodeSnapshot）。`,
-    '> 字段定义以 [`src/shared/protocol.ts`](../src/shared/protocol.ts) 为准；规则细节在 `src/shared/` 对应文件；每批功能的设计背景见 [MULTIPLAYER.md](MULTIPLAYER.md) 与 [CHANGELOG.md](CHANGELOG.md)。',
+    '> 字段定义以 [`src/shared/protocol.ts`](../../src/shared/protocol.ts) 为准；规则细节在 `src/shared/` 对应文件；每批功能的设计背景见 [MULTIPLAYER.md](../design/MULTIPLAYER.md) 与 [CHANGELOG.md](../CHANGELOG.md)。',
     '> 新增消息：在 protocol.ts 的联合类型里加一行并写注释 → `npm run protocol:doc` → 服务端在对应 handler 里登记。', '',
   ];
   for (const [g, list] of [...groups].sort((a, b) => a[0].localeCompare(b[0], 'zh'))) {
@@ -61,6 +61,6 @@ export function buildProtocolDoc(root: string): string {
 
 if (process.argv[1] && /gen-protocol\.ts$/.test(process.argv[1])) {
   const root = join(import.meta.dirname, '..', '..');
-  writeFileSync(join(root, 'docs/PROTOCOL.md'), buildProtocolDoc(root));
-  console.log('✓ 协议索引 → docs/PROTOCOL.md');
+  writeFileSync(join(root, 'docs/architecture/PROTOCOL.md'), buildProtocolDoc(root));
+  console.log('✓ 协议索引 → docs/architecture/PROTOCOL.md');
 }

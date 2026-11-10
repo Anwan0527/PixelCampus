@@ -1,49 +1,84 @@
-# 文档索引（2026-11-10 整理）
+# 文档索引（2026-11-10 按工程化目录整理）
 
-> 每份文档是什么、现在是什么状态、谁来维护。**新增 / 删除 / 重命名文档时同步改这里。**
-> 状态：✅ 现行（和代码一致）· 🔄 自动生成（别手改）· 📜 历史记录（按批次的设计 / 调研，细节以代码为准）· ⚠️ 部分过期（已标注）。
+> 文档按用途分目录：入口与现状 → 架构 → 设计 → 地图 → 美术 → 指南 → 流程 → 决策记录（ADR）→ 功能规范（feature）。**新增 / 删除 / 重命名文档时同步改这里。**
+> 状态：✅ 现行（和代码一致）· 🔄 自动生成（别手改）· 📜 历史记录（细节以代码为准）· ⚠️ 部分过期（已标注）。
 
-## 先读
+## 目录结构
+```
+docs/
+├─ README.md            本索引
+├─ HANDOFF.md           项目交接 / 现状（新对话、新协作者先读）
+├─ FEATURES.md          现有功能清单（每次更新必改）
+├─ CHANGELOG.md         更新记录（每次更新必改）
+├─ architecture/        架构与协议：ARCHITECTURE.md、PROTOCOL.md（生成）
+├─ design/              系统设计：ECONOMY.md、MULTIPLAYER.md（历史）
+├─ map/                 地图：MAP_PIPELINE.md、MAP_EDITOR.md、SCALE.md、GLB_REFERENCE.md
+├─ art/                 美术与素材：ART_STYLE.md、ASSETS_AND_LICENSES.md、img/
+├─ guide/               玩家 / 使用指南：FISHING_GUIDE.md（生成）+ 模板
+├─ process/             协作流程：COLLABORATION.md、SERVER_COLLABORATION.md
+├─ adr/                 架构决策记录（为什么这样做）
+├─ feature/             功能规范：spec.md + plan.md 模板；<日期-名称>/ 每个功能一份
+└─ private/             私有文档（仅主人本机和私有备份仓库，见 private/README.md）
+```
+
+## 入口与现状（每次更新必改的放这里）
 | 文档 | 内容 | 状态 | 怎么维护 |
 |---|---|---|---|
 | [../README.md](../README.md) | 项目入口：简介、快速开始、玩法一览、目录、许可 | ✅ | 数字（建筑 / 鱼种）变了就改 |
-| [../CLAUDE.md](../CLAUDE.md) | 给 AI 助手和协作者的工作约定（中文、先问再做、提交规范、常用命令） | ✅ | 约定变了就改 |
-| [HANDOFF.md](HANDOFF.md) | **项目交接 / 现状**：目录地图、规模、核心设计要点、已知偏差与待办、调试手册（新对话 / 新协作者先读） | ✅（2026-11-10 刷新） | 结构 / 约定大变时改 |
-| [COLLABORATION.md](COLLABORATION.md) | 多人协作流程：fork + PR、主人审核、部署只由主人做 | ✅ | 流程变了才改 |
+| [../CLAUDE.md](../CLAUDE.md) | 给 AI 助手和协作者的工作约定 | ✅ | 约定变了就改 |
+| [HANDOFF.md](HANDOFF.md) | 项目交接 / 现状：目录地图、规模、设计要点、已知偏差与待办、调试手册 | ✅ | 结构 / 约定大变时改 |
+| [FEATURES.md](FEATURES.md) | 现有功能清单（注明是否已部署，50KB） | ✅ | **每次更新同步改**（后续按模块重排） |
+| [CHANGELOG.md](CHANGELOG.md) | 更新记录（按日期倒序，170KB；版本号 2026.11.x 是自编序号） | ✅ | **每次更新在最上面加一节**（后续按月归档） |
 
-## 功能与更新（每次更新必改）
-| 文档 | 内容 | 状态 | 怎么维护 |
-|---|---|---|---|
-| [FEATURES.md](FEATURES.md) | **现有功能清单**（按地图 / 时间天气 / 角色界面 / 联机社交 / 玩法成长 / 管理员 / 工具分类，注明是否已部署） | ✅ | **每次更新同步改**（体量 50KB，后续按模块重排） |
-| [CHANGELOG.md](CHANGELOG.md) | **更新记录**（按日期倒序，新增 / 调整 / 修复 / 移除，注明提交号与是否部署） | ✅ | **每次更新在最上面加一节**（体量 170KB，后续按月归档；版本号 2026.11.x 是自编序号） |
-| [FISHING_GUIDE.md](FISHING_GUIDE.md) | 钓鱼攻略（玩家手册，表格从真实规则生成） | 🔄 `npm run guide`（模板在 [guide/](guide/)） | 改了鱼表 / 装备 / 等级 / 价格后重新生成，测试会检查是否最新 |
-| [PROTOCOL.md](PROTOCOL.md) | **联机消息索引**：每种消息的方向与说明，按功能分组 | 🔄 `npm run protocol:doc` | 改了 `src/shared/protocol.ts` 后重新生成，测试会检查是否最新 |
+## architecture/ 架构与协议
+| 文档 | 内容 | 状态 |
+|---|---|---|
+| [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | 数据流、客户端 / 服务端分层、信任模型、测试与 CI、世界放大与流式加载 | ✅ |
+| [PROTOCOL.md](architecture/PROTOCOL.md) | 联机消息索引（每种消息的方向与说明，按功能分组） | 🔄 `npm run protocol:doc`，测试检查是否最新 |
 
-## 新功能怎么开发（规范）
+## design/ 系统设计
+| 文档 | 内容 | 状态 |
+|---|---|---|
+| [ECONOMY.md](design/ECONOMY.md) | 货币、收入 / 支出、卖鱼价格、平衡推演、校园墙 / 交易 / 垃圾桶 / 名人堂 | ⚠️ 设计加推演值；**真实价格以 `src/shared/economy.ts` 为准**，染料 / 家具 / 留言板限额等后加的没收录 |
+| [MULTIPLAYER.md](design/MULTIPLAYER.md) | 联机设计历史：按批次的需求、决策、移动校验、各批功能 | 📜 当前消息以 PROTOCOL.md 为准；新设计写进 feature/ |
+
+## map/ 地图
+| 文档 | 内容 | 状态 |
+|---|---|---|
+| [MAP_PIPELINE.md](map/MAP_PIPELINE.md) | 数据来源与可信度、坐标系、校验工作流、各区域重做记录、已知偏差 | ✅ |
+| [MAP_EDITOR.md](map/MAP_EDITOR.md) | 地图编辑器：用法、手动层格式、部署后并入、室内编辑器、给 AI 的流程 | ✅ |
+| [SCALE.md](map/SCALE.md) | 尺度约定（1 格 = 2.5 m，世界放大 2 倍） | ✅ |
+| [GLB_REFERENCE.md](map/GLB_REFERENCE.md) | 校园 GLB 模型：能信多少、用在哪些区域、工具 | 📜 模型只作参考 |
+
+## art/ 美术与素材
+| 文档 | 内容 | 状态 |
+|---|---|---|
+| [ART_STYLE.md](art/ART_STYLE.md) | 美术风格（"春日校园"）与预览脚本 | ✅（很短） |
+| [ASSETS_AND_LICENSES.md](art/ASSETS_AND_LICENSES.md) | 素材来源与许可、敏感词库说明 | ✅ |
+| [img/](art/img/) | 文档配图（人物 Rig、小猫、小地图等） | ✅ |
+
+## guide/ 指南
+| 文档 | 内容 | 状态 |
+|---|---|---|
+| [FISHING_GUIDE.md](guide/FISHING_GUIDE.md) | 钓鱼攻略（玩家手册，表格从真实规则生成；模板 `FISHING_GUIDE.template.md`） | 🔄 `npm run guide`，测试检查是否最新 |
+
+## process/ 协作流程
+| 文档 | 内容 | 状态 |
+|---|---|---|
+| [COLLABORATION.md](process/COLLABORATION.md) | 多人协作：fork + PR、主人审核、部署只由主人做 | ✅ |
+| [SERVER_COLLABORATION.md](process/SERVER_COLLABORATION.md) | **别人怎么改服务端**：三种协作方式、新字段 / 新协议 / 校验 / 测试 / 上线规则、协作者清单 | ✅（新） |
+
+## adr/ 决策记录
+[adr/README.md](adr/README.md)：为什么这样做（模板 + 9 份：公开 / 私有分离、shared 规则服务器裁决、token 身份、地图以卫星图为准、程序化美术、档案冻结、留言图片、部署由主人执行、服务端 handler 拆分）。**重大决定定下来就加一份，不改旧的。**
+
+## feature/ 功能规范（先文档、后代码）
 | 文档 | 内容 |
 |---|---|
-| [feature/spec.md](feature/spec.md) | **需求规格模板**：背景目标、用户场景、编号需求、规则数值、界面、数据协议、安全、性能、验收标准、未决问题；含完整开发流程（spec → plan → 开发 → 收尾 → 部署） |
-| [feature/plan.md](feature/plan.md) | **实施计划模板**：方案、任务拆分、协议与数据变更、测试计划、上线与回滚、风险、进度记录 |
+| [feature/spec.md](feature/spec.md) | **需求规格模板**（背景目标、场景、编号需求、规则、界面、数据协议、安全、性能、验收标准、未决问题）+ 开发流程 |
+| [feature/plan.md](feature/plan.md) | **实施计划模板**（方案比较、任务拆分、协议与数据变更、测试、上线与回滚、风险、进度） |
+| [feature/20261110-staging-env/](feature/20261110-staging-env/spec.md) | 第一份实例：测试环境（待确认） |
 - 每个新功能复制成 `docs/feature/<YYYYMMDD-功能名>/spec.md` + `plan.md`；**先 spec、主人确认，再 plan、主人确认，再写代码**。
-- 实际的 `plan.md` 不进公开仓库（只在私有备份里）；`spec.md` 可以公开。
+- 2026-11-10 起 spec 和 plan **都进公开仓库**：不要写服务器地址、口令、玩家数据（运维细节写到私有文档）。
 
-## 技术设计
-| 文档 | 内容 | 状态 | 怎么维护 |
-|---|---|---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | 数据流、客户端 / 服务端分层、信任模型、测试与 CI、世界放大与流式加载 | ✅（2026-11-10 刷新） | 结构变化时改 |
-| [MULTIPLAYER.md](MULTIPLAYER.md) | 联机设计**历史**：按批次记录的需求、决策、移动校验、各批功能设计 | 📜（当前消息以 PROTOCOL.md 为准） | 不再追加；新设计写进 feature/ |
-| [ECONOMY.md](ECONOMY.md) | 货币、收入 / 支出、卖鱼价格、平衡推演、校园墙 / 交易 / 垃圾桶 / 名人堂 / 钓鱼 2.0 经济 | ⚠️ 设计 + 推演值；**真实价格以 `src/shared/economy.ts` 为准**，染料 / 家具 / 留言板限额等后加的未收录 | 调价时改 |
-
-## 地图与美术
-| 文档 | 内容 | 状态 | 怎么维护 |
-|---|---|---|---|
-| [MAP_PIPELINE.md](MAP_PIPELINE.md) | 地图数据来源与可信度、坐标系、校验工作流、各区域重做记录、**已知偏差** | ✅（2026-11-10 补四栋新宿舍楼） | 改地图后补偏差 |
-| [MAP_EDITOR.md](MAP_EDITOR.md) | 地图编辑器（主人手动微调）：用法、手动层格式、部署后自动并入、室内编辑器、给 AI 的处理流程 | ✅ | 编辑器 / 流程变化时改 |
-| [SCALE.md](SCALE.md) | 尺度约定（1 格 = 2.5 m，世界放大 2 倍的决定） | ✅ | 很少改 |
-| [ART_STYLE.md](ART_STYLE.md) | 美术风格（"春日校园"）与预览脚本 | ✅（很短） | 风格有调整时改 |
-| [ASSETS_AND_LICENSES.md](ASSETS_AND_LICENSES.md) | 素材来源与许可、敏感词库说明 | ✅ | 引入新素材时改 |
-| [GLB_REFERENCE.md](GLB_REFERENCE.md) | 校园 GLB 模型：是什么、能信多少、用在了哪些区域、工具 | 📜（模型只作参考，不再扩展） | 基本不改 |
-| [img/](img/) | 文档配图（人物 Rig、小猫、小地图等） | ✅ | 被设计文档引用 |
-
-## 私有文档（只在主人本机和私有备份仓库）
-见 [private/README.md](private/README.md)：部署手册、各功能的方案与服务端备忘（`plans/`）、文件地图、玩家留言整理。**计划类文档不进公开仓库。**
+## 私有文档
+见 [private/README.md](private/README.md)：部署手册、各功能的历史方案与服务端备忘（`plans/`）、文件地图、玩家留言整理。

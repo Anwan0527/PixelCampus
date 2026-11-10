@@ -2,7 +2,7 @@
 # 联机协议索引
 
 > 共 153 种客户端消息、124 种服务器消息（另有位置上报 / 快照两种二进制帧，见 protocol.ts 的 encodePos / decodeSnapshot）。
-> 字段定义以 [`src/shared/protocol.ts`](../src/shared/protocol.ts) 为准；规则细节在 `src/shared/` 对应文件；每批功能的设计背景见 [MULTIPLAYER.md](MULTIPLAYER.md) 与 [CHANGELOG.md](CHANGELOG.md)。
+> 字段定义以 [`src/shared/protocol.ts`](../../src/shared/protocol.ts) 为准；规则细节在 `src/shared/` 对应文件；每批功能的设计背景见 [MULTIPLAYER.md](../design/MULTIPLAYER.md) 与 [CHANGELOG.md](../CHANGELOG.md)。
 > 新增消息：在 protocol.ts 的联合类型里加一行并写注释 → `npm run protocol:doc` → 服务端在对应 handler 里登记。
 
 ## 背包（2）

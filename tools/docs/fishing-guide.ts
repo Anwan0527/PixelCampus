@@ -1,8 +1,8 @@
 /**
  * 钓鱼攻略（玩家手册）生成器：手写的叙述在 docs/guide/FISHING_GUIDE.template.md，里面的 {{table:xxx}} / {{v:xxx}}
  * 占位符由这里根据 src/shared 里的真实规则（鱼表、概率、装备、配方、等级、价格……）生成——改了数值只要重新生成，手册不会过期。
- *   npm run guide        重新生成 docs/FISHING_GUIDE.md
- *   npm test             tests/fishing-guide.test.ts 会检查 docs/FISHING_GUIDE.md 是不是最新的
+ *   npm run guide        重新生成 docs/guide/FISHING_GUIDE.md
+ *   npm test             tests/fishing-guide.test.ts 会检查 docs/guide/FISHING_GUIDE.md 是不是最新的
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

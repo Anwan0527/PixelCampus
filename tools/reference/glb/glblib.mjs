@@ -1,7 +1,7 @@
 /**
  * 读校园 GLB 模型（参考资料/河北工程大学-校园模型-通用版.glb，不入库）的极简读取器：只取三角面，不做贴图。
  * 模型是 gltfpack 输出（无压缩扩展、无贴图、纯色材质），坐标单位≈米，x 向东、z 向南、y 向上；每栋楼一个顶层节点。
- * 用途与结论见 docs/GLB_REFERENCE.md。环境变量 GLB 可指定别的路径。
+ * 用途与结论见 docs/map/GLB_REFERENCE.md。环境变量 GLB 可指定别的路径。
  */
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';

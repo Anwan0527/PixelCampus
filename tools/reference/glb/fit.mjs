@@ -1,6 +1,6 @@
 /**
  * 对位：在一组"我们的蓝图楼（量自卫星图，已按视差折成脚印）"和"模型里对应的楼"之间搜缩放+平移，使脚印重叠度(IoU)最大。
- * 一、二社区各自拟合的结果一致：缩放 ≈ 0.192 格/模型米（模型整体比真实大约 4%）、IoU ≈ 0.72；用法见 docs/GLB_REFERENCE.md。
+ * 一、二社区各自拟合的结果一致：缩放 ≈ 0.192 格/模型米（模型整体比真实大约 4%）、IoU ≈ 0.72；用法见 docs/map/GLB_REFERENCE.md。
  */
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';

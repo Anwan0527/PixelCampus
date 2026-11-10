@@ -10,8 +10,8 @@
 - 技术栈：Phaser 3.90 + TypeScript 5.9 + Vite 7（客户端）；美术全部程序化生成（`tools/art` + `src/art` + sharp）；vitest。
 - **这个仓库只包含客户端、共享规则、地图/美术数据与生成工具、文档。** 联机服务器、部署、敏感词库等运维相关的东西由主人在自己的电脑上维护，**不在本仓库里**，协作者不需要也看不到。
   - 协作者用 `?offline`（单机模式）开发和预览客户端；单机模式下没有联机功能，但地图、角色、钓鱼、精灵战斗等客户端内容都能玩。
-  - 需要服务端配合的功能（新协议、新规则落地）：在 PR 里写清需求和协议改动（改 `src/shared/protocol.ts`、`src/shared/*` 里的规则，并更新 [MULTIPLAYER.md](MULTIPLAYER.md)），服务端那一半由主人来做。
-- 协作与部署流程见 [COLLABORATION.md](COLLABORATION.md)：**别人只提 PR，主人同意并合并；上线部署永远由主人手动执行。**
+  - 需要服务端配合的功能（新协议、新规则落地）：在 PR 里写清需求和协议改动（改 `src/shared/protocol.ts`、`src/shared/*` 里的规则，并更新 [MULTIPLAYER.md](design/MULTIPLAYER.md)），服务端那一半由主人来做。
+- 协作与部署流程见 [COLLABORATION.md](process/COLLABORATION.md)：**别人只提 PR，主人同意并合并；上线部署永远由主人手动执行。**
 
 ## 2. 目录地图
 ```
@@ -33,7 +33,7 @@ PixelGame/
 │  ├─ systems/ audio/ world/ net/ core/   天气与时钟 / WebAudio 合成 / 流式加载与碰撞 / NetClient / 常量与本地档案
 │  │                       systems/ 里还有节日氛围 festival.ts、宿舍浴缸闪光 bathfx.ts、宿舍装修 decoredit.ts / decorview.ts（家具目录与摆放规则在 shared/decor.ts）；art/festival.ts 画节日头饰和粒子贴图
 │  └─ shared/           **客户端和（私有的）服务端共用**：协议、规则、价格、目录
-├─ tools/docs/          钓鱼攻略生成器（`npm run guide`：docs/guide 模板 + shared 规则 → docs/FISHING_GUIDE.md）
+├─ tools/docs/          钓鱼攻略生成器（`npm run guide`：docs/guide 模板 + shared 规则 → docs/guide/FISHING_GUIDE.md）
 ├─ tests/               客户端与共享规则的测试；generated-world 测试要先 npm run assets
 ├─ .github/             CI（PR 自动跑 生成资源 + 类型检查 + 测试 + 构建）+ PR 模板
 └─ docs/
@@ -41,15 +41,15 @@ PixelGame/
 
 ## 2.5 当前规模与最近的批次（2026-11-10）
 - 客户端约 200 个源文件、2.4 万行；共享规则 `src/shared/` 65 个文件；测试 78 个文件 976 项（含依赖服务端、只在主人本机跑的 29 个）；世界 88 栋建筑、17 个地标、7593 个对象。
-- 功能全貌见 [FEATURES.md](FEATURES.md)；联机消息见 [PROTOCOL.md](PROTOCOL.md)（自动生成）；最近批次：宿舍装修 / 家具 / 染色 / 一键还原 → 校猫与好感度 2.0 → 水禽与宿舍养猫 → 商店 / 任务 / 校园墙 / Esc → 四栋新宿舍楼 / 学院合并 → 盲盒合成 / 地点留言板（可传图）→ 大文件拆分与玩家档案冻结。
+- 功能全貌见 [FEATURES.md](FEATURES.md)；联机消息见 [PROTOCOL.md](architecture/PROTOCOL.md)（自动生成）；最近批次：宿舍装修 / 家具 / 染色 / 一键还原 → 校猫与好感度 2.0 → 水禽与宿舍养猫 → 商店 / 任务 / 校园墙 / Esc → 四栋新宿舍楼 / 学院合并 → 盲盒合成 / 地点留言板（可传图）→ 大文件拆分与玩家档案冻结。
 - **新功能的开发流程**：先写 `docs/feature/<日期-名称>/spec.md`（需求，主人确认）→ `plan.md`（计划，主人确认）→ 开发 → 测试 → 同步 FEATURES / CHANGELOG（见 [feature/spec.md](feature/spec.md)、[feature/plan.md](feature/plan.md)）。
 - 文档总索引：[docs/README.md](README.md)。
 
 ## 3. 核心设计要点
-**地图**（2026-11-04 起部分区域参考了校园 GLB 模型，见 [GLB_REFERENCE.md](GLB_REFERENCE.md)：模型只当参考，**几何仍以卫星图为准**）：几何真值 = Esri z18 卫星正射图（`.cache/`，不入库）+ OSM 环路；蓝图用"5 m/格"原始坐标，`geo.json` 的 `world.scale=2` 把世界放大成 704×544 格（1 格 = 2.5 m），几何放大、像素设计的东西不放大。卫星是斜视角，蓝图填的是"屋顶坐标"，编译时按层数换算成脚印（视差）。地面按块流式加载（四季各一套），建筑图集分页，摆件 ~1.1 万个同屏只活跃几百个。详见 [MAP_PIPELINE.md](MAP_PIPELINE.md)、[SCALE.md](SCALE.md)。
+**地图**（2026-11-04 起部分区域参考了校园 GLB 模型，见 [GLB_REFERENCE.md](map/GLB_REFERENCE.md)：模型只当参考，**几何仍以卫星图为准**）：几何真值 = Esri z18 卫星正射图（`.cache/`，不入库）+ OSM 环路；蓝图用"5 m/格"原始坐标，`geo.json` 的 `world.scale=2` 把世界放大成 704×544 格（1 格 = 2.5 m），几何放大、像素设计的东西不放大。卫星是斜视角，蓝图填的是"屋顶坐标"，编译时按层数换算成脚印（视差）。地面按块流式加载（四季各一套），建筑图集分页，摆件 ~1.1 万个同屏只活跃几百个。详见 [MAP_PIPELINE.md](map/MAP_PIPELINE.md)、[SCALE.md](map/SCALE.md)。
 **图书馆广场**（x 325–399, y 361–423 格）已清空，西侧校园商店、东侧校园墙（常量在 `src/shared/plaza.ts`）；南门→图书馆中轴是主人最满意的一段，**别随意改**。
-**联机（客户端视角）**：身份 = 浏览器里的随机 token，没有账号体系；服务器分配稳定的校园号（uid）；好友、私聊只认 uid；客户端通过 `src/net/client.ts` 收发 `src/shared/protocol.ts` 里的消息。世界分公共 / 个人 / 好友三种（`src/ui/WorldPanel.ts`）。详见 [MULTIPLAYER.md](MULTIPLAYER.md)。
-**经济**：校园币只由服务器入账，客户端只显示；价格与规则在 `src/shared/economy.ts` 等共享文件里，设计见 [ECONOMY.md](ECONOMY.md)。
+**联机（客户端视角）**：身份 = 浏览器里的随机 token，没有账号体系；服务器分配稳定的校园号（uid）；好友、私聊只认 uid；客户端通过 `src/net/client.ts` 收发 `src/shared/protocol.ts` 里的消息。世界分公共 / 个人 / 好友三种（`src/ui/WorldPanel.ts`）。详见 [MULTIPLAYER.md](design/MULTIPLAYER.md)。
+**经济**：校园币只由服务器入账，客户端只显示；价格与规则在 `src/shared/economy.ts` 等共享文件里，设计见 [ECONOMY.md](design/ECONOMY.md)。
 **安全约定**：玩家写的文字一律 `textContent` 渲染（不用 `innerHTML`）；校验逻辑放 `src/shared/`；客户端发来的东西服务器一律不信任，所以客户端只做展示与请求。
 **美术**：全部程序化、确定性；人物/小猫走 Rig 管线（外观可自定义，手持物），设计与取舍在主人本机的私有设计稿里；老猫的毛色与编号已冻结（别改，会影响玩家的好感记录）。
 
@@ -91,14 +91,16 @@ PixelGame/
 | [README.md](../README.md) | 快速开始与操作 |
 | [README.md（docs 索引）](README.md) | **每份文档的内容、状态、维护方式** |
 | [FEATURES.md](FEATURES.md) | 现在有什么功能（分类清单，每次更新同步） |
-| [PROTOCOL.md](PROTOCOL.md) | 联机消息索引（`npm run protocol:doc` 自动生成） |
+| [PROTOCOL.md](architecture/PROTOCOL.md) | 联机消息索引（`npm run protocol:doc` 自动生成） |
 | [feature/](feature/spec.md) | 新功能的需求 + 计划模板（spec.md / plan.md） |
 | [CHANGELOG.md](CHANGELOG.md) | 每次更新了什么（按日期倒序） |
-| [COLLABORATION.md](COLLABORATION.md) | **多人协作流程**：怎么 fork、提 PR，主人怎么审、怎么上线 |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | 代码与数据流架构 |
-| [MULTIPLAYER.md](MULTIPLAYER.md) | 联机需求、协议、各批功能设计 |
-| [ECONOMY.md](ECONOMY.md) | 货币、商店、校园墙的设计 |
-| [MAP_EDITOR.md](MAP_EDITOR.md) | **地图编辑器**：主人手动微调地图的小工具、手动层格式 |
-| [MAP_PIPELINE.md](MAP_PIPELINE.md) / [SCALE.md](SCALE.md) | 地图数据来源与校验、**已知偏差**；比例约定 |
-| [ART_STYLE.md](ART_STYLE.md) / [ASSETS_AND_LICENSES.md](ASSETS_AND_LICENSES.md) | 美术风格；人物小猫 Rig 设计；素材许可 |
-| [GLB_REFERENCE.md](GLB_REFERENCE.md) | 校园 GLB 模型：是什么、能信多少、用在了哪些区域 |
+| [SERVER_COLLABORATION.md](process/SERVER_COLLABORATION.md) | **别人怎么改服务端**：协作方式、新字段 / 新协议 / 校验 / 测试 / 上线规则 |
+| [adr/](adr/README.md) | 架构决策记录：为什么这样做（9 份） |
+| [COLLABORATION.md](process/COLLABORATION.md) | **多人协作流程**：怎么 fork、提 PR，主人怎么审、怎么上线 |
+| [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | 代码与数据流架构 |
+| [MULTIPLAYER.md](design/MULTIPLAYER.md) | 联机需求、协议、各批功能设计 |
+| [ECONOMY.md](design/ECONOMY.md) | 货币、商店、校园墙的设计 |
+| [MAP_EDITOR.md](map/MAP_EDITOR.md) | **地图编辑器**：主人手动微调地图的小工具、手动层格式 |
+| [MAP_PIPELINE.md](map/MAP_PIPELINE.md) / [SCALE.md](map/SCALE.md) | 地图数据来源与校验、**已知偏差**；比例约定 |
+| [ART_STYLE.md](art/ART_STYLE.md) / [ASSETS_AND_LICENSES.md](art/ASSETS_AND_LICENSES.md) | 美术风格；人物小猫 Rig 设计；素材许可 |
+| [GLB_REFERENCE.md](map/GLB_REFERENCE.md) | 校园 GLB 模型：是什么、能信多少、用在了哪些区域 |

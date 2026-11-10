@@ -1,6 +1,6 @@
 /**
  * 植物精灵生成：阔叶树、杨树、银杏、樱花、松柏、柳树、灌木、花丛。
- * 尺度约定（与 docs/SCALE.md 一致）：16px = 1 tile；成年阔叶树冠宽约 3 tile、总高约 3.5 tile，
+ * 尺度约定（与 docs/map/SCALE.md 一致）：16px = 1 tile；成年阔叶树冠宽约 3 tile、总高约 3.5 tile，
  * 人物 16×32，所以人站在树旁大约到树干中段 —— 与星露谷比例一致。
  */
 import { Img, Rng, hash2, vnoise, type RGBA } from './px.ts';

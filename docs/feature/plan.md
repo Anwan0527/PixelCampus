@@ -1,7 +1,7 @@
 # 实施计划（plan）模板
 
 > **这份文件是模板。** 每个新功能复制一份到 `docs/feature/<YYYYMMDD-功能名>/plan.md`，和同目录的 `spec.md`（需求）配套；**spec 经主人确认之后再写 plan**，plan 经主人确认之后再开发。
-> 实际的 `plan.md` 不进公开仓库（`.gitignore` 忽略 `docs/feature/*/plan.md`，由私有备份仓库保存）；本目录根部这份模板是公开的。
+> `docs/feature/` 下的 spec 和 plan 都进**公开仓库**：不要写服务器地址 / IP、口令、令牌、玩家数据；运维细节（具体命令、路径、备份位置）写到私有文档 `docs/private/`，这里只写到「需要部署 / 需要改 nginx / 需要备份哪类数据」这一层。
 
 ---
 

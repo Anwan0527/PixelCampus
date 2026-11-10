@@ -20,7 +20,7 @@ export const ABOUT = {
 /** 画面角落的小水印、照片底栏、页面版权行 */
 export const copyrightLine = () => `© ${ABOUT.year} ${ABOUT.author} · ${ABOUT.title.split(' · ')[0]}`;
 
-/** 致谢：用到的第三方内容及其许可。新增第三方素材/库时在这里加一行，并同步 docs/ASSETS_AND_LICENSES.md。 */
+/** 致谢：用到的第三方内容及其许可。新增第三方素材/库时在这里加一行，并同步 docs/art/ASSETS_AND_LICENSES.md。 */
 export interface Credit { name: string; by: string; license: string; url?: string; note?: string }
 export const CREDITS: readonly Credit[] = [
   { name: 'Phaser 3', by: 'Photon Storm', license: 'MIT', url: 'https://phaser.io', note: '游戏引擎' },

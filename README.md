@@ -9,12 +9,12 @@
 地图**平面布局以真实校园为准**（卫星正射图量测 + OSM 交叉校验：88 栋建筑、道路网、湖、运动场、三个大门；世界 704×544 格，1 格 = 2.5 m）；
 画面（地面、建筑、树、人物、小猫、UI）全部由代码程序化生成，没有第三方素材（仅 Ark Pixel 12px 字体，OFL）。
 
-![小地图](docs/img/minimap.png)
+![小地图](docs/art/img/minimap.png)
 
 ## 快速开始
 ```bash
 npm ci
-npm run guide      # 重新生成钓鱼攻略 docs/FISHING_GUIDE.md（改了鱼表/装备/等级/价格后运行）
+npm run guide      # 重新生成钓鱼攻略 docs/guide/FISHING_GUIDE.md（改了鱼表/装备/等级/价格后运行）
 npm run assets     # 生成地面块 / 图集 / 世界数据（生成物不入库；首次约 2 分钟，之后有缓存）
 npm run dev        # http://127.0.0.1:5173/?offline （离线单人预览；?touch 强制手机界面，把窗口调矮就是横屏布局）
 npm test           # 客户端与共享规则的测试
@@ -22,7 +22,7 @@ npm run build      # 类型检查 + 生产构建
 ```
 **联机服务器、部署和运维不在这个仓库里**，由主人在自己电脑上维护；仓库里的 `npm run server / deploy / board / admin:set / bots` 等脚本需要那部分文件，协作者用不到。
 
-**多人协作**：fork 本仓库、在自己的 fork 里改，提 Pull Request，CI 自动跑检查；主人审核合并，上线部署由主人手动执行。完整流程见 [docs/COLLABORATION.md](docs/COLLABORATION.md)。
+**多人协作**：fork 本仓库、在自己的 fork 里改，提 Pull Request，CI 自动跑检查；主人审核合并，上线部署由主人手动执行。完整流程见 [docs/process/COLLABORATION.md](docs/process/COLLABORATION.md)。
 
 ## 玩法一览
 走路/奔跑、骑共享单车、和校园小猫玩（好感度、跟随、猫窝）、湖边钓鱼（拉鱼小游戏、48 种鱼、图鉴）、校园商店卖鱼买东西、校园墙发帖（需管理员审核）、每日任务/成就/称号、校园跑、好友/私聊/组队、公屏/留言板/公告、拍照、表情、手持物、季节与天气、昼夜。
@@ -43,12 +43,12 @@ archive/            上一版（只读，已废弃，不入库）
 ## 文档
 - **[docs/HANDOFF.md](docs/HANDOFF.md) — 项目交接：现状、约定、待办、调试手册（新会话/新协作者先读这个）**
 - [docs/FEATURES.md](docs/FEATURES.md) 现有功能 · [docs/CHANGELOG.md](docs/CHANGELOG.md) 更新记录
-- [docs/FISHING_GUIDE.md](docs/FISHING_GUIDE.md) 钓鱼攻略（玩家手册，表格由 `npm run guide` 从真实规则生成）
-- [docs/COLLABORATION.md](docs/COLLABORATION.md) 协作流程（fork + PR）
+- [docs/guide/FISHING_GUIDE.md](docs/guide/FISHING_GUIDE.md) 钓鱼攻略（玩家手册，表格由 `npm run guide` 从真实规则生成）
+- [docs/process/COLLABORATION.md](docs/process/COLLABORATION.md) 协作流程（fork + PR）
 - [docs/README.md](docs/README.md) **文档索引（每份文档是什么、状态、怎么维护）** · [docs/feature/](docs/feature/spec.md) 新功能的需求（spec）+ 计划（plan）模板
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 架构 · [docs/PROTOCOL.md](docs/PROTOCOL.md) 联机协议索引（自动生成）· [docs/MULTIPLAYER.md](docs/MULTIPLAYER.md) 联机各批功能的设计记录 · [docs/ECONOMY.md](docs/ECONOMY.md) 货币/商店/校园墙设计
-- [docs/MAP_PIPELINE.md](docs/MAP_PIPELINE.md) 地图管线与已知偏差（改地图前先读）· [docs/SCALE.md](docs/SCALE.md) 比例约定
-- [docs/ART_STYLE.md](docs/ART_STYLE.md) 美术风格 · [docs/ASSETS_AND_LICENSES.md](docs/ASSETS_AND_LICENSES.md) 素材许可
+- [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) 架构 · [docs/architecture/PROTOCOL.md](docs/architecture/PROTOCOL.md) 联机协议索引（自动生成）· [docs/design/MULTIPLAYER.md](docs/design/MULTIPLAYER.md) 联机各批功能的设计记录 · [docs/design/ECONOMY.md](docs/design/ECONOMY.md) 货币/商店/校园墙设计
+- [docs/map/MAP_PIPELINE.md](docs/map/MAP_PIPELINE.md) 地图管线与已知偏差（改地图前先读）· [docs/map/SCALE.md](docs/map/SCALE.md) 比例约定
+- [docs/art/ART_STYLE.md](docs/art/ART_STYLE.md) 美术风格 · [docs/art/ASSETS_AND_LICENSES.md](docs/art/ASSETS_AND_LICENSES.md) 素材许可
 
 ## 许可说明
 本项目是**个人学习作品，不是开源软件**：版权所有 © 2026 [EXIST-D](https://github.com/EXIST-D)，**保留所有权利**。代码虽然公开在 GitHub 上，但公开不等于开源授权。下面是摘要，**以仓库根目录的 [LICENSE](LICENSE) 为准**（中文条款为准，文末附英文摘要）。
@@ -66,9 +66,9 @@ archive/            上一版（只读，已废弃，不入库）
 - 声称是你自己创作的，或以作者的名义发布、背书；
 - 用于违法用途，或用于训练、微调机器学习模型并对外发布。
 
-**🤝 关于贡献**：向本项目提交代码、美术或文字（例如 Pull Request），即表示你保证对其拥有权利，并授予作者永久的、全球范围的、免费的、不可撤销的许可，可以任意使用、修改、发布并再授权你的贡献；你保留署名权。协作流程见 [docs/COLLABORATION.md](docs/COLLABORATION.md)。
+**🤝 关于贡献**：向本项目提交代码、美术或文字（例如 Pull Request），即表示你保证对其拥有权利，并授予作者永久的、全球范围的、免费的、不可撤销的许可，可以任意使用、修改、发布并再授权你的贡献；你保留署名权。协作流程见 [docs/process/COLLABORATION.md](docs/process/COLLABORATION.md)。
 
-**第三方内容**遵循各自的许可（Phaser、Ark Pixel 字体、OpenStreetMap 数据等），不受本许可约束，详见游戏内「关于」面板和 [docs/ASSETS_AND_LICENSES.md](docs/ASSETS_AND_LICENSES.md)；OpenStreetMap 数据需署名 © OpenStreetMap contributors。
+**第三方内容**遵循各自的许可（Phaser、Ark Pixel 字体、OpenStreetMap 数据等），不受本许可约束，详见游戏内「关于」面板和 [docs/art/ASSETS_AND_LICENSES.md](docs/art/ASSETS_AND_LICENSES.md)；OpenStreetMap 数据需署名 © OpenStreetMap contributors。
 **玩家在游戏里发布的内容**（聊天、留言、校园墙等）版权归玩家本人，发布即同意游戏展示并由管理员按规则审核、撤回或删除。
 **关于校名**：本项目与河北工程大学没有隶属、授权或官方关系，校名、地名、建筑名只用来描述真实地点。
 **免责声明**：本作品"按现状"提供，不附带任何担保；在法律允许的范围内，作者不对使用本作品产生的损失承担责任。
