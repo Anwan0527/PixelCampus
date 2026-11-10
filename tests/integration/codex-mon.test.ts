@@ -54,8 +54,8 @@ describe('精灵图鉴 · CodexPanel', () => {
     panel.open('mons');
     const cell = cellOf('？？？');
     expect(cell).toBeTruthy();
-    expect(cell!.querySelector('.mon-dex-silhouette')).toBeTruthy();
-    expect(cell!.querySelector('img')).toBeNull();
+    expect(cell!.querySelector('img.mon-dex-img.silhouette')).toBeTruthy();
+    expect(cell!.querySelector('img:not(.silhouette)')).toBeNull();
     cell!.click();
     expect(detail()).toContain('？？？');
     expect(detail()).toContain('还没遇到');

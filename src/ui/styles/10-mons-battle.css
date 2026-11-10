@@ -99,18 +99,19 @@
 .tp-floor { flex: 1; min-width: 0; min-height: 36px; padding: 2px 0; font-size: 13px; }
 @media (max-width: 420px) { .tp-row { grid-template-columns: repeat(2, 1fr); } }
 
-/* 精灵图鉴（IR #8） */
-.mon-dex-silhouette { width: 36px; height: 36px; margin: 2px auto; border-radius: 45% 45% 35% 35%; background: #3b2a1a; opacity: .55; }
-.mon-dex-silhouette.big { width: 64px; height: 64px; }
-.mon-dex-img { width: 36px; height: 36px; }
-.mon-dex-cell .mon-types { justify-content: center; }
+/* 精灵图鉴（IR #8）：和动物 / 钓鱼图鉴同一套 5 列卡片 */
+.mon-dex-img { width: 36px; height: 36px; image-rendering: pixelated; }
+.mon-dex-img.silhouette { filter: brightness(0) opacity(.35); }
+.mon-dex-img.big { width: 64px; height: 64px; }
+.mon-dex-cell .cx-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mon-dex-detail .mon-types { margin: 4px 0; }
 .mon-dex-chain { word-break: break-word; }
 .mon-dex-filter select { max-width: 140px; }
+.mon-dex-group { margin-top: 10px; }
+.mon-dex-grid { grid-template-columns: repeat(5, 1fr); }
 @media (max-width: 560px) {
   .mon-dex-filter select { max-width: 110px; }
-  .mon-dex-img, .mon-dex-silhouette { width: 30px; height: 30px; }
-  .mon-dex-silhouette.big { width: 48px; height: 48px; }
+  .mon-dex-img { width: 30px; height: 30px; }
+  .mon-dex-img.big { width: 48px; height: 48px; }
+  .mon-dex-grid { grid-template-columns: repeat(3, 1fr); }
 }
-.mon-dex-grid { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 560px) { .mon-dex-grid { grid-template-columns: repeat(3, 1fr); } }

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { NetClient } from '@/net/client';
 import type { ServerMsg } from '@/shared/protocol';
-import { CONTENT, ZONES } from '@/shared/mons-content';
+import { CONTENT, ZONES, monArt } from '@/shared/mons-content';
 import { elementName } from '@/shared/mons';
 import { monDexGroups, monDexProgress, monDexRows, monDexZoneOptions, type MonDexFilter, type MonDexRow } from './mondexModel';
 import { REAL_FISH, RARITY_COLORS, RARITY_NAMES, RARITY_ORDER, MOVE_NAMES, diffStars, fishDef, fmtKg, habitat, habitatText, type FishDef, type FishLog } from '@/shared/fishing';
@@ -28,6 +28,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 export type CodexTab = 'animals' | 'fish' | 'mons' | 'ach' | 'titles';
 type MonData = Extract<ServerMsg, { t: 'mon_data' }>;
 const COLOR = new Map(CONTENT.elements.elements.map((e) => [e.id, e.color]));
+const GROUP_COLORS: Record<'open' | 'cat' | 'dm', string> = { open: '#6aa84f', cat: '#b8501e', dm: '#8a5ac4' };
 const typeBadge = (id: string) => { const b = el('span', 'mon-type', elementName(CONTENT.elements, id)); b.style.background = COLOR.get(id) ?? '#aaa'; return b; };
 const dexNo = (no: number) => `No.${String(no).padStart(3, '0')}`;
 const addOption = (sel: HTMLSelectElement, label: string, value: string) => { const o = el('option'); o.textContent = label; o.value = value; sel.append(o); };
@@ -125,16 +126,13 @@ export class CodexPanel {
     if (!groups.length) box.append(el('div', 'cx-dim mon-dex-empty', '没有符合条件的精灵'));
     for (const g of groups) {
       const title = el('div', 'cx-group mon-dex-group', `${g.title}　见过 ${g.seen} / ${g.total} · 收服 ${g.caught} / ${g.total}`);
+      title.style.borderLeftColor = GROUP_COLORS[g.id];
       const grid = el('div', 'cx-grid mon-dex-grid');
       for (const row of g.rows) {
         const cell = el('button', 'cx-cell mon-dex-cell' + (row.seen ? ' got' : '') + (this.monSel === row.sp.id ? ' on' : '')); cell.type = 'button';
-        if (!row.seen) {
-          cell.append(el('div', 'mon-dex-silhouette'), el('div', 'cx-name', '？？？'), el('div', 'cx-sub', dexNo(row.no)));
-        } else {
-          const im = el('img', 'mon-img mon-dex-img'); im.src = row.art ?? ''; im.alt = ''; im.draggable = false;
-          const types = el('div', 'mon-types'); types.append(...row.types.map(typeBadge));
-          cell.append(im, el('div', 'cx-name', row.name), el('div', 'cx-sub', dexNo(row.no)), types, el('div', 'cx-sub', row.caught ? `收服 ×${row.caught}` : `见过 ×${row.seenCount}`));
-        }
+        const im = el('img', 'mon-img mon-dex-img' + (row.seen ? '' : ' silhouette'));
+        im.src = row.art ?? monArt(row.sp.id, 'front'); im.alt = ''; im.draggable = false;
+        cell.append(im, el('div', 'cx-name', row.seen ? row.name : '？？？'), el('div', 'cx-sub', row.seen ? `${dexNo(row.no)} · ${row.caught ? `收服 ×${row.caught}` : `见过 ×${row.seenCount}`}` : dexNo(row.no)));
         cell.addEventListener('click', () => { this.monSel = row.sp.id; this.render(); });
         grid.append(cell);
       }
@@ -147,7 +145,8 @@ export class CodexPanel {
     const row = this.monSel ? rows.find((r) => r.sp.id === this.monSel) : undefined;
     if (!row) { d.append(el('div', 'cx-dim', '点一只精灵看详情。')); return d; }
     if (!row.seen) {
-      d.append(el('div', 'mon-dex-silhouette big'), el('div', 'cx-dname', '？？？'), el('div', 'cx-dline', dexNo(row.no)), el('div', 'cx-dim', '还没遇到'));
+      const im = el('img', 'mon-img mon-dex-img big silhouette'); im.src = monArt(row.sp.id, 'front'); im.alt = '';
+      d.append(im, el('div', 'cx-dname', '？？？'), el('div', 'cx-dline', dexNo(row.no)), el('div', 'cx-dim', '还没遇到'));
       return d;
     }
     const top = el('div', 'cx-d-top'); top.append(el('span', 'cx-d-name', row.name), el('span', 'board-tag', dexNo(row.no)));
