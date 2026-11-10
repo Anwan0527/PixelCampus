@@ -230,6 +230,7 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
   - 卡片只保留「图 + 名字 + No. · 见过 / 收服次数」，属性徽章收进详情，和现有图鉴一样紧凑。
   - 未见过用物种图 `brightness(0)` 做灰度剪影（和现有 canvas 剪影一致），不再用深色圆块。
   - 分组标题按来源上色（开放包绿 / 猫系红 / 登录赠送紫），详情沿用现有 `cx-detail` 虚线卡片。
-  - 属性 / 区域筛选从原生 `<select>` 改成像素风下拉（按钮 + 面板），和游戏内其他面板一致。
+  - 属性 / 区域筛选从原生 `<select>` 改成像素风下拉（按钮 + 面板），和游戏内其他面板一致；下拉按内容自适应、不出现滚动条。
+  - 手机横屏：卡片 6 列紧凑排列、图片留安全边距、无横向溢出；卡片高度自适应。
 - **验证**：`npm test` 59 文件 553 通过 / 3 跳过；`npx vitest run --config server/vitest.config.ts` 90 文件 1056 通过 / 5 跳过；`npx vite build` 绿。测试服 E2E：5 列（94.59px）、83 个图鉴位、82 个剪影、详情 / 筛选 / 844×390 横屏正常。
 - **状态**：测试服已部署；样式 PR [#15](https://github.com/EXIST-D/PixelCampus/pull/15) 待合并。
