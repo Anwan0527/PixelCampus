@@ -3,6 +3,7 @@ import type { ServerMsg } from '@/shared/protocol';
 import type { BEvent } from '@/shared/battle';
 import { CONTENT, monArt, speciesOf } from '@/shared/mons-content';
 import { elementName, maxHp, type Mon } from '@/shared/mons';
+import { fastDelay, hpText, learnLogText, moveView, readFast, summaryRows, writeFast } from './monBattleHelpers';
 import { isCatSpecies } from '@/shared/cat-mons';
 import { sfx, type SfxName } from '@/audio/sfx';
 
@@ -43,12 +44,18 @@ export class BattleUi {
   private busy = false;
   private prompt = el('div', 'mon-enc hidden');
   private banner = el('div', 'bt-banner hidden');
+  private fast = readFast();
+  private fastBtn = el('button', 'btn sm bt-fast');
   /** 战斗开始时调用（场景用来收起和小猫互动的面板） */
   onOpen: (() => void) | null = null;
   private promptTimer = 0;
 
   constructor(private net: NetClient) {
     const stage = el('div', 'bt-stage'); stage.append(this.foeCard, this.foeImg, this.meImg, this.meCard, this.banner);
+    this.fastBtn.type = 'button';
+    this.fastBtn.addEventListener('click', () => this.setFast(!this.fast));
+    this.updateFastBtn();
+    stage.append(this.fastBtn);
     const panel = el('div', 'box bt'); panel.append(stage, this.log, this.menu);
     this.root.append(panel);
     (document.getElementById('hud') ?? document.body).append(this.root, this.prompt);
@@ -103,6 +110,10 @@ export class BattleUi {
   private viewOf(m: Bt): View { return { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max }; }
   private lead(m = this.bt): Mon | undefined { return m?.sq[this.view.lead]; }
   private say(text: string) { this.log.append(el('div', undefined, text)); this.log.scrollTop = this.log.scrollHeight; }
+  /** 动画 / 文字等待；快进时缩短，服务器计时不受影响 */
+  private wait(ms: number) { return sleep(fastDelay(ms, this.fast)); }
+  private setFast(on: boolean) { this.fast = on; writeFast(on); this.updateFastBtn(); }
+  private updateFastBtn() { this.fastBtn.textContent = `⏩ 快进：${this.fast ? '开' : '关'}`; this.fastBtn.setAttribute('aria-pressed', String(this.fast)); }
 
   /** 按事件播放：每个事件改一点显示状态 + 一句话 + 一小段动画 */
   private async play(m: Bt) {
@@ -110,12 +121,12 @@ export class BattleUi {
     const myName = () => nameOf(mons[this.view.lead] ?? bt0.sq[this.view.lead]);
     const foeName = () => m.cat?.name ?? speciesOf(m.foe.sp)?.name ?? m.foe.sp;
     const who = (s: 'me' | 'foe') => (s === 'me' ? myName() : m.cat ? foeName() : `野生的${foeName()}`);
-    const anim = async (img: HTMLElement, cls: string, ms: number) => { img.classList.remove(cls); void img.offsetWidth; img.classList.add(cls); await sleep(ms); img.classList.remove(cls); };
+    const anim = async (img: HTMLElement, cls: string, ms: number) => { img.classList.remove(cls); void img.offsetWidth; img.classList.add(cls); await this.wait(ms); img.classList.remove(cls); };
     const snd = (n: SfxName) => sfx(n);
     for (const e of m.ev as BEvent[]) {
       switch (e.t) {
         case 'use': this.say(`${who(e.side)}使用了${CONTENT.moves.get(e.move)?.name ?? (e.move === 'struggle' ? '挣扎' : e.move)}！`); await anim(e.side === 'me' ? this.meImg : this.foeImg, e.side === 'me' ? 'lunge-me' : 'lunge-foe', 380); break;
-        case 'miss': this.say('没有打中！'); snd('fail'); await sleep(450); break;
+        case 'miss': this.say('没有打中！'); snd('fail'); await this.wait(450); break;
         case 'hit': {
           if (e.side === 'foe') this.view.foeHp = e.hp; else this.view.hp[this.view.lead] = e.hp;
           this.renderStage(); snd('click');
@@ -128,13 +139,13 @@ export class BattleUi {
         case 'throw': this.say('扔出了一包零食！'); snd('cast'); await anim(this.foeImg, 'lunge-me', 420); break;
         case 'shake': this.say(e.n > 0 ? `零食包晃了 ${e.n} 下……` : '对方还在犹豫……'); for (let i = 0; i < Math.max(1, e.n); i++) await anim(this.foeImg, 'wobble', 420); break;
         case 'caught': this.say(`收服了 ${foeName()}！`); snd('catch'); await anim(this.foeImg, 'caught', 700); break;
-        case 'break': this.say('它挣脱了！'); snd('fail'); await sleep(350); break;
-        case 'escape': this.say('成功逃走了！'); await sleep(400); break;
-        case 'stuck': this.say('没能逃掉！'); await sleep(400); break;
-        case 'xp': this.say(`${nameOf(mons[e.i])} 获得了 ${e.gain} 点经验`); await sleep(450); break;
-        case 'level': this.say(`${nameOf(mons[e.i])} 升到了 Lv.${e.lv}！`); snd('achieve'); await sleep(600); break;
-        case 'evolve': { const from = nameOf(bt0.sq[e.i] ?? { sp: e.to }); this.say(`咦？${from} 的样子发生了变化！`); await anim(this.meImg, 'evolve', 1100); this.say(`${from} 进化成了 ${speciesOf(e.to)?.name ?? e.to}！`); snd('achieve'); if (e.i === this.view.lead) this.meImg.src = monArt(e.to, 'back', !!bt0.sq[e.i]?.sh); await sleep(700); break; }
-        case 'learn': this.say(e.full ? `${nameOf(mons[e.i])} 想学会 ${CONTENT.moves.get(e.move)?.name}，但技能已经满了……` : `${nameOf(mons[e.i])} 学会了 ${CONTENT.moves.get(e.move)?.name}！`); await sleep(550); break;
+        case 'break': this.say('它挣脱了！'); snd('fail'); await this.wait(350); break;
+        case 'escape': this.say('成功逃走了！'); await this.wait(400); break;
+        case 'stuck': this.say('没能逃掉！'); await this.wait(400); break;
+        case 'xp': this.say(`${nameOf(mons[e.i])} 获得了 ${e.gain} 点经验`); await this.wait(450); break;
+        case 'level': this.say(`${nameOf(mons[e.i])} 升到了 Lv.${e.lv}！`); snd('achieve'); await this.wait(600); break;
+        case 'evolve': { const from = nameOf(bt0.sq[e.i] ?? { sp: e.to }); this.say(`咦？${from} 的样子发生了变化！`); await anim(this.meImg, 'evolve', 1100); this.say(`${from} 进化成了 ${speciesOf(e.to)?.name ?? e.to}！`); snd('achieve'); if (e.i === this.view.lead) this.meImg.src = monArt(e.to, 'back', !!bt0.sq[e.i]?.sh); await this.wait(700); break; }
+        case 'learn': this.say(learnLogText(nameOf(mons[e.i]), CONTENT.moves.get(e.move)?.name ?? e.move, e.full)); await this.wait(550); break;
       }
     }
   }
@@ -143,12 +154,13 @@ export class BattleUi {
     const m = this.bt; if (!m) return;
     const foeSp = speciesOf(m.foe.sp), me = this.lead(m);
     this.foeImg.src = monArt(m.foe.sp, 'front', !!m.foe.sh);
-    this.foeCard.replaceChildren(el('div', 'mon-name', `${m.cat ? `${m.cat.name}（${foeSp?.name ?? m.foe.sp}）` : foeSp?.name ?? m.foe.sp}  Lv.${m.foe.lv}`), bar(this.view.foeHp / Math.max(1, this.view.foeMax)), el('div', 'mon-types'));
-    this.foeCard.lastElementChild!.append(...(foeSp?.types ?? []).map(badge));
+    const foeTypes = el('div', 'mon-types'); foeTypes.append(...(foeSp?.types ?? []).map(badge));
+    this.foeCard.replaceChildren(el('div', 'mon-name', `${m.cat ? `${m.cat.name}（${foeSp?.name ?? m.foe.sp}）` : foeSp?.name ?? m.foe.sp}  Lv.${m.foe.lv}`), bar(this.view.foeHp / Math.max(1, this.view.foeMax)), el('div', 'mon-sub', hpText(this.view.foeHp, m.foe.max)), foeTypes);
     if (me) {
       this.meImg.src = monArt(me.sp, 'back', !!me.sh);
       const max = maxHp(CONTENT, me), hp = this.view.hp[this.view.lead] ?? me.hp;
-      this.meCard.replaceChildren(el('div', 'mon-name', `${nameOf(me)}  Lv.${me.lv}`), bar(hp / Math.max(1, max)), el('div', 'mon-sub', `${hp}/${max}`));
+      const meTypes = el('div', 'mon-types'); meTypes.append(...(speciesOf(me.sp)?.types ?? []).map(badge));
+      this.meCard.replaceChildren(el('div', 'mon-name', `${nameOf(me)}  Lv.${me.lv}`), bar(hp / Math.max(1, max)), el('div', 'mon-sub', hpText(hp, max)), meTypes);
     }
   }
 
@@ -158,7 +170,7 @@ export class BattleUi {
   private renderMenu() {
     this.menu.replaceChildren();
     const m = this.bt; if (!m) return;
-    if (m.phase === 'over') { this.menu.append(this.btn('离开', () => this.close(), 'btn primary')); return; }
+    if (m.phase === 'over') { this.menu.append(this.renderSummary(m), this.btn('离开', () => this.close(), 'btn primary')); return; }
     const forced = m.phase === 'swap';
     const mode = forced ? 'swap' : this.mode;
     if (mode === 'main') {
@@ -170,10 +182,17 @@ export class BattleUi {
       (this.menu.children[2] as HTMLButtonElement).disabled = this.busy || m.sq.filter((x, i) => i !== this.view.lead && x.hp > 0).length === 0;
     } else if (mode === 'moves') {
       const me = this.lead(m)!;
+      const foeTypes = speciesOf(m.foe.sp)?.types ?? [];
       me.mv.forEach((x, i) => {
         const d = CONTENT.moves.get(x.id); if (!d) return;
-        const b = this.btn(`${d.name}  PP ${x.pp}/${d.pp}`, () => this.act({ t: 'move', i }), 'btn bt-move'); b.style.borderColor = COLOR.get(d.type) ?? '';
-        b.disabled = this.busy || (x.pp <= 0 && me.mv.some((y) => y.pp > 0)); this.menu.append(b);
+        const v = moveView(CONTENT, d, x.pp, foeTypes);
+        const b = el('button', 'btn bt-move'); b.type = 'button';
+        b.append(badge(d.type), el('span', 'mon-mname', v.name), el('span', 'bt-mmeta', `${v.cat} 威力${v.power} 命中${v.acc}%  PP ${v.pp}/${v.maxPp}`));
+        if (v.effect) b.append(el('span', 'bt-eff', v.effect));
+        b.style.borderColor = COLOR.get(d.type) ?? '';
+        b.disabled = this.busy || (x.pp <= 0 && me.mv.some((y) => y.pp > 0));
+        b.addEventListener('click', () => this.act({ t: 'move', i }));
+        this.menu.append(b);
       });
       this.menu.append(this.btn('返回', () => { this.mode = 'main'; this.renderMenu(); }));
     } else {
@@ -185,6 +204,24 @@ export class BattleUi {
       });
       if (!forced) this.menu.append(this.btn('返回', () => { this.mode = 'main'; this.renderMenu(); }));
     }
+  }
+
+  private resultText(m: Bt): string {
+    return m.result === 'win' ? '战斗胜利！' : m.result === 'caught' ? '收服成功！' : m.result === 'fled' ? '成功脱离了战斗。' : m.cat ? '你的精灵都倒下了……友谊赛到此为止，下次再来切磋！' : '你的精灵全部倒下了……眼前一黑，你回到了校门口。';
+  }
+  /** 结算页：结果 + 本回合事件（经验 / 升级 / 进化 / 学招 / 收服）；没有事件就只有结果 */
+  private renderSummary(m: Bt): HTMLElement {
+    const box = el('div', 'bt-summary');
+    box.append(el('div', 'bt-sum-title', this.resultText(m)));
+    const foeName = m.cat?.name ?? speciesOf(m.foe.sp)?.name ?? m.foe.sp;
+    const rows = summaryRows(m.ev, {
+      mon: (i) => nameOf(m.sq[i] ?? { sp: m.foe.sp }),
+      move: (id) => CONTENT.moves.get(id)?.name ?? id,
+      species: (id) => speciesOf(id)?.name ?? id,
+      foe: foeName,
+    });
+    for (const r of rows) box.append(el('div', 'bt-sum-row', r));
+    return box;
   }
 
   close() { this.root.classList.add('hidden'); this.bt = null; this.busy = false; }

@@ -5,6 +5,36 @@
 
 ---
 
+## 2026.11.10（平衡：耄耋技能槽 10 → 5）更新内容
+**调整：**
+- 登录赠送的「耄耋」技能槽 **10 → 5**：默认带耄耋哈气、圆头冲撞、一般系两招和格斗；地面/火/水/电/冰的老吴技能可以在精灵面板随时换上来。
+- 旧存档的 10 个技能会收敛到前 5 个（和新默认一致），其余可在精灵面板换回；不需要迁移脚本。
+- 共享 `DM_SPECIES.moveSlots` 修改，服务端 + 客户端一起部署；`server/tests/monwild.test.ts` 覆盖默认 5 个、多系可换、旧存档截断。
+（测试服已部署；正式服待部署。）
+
+## 2026.11.10（精灵对战第一批：技能更换、战斗信息、结算页、快进；2026-11-10 16:32 测试服已部署，正式服待部署）更新内容
+**新增：技能更换（B 方案）**
+- 精灵面板在战斗外可以查看「当前等级及以下、当前阶段 + 已经过的前序阶段、技能表里有但当前没带」的技能，免费、不限次数地替换或学会；有空槽时直接「学习新技能」，不满槽不覆盖。不再因为技能满而永久丢招。可学列表由服务端在 `mon_data.learnable` 下发（精灵 id → 技能 id，按等级排序），客户端只显示，不做本地推导。
+- 协议（additive，`PROTOCOL_VERSION` 不升）：客户端 → 服务器 `mon_replace { id, move, drop }`，`drop = -1` 放空槽，`drop >= 0` 替换该下标；服务器校验精灵、技能在 `learnable` 里、当前没带、`drop` 合法、不在战斗中，成功后推回 `mon_data`。**不需要新增存档字段**，旧存档兼容。
+- 升级 / 进化时技能满：文案改成「想学会 X，但技能已满；可在精灵面板更换」；进化时也发 `learn{full:true}` 提示（只提示，不改数据）。
+**新增：战斗信息 / 结算页 / 快进**
+- 出招菜单显示属性文字、物理 / 特殊、威力、命中、PP、对当前对手的克制（无效 / 效果不佳 ×N / 效果拔群 ×N）；对手卡片显示 `hp/max`，我方卡片显示属性。
+- 战斗结束有结算页：结果 + 本回合经验 / 升级 / 进化 / 学招 / 收服；重连后没有事件时只显示结果。
+- 战斗内可切换快进（动画 / 文字等待 ×0.35，最短 80ms），偏好存 `localStorage`（`pixelcampus.mon.btFast`），存储不可用时默认关闭。
+**测试 / 文档**
+- 新增 `tests/mon-learn.test.ts`、`tests/mon-learn-events.test.ts`、`tests/mon-ui-helpers.test.ts`、`tests/integration/mon-panel-learn.test.ts`、`tests/integration/battle-ui-info.test.ts`、`tests/integration/protocol-mon.test.ts`、`tests/source-safety.test.ts`；`happy-dom` 只进 devDependencies。
+- `docs/feature/20261110-mon-battle/` 的 spec / plan 已按 B 方案更新；规范见 `docs/feature/spec.md` 模板。
+**部署注意（未做）**
+- **服务端本地已实现**（私有 `server/` `develop`）：`mon_data.learnable` 下发、`mon_replace` 处理、战斗中拒绝；`server/tests/monreplace.test.ts` 含真实 WebSocket 用例。待部署到测试服 / 正式服；客户端拿不到 `learnable` 时不会显示更换入口，不会出现坏按钮。协议是 additive，部署前仍按惯例备份玩家存档（本批不新增字段）。
+（测试服已部署；正式服待主人手动部署。测试服 `status` 正常，`mon_replace` 非法请求被拒；本地真实浏览器 E2E 已通过。）
+
+## 2026.11.10（文档：新增 IR #12 校园环线摆渡）更新内容
+**新增：IR #12 校园环线摆渡第一批**
+- 新建 `docs/feature/ir-012-campus-shuttle-batch1/`：`spec.md`（背景、范围、正向 P1–P15、反向 N1–N24、协议、界面、验收、开放问题）和由它生成的 `plan.md`（实施顺序、文件清单、详细设计、测试计划、服务端配合、风险、提交拆分）。
+- 对应 Issue：[EXIST-D/PixelCampus#12](https://github.com/EXIST-D/PixelCampus/issues/12)：沿校园环路（OSM `775116469` + `1561666646`）自动行驶、7 个站牌、4 座、服务器权威上下车、`?offline` 可单人乘坐。
+- 尚未开始写代码；站名/速度/停站/断线落点等待主人拍板（见 spec §9）。
+（纯文档，无需部署。）
+
 ## 2026.11.16（大文件拆分 + 玩家档案冻结 + 清理；2026-11-10 11:24 已部署）更新内容
 **调整：大文件按功能拆分（行为不变，只搬代码）**
 - `src/scenes/WorldScene.ts` 1528 → 401 行：新增 `src/scenes/world/`（接线 `wire-panels`、按 E 交互判定 `interaction-rules`（纯函数，`tests/world-interaction.test.ts` 10 项）+ `interaction`、流式构建 `stream`、`entities`、`effects`、`clock`、`fishing`、`cats`、`actions`、`hotkeys`、`place`、`transitions`、`camera`）；`WorldScene` 成员去掉 `private`，供模块访问。
