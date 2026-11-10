@@ -109,12 +109,14 @@ function defaultRoofTone(b: BuildingDef): number {
   const t = table[b.kind] ?? [0];
   return t[h % t.length];
 }
+/** 建筑 id → 室内 id（data/campus/interior-links.json）：在手动层 / baked 层之后套用，编辑器改建筑不会丢这个对应 */
+const INTERIOR_LINKS: Record<string, string> = (() => { const f = join(ROOT, 'data', 'campus', 'interior-links.json'); if (!existsSync(f)) return {}; return Object.fromEntries(Object.entries(JSON.parse(readFileSync(f, 'utf8')) as Record<string, string>).filter(([k]) => !k.startsWith('_'))); })();
 const OPEN_INTERIORS = new Set<string>();
 { const dir = join(ROOT, 'data', 'interiors'); if (existsSync(dir)) for (const f of readdirSync(dir).filter((x) => x.endsWith('.json'))) { const j = JSON.parse(readFileSync(join(dir, f), 'utf8')); if (j.open && j.id) OPEN_INTERIORS.add(j.id); } }
 for (const b of buildings) {
   // 室内系统暂停开发：默认不暴露入口。设置 INTERIORS=1 可开启（室内场景尚未通过验收）。
   // 室内：INTERIORS=1 时按旧规则全开；否则只开放 data/interiors/*.json 里写了 "open": true 的那几间（目前试点：42 号楼 → 数学建模协会 214）
-  const interior = process.env.INTERIORS === '1' ? (b.interior ?? (b.kind === 'teaching' ? 'classroom' : b.kind === 'canteen' ? 'canteen' : undefined)) : (b.interior && OPEN_INTERIORS.has(b.interior) ? b.interior : undefined);
+  const interior = process.env.INTERIORS === '1' ? (b.interior ?? (b.kind === 'teaching' ? 'classroom' : b.kind === 'canteen' ? 'canteen' : undefined)) : ((INTERIOR_LINKS[b.id] ?? b.interior) && OPEN_INTERIORS.has((INTERIOR_LINKS[b.id] ?? b.interior)!) ? (INTERIOR_LINKS[b.id] ?? b.interior) : undefined);
   const editorSpecs: Record<string, unknown>[] = [];
   editorOut.push({ id: b.id, name: b.name, kind: b.kind, sign: b.sign, desc: b.desc, fixed: b.fixed, interior: b.interior, wings: editorSpecs });
   const out: BuildingOut = { id: b.id, name: b.name, kind: b.kind, desc: b.desc, interior, wings: [], doors: [], bbox: { x: 1e9, y: 1e9, w: 0, h: 0 } };

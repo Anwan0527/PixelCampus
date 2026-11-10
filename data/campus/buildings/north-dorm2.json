@@ -229,7 +229,7 @@
  },
  {
   "id": "d2-market",
-  "name": "学生超市",
+  "name": "第二超市",
   "kind": "service",
   "style": "brick",
   "f": 3,
@@ -245,7 +245,7 @@
     }
    }
   ],
-  "sign": "超市",
+  "sign": "第二超市",
   "ground": true
  },
  {

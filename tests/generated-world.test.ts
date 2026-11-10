@@ -128,7 +128,7 @@ describe.skipIf(!has)('景观完成度', () => {
   });
   it('食堂/浴室/超市都有招牌，食堂门前有遮阳伞桌椅', () => {
     const txt = W.labels.filter((l) => l.plate).map((l) => l.text);
-    for (const t of ['第一学生食堂', '第二学生食堂', '第三学生食堂', '三社区超市', '学生超市', '一社区浴室', '校医院', '图书馆']) expect(txt, t).toContain(t);
+    for (const t of ['第一学生食堂', '第二学生食堂', '第三学生食堂', '三社区超市', '第二超市', '一社区浴室', '校医院', '图书馆']) expect(txt, t).toContain(t);
     expect(W.objects.filter((o) => o.k.startsWith('parasolTable')).length).toBeGreaterThanOrEqual(4);
   });
   it('场地设施：运动场灯杆 ≥ 12、看台 ≥ 2、湖岸岸石 ≥ 20、芦苇 ≥ 20', () => {

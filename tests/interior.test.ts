@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { validateInterior, rotFoot, furnitureLabel, type InteriorSpec } from '../src/shared/interior';
+import { validateInterior, validateInteriorSet, interiorProblems, collisionRows, seatsOfFurn, stairLand, stairW, STAIR_H, SEAT_KEYS, floorName, rotFoot, furnitureLabel, type InteriorSpec } from '../src/shared/interior';
 import { FURNITURE } from '../tools/art/furniture';
 import { OFFICE_FURNITURE, FURN_INFO } from '../tools/art/furniture-office';
 import { DORM_FURNITURE } from '../tools/art/furniture-dorm';
@@ -76,10 +76,9 @@ describe('开放的室内：能走进去、走得到每个 NPC、家具没叠在
       });
     });
     it(`${s.id}：从门口出发能走到所有 NPC 身边，可走区域连通`, () => {
-      const blocked = Array.from({ length: s.h }, (_, y) => Array.from({ length: s.w }, (_, x) => y < 3 || x === 0 || x === s.w - 1 || (y === s.h - 1 && !(x >= s.exit.x && x < s.exit.x + s.exit.w))));
-      for (const p of s.partitions ?? []) for (let y = p.y0; y <= p.y1; y++) if (!(p.gap && y >= p.gap.y && y < p.gap.y + p.gap.h)) blocked[y][p.x] = true;
-      for (const f of s.furniture) { const { fw, fh } = foot(f.k, f.rot); if (f.top) continue; for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) if (blocked[f.y + j]?.[f.x + i] !== undefined) blocked[f.y + j][f.x + i] = true; }
-      const sx = Math.floor(s.exit.x + s.exit.w / 2), sy = s.h - 2;
+      const blocked = collisionRows(s, (k, r) => foot(k, r)).map((r) => r.split('').map((c) => c === '1'));
+      const st = s.exit ? { x: Math.floor(s.exit.x + s.exit.w / 2), y: s.h - 2 } : { x: Math.floor(stairLand(s.stairs![0]).x), y: Math.floor(stairLand(s.stairs![0]).y) };
+      const sx = st.x, sy = st.y;
       expect(blocked[sy][sx], '出生点被挡住').toBe(false);
       const seen = new Set<string>([`${sx},${sy}`]); const q: [number, number][] = [[sx, sy]];
       while (q.length) { const [x, y] = q.shift()!; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= s.w || ny >= s.h || blocked[ny][nx] || seen.has(`${nx},${ny}`)) continue; seen.add(`${nx},${ny}`); q.push([nx, ny]); } }
@@ -124,5 +123,77 @@ describe('家具旋转与家具上的字', () => {
     expect(room?.labels.map((l) => l.text)).toEqual(expect.arrayContaining(['数学建模协会', '天\n道\n酬\n勤']));
     const ia = (JSON.parse(readFileSync(o, 'utf8')) as { id: string; interacts: { text: string; y0: number; y1: number }[] }[]).find((x) => x.id === 'mathmodel-214')!.interacts;
     expect(ia.some((a) => a.text === '2026数学建模迎新群：784626521' && a.y1 >= 64), '互动区要够到北墙下第一排能站的格子（y≥48）').toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------- 多层大楼：楼层、楼梯、座位、传送
+import { TELEPORTS, groundInterior } from '../src/shared/teleport';
+const footR = (k: string, r: number) => { const f = ALL[k]; if (!f) return undefined; const x = f(); return rotFoot(x.fw, x.fh, r); };
+const HALLS = specs.filter((s) => s.building);
+describe('多层大楼（餐厅 / 教学楼）', () => {
+  it('整批室内：id 唯一、楼梯成对且层号对得上、同栋楼楼层连续、一层有门二层以上没有', () => {
+    expect(validateInteriorSet(specs)).toEqual([]);
+  });
+  it('三个餐厅各 3 层、两个教学楼各 5 层，一层开放、其余不开放', () => {
+    const count = (b: string) => HALLS.filter((s) => s.building === b).length;
+    for (const b of ['canteen-1', 'canteen-2', 'canteen-3']) expect(count(b), b).toBe(3);
+    for (const b of ['edu-1', 'edu-2']) expect(count(b), b).toBe(5);
+    for (const s of HALLS) expect(!!s.open, s.id).toBe(s.floor === 1);
+  });
+  it('每层都能走楼梯上下（顶层只有下、底层只有上），楼梯画在房间里、落点是空地', () => {
+    for (const s of HALLS) {
+      const dirs = (s.stairs ?? []).map((t) => t.dir).sort();
+      const top = HALLS.filter((o) => o.building === s.building).length;
+      const want = top === 1 ? [] : s.floor === 1 ? ['up'] : s.floor === top ? ['down'] : ['down', 'up'];
+      expect(dirs, s.id).toEqual(want);
+      expect(interiorProblems(s, footR).stairs, s.id).toEqual([]);
+      for (const t of s.stairs ?? []) { const l = stairLand(t); expect(l.y).toBeGreaterThan(t.y + STAIR_H); expect(t.x + stairW(t)).toBeLessThanOrEqual(s.w - 1); }
+    }
+  });
+  it('新做的房间里每把椅子 / 沙发都坐得上去（四周有能站的格子）；旧的 214 室允许有两把塞进桌里的', () => {
+    for (const s of specs.filter((x) => x.id !== 'mathmodel-214' && !/^dorm/.test(x.id))) expect(interiorProblems(s, footR).seats.map((p) => p.msg), s.id).toEqual([]);
+  });
+  it('座位：椅子 1 个、沙发 2 个，位置在椅子正南面（和宿舍一个算法）；挂在桌面上的小件不算', () => {
+    expect(seatsOfFurn({ k: 'bchair_d', x: 5, y: 6 }, 1, 1)).toEqual([{ x: 88, y: 113, bx: 88, by: 104 }]);
+    expect(seatsOfFurn({ k: 'sofa', x: 3, y: 18 }, 2, 1).length).toBe(2);
+    expect(seatsOfFurn({ k: 'ltable4', x: 3, y: 6 }, 4, 2)).toEqual([]);
+    expect(seatsOfFurn({ k: 'stool', x: 3, y: 6, top: true }, 1, 1)).toEqual([]);
+    for (const k of SEAT_KEYS) expect(ALL[k], k).toBeTruthy(); // 能坐的 key 都真实存在
+  });
+  it('每间新房间至少有 1 个椅子 / 沙发可以坐，有 NPC，教学楼 / 餐厅每层都有楼层名', () => {
+    for (const s of HALLS.concat(specs.filter((x) => ['library', 'market-2-f1', 'market-3-f1'].includes(x.id)))) {
+      if (s.id.startsWith('market')) continue;
+      expect(s.furniture.some((f) => SEAT_KEYS.has(f.k)), s.id).toBe(true);
+    }
+    for (const s of HALLS) { expect(s.npcs?.length ?? 0, s.id).toBeGreaterThan(0); expect(s.name, s.id).toMatch(new RegExp(`${s.floor}F$`)); }
+    expect(floorName(2)).toBe('二楼'); expect(floorName(5)).toBe('五楼');
+  });
+  it('图书馆、两个教学楼、第二 / 第三超市、三个餐厅都是开放的室内', () => {
+    const open = new Set(specs.filter((s) => s.open).map((s) => s.id));
+    for (const id of ['library', 'edu-1-f1', 'edu-2-f1', 'canteen-1-f1', 'canteen-2-f1', 'canteen-3-f1', 'market-2-f1', 'market-3-f1']) expect(open.has(id), id).toBe(true);
+  });
+  it('建筑 → 室内的对应（interior-links.json）指向开放的一层', () => {
+    const links = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'campus', 'interior-links.json'), 'utf8')) as Record<string, string>;
+    for (const [bid, iid] of Object.entries(links).filter(([k]) => !k.startsWith('_'))) { const s = specs.find((x) => x.id === iid); expect(s, `${bid} → ${iid}`).toBeTruthy(); expect(s!.open, `${iid} 要 open`).toBe(true); expect(s!.exit, `${iid} 是一层，要有门`).toBeTruthy(); }
+  });
+  it('传送面板：餐厅 3 层、教学楼 5 层都指向真实存在的室内，且第一层就是建筑进门的那层', () => {
+    for (const t of TELEPORTS.filter((x) => x.floors)) {
+      expect(t.floors!.length, t.id).toBe(t.id.startsWith('canteen') ? 3 : 5);
+      for (const f of t.floors!) expect(specs.some((s) => s.id === f.interior), f.interior).toBe(true);
+      expect(groundInterior(t.floors![2].interior), t.id).toBe(t.floors![0].interior);
+      expect(specs.find((s) => s.id === t.floors![0].interior)!.open, t.id).toBe(true);
+    }
+  });
+  it('生成物：interiors.json 里每层的楼梯、座位、出生点和 NPC 周围都对得上（已生成时检查）', () => {
+    const f = join(GEN, 'interiors.json'); if (!existsSync(f)) return;
+    const out = JSON.parse(readFileSync(f, 'utf8')) as { id: string; seats?: unknown[]; stairs?: { to: string; land: { x: number; y: number }; label: string }[]; exit?: unknown; spawn: { x: number; y: number }; collision: string[] }[];
+    for (const s of specs.filter((x) => x.building || ['library', 'market-2-f1', 'market-3-f1'].includes(x.id))) {
+      const o = out.find((x) => x.id === s.id)!; expect(o, s.id).toBeTruthy();
+      expect(o.stairs?.length, s.id).toBe(s.stairs?.length ?? 0);
+      for (const t of o.stairs ?? []) { expect(out.some((x) => x.id === t.to), t.to).toBe(true); expect(t.label, s.id).toMatch(/^(上|下)[一二三四五]楼$/); expect(o.collision[Math.floor(t.land.y)][Math.floor(t.land.x)], `${s.id} 落点`).toBe('0'); }
+      expect(!!o.exit, s.id).toBe((s.floor ?? 1) === 1);
+      expect(o.collision[Math.floor(o.spawn.y)][Math.floor(o.spawn.x)], `${s.id} 出生点`).toBe('0');
+      if (!s.id.startsWith('market')) expect((o.seats ?? []).length, s.id).toBeGreaterThan(0); // 超市没有座位
+    }
   });
 });

@@ -1,0 +1,11 @@
+{
+ "_说明": "建筑 id → 它正门进去的室内 id（室内数据在 data/interiors/<id>.json，一层要写 open: true 才真的开放）。编译时在地图手动层 / baked 层之后再套用，所以地图编辑器改建筑不会丢掉这个对应关系。",
+ "library": "library",
+ "public-1": "edu-1-f1",
+ "public-2": "edu-2-f1",
+ "canteen-1": "canteen-1-f1",
+ "d2-canteen": "canteen-2-f1",
+ "canteen-3": "canteen-3-f1",
+ "d2-market": "market-2-f1",
+ "muslim-restaurant": "market-3-f1"
+}
