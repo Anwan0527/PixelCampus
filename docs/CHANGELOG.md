@@ -5,7 +5,7 @@
 
 ---
 
-## 2026.11.16（大文件拆分 + 玩家档案冻结 + 清理；2026-11-10，未部署）更新内容
+## 2026.11.16（大文件拆分 + 玩家档案冻结 + 清理；2026-11-10 11:24 已部署）更新内容
 **调整：大文件按功能拆分（行为不变，只搬代码）**
 - `src/scenes/WorldScene.ts` 1528 → 401 行：新增 `src/scenes/world/`（接线 `wire-panels`、按 E 交互判定 `interaction-rules`（纯函数，`tests/world-interaction.test.ts` 10 项）+ `interaction`、流式构建 `stream`、`entities`、`effects`、`clock`、`fishing`、`cats`、`actions`、`hotkeys`、`place`、`transitions`、`camera`）；`WorldScene` 成员去掉 `private`，供模块访问。
 - `src/ui/style.css` 1432 行 → 19 行入口 + `src/ui/styles/01~16`（按原行序切，拼接后逐字节一致，构建出的 CSS 字节相同）。
@@ -15,6 +15,7 @@
 **清理**
 - 删除 `.cache` 一次性对照图与脚本（约 440MB）、`dist`、脱敏前的旧文档备份；旧版归档移出项目；服务器上的备份文件保留最近 5 份（先下载了完整备份）。
 - 注意：服务端同步改了（`server/store.ts`、`game.ts`、`handlers/*`、`index.ts`）；客户端与服务端行为不变，可以一起部署。
+- 部署实测：重启后 `/healthz` 显示 8559 份档案里 8440 份已冻结，堆 27MB、进程 RSS 172MB（部署前约 262MB）。
 
 ---
 
