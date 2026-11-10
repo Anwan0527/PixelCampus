@@ -26,7 +26,7 @@ tools/art/*  ──────────►│ 图集（人物、小猫、道
 - **系统**：`systems/clock`（服务器时间校准的昼夜）、`systems/weather`（雨雪画面、雨伞贴图）、`audio/`（WebAudio 合成的音乐/音效/环境声）。
 - **网络**：`net/client.ts`（`NetClient`：WebSocket、重连、所有消息收发，面板通过 `handlers` 订阅）。
 
-## 3. 服务器（`server/`）
+## 3. 服务器（`server/`，独立私有仓库 `PixelCampus-server`，克隆到本仓库的 `server/` 目录；见 [ADR 0012](../adr/0012-server-private-repo.md)）
 - `index.ts`：HTTP（静态页 + `/healthz` + 图片上传 `POST /up/<券>` / 读取 `GET /img/<名>`）+ WS 入口，组装各存储；`game.ts`：核心（连接、加入 / 退出、移动校验、视野快照、发送、tick）+ 「消息类型 → 处理函数」分发表；各功能在 `server/handlers/*-handler.ts`（管理员、举报、任务、宿舍、留言板、校园墙、钓鱼、商店、交易、社交、组队、牵手、世界、传送、精灵、节日、聊天…），handler 只通过窄接口 `GameCtx` 访问核心。联机消息清单见 [PROTOCOL.md](PROTOCOL.md)。
 - 持久化都是 `data/server/`下的文件：`store.ts`（玩家档案：快照 + 增量日志，防抖 + 原子写；离线 10 分钟的档案在内存里冻结成压缩 JSON，`/healthz` 有 heapMB / rssMB / profiles / frozen）、`place`（地点留言：`place.jsonl` + `place-img/` 图片文件）、`board`/`wall`（追加写 JSONL，删除/审核也是事件行，启动时重放）、`notices`、`social`（好友 JSON + 私聊 JSONL）、`chatlog`、`config`。
 - 规则分层：`progress.ts`（背包/好感/每日任务/币/商店/猫窝，和网络解耦便于测试）、`run.ts`（校园跑房间）、`party.ts`（组队）、`bikes.ts`（留车）、`admin.ts`（口令/令牌/限流）。

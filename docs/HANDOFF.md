@@ -8,7 +8,7 @@
 
 - 线上：**https://exist.qd.je/pixel/**
 - 技术栈：Phaser 3.90 + TypeScript 5.9 + Vite 7（客户端）；美术全部程序化生成（`tools/art` + `src/art` + sharp）；vitest。
-- **这个仓库只包含客户端、共享规则、地图/美术数据与生成工具、文档。** 联机服务器、部署、敏感词库等运维相关的东西由主人在自己的电脑上维护，**不在本仓库里**，协作者不需要也看不到。
+- **这个仓库只包含客户端、共享规则、地图/美术数据与生成工具、文档。** 联机服务器在独立的私有仓库（`PixelCampus-server`，克隆到本仓库的 `server/` 目录使用，被本仓库忽略；受邀的服务端协作者才有权限），部署、敏感词库等运维相关的东西由主人在自己的电脑上维护，**不在本仓库里**。
   - 协作者用 `?offline`（单机模式）开发和预览客户端；单机模式下没有联机功能，但地图、角色、钓鱼、精灵战斗等客户端内容都能玩。
   - 需要服务端配合的功能（新协议、新规则落地）：在 PR 里写清需求和协议改动（改 `src/shared/protocol.ts`、`src/shared/*` 里的规则，并更新 [MULTIPLAYER.md](design/MULTIPLAYER.md)），服务端那一半由主人来做。
 - 协作与部署流程见 [COLLABORATION.md](process/COLLABORATION.md)：**别人只提 PR，主人同意并合并；上线部署永远由主人手动执行。**
@@ -95,7 +95,7 @@ PixelGame/
 | [feature/](feature/spec.md) | 新功能的需求 + 计划模板（spec.md / plan.md） |
 | [CHANGELOG.md](CHANGELOG.md) | 每次更新了什么（按日期倒序） |
 | [SERVER_COLLABORATION.md](process/SERVER_COLLABORATION.md) | **别人怎么改服务端**：协作方式、新字段 / 新协议 / 校验 / 测试 / 上线规则 |
-| [adr/](adr/README.md) | 架构决策记录：为什么这样做（11 份） |
+| [adr/](adr/README.md) | 架构决策记录：为什么这样做（12 份） |
 | [COLLABORATION.md](process/COLLABORATION.md) | **多人协作流程**：怎么 fork、提 PR，主人怎么审、怎么上线 |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | 代码与数据流架构 |
 | [MULTIPLAYER.md](design/MULTIPLAYER.md) | 联机需求、协议、各批功能设计 |

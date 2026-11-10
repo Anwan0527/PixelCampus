@@ -28,3 +28,6 @@ docs/*_PLAN.md
 docs/*_TASKS.md
 docs/*_DESIGN.md
 docs/ROADMAP.md
+
+# 服务端是独立的私有仓库（PixelCampus-server），克隆到这个目录使用，不属于公开仓库
+/server/

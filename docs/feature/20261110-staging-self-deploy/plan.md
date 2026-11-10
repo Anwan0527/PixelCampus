@@ -69,4 +69,5 @@ npm run deploy:test  ──ssh──►  受限账号 pcdeploy（authorized_keys
 | 日期 | 做了什么 / 提交 | 备注 |
 |---|---|---|
 | 2026-11-10 | 写 spec / plan 草稿 | |
+| 2026-11-10 | （后续）协作者侧部署脚本随服务端迁入独立私有仓库 `PixelCampus-server`（`server/scripts/deploy-test.sh`、`test-env.sh`），不再用压缩包 | 见 ADR 0012 |
 | 2026-11-10 | 主人给出第一位协作者的公钥 → 实现并上线：受限账号 + 强制命令（deploy code/full、status、logs、rollback、reset、sethash）+ sudo 固定参数 + 沙箱加固（出站断网、隐藏敏感路径）；用临时密钥走完 A1~A7（越权、恶意包、压缩炸弹、并发、坏版本自动回滚、手动回滚、沙箱 12 项）后撤销临时密钥，加入协作者公钥 | 没验证：协作者那把 RSA 公钥的真实登录（只核对了格式和指纹）；发现并修了 macOS tar 管道输出带尾部填充导致 `gzip -l` 失灵的问题，并把默认部署改为只传代码（full 才传 145MB 资源） |
