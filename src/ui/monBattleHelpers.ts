@@ -63,7 +63,7 @@ export function summaryRows(ev: readonly BEvent[], labels: SummaryLabels): strin
       case 'level': rows.push(`${labels.mon(e.i)} 升到了 Lv.${e.lv}！`); break;
       case 'evolve': rows.push(`${labels.species(e.to)} 进化完成`); break;
       case 'learn': rows.push(learnLogText(labels.mon(e.i), labels.move(e.move), e.full)); break;
-      case 'caught': rows.push(`收服了 ${labels.foe}（去精灵面板查看）`); break;
+      case 'caught': rows.push(`收服了 ${labels.foe}`); break;
     }
   }
   return rows;

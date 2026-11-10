@@ -19,11 +19,11 @@
 - 升级 / 进化时技能满：文案改成「想学会 X，但技能已满；可在精灵面板更换」；进化时也发 `learn{full:true}` 提示（只提示，不改数据）。
 **新增：战斗信息 / 结算页 / 快进**
 - 出招菜单显示属性文字、物理 / 特殊、威力、命中、PP、对当前对手的克制（无效 / 效果不佳 ×N / 效果拔群 ×N）；对手卡片显示 `hp/max`，我方卡片显示属性。
-- 战斗结束有结算页：结果 + 本回合经验 / 升级 / 进化 / 学招 / 收服（收服提示「去精灵面板查看」）；重连后没有事件时只显示结果。
+- 战斗结束有结算页：结果 + 本回合经验 / 升级 / 进化 / 学招 / 收服；重连后没有事件时只显示结果。
 - 战斗内可切换快进（动画 / 文字等待 ×0.35，最短 80ms），偏好存 `localStorage`（`pixelcampus.mon.btFast`），存储不可用时默认关闭。
 **测试 / 文档**
 - 新增 `tests/mon-learn.test.ts`、`tests/mon-learn-events.test.ts`、`tests/mon-ui-helpers.test.ts`、`tests/integration/mon-panel-learn.test.ts`、`tests/integration/battle-ui-info.test.ts`、`tests/integration/protocol-mon.test.ts`、`tests/source-safety.test.ts`；`happy-dom` 只进 devDependencies。
-- `docs/feature/20261110-mon-battle-batch1/` 的 spec / plan 已按 B 方案更新；规范见 `docs/feature/spec.md` 模板。
+- `docs/feature/20261110-mon-battle/` 的 spec / plan 已按 B 方案更新；规范见 `docs/feature/spec.md` 模板。
 **部署注意（未做）**
 - **服务端本地已实现**（私有 `server/` `develop`）：`mon_data.learnable` 下发、`mon_replace` 处理、战斗中拒绝；`server/tests/monreplace.test.ts` 含真实 WebSocket 用例。待部署到测试服 / 正式服；客户端拿不到 `learnable` 时不会显示更换入口，不会出现坏按钮。协议是 additive，部署前仍按惯例备份玩家存档（本批不新增字段）。
 （测试服已部署；正式服待主人手动部署。测试服 `status` 正常，`mon_replace` 非法请求被拒；本地真实浏览器 E2E 已通过。）
