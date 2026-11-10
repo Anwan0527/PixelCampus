@@ -2,7 +2,7 @@
 
 > 由 [spec.md](spec.md) 生成；spec 变了先改 spec，再同步本文件。
 > 对应 Issue：[EXIST-D/PixelCampus#8](https://github.com/EXIST-D/PixelCampus/issues/8)
-> 状态：**实现完成（2026-11-10）**；测试 / 本地 E2E 通过；PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 待合并
+> 状态：**实现完成（2026-11-10）**；测试 / 本地 E2E / 测试服 #5+#8 集成验收通过；PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 待合并
 
 ## 0. 已确认的设计（本轮问答）
 
@@ -199,6 +199,7 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 - [x] P1–P11、N1–N12 测试存在 / 通过。
 - [x] `npm test`（52 文件 498 通过 / 3 跳过）、`npx tsc --noEmit -p .cache/tsconfig.mondex.json`、`npx vite build` 全绿。
 - [x] 本地真实浏览器 E2E：精灵图鉴、筛选、未见过剪影、详情、手机横屏。
+- [x] 测试服 #5+#8 集成验收通过（`TEST_SERVER_DEX_E2E_OK`）。
 - [x] `docs/FEATURES.md`、`docs/CHANGELOG.md`、feature spec/plan 同步。
 - [x] PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 说明链接 spec/plan；纯客户端，不要求服务端改动。
 
@@ -217,6 +218,6 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 - **红灯**：`tests/mondex.test.ts`、`tests/integration/codex-mon.test.ts`、`tests/mondex-source-safety.test.ts` 先跑，`7 failed | 1 passed`（模型 / 页面未实现；通过的 1 个是「协议没有 mon_dex」的空断言）。
 - **绿灯**：单元 14 + 集成 6 + 源码扫描 2 全过；公开全量 **52 个测试文件，498 通过 / 3 跳过**；`npx vite build` 绿。
 - **类型检查**：本地 `server/` 是 #5 服务端分支，与 #8 共享规则不兼容；用 `.cache/tsconfig.mondex.json` 排除 `server/` 后绿。CI 检出公开仓库时没有 `server/`，根配置会通过。
-- **真实 E2E**：测试服 #5 数据 + #8 客户端（本地 dev + Origin 中继）。`已见 1 / 83`、`已收服 1 / 83`、83 个图鉴位、82 个剪影；耄耋详情显示 No.099 / 一般 / 描述 / 栖息地「登录赠送」/ 记录；未见过详情只有「？？？ No.001 还没遇到」；属性筛选「一般」剩 1 个；844×390 横屏无横向滚动。`MON_DEX_E2E_OK`。
+- **真实 E2E**：测试服已部署 #5+#8 集成分支；测试站直接验收：`已见 1 / 83`、`已收服 1 / 83`、83 个图鉴位、82 个剪影；耄耋详情显示 No.099 / 一般 / 描述 / 栖息地「登录赠送」/ 记录；未见过详情只有「？？？ No.001 还没遇到」；属性筛选「一般」剩 1 个；844×390 横屏无横向滚动。`TEST_SERVER_DEX_E2E_OK`。
 - **自审**：无协议 / 服务端改动；未见过不返回名字 / 描述 / 属性 / 图；无 `innerHTML`；关闭重置筛选；空状态 / 加载态正常。
-- **PR**：[#14](https://github.com/EXIST-D/PixelCampus/pull/14) 已提；未部署（#8 纯客户端，测试服当前仍是 #5 客户端），正式服待主人手动部署。
+- **PR**：[#14](https://github.com/EXIST-D/PixelCampus/pull/14) 已提；测试服已部署 #5+#8 集成验收；正式服待主人手动部署（#8 基于 main，待 #5 合并后 rebase / 部署）。
