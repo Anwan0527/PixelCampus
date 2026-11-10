@@ -4,7 +4,17 @@ import { BootScene } from '@/scenes/BootScene';
 import { WorldScene } from '@/scenes/WorldScene';
 import { InteriorScene } from '@/scenes/InteriorScene';
 
+/** 测试环境构建（VITE_ENV=test，见 docs/feature/20261110-staging-env）：标题加前缀 + 顶部红色小标签，避免和正式环境混淆 */
+function markTestEnv() {
+  if (import.meta.env.VITE_ENV !== 'test') return;
+  document.title = `[测试] ${document.title}`;
+  const b = document.createElement('div'); b.textContent = '🧪 测试环境';
+  b.style.cssText = 'position:fixed;left:50%;top:0;transform:translateX(-50%);z-index:9999;padding:1px 12px;background:#c0392b;color:#fff;font:12px/18px sans-serif;border-radius:0 0 6px 6px;pointer-events:none;opacity:.92';
+  document.body.append(b);
+}
+
 function start() {
+  markTestEnv();
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game',

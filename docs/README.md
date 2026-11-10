@@ -69,14 +69,14 @@ docs/
 | [SERVER_COLLABORATION.md](process/SERVER_COLLABORATION.md) | **别人怎么改服务端**：三种协作方式、新字段 / 新协议 / 校验 / 测试 / 上线规则、协作者清单 | ✅（新） |
 
 ## adr/ 决策记录
-[adr/README.md](adr/README.md)：为什么这样做（模板 + 9 份：公开 / 私有分离、shared 规则服务器裁决、token 身份、地图以卫星图为准、程序化美术、档案冻结、留言图片、部署由主人执行、服务端 handler 拆分）。**重大决定定下来就加一份，不改旧的。**
+[adr/README.md](adr/README.md)：为什么这样做（模板 + 10 份：公开 / 私有分离、shared 规则服务器裁决、token 身份、地图以卫星图为准、程序化美术、档案冻结、留言图片、部署由主人执行、服务端 handler 拆分、测试环境）。**重大决定定下来就加一份，不改旧的。**
 
 ## feature/ 功能规范（先文档、后代码）
 | 文档 | 内容 |
 |---|---|
 | [feature/spec.md](feature/spec.md) | **需求规格模板**（背景目标、场景、编号需求、规则、界面、数据协议、安全、性能、验收标准、未决问题）+ 开发流程 |
 | [feature/plan.md](feature/plan.md) | **实施计划模板**（方案比较、任务拆分、协议与数据变更、测试、上线与回滚、风险、进度） |
-| [feature/20261110-staging-env/](feature/20261110-staging-env/spec.md) | 第一份实例：测试环境（待确认） |
+| [feature/20261110-staging-env/](feature/20261110-staging-env/spec.md) | 第一份实例：测试环境（已上线） |
 - 每个新功能复制成 `docs/feature/<YYYYMMDD-功能名>/spec.md` + `plan.md`；**先 spec、主人确认，再 plan、主人确认，再写代码**。
 - 2026-11-10 起 spec 和 plan **都进公开仓库**：不要写服务器地址、口令、玩家数据（运维细节写到私有文档）。
 

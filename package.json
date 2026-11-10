@@ -30,8 +30,11 @@
     "serve": "npm run build && tsx server/index.ts",
     "bots": "tsx server/bot.ts",
     "deploy": "bash deploy/deploy.sh",
+    "deploy:test": "DEPLOY_TARGET=test bash deploy/deploy.sh",
+    "test-env:reset": "bash deploy/test-reset.sh",
     "board": "bash deploy/board.sh",
     "admin:set": "node deploy/set-admin.mjs",
+    "admin:set:test": "DEPLOY_TARGET=test node deploy/set-admin.mjs",
     "editor": "tsx tools/editor/server.ts",
     "bake": "tsx tools/editor/bake.ts"
   },

@@ -54,6 +54,8 @@
 - 服务端 `server/game.ts` 3027 → 670 行：新增 `server/handlers/`（管理员、举报、任务、宿舍、留言板、校园墙、钓鱼、商店、交易、社交、组队、牵手、世界、传送、精灵、节日、聊天…共 20 个 handler + `ctx` / `dispatch` / `player` / `consts`）；消息处理改为「类型 → 处理函数」分发表（原来两处长 `case` 列表合一，限流和打断牵手变成表里的标志位）。
 **新增：玩家档案冻结（服务端）**
 - 离线 10 分钟且已落盘的档案在内存里冻结成压缩的 JSON，用到时再解冻；对外接口不变，全表扫描临时解析不保留。用线上备份（8550 份）实测每份约 5.0KB → 2.2KB，省约 57%。`/healthz` 增加 `heapMB`、`rssMB`、`profiles`、`frozen`；档案达到 18000 份时警告一次（2 万份时评估换 SQLite，见私有方案）。
+**新增：测试环境（2026-11-10，已部署到服务器）**
+- 正式服务器上新增独立的测试实例：同一域名和 HTTPS、**隐藏路径**访问（不公开、`noindex`）、独立系统用户 / 数据目录 / 端口 / 管理员口令、内存上限 200MB、最多 30 人，默认空数据，看不到正式数据。`npm run deploy:test` 部署测试环境，`npm run deploy` 仍只部署正式（路径 / 目录 / 服务 / 端口写死，输出里显示部署目标）；测试构建页面显示「🧪 测试环境」标记（`VITE_ENV=test`）。需求与计划见 `docs/feature/20261110-staging-env/`，决策见 ADR 0010，协作者先测后上的流程见 `docs/process/SERVER_COLLABORATION.md` 第四节。
 **文档整理**
 - **docs 按工程化目录重新整理**：`architecture/`（架构、协议）、`design/`（系统设计）、`map/`、`art/`（含 `img/`）、`guide/`、`process/`（协作流程、**新增服务端协作指南**）、`adr/`（**新增 9 份架构决策记录**）、`feature/`（需求 + 计划，**spec 和 plan 都进公开仓库**，第一份实例：测试环境 `20261110-staging-env`）；`HANDOFF / FEATURES / CHANGELOG` 留在 docs 根部；所有交叉引用、生成器路径、测试已同步；`.github` PR 模板加入 spec / plan / 协议自查项。
 - 新增 `docs/README.md`（文档索引：每份文档的内容 / 状态 / 维护方式）、`docs/architecture/PROTOCOL.md`（联机消息索引，`npm run protocol:doc` 从 `protocol.ts` 生成，`tests/protocol-doc.test.ts` 检查是否最新）、`docs/feature/spec.md` + `plan.md`（新功能的需求与计划模板，规定「先 spec → 主人确认 → 再 plan → 主人确认 → 再开发」）；刷新 README / HANDOFF / ARCHITECTURE / MAP_PIPELINE，MULTIPLAYER 标注为历史设计记录；CLAUDE.md 加入新功能开发规范。
