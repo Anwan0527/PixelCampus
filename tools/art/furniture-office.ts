@@ -8,6 +8,7 @@ import { PAL } from './palette.ts';
 import type { Furn } from './furniture.ts';
 import { DORM_INFO } from './furniture-dorm.ts';
 import { DECOR_INFO } from './furniture-decor.ts';
+import { HALL_FURNITURE, HALL_INFO, HALL_TEXT } from './furniture-hall.ts';
 
 const OUT = PAL.outline;
 const W = PAL.wood, M = PAL.metal;
@@ -209,12 +210,13 @@ export const OFFICE_FURNITURE: Record<string, () => Furn> = {
   octable, ltable3: () => ltable(3), ltable4: () => ltable(4), ltable5: () => ltable(5), ltable6: () => ltable(6),
   cab4, cab2, fridge, deskw, gchair, cart, campchair, waterpack, basin, books, laptop, thermos, radiator,
   ac, scroll, banner, whiteboard, hookbag, rope,
+  ...HALL_FURNITURE, // 窗口招牌、货架、冷柜、售货机、饮水机、公告栏（餐厅 / 超市 / 教学楼）
 };
 
 /** 编辑器里的家具目录：中文名 + 分类（key → 名称/分类）。分类顺序 = 面板顺序 */
-export const FURN_CATS = ['桌椅', '柜子电器', '小件', '墙面挂件', '图书馆', '食堂', '其他'] as const;
+export const FURN_CATS = ['桌椅', '柜子电器', '小件', '墙面挂件', '图书馆', '食堂', '超市', '其他'] as const;
 /** 能在上面写字的家具：h 横排 / v 竖排，及新摆时的默认文字 */
-export const FURN_TEXT: Record<string, { mode: 'h' | 'v'; def: string }> = { banner: { mode: 'h', def: '横幅文字' }, scroll: { mode: 'v', def: '天道酬勤' }, whiteboard: { mode: 'h', def: '' } };
+export const FURN_TEXT: Record<string, { mode: 'h' | 'v'; def: string }> = { banner: { mode: 'h', def: '横幅文字' }, scroll: { mode: 'v', def: '天道酬勤' }, whiteboard: { mode: 'h', def: '' }, ...HALL_TEXT };
 export const FURN_INFO: Record<string, { name: string; cat: (typeof FURN_CATS)[number]; top?: boolean }> = {
   sdesk: { name: '蓝色学生桌', cat: '桌椅' }, bchair_d: { name: '蓝椅·朝南', cat: '桌椅' }, bchair_u: { name: '蓝椅·朝北', cat: '桌椅' }, bchair_l: { name: '蓝椅·朝西', cat: '桌椅' }, bchair_r: { name: '蓝椅·朝东', cat: '桌椅' }, stool: { name: '蓝凳子', cat: '桌椅' },
   octable: { name: '八边形会议桌', cat: '桌椅' }, ltable3: { name: '长木桌(3格)', cat: '桌椅' }, ltable4: { name: '长木桌(4格)', cat: '桌椅' }, ltable5: { name: '长木桌(5格)', cat: '桌椅' }, ltable6: { name: '长木桌(6格)', cat: '桌椅' },
@@ -225,6 +227,7 @@ export const FURN_INFO: Record<string, { name: string; cat: (typeof FURN_CATS)[n
   ac: { name: '空调', cat: '墙面挂件' }, scroll: { name: '字画（竖）', cat: '墙面挂件' }, banner: { name: '横幅', cat: '墙面挂件' }, whiteboard: { name: '白板', cat: '墙面挂件' }, hookbag: { name: '挂着的袋子', cat: '墙面挂件' }, rope: { name: '挂绳', cat: '墙面挂件' },
   shelf1: { name: '书架1', cat: '图书馆' }, shelf2: { name: '书架2', cat: '图书馆' }, shelf3: { name: '书架3', cat: '图书馆' }, shelf4: { name: '书架4', cat: '图书馆' },
   counter3: { name: '柜台3', cat: '食堂' }, counter5: { name: '柜台5', cat: '食堂' }, foodcounter5: { name: '打饭窗口5', cat: '食堂' }, foodcounter7: { name: '打饭窗口7', cat: '食堂' },
+  ...HALL_INFO,
   ...DORM_INFO, // 宿舍家具（单人床/衣柜/宝箱…），画在 furniture-dorm.ts
   ...DECOR_INFO, // 宿舍商店卖的装饰家具，画在 furniture-decor.ts
 };
