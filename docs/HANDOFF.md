@@ -26,7 +26,7 @@ PixelGame/
 │  ├─ assets/           发布前的资源处理：webp.ts（PNG→无损 WebP，客户端只加载 .webp）、precompress.ts（brotli）、font-slices.py（字体切片，生成 public/fonts/*.woff2 与 src/ui/fonts.css）、fonts/（完整字体源文件）
 │  └─ reference/ analysis/  卫星图对照、OSM 取数、Python 路网分析（改地图时用）
 ├─ src/
-│  ├─ scenes/           BootScene（加载）、WorldScene（主场景，所有面板的总装）、InteriorScene（室内）
+│  ├─ scenes/           BootScene（加载）、WorldScene（主场景骨架，401 行）、InteriorScene（室内/宿舍）；scenes/world/ 是主场景按功能拆出的模块（接线、交互判定、流式构建、小猫、钓鱼…）
 │  ├─ entities/         Player(Character) / Npc / RemotePlayer / Cat
 │  ├─ art/              人物 Rig 渲染（char-rig、skins、held 手持物）
 │  ├─ ui/               各种面板（DOM 叠层）；actions.ts 是入口注册表；style.css（样式入口清单）+ styles/NN-*.css（按功能分的 16 个样式文件，含手机横屏；顺序 = 层叠顺序，不要调换）

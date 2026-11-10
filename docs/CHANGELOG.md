@@ -5,6 +5,19 @@
 
 ---
 
+## 2026.11.16（大文件拆分 + 玩家档案冻结 + 清理；2026-11-10，未部署）更新内容
+**调整：大文件按功能拆分（行为不变，只搬代码）**
+- `src/scenes/WorldScene.ts` 1528 → 401 行：新增 `src/scenes/world/`（接线 `wire-panels`、按 E 交互判定 `interaction-rules`（纯函数，`tests/world-interaction.test.ts` 10 项）+ `interaction`、流式构建 `stream`、`entities`、`effects`、`clock`、`fishing`、`cats`、`actions`、`hotkeys`、`place`、`transitions`、`camera`）；`WorldScene` 成员去掉 `private`，供模块访问。
+- `src/ui/style.css` 1432 行 → 19 行入口 + `src/ui/styles/01~16`（按原行序切，拼接后逐字节一致，构建出的 CSS 字节相同）。
+- 服务端 `server/game.ts` 3027 → 670 行：新增 `server/handlers/`（管理员、举报、任务、宿舍、留言板、校园墙、钓鱼、商店、交易、社交、组队、牵手、世界、传送、精灵、节日、聊天…共 20 个 handler + `ctx` / `dispatch` / `player` / `consts`）；消息处理改为「类型 → 处理函数」分发表（原来两处长 `case` 列表合一，限流和打断牵手变成表里的标志位）。
+**新增：玩家档案冻结（服务端）**
+- 离线 10 分钟且已落盘的档案在内存里冻结成压缩的 JSON，用到时再解冻；对外接口不变，全表扫描临时解析不保留。用线上备份（8550 份）实测每份约 5.0KB → 2.2KB，省约 57%。`/healthz` 增加 `heapMB`、`rssMB`、`profiles`、`frozen`；档案达到 18000 份时警告一次（2 万份时评估换 SQLite，见私有方案）。
+**清理**
+- 删除 `.cache` 一次性对照图与脚本（约 440MB）、`dist`、脱敏前的旧文档备份；旧版归档移出项目；服务器上的备份文件保留最近 5 份（先下载了完整备份）。
+- 注意：服务端同步改了（`server/store.ts`、`game.ts`、`handlers/*`、`index.ts`）；客户端与服务端行为不变，可以一起部署。
+
+---
+
 ## 2026.11.15（盲盒合成 + 宿舍一键还原 + 地点留言板；2026-11-09 16:39 已部署）更新内容
 **新增：盲盒合成**
 - 合成页（校园商店 / 钓具摊）多两条配方：**3 个漂流瓶 → 1 个旧木箱**（钓鱼 3 级）、**3 个旧木箱 → 1 个沉船箱**（钓鱼 6 级），不花币；合出来的是没开的盒子，背包里点「打开」才揭晓。规则在 `shared/craft.ts` / `shared/fishlevel.ts`（`RECIPE_LEVEL`）；`tests/craft-boxes.test.ts`。

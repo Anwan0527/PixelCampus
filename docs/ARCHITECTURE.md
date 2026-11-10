@@ -19,7 +19,7 @@ tools/art/*  ──────────►│ 图集（人物、小猫、道
 - **扩展点**：新建筑 = `data/campus/buildings/*.json` 加一项；新道路 = `terrain/*.json` 加 `stroke`；新地标/互动区 = `pois.json` / 蓝图里的 `interact`（`action: board | shop | wall`）；新大型小品 = `tools/art/plaza.ts` 式的 Sprite + `PropKind`。
 
 ## 2. 客户端（`src/`）
-- **场景**：`BootScene`（加载，按当前季节取图集）→ `WorldScene`（主场景，所有面板的总装；**偏大，待拆**）；`InteriorScene` 暂停。HUD 是 DOM 叠层（中文像素字体更清晰），`ui/actions.ts` 是入口注册表（电脑侧边按钮 / 手机菜单）。
+- **场景**：`BootScene`（加载，按当前季节取图集）→ `WorldScene`（主场景骨架；功能模块在 `scenes/world/`）；`InteriorScene` 暂停。HUD 是 DOM 叠层（中文像素字体更清晰），`ui/actions.ts` 是入口注册表（电脑侧边按钮 / 手机菜单）。
 - **流式加载**：`world/Streamer`——所有条目登记包围盒 + `make()`，每 120 ms 按镜头位置创建/销毁；地面块异步加载、销毁时释放纹理。
 - **实体**：`Character`（Player.ts：脚点坐标、四向动画、骑车/坐/钓鱼/雨伞/手持物、昵称牌）→ `Player`/`Npc`/`RemotePlayer`；`Cat`（家 + 游走 + 状态机）。
 - **人物/小猫美术**：`src/art/`（char-rig、skins、held）是运行时 Rig 合成；`tools/art/cat-rig`、`char-rig` 是构建期预览与图集；外观数据与校验在 `shared/appearance.ts`。
