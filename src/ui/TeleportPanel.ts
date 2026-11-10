@@ -20,7 +20,10 @@ export class TeleportPanel {
   private buttons: HTMLButtonElement[] = [];
   private lastGo = 0;
 
-  constructor(private net: NetClient, private onGone: () => void = () => {}) {
+  /** 点了某一层：等服务器说「传到了」之后，通知场景进入这一层 */
+  private pendingFloor: string | null = null;
+
+  constructor(private net: NetClient, private onGone: (floor?: string) => void = () => {}) {
     const panel = el('div', 'box tp');
     const head = el('div', 'board-head');
     const close = el('button', 'btn', '✕'); close.type = 'button'; close.setAttribute('aria-label', '关闭传送面板');
@@ -32,8 +35,13 @@ export class TeleportPanel {
       const row = el('div', 'tp-row');
       for (const t of TELEPORTS.filter((x) => x.group === g)) {
         const b = el('button', 'btn tp-btn', t.name); b.type = 'button'; b.dataset.id = t.id;
-        b.addEventListener('click', () => { if (this.net.status !== 'online') { this.say('没连上服务器，不能传送', false); return; } this.lastGo = Date.now(); this.net.tpGo(t.id); });
-        this.buttons.push(b); row.append(b);
+        b.addEventListener('click', () => this.go(t.id, null));
+        this.buttons.push(b);
+        if (t.floors) { // 多层建筑：名字下面再排「1F 2F 3F」，点哪层直接进哪层
+          const cell = el('div', 'tp-cell'), fl = el('div', 'tp-floors');
+          for (const f of t.floors) { const fb = el('button', 'btn tp-floor', f.label); fb.type = 'button'; fb.title = `${t.name} ${f.label}`; fb.addEventListener('click', () => this.go(t.id, f.interior)); fl.append(fb); }
+          cell.append(b, fl); row.append(cell);
+        } else row.append(b);
       }
       panel.append(row);
     }
@@ -44,10 +52,14 @@ export class TeleportPanel {
     ui.add({ id: 'teleport', label: '传送', key: 'Y', run: () => this.toggle() });
     net.handlers.tpResult = (ok, msg) => {
       this.say(msg, ok);
-      if (ok) { this.lastGo = Date.now(); this.close(); this.onGone(); }
+      if (ok) { const fl = this.pendingFloor ?? undefined; this.pendingFloor = null; this.lastGo = Date.now(); this.close(); this.onGone(fl); } else this.pendingFloor = null;
     };
   }
 
+  private go(id: string, floor: string | null) {
+    if (this.net.status !== 'online') { this.say('没连上服务器，不能传送', false); return; }
+    this.lastGo = Date.now(); this.pendingFloor = floor; this.net.tpGo(id);
+  }
   get isOpen() { return !this.root.classList.contains('hidden'); }
   open() { this.say('', true); this.root.classList.remove('hidden'); }
   close() { this.root.classList.add('hidden'); }

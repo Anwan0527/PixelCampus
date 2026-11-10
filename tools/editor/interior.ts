@@ -8,6 +8,8 @@ import { INTERIOR_THEMES, validateInterior, furnitureLabel, type InteriorSpec, t
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const cv = $('cv') as HTMLCanvasElement; const ctx = cv.getContext('2d')!;
 const T = 16;
+/** 二层以上没有南墙门洞：编辑器里按「零宽门洞」处理 */
+const NOEXIT = { x: 0, w: 0 };
 type RotInfo = { fw: number; fh: number; w: number; h: number; mx: number; my: number };
 type Meta = { fw: number; fh: number; w: number; h: number; name: string; cat: string; top: boolean; rots: Record<number, RotInfo>; text?: { mode: 'h' | 'v'; def: string } };
 type Frame = { x: number; y: number; w: number; h: number };
@@ -102,7 +104,7 @@ function draw() {
     for (const f of cur.furniture) { if (f.top) continue; const [x, y, fw, fh] = footRects(f); const [a, b] = toS(x * T, y * T); ctx.fillRect(a, b, fw * T * view.z, fh * T * view.z); }
     const [a, b] = toS(0, 0); ctx.fillRect(a, b, cur.w * T * view.z, 3 * T * view.z); ctx.fillRect(a, b, T * view.z, cur.h * T * view.z); ctx.fillRect(a + (cur.w - 1) * T * view.z, b, T * view.z, cur.h * T * view.z);
   }
-  { const [a, b] = toS(cur.exit.x * T, (cur.h - 1) * T); ctx.fillStyle = 'rgba(80,200,110,.35)'; ctx.fillRect(a, b, cur.exit.w * T * view.z, T * view.z); ctx.fillStyle = '#bff0c8'; ctx.font = '12px sans-serif'; ctx.fillText('门洞（出口）', a + 4, b + 14); }
+  { const [a, b] = toS((cur.exit ?? NOEXIT).x * T, (cur.h - 1) * T); ctx.fillStyle = 'rgba(80,200,110,.35)'; ctx.fillRect(a, b, (cur.exit ?? NOEXIT).w * T * view.z, T * view.z); ctx.fillStyle = '#bff0c8'; ctx.font = '12px sans-serif'; ctx.fillText('门洞（出口）', a + 4, b + 14); }
   // 窗户外框、文字牌、NPC
   (cur.windows ?? []).forEach((wd, i) => { const [a, b] = toS(wd.x * T, 5); ctx.strokeStyle = isSel('win', i) ? '#ffe070' : 'rgba(120,200,255,.7)'; ctx.lineWidth = isSel('win', i) ? 3 : 1.5; ctx.strokeRect(a, b, wd.w * T * view.z, 33 * view.z); });
   (cur.partitions ?? []).forEach((p, i) => { // 隔断：画面是上次生成的，这里叠一层半透明预览（青色 = 玻璃，绿色 = 内部门洞）
@@ -130,7 +132,7 @@ function blocked(f: InteriorFurn): boolean {
   const m = riOf(f); if (!m || f.top || m.fh === 0) return false;
   for (let j = 0; j < m.fh; j++) for (let i = 0; i < m.fw; i++) {
     const x = f.x + i, y = f.y + j;
-    if (x < 1 || x > cur.w - 2 || y < 3 || y > cur.h - 1 || (y === cur.h - 1 && !(x >= cur.exit.x && x < cur.exit.x + cur.exit.w))) return true;
+    if (x < 1 || x > cur.w - 2 || y < 3 || y > cur.h - 1 || (y === cur.h - 1 && !(x >= (cur.exit ?? NOEXIT).x && x < (cur.exit ?? NOEXIT).x + (cur.exit ?? NOEXIT).w))) return true;
     for (const p of cur.partitions ?? []) if (x === p.x && y >= p.y0 && y <= p.y1 && !(p.gap && y >= p.gap.y && y < p.gap.y + p.gap.h)) return true;
     for (const g of cur.furniture) { if (g === f || g.top) continue; const gm = riOf(g); if (!gm) continue; if (x >= g.x && x < g.x + gm.fw && y >= g.y && y < g.y + gm.fh) return true; }
   }
@@ -339,7 +341,7 @@ function renderSide() {
     <div class="row"><label>提示语</label><input id="rdesc" type="text" value="${esc(cur.desc ?? '')}" style="flex:1;min-width:0" placeholder="进门时显示的小字"></div>
     <div class="row"><label>主题</label><select id="rtheme">${INTERIOR_THEMES.map((t) => `<option value="${t.k}" ${cur.theme === t.k ? 'selected' : ''}>${t.name}</option>`).join('')}</select></div>
     <div class="row"><label>大小</label>${num('rw', cur.w, 'min="8" max="48"')}×${num('rh', cur.h, 'min="8" max="40"')} <span style="color:var(--dim)">格</span></div>
-    <div class="row"><label>门洞</label>${num('rex', cur.exit.x, 'min="1"')}<label style="min-width:0">宽</label>${num('rew', cur.exit.w, 'min="2" max="6"')}</div>
+    <div class="row"><label>门洞</label>${num('rex', (cur.exit ?? NOEXIT).x, 'min="1"')}<label style="min-width:0">宽</label>${num('rew', (cur.exit ?? NOEXIT).w, 'min="2" max="6"')}</div>
     <div class="row"><label style="min-width:0;color:var(--fg)"><input type="checkbox" id="rglass" ${cur.wallW === 'glass' ? 'checked' : ''}> 西墙玻璃隔断</label></div>
     <div class="row"><label style="min-width:0;color:var(--fg)"><input type="checkbox" id="ropen" ${cur.open ? 'checked' : ''}> 开放入口（玩家能进）</label></div>
     <div style="color:var(--dim)">改了主题/大小/门洞/窗户后，要点「保存并生成预览」才会换画面；改了「开放入口」要再点「生成地图」。</div>
@@ -400,8 +402,8 @@ $('side').addEventListener('change', (e) => {
   if (t.id === 'rname') mutate(() => { cur.name = t.value.slice(0, 30) || cur.name; });
   else if (t.id === 'rdesc') mutate(() => { if (t.value) cur.desc = t.value.slice(0, 80); else delete cur.desc; });
   else if (t.id === 'rtheme') mutate(() => { cur.theme = t.value as InteriorSpec['theme']; });
-  else if (t.id === 'rw' || t.id === 'rh') { const w = t.id === 'rw' ? num : cur.w, h = t.id === 'rh' ? num : cur.h; if (!Number.isInteger(w) || !Number.isInteger(h) || w < 8 || w > 48 || h < 8 || h > 40) { toast('宽 8~48、高 8~40（整数）'); renderSide(); return; } mutate(() => { cur.w = w; cur.h = h; cur.exit.x = Math.min(cur.exit.x, w - 1 - cur.exit.w); cur.furniture = cur.furniture.filter((f) => f.x < w && f.y < h); }); }
-  else if (t.id === 'rex' || t.id === 'rew') { const x = t.id === 'rex' ? num : cur.exit.x, w = t.id === 'rew' ? num : cur.exit.w; if (!Number.isInteger(x) || !Number.isInteger(w) || w < 2 || w > 6 || x < 1 || x + w > cur.w - 1) { toast('门洞要在南墙内（宽 2~6）'); renderSide(); return; } mutate(() => { cur.exit = { x, w }; }); }
+  else if (t.id === 'rw' || t.id === 'rh') { const w = t.id === 'rw' ? num : cur.w, h = t.id === 'rh' ? num : cur.h; if (!Number.isInteger(w) || !Number.isInteger(h) || w < 8 || w > 48 || h < 8 || h > 40) { toast('宽 8~48、高 8~40（整数）'); renderSide(); return; } mutate(() => { cur.w = w; cur.h = h; cur.exit!.x = Math.min(cur.exit!.x, w - 1 - cur.exit!.w); cur.furniture = cur.furniture.filter((f) => f.x < w && f.y < h); }); }
+  else if (t.id === 'rex' || t.id === 'rew') { const x = t.id === 'rex' ? num : cur.exit!.x, w = t.id === 'rew' ? num : cur.exit!.w; if (!Number.isInteger(x) || !Number.isInteger(w) || w < 2 || w > 6 || x < 1 || x + w > cur.w - 1) { toast('门洞要在南墙内（宽 2~6）'); renderSide(); return; } mutate(() => { cur.exit = { x, w }; }); }
   else if (t.id === 'rglass') mutate(() => { if (t.checked) cur.wallW = 'glass'; else delete cur.wallW; });
   else if (t.id === 'ropen') mutate(() => { if (t.checked) cur.open = true; else delete cur.open; });
   else if (one?.t === 'f') {

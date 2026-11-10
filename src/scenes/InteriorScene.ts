@@ -34,7 +34,13 @@ export interface InteriorDef {
   collision: string[];
   objects: { k: string; x: number; y: number; depth: number }[];
   npcs: { look: number; x: number; y: number; name: string; facing?: 'down' | 'up' | 'left' | 'right'; lines: string[] }[];
-  exit: { x: number; w: number }; spawn: { x: number; y: number };
+  /** 南墙门洞（回校园）；多层建筑的二层以上没有，只能走楼梯 */
+  exit?: { x: number; w: number }; spawn: { x: number; y: number };
+  floor?: number; building?: string;
+  /** 能坐的座位（像素）：bx,by = 椅面中心，x,y = 坐下时人的位置 */
+  seats?: { x: number; y: number; bx: number; by: number }[];
+  /** 楼梯口：x0..y1 = 互动区（像素），land = 从别的楼层走过来时人落的位置（格），label = 提示里的「上二楼」 */
+  stairs?: { dir: 'up' | 'down'; to: string; label: string; x0: number; x1: number; y0: number; y1: number; land: { x: number; y: number } }[];
 }
 
 /** 室内：整张背景图 + 家具精灵（可前后遮挡）+ 静态 NPC；走出南侧门洞回到校园。id = 'dorm' 时是「我的宿舍」：床/空调/衣柜/宝箱可以互动，公屏照常能看能说。 */
@@ -46,6 +52,8 @@ export class InteriorScene extends Phaser.Scene {
   private npcs: Npc[] = [];
   private keys!: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'shift' | 'e' | 'space' | 'esc' | 'enter' | 'y' | 'x', Phaser.Input.Keyboard.Key>;
   private leaving = false;
+  /** 从哪一层走楼梯过来的（落在对应楼梯口旁边）；从校园进来 / 传送进来时没有 */
+  private fromId?: string;
   // ---- 家具摆放（装修）：宿舍里除了床/衣柜/宝箱/浴缸，其余家具都来自摆放数据，客户端按它现画
   private lay: Placed[] = []; private layKey = ''; private decorObjs: Phaser.GameObjects.Image[] = []; private decorTalk: NonNullable<InteriorDef['interacts']> = [];
   private level = 0; private skinNow = { w: -1, f: -1 }; private skinImgs: Phaser.GameObjects.Image[] = []; private skinSeq = 0;
@@ -76,7 +84,7 @@ export class InteriorScene extends Phaser.Scene {
   private takeTouchPress() { const p = !!this.registry.get('touchPress'); if (p) this.registry.set('touchPress', false); return p; }
   constructor() { super('Interior'); }
 
-  init(data: { id: string }) { this.registry.set('interiorId', data.id); this.leaving = false; this.layKey = ''; this.lay = []; this.decorObjs = []; this.decorTalk = []; this.skinNow = { w: -1, f: -1 }; this.skinImgs = []; this.skinSeq++; }
+  init(data: { id: string; from?: string }) { this.registry.set('interiorId', data.id); this.fromId = data.from; this.leaving = false; this.sitting = false; this.seats = []; this.layKey = ''; this.lay = []; this.decorObjs = []; this.decorTalk = []; this.skinNow = { w: -1, f: -1 }; this.skinImgs = []; this.skinSeq++; }
 
   create() {
     this.hud = this.registry.get('hud') as Hud;
@@ -94,7 +102,9 @@ export class InteriorScene extends Phaser.Scene {
     this.dorm = isDormInterior(d.id); this.level = dormInteriorLevel(d.id);
     this.visit = this.dorm ? ((this.registry.get('dormVisit') as Extract<ServerMsg, { t: 'dorm_visit' }> | null | undefined) ?? null) : null;
     const me = this.registry.get('profile') as Profile | undefined; this.seenProfile = me;
-    this.player = new Player(this, d.spawn.x * TILE, d.spawn.y * TILE, this.dorm && me ? me.look : 0, this.dorm ? me?.app : undefined); // 宿舍里是你自己的样子（换装后也跟着变）
+    const sp = (this.fromId && d.stairs?.find((t) => t.to === this.fromId)?.land) || d.spawn; // 走楼梯过来：落在通向来处的那个楼梯口旁边
+    this.seats = d.seats ? d.seats.slice() : []; // 数据里的椅子 / 沙发（宿舍的座位来自摆放数据，setLay 里会覆盖）
+    this.player = new Player(this, sp.x * TILE, sp.y * TILE, this.dorm && me ? me.look : 0, this.dorm ? me?.app : undefined); // 宿舍里是你自己的样子（换装后也跟着变）
     Character.umbrella = false; // 屋里不打伞（外面下雨时，校园场景每帧会把它设回去，所以这里只管室内）
     this.player.facing = 'up'; this.player.sprite.setFrame('c0_up_0');
     if (this.dorm) this.player.setFz(festData.on); // 自己戴着的节日装扮：在宿舍里（自己的、别人的）也要显示
@@ -524,10 +534,14 @@ export class InteriorScene extends Phaser.Scene {
       if (dd < sd) { sd = dd; spot = a; }
     }
     const tip = (a: NonNullable<InteriorDef['interacts']>[number]) => a.act === 'sign' ? (this.isHost ? 'E  给宿舍起个名字（改门牌）' : 'E  看门牌') : a.act === 'bed' ? (this.isHost ? 'E  上床睡觉（精灵会慢慢恢复）' : `E  ${this.hostName} 的床`) : a.act === 'ac' ? `E  空调：现在${AC_NAMES[this.acMode as 0 | 1 | 2]}，点一下切换` : a.act === 'wardrobe' ? 'E  打开衣柜（换装）' : a.act === 'bath' ? (this.isHost ? 'E  鱼缸：放鱼进去养着（放进去的鱼不能卖）' : 'E  看看鱼缸里的鱼') : a.act === 'chest' ? (this.isHost ? 'E  打开宝箱（仓库）' : 'E  宝箱（只有主人能开）') : `E  查看：${a.title}`;
+    // 楼梯口：站在楼梯上按 E 换层（坐着时先起身）
+    let stair: NonNullable<InteriorDef['stairs']>[number] | null = null;
+    if (!near && !spot && !dcat && !this.sitting && !this.leaving) for (const t of this.def.stairs ?? []) if (this.player.x >= t.x0 && this.player.x <= t.x1 && this.player.y >= t.y0 && this.player.y <= t.y1) { stair = t; break; }
     // 椅子：靠近按 E 坐下；坐着时按 E 起身
     let seat: (typeof this.seats)[number] | null = null;
-    if (this.dorm && !near && !spot && !dcat && !this.sitting) { let sd2 = 26; for (const q of this.seats) { const dd = Math.hypot(q.bx - this.player.x, q.by - this.player.y); if (dd < sd2) { sd2 = dd; seat = q; } } }
-    this.hud.hint(this.sitting ? 'E / 方向键  起身' : near ? `E  和「${near.name}」交谈` : dcat ? `E  ${this.isHost ? '和' : '看看'}「${dcat.label}」${this.isHost ? '玩' : ''}` : spot ? tip(spot) : seat ? 'E  坐下' : null);
+    if (!near && !spot && !dcat && !stair && !this.sitting) { let sd2 = 26; for (const q of this.seats) { const dd = Math.hypot(q.bx - this.player.x, q.by - this.player.y); if (dd < sd2) { sd2 = dd; seat = q; } } }
+    this.hud.hint(this.sitting ? 'E / 方向键  起身' : near ? `E  和「${near.name}」交谈` : dcat ? `E  ${this.isHost ? '和' : '看看'}「${dcat.label}」${this.isHost ? '玩' : ''}` : spot ? tip(spot) : stair ? `E  ${stair.label}` : seat ? 'E  坐下' : null);
+    if (stair && press) { this.changeFloor(stair.to); return; }
     if (this.sitting && press) this.standUp(); else if (seat && press) this.sitDown(seat);
     if (dcat && press && !this.sitting) this.touchDormCat(dcat);
     if (spot && press) { if (spot.act) this.dormAct(spot.act); else this.hud.openDialog(spot.title, [spot.text]); }
@@ -540,7 +554,7 @@ export class InteriorScene extends Phaser.Scene {
       this.hud.openDialog(near.name, near.lines);
     }
     // 走出南侧门洞
-    if (!this.leaving && this.player.y > (this.def.h - 1) * TILE + 6) this.leave();
+    if (!this.leaving && this.def.exit && this.player.y > (this.def.h - 1) * TILE + 6) this.leave();
   }
 
   /**
@@ -579,6 +593,14 @@ export class InteriorScene extends Phaser.Scene {
     this.editor?.close(); this.dormUi?.close(); this.dormUi?.closeChest(); (this.registry.get('tpUi') as TeleportPanel | undefined)?.close();
     this.cameras.main.fadeEffect.reset(); this.cameras.main.fadeOut(240, 20, 14, 10); // 刚进屋的淡入还没播完就退出：不先 reset，淡出会被忽略，"淡出完成"永远不触发，人就卡在屋里（Phaser 的淡入淡出同一时间只能有一个）
     this.cameras.main.once('camerafadeoutcomplete', () => { this.backToWorld(); });
+  }
+
+  /** 走楼梯：淡出 → 重新进入目标楼层（人落在对应楼梯口旁边）；坐着的先起身 */
+  private changeFloor(to: string) {
+    if (this.leaving) return;
+    this.leaving = true; this.standUp(); this.hud.hint(null);
+    this.cameras.main.fadeEffect.reset(); this.cameras.main.fadeOut(200, 20, 14, 10);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Interior', { id: to, from: this.def.id }));
   }
 
   private leave() {

@@ -2,15 +2,39 @@
 import { Img, hash2, vnoise, type RGBA } from './px.ts';
 import { PAL } from './palette.ts';
 import { hex } from './px.ts';
-import type { InteriorSpec } from '../../src/shared/interior.ts';
+import { STAIR_H, stairW, type InteriorSpec, type InteriorStair } from '../../src/shared/interior.ts';
 
 export type { InteriorSpec };
+
+/** 楼梯口（俯视）：一级一级的踏步 + 两侧扶手 + 方向箭头；上行越往里越亮，下行越往里越暗（像是沉下去） */
+function paintStair(img: Img, t: InteriorStair) {
+  const x0 = t.x * 16, y0 = t.y * 16, w = stairW(t) * 16, h = STAIR_H * 16, up = t.dir === 'up';
+  const lerp = (a: RGBA, b: RGBA, k: number): RGBA => [Math.round(a[0] + (b[0] - a[0]) * k), Math.round(a[1] + (b[1] - a[1]) * k), Math.round(a[2] + (b[2] - a[2]) * k), 255];
+  const lo = up ? hex('#b9b1a0') : hex('#d2cab8'), hi = up ? hex('#ece6d6') : hex('#6e675a');
+  const steps = 8, sh = h / steps;
+  for (let i = 0; i < steps; i++) {
+    const k = i / (steps - 1), base = lerp(lo, hi, up ? k : k); // 上行：近处暗、远处亮；下行：近处亮、远处暗
+    const ya = Math.round(y0 + i * sh), yb = Math.round(y0 + (i + 1) * sh);
+    img.rect(x0, ya, w, yb - ya, base);
+    img.hline(x0, yb - 1, w, lerp(base, hex('#000000'), 0.28)); // 踏步前沿的阴影线
+    if (up) img.hline(x0, ya, w, lerp(base, hex('#ffffff'), 0.35)); // 踏步面的高光
+  }
+  const dark = hex('#4a4438'), post = hex('#2f343c');
+  img.rect(x0, y0, 2, h, dark); img.rect(x0 + w - 2, y0, 2, h, dark); img.hline(x0, y0, w, post); img.hline(x0, y0 + h - 1, w, post); // 扶手 + 上下沿
+  const cx = x0 + Math.floor(w / 2), cy = y0 + Math.floor(h / 2), ac = up ? hex('#6a6254') : hex('#f2eedf'); // 方向箭头（人字形）
+  for (let i = 0; i < 5; i++) for (const dx of [-i, i]) { img.set(cx + dx, cy + (up ? i - 2 : 2 - i), ac); img.set(cx + dx, cy + (up ? i - 1 : 1 - i), ac); }
+}
 
 const THEMES = {
   library: { floor: [hex('#a67447'), hex('#b8844f'), hex('#c8955a')], wall: [hex('#e9d8b4'), hex('#dcc89c'), hex('#c9b184')], wain: [hex('#6e4425'), hex('#8a5a33')], plank: true },
   classroom: { floor: [hex('#cfc7b4'), hex('#dcd5c2'), hex('#e8e2d0')], wall: [hex('#f1ead6'), hex('#e3dac0'), hex('#cfc4a4')], wain: [hex('#3f7a64'), hex('#4f917a')], plank: false },
   office: { floor: [hex('#bdb9ad'), hex('#d9d6cc'), hex('#e4e1d7')], wall: [hex('#f2f4f6'), hex('#e6e9ee'), hex('#cfd4dc')], wain: [hex('#9aa0ac'), hex('#b4bac5')], plank: false },
   canteen: { floor: [hex('#bfae94'), hex('#cdbfa8'), hex('#dbcfba')], wall: [hex('#f4e4c0'), hex('#e6d2a2'), hex('#d1b980')], wain: [hex('#a8402f'), hex('#c25a3f')], plank: false },
+  // 第二、第三餐厅和超市、教学楼走廊：墙色 / 地面各不相同，一眼能分出是哪栋楼
+  canteen2: { floor: [hex('#aab0a4'), hex('#c4c9bd'), hex('#d6dacd')], wall: [hex('#d6efdf'), hex('#bde0c9'), hex('#9cc4ad')], wain: [hex('#3f8a64'), hex('#56a47c')], plank: false },
+  canteen3: { floor: [hex('#8a6a46'), hex('#a07c52'), hex('#b48e60')], wall: [hex('#d9e6f2'), hex('#bcd0e4'), hex('#9bb4cc')], wain: [hex('#3f5a80'), hex('#587aa6')], plank: true },
+  mall: { floor: [hex('#c9ccd2'), hex('#e0e3e8'), hex('#eef0f3')], wall: [hex('#f7f7f4'), hex('#ebebe6'), hex('#d4d4cc')], wain: [hex('#d9822b'), hex('#ee9d42')], plank: false },
+  hall: { floor: [hex('#bcb5a0'), hex('#d4cdb8'), hex('#e3dcc8')], wall: [hex('#e3eddc'), hex('#cddcc2'), hex('#aec29e')], wain: [hex('#6a8a58'), hex('#82a56e')], plank: false },
 } as const;
 
 /** 宿舍墙纸 / 地板样式（下标和 src/shared/dormskin.ts 的 WALL_SKINS / FLOOR_SKINS 一一对应；第 0 种 = library 主题原样） */
@@ -72,7 +96,7 @@ export function paintInterior(s: InteriorSpec, opts: { wall?: number; floor?: nu
   // 侧墙（左右各 1 tile）
   for (let y = WALL_H; y < img.h; y++) for (const x0 of [0, img.w - 16]) for (let x = 0; x < 16; x++) img.set(x0 + x, y, x === (x0 === 0 ? 15 : 0) ? T.wain[0] : T.wall[1]);
   // 南墙（除门）
-  const ex0 = s.exit.x * 16, ex1 = (s.exit.x + s.exit.w) * 16;
+  const ex0 = s.exit ? s.exit.x * 16 : 0, ex1 = s.exit ? (s.exit.x + s.exit.w) * 16 : 0; // 二层以上没有门洞：整面南墙都是实墙
   for (let y = img.h - 16; y < img.h; y++) for (let x = 0; x < img.w; x++) if (x < ex0 || x >= ex1) img.set(x, y, y === img.h - 16 ? T.wain[1] : T.wall[0]);
   // 玻璃隔断列（深色框 + 灰色百叶帘）：西墙、房间里的隔断共用
   const glassCol = (x0: number, ya: number, yb: number) => { for (let y = ya; y < yb; y++) for (let x = 0; x < 16; x++) { const post = (y - ya) % 32 === 0 || x === 0 || x === 15; img.set(x0 + x, y, post ? hex('#2f343c') : (y % 3 === 0 ? hex('#7d8a92') : hex('#a9b4ba'))); } };
@@ -120,8 +144,9 @@ export function paintInterior(s: InteriorSpec, opts: { wall?: number; floor?: nu
       img.set(x, y, edge ? [Math.min(255, c[0] + 50), Math.min(255, c[1] + 40), Math.min(255, c[2] + 30), 255] : (x + y) % 8 < 1 ? [Math.min(255, c[0] + 18), Math.min(255, c[1] + 14), Math.min(255, c[2] + 12), 255] : c);
     }
   }
+  for (const t of s.stairs ?? []) paintStair(img, t);
   // 门垫（宿舍的门垫是可以挪、可以换的家具，不画在底图里）
-  if (!isDorm(s.id)) { img.rect(ex0 + 2, img.h - 14, ex1 - ex0 - 4, 10, hex('#5a3a28')); img.rect(ex0 + 4, img.h - 12, ex1 - ex0 - 8, 6, hex('#7a5233')); }
+  if (!isDorm(s.id) && s.exit) { img.rect(ex0 + 2, img.h - 14, ex1 - ex0 - 4, 10, hex('#5a3a28')); img.rect(ex0 + 4, img.h - 12, ex1 - ex0 - 8, 6, hex('#7a5233')); }
   if (opts.layer) { // 只留一层：墙 = 北墙 + 左右侧墙 + 南墙（门洞除外）；其余是地板层
     for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) {
       const wall = y < WALL_H || x < 16 || x >= img.w - 16 || (y >= img.h - 16 && (x < ex0 || x >= ex1));

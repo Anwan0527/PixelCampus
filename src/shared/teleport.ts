@@ -4,25 +4,30 @@
  * 服务器再在目标附近找一个真能站的位置，并限制冷却与状态（骑车/坐着/钓鱼/战斗中不能传）。
  */
 export type TeleportGroup = '大门' | '教学' | '食堂' | '宿舍' | '湖边' | '其他';
+/** 多层建筑的某一层：传送面板里点它，服务器照常把人传到建筑门口，传到之后客户端自动进入这一层的室内（interior = 室内 id） */
+export interface TeleportFloor { label: string; interior: string }
 export interface TeleportDef {
   id: string; name: string; group: TeleportGroup;
+  /** 能直接传到的楼层（缺省 = 只有门口） */
+  floors?: readonly TeleportFloor[];
   /** 地标 id（world.json 的 pois） */
   poi?: string;
   /** 建筑名前缀：取同名里占地最大的一栋，目标是它南面（门前）约 2.5 格 */
   building?: string;
 }
 
+const floorsOf = (prefix: string, n: number): TeleportFloor[] => Array.from({ length: n }, (_, i) => ({ label: `${i + 1}F`, interior: `${prefix}-f${i + 1}` }));
 export const TELEPORTS: readonly TeleportDef[] = [
   { id: 'gate-south', name: '南门', group: '大门', poi: 'gate-south' },
   { id: 'gate-east', name: '东门', group: '大门', poi: 'gate-east' },
   { id: 'gate-west', name: '西门', group: '大门', poi: 'gate-west' },
   { id: 'library', name: '图书馆门前', group: '教学', building: '图书馆' },
-  { id: 'edu-1', name: '第一教学楼', group: '教学', building: '第一公共教学楼' },
-  { id: 'edu-2', name: '第二教学楼', group: '教学', building: '第二公共教学楼' },
+  { id: 'edu-1', name: '第一教学楼', group: '教学', building: '第一公共教学楼', floors: floorsOf('edu-1', 5) },
+  { id: 'edu-2', name: '第二教学楼', group: '教学', building: '第二公共教学楼', floors: floorsOf('edu-2', 5) },
   { id: 'b42', name: '42 号楼', group: '教学', building: '42号楼' },
-  { id: 'canteen-1', name: '第一餐厅', group: '食堂', building: '第一学生食堂' },
-  { id: 'canteen-2', name: '第二餐厅', group: '食堂', building: '第二学生食堂' },
-  { id: 'canteen-3', name: '第三餐厅', group: '食堂', building: '第三学生食堂' },
+  { id: 'canteen-1', name: '第一餐厅', group: '食堂', building: '第一学生食堂', floors: floorsOf('canteen-1', 3) },
+  { id: 'canteen-2', name: '第二餐厅', group: '食堂', building: '第二学生食堂', floors: floorsOf('canteen-2', 3) },
+  { id: 'canteen-3', name: '第三餐厅', group: '食堂', building: '第三学生食堂', floors: floorsOf('canteen-3', 3) },
   { id: 'dorm-1', name: '一社区', group: '宿舍', poi: 'dorm-1' },
   { id: 'dorm-2', name: '二社区', group: '宿舍', poi: 'dorm-2' },
   { id: 'dorm-3', name: '三社区', group: '宿舍', poi: 'dorm-3' },
@@ -63,3 +68,6 @@ export function standNear(blocked: (px: number, py: number) => boolean, x: numbe
   }
   return null;
 }
+
+/** 某层室内 id → 这栋楼一层的室内 id（建筑的 interior 字段就是一层）：canteen-2-f3 → canteen-2-f1 */
+export const groundInterior = (id: string) => id.replace(/-f\d+$/, '-f1');

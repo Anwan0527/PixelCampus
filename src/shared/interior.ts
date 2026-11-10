@@ -3,8 +3,10 @@
  * 坐标单位 = 格（16 px）；北墙占上面 3 格，西/东/南各 1 格墙，南墙留一个门洞（exit）。
  */
 export const INTERIOR_THEMES: { k: string; name: string }[] = [
-  { k: 'office', name: '办公室/活动室（白墙、大地砖）' }, { k: 'classroom', name: '教室' }, { k: 'library', name: '图书馆（木地板）' }, { k: 'canteen', name: '食堂' },
+  { k: 'office', name: '办公室/活动室（白墙、大地砖）' }, { k: 'classroom', name: '教室' }, { k: 'library', name: '图书馆（木地板）' }, { k: 'canteen', name: '食堂（米黄墙、红墙裙）' },
+  { k: 'canteen2', name: '食堂 B（薄荷绿墙、水磨石地面）' }, { k: 'canteen3', name: '食堂 C（浅蓝墙、木地板）' }, { k: 'mall', name: '超市（白墙、浅色地砖）' }, { k: 'hall', name: '教学楼走廊 / 门厅（浅绿墙）' },
 ];
+export type InteriorTheme = 'library' | 'classroom' | 'canteen' | 'office' | 'canteen2' | 'canteen3' | 'mall' | 'hall';
 export interface InteriorWindow { x: number; w: number; curtain?: boolean }
 export interface InteriorLabel { text: string; x: number; y: number; size?: number; color?: string }
 export type Rot = 0 | 90 | 180 | 270;
@@ -12,9 +14,29 @@ export interface InteriorFurn { k: string; x: number; y: number; /** 顺时针�
 /** 房间内的玻璃隔断（竖向，一格厚）：x 列、y0~y1 行（含两端），gap = 隔断上留的"内部门"（从第 y 行起、高 h 格） */
 export interface InteriorPartition { x: number; y0: number; y1: number; gap?: { y: number; h: number } }
 export interface InteriorNpc { look: number; x: number; y: number; name: string; facing?: 'down' | 'up' | 'left' | 'right'; lines: string[] }
+/**
+ * 楼梯口：画在地板上的一块 w×2 格的楼梯（不挡路），走到上面按 E 换层。dir = 上楼 / 下楼，to = 目标室内 id。
+ * land = 从别的楼层走过来时人落在哪（缺省：楼梯口正南面，见 stairLand）。
+ */
+export interface InteriorStair { dir: 'up' | 'down'; x: number; y: number; w?: number; to: string; land?: { x: number; y: number } }
+export const STAIR_H = 2, STAIR_W = 3;
+const CN_NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+/** 楼层的中文说法：1 → 一楼 */
+export const floorName = (n: number) => `${CN_NUM[n] ?? n}楼`;
+export const stairW = (s: InteriorStair) => s.w ?? STAIR_W;
+/** 从楼上 / 楼下走过来时人落的位置（格，可以是小数）：楼梯口正南面一格多一点 */
+export const stairLand = (s: InteriorStair): { x: number; y: number } => s.land ?? { x: s.x + stairW(s) / 2, y: s.y + STAIR_H + 0.6 };
+/** 楼梯口的互动区（像素）：楼梯本体外扩半格（落点在区外，刚走过来不会马上又提示换层） */
+export const stairZone = (s: InteriorStair) => ({ x0: s.x * 16 - 8, x1: (s.x + stairW(s)) * 16 + 8, y0: s.y * 16 - 8, y1: (s.y + STAIR_H) * 16 + 8 });
 export interface InteriorSpec {
-  id: string; name: string; w: number; h: number; theme: 'library' | 'classroom' | 'canteen' | 'office';
-  exit: { x: number; w: number };
+  id: string; name: string; w: number; h: number; theme: InteriorTheme;
+  /** 南墙门洞（回校园）。多层建筑的二层以上没有门洞，只能走楼梯 */
+  exit?: { x: number; w: number };
+  /** 第几层（1 起）；多层建筑每层一个文件 */
+  floor?: number;
+  /** 所属建筑（同一栋楼的各层写同一个名字，如 canteen-2）：测试按它检查楼层连贯 */
+  building?: string;
+  stairs?: InteriorStair[];
   rugs?: { x: number; y: number; w: number; h: number; color?: string }[];
   blackboard?: { x: number; w: number };
   posters?: { x: number }[];
@@ -67,7 +89,18 @@ export function validateInterior(j: unknown, known: ReadonlySet<string>): string
   if (!INTERIOR_THEMES.some((t) => t.k === s.theme)) err.push('未知主题');
   if (err.length) return err;
   const W = s.w!, H = s.h!;
-  if (!s.exit || !int(s.exit.x) || !int(s.exit.w) || s.exit.w < 2 || s.exit.w > 6 || s.exit.x < 1 || s.exit.x + s.exit.w > W - 1) err.push('门洞 exit：宽 2~6，且在南墙内');
+  if (s.exit === undefined) { if (!Array.isArray(s.stairs) || !s.stairs.length) err.push('没有南墙门洞 exit 的房间（多层建筑的上层）必须有楼梯 stairs'); }
+  else if (!int(s.exit.x) || !int(s.exit.w) || s.exit.w < 2 || s.exit.w > 6 || s.exit.x < 1 || s.exit.x + s.exit.w > W - 1) err.push('门洞 exit：宽 2~6，且在南墙内');
+  if (s.floor !== undefined && (!int(s.floor) || s.floor < 1 || s.floor > 9)) err.push('floor 是 1~9 的整数');
+  if (s.building !== undefined && (typeof s.building !== 'string' || !/^[a-z0-9][a-z0-9-]{1,39}$/.test(s.building))) err.push('building 只能是小写字母/数字/短横线');
+  if (s.stairs !== undefined) {
+    if (!Array.isArray(s.stairs) || s.stairs.length > 4) err.push('stairs 不合法（最多 4 个）');
+    else s.stairs.forEach((t, i) => {
+      const w = int(t.w ?? STAIR_W) ? (t.w ?? STAIR_W) : 0;
+      const ok = (t.dir === 'up' || t.dir === 'down') && int(t.x) && int(t.y) && w >= 2 && w <= 6 && t.x >= 1 && t.x + w <= W - 1 && t.y >= 3 && t.y + STAIR_H <= H - 1 && typeof t.to === 'string' && /^[a-z0-9][a-z0-9-]{1,39}$/.test(t.to);
+      if (!ok) err.push(`stairs[${i}]: 方向 up/down、位置在房间里（宽 2~6、高 ${STAIR_H} 格）、目标是室内 id`);
+    });
+  }
   if (!Array.isArray(s.furniture) || s.furniture.length > 500) { err.push('furniture 不是数组或太多'); return err; }
   s.furniture.forEach((f, i) => {
     if (!f || !known.has(f.k)) err.push(`furniture[${i}]: 未知家具 ${f?.k}`);
@@ -103,5 +136,88 @@ export function validateInterior(j: unknown, known: ReadonlySet<string>): string
   if (s.wallW !== undefined && s.wallW !== 'glass') err.push('wallW 只能是 glass');
   if (s.open !== undefined && typeof s.open !== 'boolean') err.push('open 要是 true/false');
   if (s.desc !== undefined && (typeof s.desc !== 'string' || s.desc.length > 80)) err.push('desc ≤80 字');
+  return err;
+}
+
+
+// ---------------------------------------------------------------- 座位 / 碰撞 / 楼层检查（编译、测试共用）
+/** 能坐的室内家具（key）：椅子、凳子、沙发。座位位置由占地推算，不需要在数据里手写 */
+export const SEAT_KEYS: ReadonlySet<string> = new Set(['chair', 'chairup', 'stool', 'bchair_d', 'bchair_u', 'bchair_l', 'bchair_r', 'gchair', 'campchair', 'sofa']);
+export interface InteriorSeat { x: number; y: number; bx: number; by: number }
+/**
+ * 一件能坐的家具的座位（像素）：bx,by = 椅面中心（人画在这里），x,y = 坐下时人的位置（椅子正南面一点，和宿舍里的椅子一个算法）；
+ * 沙发有两个座位（沿着长边排）。fw/fh = 旋转之后的占地格数。
+ */
+export function seatsOfFurn(f: Pick<InteriorFurn, 'k' | 'x' | 'y' | 'top'>, fw: number, fh: number): InteriorSeat[] {
+  if (!SEAT_KEYS.has(f.k) || f.top) return [];
+  const n = Math.max(fw, fh), out: InteriorSeat[] = [];
+  for (let i = 0; i < n; i++) {
+    if (fw >= fh) { const bx = (f.x + ((i + 0.5) * fw) / n) * 16, by = (f.y + fh) * 16 - 8; out.push({ x: bx, y: (f.y + fh) * 16 + 1, bx, by }); }
+    else { const bx = (f.x + 0.5) * 16, by = (f.y + ((i + 1) * fh) / n) * 16 - 8; out.push({ x: bx, y: by + 9, bx, by }); }
+  }
+  return out;
+}
+
+/** 碰撞格（'1' = 挡路）：北墙 3 格、东西南墙各 1 格（南墙门洞除外）、玻璃隔断（门洞除外）、地面家具的占地。foot(k,rot) = 家具旋转后的占地格数 */
+export function collisionRows(s: InteriorSpec, foot: (k: string, rot: number) => { fw: number; fh: number } | undefined): string[] {
+  const rows: Uint8Array[] = Array.from({ length: s.h }, () => new Uint8Array(s.w));
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    let b = y < 3 || x === 0 || x === s.w - 1 || y === s.h - 1;
+    if (s.exit && y === s.h - 1 && x >= s.exit.x && x < s.exit.x + s.exit.w) b = false;
+    rows[y][x] = b ? 1 : 0;
+  }
+  for (const p of s.partitions ?? []) for (let y = p.y0; y <= p.y1; y++) if (!(p.gap && y >= p.gap.y && y < p.gap.y + p.gap.h)) rows[y][p.x] = 1;
+  for (const f of s.furniture) {
+    if (f.top) continue;
+    const ft = foot(f.k, f.rot ?? 0); if (!ft) continue;
+    for (let j = 0; j < ft.fh; j++) for (let i = 0; i < ft.fw; i++) if (rows[f.y + j]?.[f.x + i] !== undefined) rows[f.y + j][f.x + i] = 1;
+  }
+  return rows.map((r) => Array.from(r).join(''));
+}
+
+/**
+ * 一间房的"能不能用"检查（不合格的返回原因）：楼梯落点必须是空地（stairs，硬错误）；每把椅子四周要有能站的格子（seats，
+ * idx = furniture 下标；被堵死的椅子走不到，编译时会把它的座位去掉并警告，新做的房间由测试要求全部为空）。foot 同 collisionRows
+ */
+export function interiorProblems(s: InteriorSpec, foot: (k: string, rot: number) => { fw: number; fh: number } | undefined): { stairs: string[]; seats: { idx: number; msg: string }[] } {
+  const stairs: string[] = [], seats: { idx: number; msg: string }[] = [], rows = collisionRows(s, foot), free = (x: number, y: number) => rows[y]?.[x] === '0';
+  for (const t of s.stairs ?? []) {
+    const l = stairLand(t);
+    if (!free(Math.floor(l.x), Math.floor(l.y))) stairs.push(`楼梯 ${t.dir}→${t.to} 的落点 (${l.x.toFixed(1)}, ${l.y.toFixed(1)}) 被挡住了`);
+    for (let j = 0; j < STAIR_H; j++) for (let i = 0; i < stairW(t); i++) if (!free(t.x + i, t.y + j)) stairs.push(`楼梯 ${t.dir}→${t.to} 的 (${t.x + i}, ${t.y + j}) 被家具 / 墙压住`);
+  }
+  s.furniture.forEach((f, idx) => {
+    const ft = foot(f.k, f.rot ?? 0); if (!ft || !SEAT_KEYS.has(f.k) || f.top) return;
+    let ok = false; // 椅子（或沙发）四周至少有一个能站的格子，不然走不到、也坐不上去
+    for (let i = -1; i <= ft.fw && !ok; i++) for (let j = -1; j <= ft.fh && !ok; j++) {
+      const inside = i >= 0 && i < ft.fw && j >= 0 && j < ft.fh, corner = (i === -1 || i === ft.fw) && (j === -1 || j === ft.fh);
+      if (!inside && !corner && free(f.x + i, f.y + j)) ok = true;
+    }
+    if (!ok) seats.push({ idx, msg: `furniture[${idx}] ${f.k} (${f.x}, ${f.y}) 四周都被堵死，坐不上去` });
+  });
+  return { stairs, seats };
+}
+
+/** 一批室内之间的关系：id 唯一；楼梯成对（上去的楼梯对面一定有下来的）；同一栋楼的楼层连续、一层有门、二层以上没有；楼层号随楼梯方向变 */
+export function validateInteriorSet(specs: readonly InteriorSpec[]): string[] {
+  const err: string[] = [], by = new Map<string, InteriorSpec>();
+  for (const s of specs) { if (by.has(s.id)) err.push(`重复的 id ${s.id}`); by.set(s.id, s); }
+  for (const s of specs) {
+    for (const t of s.stairs ?? []) {
+      const o = by.get(t.to);
+      if (!o) { err.push(`${s.id}: 楼梯指向不存在的室内 ${t.to}`); continue; }
+      if (!o.stairs?.some((u) => u.to === s.id && u.dir !== t.dir)) err.push(`${s.id}: 楼梯 ${t.dir}→${t.to}，但 ${t.to} 里没有反方向通回来的楼梯`);
+      if (s.building !== o.building) err.push(`${s.id} 与 ${t.to} 不在同一栋楼（building 不同）`);
+      if (s.floor !== undefined && o.floor !== undefined && o.floor !== s.floor + (t.dir === 'up' ? 1 : -1)) err.push(`${s.id}（${s.floor} 层）的 ${t.dir} 楼梯通向 ${t.to}（${o.floor} 层），层号对不上`);
+    }
+    if (s.exit === undefined && !s.stairs?.length) err.push(`${s.id}: 没有出口也没有楼梯`);
+  }
+  const groups = new Map<string, InteriorSpec[]>();
+  for (const s of specs) if (s.building) groups.set(s.building, [...(groups.get(s.building) ?? []), s]);
+  for (const [b, g] of groups) {
+    const fl = g.map((s) => s.floor ?? 0).sort((p, q) => p - q);
+    if (fl.some((n, i) => n !== i + 1)) err.push(`${b}: 楼层号要从 1 连续编号，现在是 ${fl.join(',')}`);
+    for (const s of g) { if ((s.floor ?? 1) === 1 && !s.exit) err.push(`${s.id}: 一层必须有南墙门洞`); if ((s.floor ?? 1) > 1 && s.exit) err.push(`${s.id}: 二层以上不该有通向室外的门洞`); }
+  }
   return err;
 }

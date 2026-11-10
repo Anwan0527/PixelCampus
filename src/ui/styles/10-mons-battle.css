@@ -92,6 +92,11 @@
 .tp-group { font-weight: bold; margin: 8px 0 4px; border-bottom: 3px solid var(--wood-l); }
 .tp-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .tp-btn { padding: 8px 6px; font-size: 16px; }
+/* 多层建筑（餐厅、教学楼）：名字下面一排「1F 2F 3F…」小按钮，点哪层直接进哪层 */
+.tp-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tp-cell .tp-btn { width: 100%; }
+.tp-floors { display: flex; gap: 3px; }
+.tp-floor { flex: 1; min-width: 0; min-height: 36px; padding: 2px 0; font-size: 13px; }
 @media (max-width: 420px) { .tp-row { grid-template-columns: repeat(2, 1fr); } }
 
 /* 精灵图鉴（IR #8） */

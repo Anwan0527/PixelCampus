@@ -67,7 +67,7 @@ import { catAction, closeCat, refreshCatPanel } from './cats';
 import { addDropped, clearDropped } from './entities';
 import { fishBlocked, fishLockState, onFishState } from './fishing';
 import { setupPlaceBtn } from './place';
-import { enterDorm } from './transitions';
+import { enterDorm, enterFloor } from './transitions';
 import type { WorldScene } from '../WorldScene';
 
 export function wireSocialCore(sc: WorldScene, profile: Profile) {
@@ -138,7 +138,7 @@ export function wireHand(sc: WorldScene) {
 }
 
 export function wireWorld(sc: WorldScene) {
-  sc.tpUi = new TeleportPanel(sc.net, () => { sc.hud.banner('📍 传送', '到啦'); sfx('go'); });
+  sc.tpUi = new TeleportPanel(sc.net, (floor) => { sc.hud.banner('📍 传送', '到啦'); sfx('go'); if (floor) enterFloor(sc, floor); }); // 选了某一层：到门口后直接进那一层
   sc.worldUi = new WorldPanel(sc.net, { friends: () => sc.socialUi.friendList, locOf: (u) => sc.socialUi.locOf(u) });
   sc.socialUi.onWorld = (uid) => sc.worldUi.openFor(uid); sc.socialUi.onLocs = () => sc.worldUi.refresh();
   sc.worldUi.onChange = (kind) => { // 换了世界：旧世界里的人物、公屏都不是这个世界的了（服务器会补发这个世界的单车/小猫/牵手/公屏记录）
