@@ -6,7 +6,7 @@
 - 💬 **交流群**：**1126319323** （玩法反馈、报 bug、想法建议、一起协作开发都欢迎来聊）
 - 📦 **项目仓库**：[https://github.com/EXIST-D/PixelCampus](https://github.com/EXIST-D/PixelCampus) （公开；欢迎 fork 提 Pull Request，须经仓库主人审核才合并）
 
-地图**平面布局以真实校园为准**（卫星正射图量测 + OSM 交叉校验：101 栋建筑、道路网、湖、运动场、三个大门；世界 704×544 格，1 格 = 2.5 m）；
+地图**平面布局以真实校园为准**（卫星正射图量测 + OSM 交叉校验：88 栋建筑、道路网、湖、运动场、三个大门；世界 704×544 格，1 格 = 2.5 m）；
 画面（地面、建筑、树、人物、小猫、UI）全部由代码程序化生成，没有第三方素材（仅 Ark Pixel 12px 字体，OFL）。
 
 ![小地图](docs/img/minimap.png)
@@ -25,14 +25,14 @@ npm run build      # 类型检查 + 生产构建
 **多人协作**：fork 本仓库、在自己的 fork 里改，提 Pull Request，CI 自动跑检查；主人审核合并，上线部署由主人手动执行。完整流程见 [docs/COLLABORATION.md](docs/COLLABORATION.md)。
 
 ## 玩法一览
-走路/奔跑、骑共享单车、和校园小猫玩（好感度、跟随、猫窝）、湖边钓鱼（拉鱼小游戏、25 种鱼、图鉴）、校园商店卖鱼买东西、校园墙发帖（需管理员审核）、每日任务/成就/称号、校园跑、好友/私聊/组队、公屏/留言板/公告、拍照、表情、手持物、季节与天气、昼夜。
+走路/奔跑、骑共享单车、和校园小猫玩（好感度、跟随、猫窝）、湖边钓鱼（拉鱼小游戏、48 种鱼、图鉴）、校园商店卖鱼买东西、校园墙发帖（需管理员审核）、每日任务/成就/称号、校园跑、好友/私聊/组队、公屏/留言板/公告、拍照、表情、手持物、季节与天气、昼夜。
 操作：`WASD/方向键` 移动，`Shift` 奔跑，`E/空格` 互动，`I` 背包，`H` 图鉴，`J` 成就，`Q` 任务，`T` 组队，`X` 表情，`P` 拍照，`Z` 沉浸模式，`M` 地图，`B` 留言板，`N` 公告，`F` 好友，`+/-` 缩放；手机是左半屏摇杆 + 右下角按钮。
 **完整功能清单见 [docs/FEATURES.md](docs/FEATURES.md)**（每次更新同步），更新历史见 [docs/CHANGELOG.md](docs/CHANGELOG.md)。
 
 ## 目录
 ```
 data/campus/        ★ 地图唯一数据源（改这里，再 npm run assets）：geo、terrain、buildings、pois、osm-roads
-data/interiors/     室内数据（室内暂停开发，默认不开放入口）
+data/interiors/     室内数据（宿舍室内 + 42 号楼 214 室试点，其余室内未开放）
 src/                游戏客户端：scenes / entities / world / systems / ui / audio / net / art（人物小猫 Rig）/ shared（共享规则与协议）
 tools/              构建期工具：world/compile.ts（蓝图→地面块+图集+碰撞）、art/（程序化像素美术）、reference/（卫星图对照）、analysis/（Python 路网分析）
 tests/              vitest：蓝图完整性、地图保真度、生成世界、外观/协议/共享规则…
@@ -45,7 +45,8 @@ archive/            上一版（只读，已废弃，不入库）
 - [docs/FEATURES.md](docs/FEATURES.md) 现有功能 · [docs/CHANGELOG.md](docs/CHANGELOG.md) 更新记录
 - [docs/FISHING_GUIDE.md](docs/FISHING_GUIDE.md) 钓鱼攻略（玩家手册，表格由 `npm run guide` 从真实规则生成）
 - [docs/COLLABORATION.md](docs/COLLABORATION.md) 协作流程（fork + PR）
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 架构 · [docs/MULTIPLAYER.md](docs/MULTIPLAYER.md) 联机协议与各批功能设计 · [docs/ECONOMY.md](docs/ECONOMY.md) 货币/商店/校园墙设计
+- [docs/README.md](docs/README.md) **文档索引（每份文档是什么、状态、怎么维护）** · [docs/feature/](docs/feature/spec.md) 新功能的需求（spec）+ 计划（plan）模板
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 架构 · [docs/PROTOCOL.md](docs/PROTOCOL.md) 联机协议索引（自动生成）· [docs/MULTIPLAYER.md](docs/MULTIPLAYER.md) 联机各批功能的设计记录 · [docs/ECONOMY.md](docs/ECONOMY.md) 货币/商店/校园墙设计
 - [docs/MAP_PIPELINE.md](docs/MAP_PIPELINE.md) 地图管线与已知偏差（改地图前先读）· [docs/SCALE.md](docs/SCALE.md) 比例约定
 - [docs/ART_STYLE.md](docs/ART_STYLE.md) 美术风格 · [docs/ASSETS_AND_LICENSES.md](docs/ASSETS_AND_LICENSES.md) 素材许可
 

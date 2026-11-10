@@ -1,5 +1,7 @@
 # 多人联机：需求、决策与各批功能设计
 
+> **定位（2026-11-10）**：这是「按批次记录的设计历史」，不是协议手册。**当前有哪些消息**看自动生成的 [PROTOCOL.md](PROTOCOL.md)（以 `src/shared/protocol.ts` 为准）；现有功能看 [FEATURES.md](FEATURES.md)；每次更新看 [CHANGELOG.md](CHANGELOG.md)。下文个别细节（限频数字、字段）可能已被后续批次改动，以代码为准。
+
 > 本文按时间记录联机相关的设计（协议、移动校验、社交、玩法）。**货币/商店/校园墙见 [ECONOMY.md](ECONOMY.md)；人物/小猫 Rig 与外观自定义见 ART_CHARACTER_CAT_DESIGN.md；各批功能的最新状态以 [FEATURES.md](FEATURES.md) 为准。**
 
 ## 已确认的需求（用户 2026-10-31）

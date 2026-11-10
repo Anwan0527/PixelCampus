@@ -19,7 +19,7 @@ tools/art/*  ──────────►│ 图集（人物、小猫、道
 - **扩展点**：新建筑 = `data/campus/buildings/*.json` 加一项；新道路 = `terrain/*.json` 加 `stroke`；新地标/互动区 = `pois.json` / 蓝图里的 `interact`（`action: board | shop | wall`）；新大型小品 = `tools/art/plaza.ts` 式的 Sprite + `PropKind`。
 
 ## 2. 客户端（`src/`）
-- **场景**：`BootScene`（加载，按当前季节取图集）→ `WorldScene`（主场景骨架；功能模块在 `scenes/world/`）；`InteriorScene` 暂停。HUD 是 DOM 叠层（中文像素字体更清晰），`ui/actions.ts` 是入口注册表（电脑侧边按钮 / 手机菜单）。
+- **场景**：`BootScene`（加载，按当前季节取图集）→ `WorldScene`（主场景骨架；功能模块在 `scenes/world/`）；`InteriorScene`（自己的宿舍 / 好友做客 / 试点室内）。HUD 是 DOM 叠层（中文像素字体更清晰），`ui/actions.ts` 是入口注册表（电脑侧边按钮 / 手机菜单）。
 - **流式加载**：`world/Streamer`——所有条目登记包围盒 + `make()`，每 120 ms 按镜头位置创建/销毁；地面块异步加载、销毁时释放纹理。
 - **实体**：`Character`（Player.ts：脚点坐标、四向动画、骑车/坐/钓鱼/雨伞/手持物、昵称牌）→ `Player`/`Npc`/`RemotePlayer`；`Cat`（家 + 游走 + 状态机）。
 - **人物/小猫美术**：`src/art/`（char-rig、skins、held）是运行时 Rig 合成；`tools/art/cat-rig`、`char-rig` 是构建期预览与图集；外观数据与校验在 `shared/appearance.ts`。
@@ -27,8 +27,8 @@ tools/art/*  ──────────►│ 图集（人物、小猫、道
 - **网络**：`net/client.ts`（`NetClient`：WebSocket、重连、所有消息收发，面板通过 `handlers` 订阅）。
 
 ## 3. 服务器（`server/`）
-- `index.ts`：HTTP（静态页 + `/healthz`）+ WS 入口，组装各存储；`game.ts`：核心（加入/移动校验/视野过滤/聊天/钓鱼/小猫/骑行/商店/校园墙消息分发）。
-- 持久化都是 `data/server/`下的文件：`store.ts`（玩家档案 JSON，防抖 + 原子写）、`board`/`wall`（追加写 JSONL，删除/审核也是事件行，启动时重放）、`notices`、`social`（好友 JSON + 私聊 JSONL）、`chatlog`、`config`。
+- `index.ts`：HTTP（静态页 + `/healthz` + 图片上传 `POST /up/<券>` / 读取 `GET /img/<名>`）+ WS 入口，组装各存储；`game.ts`：核心（连接、加入 / 退出、移动校验、视野快照、发送、tick）+ 「消息类型 → 处理函数」分发表；各功能在 `server/handlers/*-handler.ts`（管理员、举报、任务、宿舍、留言板、校园墙、钓鱼、商店、交易、社交、组队、牵手、世界、传送、精灵、节日、聊天…），handler 只通过窄接口 `GameCtx` 访问核心。联机消息清单见 [PROTOCOL.md](PROTOCOL.md)。
+- 持久化都是 `data/server/`下的文件：`store.ts`（玩家档案：快照 + 增量日志，防抖 + 原子写；离线 10 分钟的档案在内存里冻结成压缩 JSON，`/healthz` 有 heapMB / rssMB / profiles / frozen）、`place`（地点留言：`place.jsonl` + `place-img/` 图片文件）、`board`/`wall`（追加写 JSONL，删除/审核也是事件行，启动时重放）、`notices`、`social`（好友 JSON + 私聊 JSONL）、`chatlog`、`config`。
 - 规则分层：`progress.ts`（背包/好感/每日任务/币/商店/猫窝，和网络解耦便于测试）、`run.ts`（校园跑房间）、`party.ts`（组队）、`bikes.ts`（留车）、`admin.ts`（口令/令牌/限流）。
 - **信任模型**：客户端只上报位置和"想做什么"；价格、掉落、判定、限频、距离检查都在服务器；`src/shared` 里放可共用的纯函数规则，客户端用来显示、服务器用来裁决。
 

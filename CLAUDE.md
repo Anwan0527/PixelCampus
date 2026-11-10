@@ -9,6 +9,7 @@
 - 优先级：先保证平面地图/道路与真实一致，再做景观；**室内：试点中**（只开放 42 号楼 214 室，其余仍关闭，主人点头再扩）；南门→图书馆那一段主人最满意，别随意改。
 - 玩家写的文字一律 `textContent` 渲染（不用 `innerHTML`）；校验逻辑放 `src/shared/`；客户端只做展示和请求，不替服务器做决定；不做账号密码，身份是浏览器 token。
 - **每次更新（新功能/调整/修复）都要同步改 `docs/FEATURES.md`（现有功能清单）并在 `docs/CHANGELOG.md` 顶部按日期加一节。**
+- **新功能先写文档再写代码**：复制 `docs/feature/spec.md`、`plan.md` 到 `docs/feature/<日期-名称>/`，先写需求（spec）→ 主人确认 → 再写计划（plan）→ 主人确认 → 开发；实际的 plan.md 不进公开仓库。文档索引见 `docs/README.md`；改了 `src/shared/protocol.ts` 要 `npm run protocol:doc`。
 - 提交信息用中文，每个改动单独提交；别提交 `public/assets/generated*`、`data/server/`、任何口令/令牌（已在 `.gitignore`）。
 - **上线部署只由主人手动执行**，别人合并的代码不会自动上线。多人协作流程见 `docs/COLLABORATION.md`。
 

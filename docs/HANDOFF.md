@@ -1,4 +1,4 @@
-# 项目交接 / 现状（2026-11-05 整理）
+# 项目交接 / 现状（2026-11-10 整理）
 
 > 给新开的对话、新协作者用：先读这一份和 `CLAUDE.md`，再按需读专题文档（§8 索引）。
 > 本文只写**现在是什么样**；做过什么看 [CHANGELOG.md](CHANGELOG.md)，有什么功能看 [FEATURES.md](FEATURES.md)，接下来做什么听主人的安排。
@@ -17,7 +17,7 @@
 ```
 PixelGame/
 ├─ data/campus/       **manual.json（手动层：主人用地图编辑器改的，编译时最后处理）**；蓝图 JSON：terrain/*.json（按文件名顺序叠图层）、buildings/*.json、pois.json、geo.json（卫星配准+视差+放大倍数）、osm-roads.json
-├─ data/interiors/    室内数据（试点：只开放 42 号楼 214 室）
+├─ data/interiors/    室内数据（宿舍室内 + 试点：42 号楼 214 室；其余室内未开放）
 ├─ data/mons/         精灵内容包
 ├─ tools/
 │  ├─ editor/           地图编辑器（`npm run editor`，本地 5174；server.ts + index.html + main.ts），见 MAP_EDITOR.md
@@ -39,6 +39,12 @@ PixelGame/
 └─ docs/
 ```
 
+## 2.5 当前规模与最近的批次（2026-11-10）
+- 客户端约 200 个源文件、2.4 万行；共享规则 `src/shared/` 65 个文件；测试 78 个文件 976 项（含依赖服务端、只在主人本机跑的 29 个）；世界 88 栋建筑、17 个地标、7593 个对象。
+- 功能全貌见 [FEATURES.md](FEATURES.md)；联机消息见 [PROTOCOL.md](PROTOCOL.md)（自动生成）；最近批次：宿舍装修 / 家具 / 染色 / 一键还原 → 校猫与好感度 2.0 → 水禽与宿舍养猫 → 商店 / 任务 / 校园墙 / Esc → 四栋新宿舍楼 / 学院合并 → 盲盒合成 / 地点留言板（可传图）→ 大文件拆分与玩家档案冻结。
+- **新功能的开发流程**：先写 `docs/feature/<日期-名称>/spec.md`（需求，主人确认）→ `plan.md`（计划，主人确认）→ 开发 → 测试 → 同步 FEATURES / CHANGELOG（见 [feature/spec.md](feature/spec.md)、[feature/plan.md](feature/plan.md)）。
+- 文档总索引：[docs/README.md](README.md)。
+
 ## 3. 核心设计要点
 **地图**（2026-11-04 起部分区域参考了校园 GLB 模型，见 [GLB_REFERENCE.md](GLB_REFERENCE.md)：模型只当参考，**几何仍以卫星图为准**）：几何真值 = Esri z18 卫星正射图（`.cache/`，不入库）+ OSM 环路；蓝图用"5 m/格"原始坐标，`geo.json` 的 `world.scale=2` 把世界放大成 704×544 格（1 格 = 2.5 m），几何放大、像素设计的东西不放大。卫星是斜视角，蓝图填的是"屋顶坐标"，编译时按层数换算成脚印（视差）。地面按块流式加载（四季各一套），建筑图集分页，摆件 ~1.1 万个同屏只活跃几百个。详见 [MAP_PIPELINE.md](MAP_PIPELINE.md)、[SCALE.md](SCALE.md)。
 **图书馆广场**（x 325–399, y 361–423 格）已清空，西侧校园商店、东侧校园墙（常量在 `src/shared/plaza.ts`）；南门→图书馆中轴是主人最满意的一段，**别随意改**。
@@ -55,9 +61,9 @@ PixelGame/
 
 ## 5. 已知偏差与待办（地图与内容）
 - 建筑名称是按位置对应的，主人还没逐栋核对（2026-11-04 起一批名称来自模型，来源不明：留学生公寓、体育与健康学院、一社区北浴室、删除了马克思主义学院，需要主人确认）；个别设计是推测（体育场广场喷泉、围栏位置、东门校训石无字）。视差在放大后约 ±1.4 格。
-- 室内：试点开放 42 号楼 214 室（`data/interiors/mathmodel-214.json`，`"open": true`）；图书馆/教室/食堂仍关闭。室内目前只有自己可见。编辑用 `/interior`（见 MAP_EDITOR.md「室内编辑器」）。
+- 室内：自己的宿舍（InteriorScene，好友可做客）+ 试点 42 号楼 214 室（`data/interiors/mathmodel-214.json`，`"open": true`）；图书馆/教室/食堂仍关闭，扩范围要主人点头。编辑用 `/interior`（见 MAP_EDITOR.md「室内编辑器」）。
 - 蓝图里 `ground:true` 的楼（模型脚印）不再做视差修正，与旧的"量自屋顶"条目并存；编辑器里改的是脚印，两种来源的楼编辑体验一致。
-- Vite 构建 chunk > 1.4 MB（Phaser）；`WorldScene.ts`（~1100 行）偏大，多人协作容易冲突，适合按功能拆（小猫/钓鱼/商店/校园墙各一个模块）。
+- Vite 构建 chunk > 1.4 MB（Phaser）；`WorldScene.ts` 已按功能拆成 `scenes/world/*`（2026-11-10，主文件 401 行），样式表拆成 `ui/styles/01~16`；新功能请在新文件里写、在骨架里登记一行，别再往大文件里堆。
 - 手机真机体验（摇杆手感、键盘弹出、首屏加载慢、面板排版）还没有系统测过。
 - 价格/平衡（ECONOMY.md §6）是推演值，上线后要看真实数据再调。
 
@@ -83,7 +89,10 @@ PixelGame/
 | 文档 | 内容 |
 |---|---|
 | [README.md](../README.md) | 快速开始与操作 |
+| [README.md（docs 索引）](README.md) | **每份文档的内容、状态、维护方式** |
 | [FEATURES.md](FEATURES.md) | 现在有什么功能（分类清单，每次更新同步） |
+| [PROTOCOL.md](PROTOCOL.md) | 联机消息索引（`npm run protocol:doc` 自动生成） |
+| [feature/](feature/spec.md) | 新功能的需求 + 计划模板（spec.md / plan.md） |
 | [CHANGELOG.md](CHANGELOG.md) | 每次更新了什么（按日期倒序） |
 | [COLLABORATION.md](COLLABORATION.md) | **多人协作流程**：怎么 fork、提 PR，主人怎么审、怎么上线 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 代码与数据流架构 |

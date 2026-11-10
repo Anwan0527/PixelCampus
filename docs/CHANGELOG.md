@@ -12,6 +12,8 @@
 - 服务端 `server/game.ts` 3027 → 670 行：新增 `server/handlers/`（管理员、举报、任务、宿舍、留言板、校园墙、钓鱼、商店、交易、社交、组队、牵手、世界、传送、精灵、节日、聊天…共 20 个 handler + `ctx` / `dispatch` / `player` / `consts`）；消息处理改为「类型 → 处理函数」分发表（原来两处长 `case` 列表合一，限流和打断牵手变成表里的标志位）。
 **新增：玩家档案冻结（服务端）**
 - 离线 10 分钟且已落盘的档案在内存里冻结成压缩的 JSON，用到时再解冻；对外接口不变，全表扫描临时解析不保留。用线上备份（8550 份）实测每份约 5.0KB → 2.2KB，省约 57%。`/healthz` 增加 `heapMB`、`rssMB`、`profiles`、`frozen`；档案达到 18000 份时警告一次（2 万份时评估换 SQLite，见私有方案）。
+**文档整理**
+- 新增 `docs/README.md`（文档索引：每份文档的内容 / 状态 / 维护方式）、`docs/PROTOCOL.md`（联机消息索引，`npm run protocol:doc` 从 `protocol.ts` 生成，`tests/protocol-doc.test.ts` 检查是否最新）、`docs/feature/spec.md` + `plan.md`（新功能的需求与计划模板，规定「先 spec → 主人确认 → 再 plan → 主人确认 → 再开发」）；刷新 README / HANDOFF / ARCHITECTURE / MAP_PIPELINE，MULTIPLAYER 标注为历史设计记录；CLAUDE.md 加入新功能开发规范。
 **清理**
 - 删除 `.cache` 一次性对照图与脚本（约 440MB）、`dist`、脱敏前的旧文档备份；旧版归档移出项目；服务器上的备份文件保留最近 5 份（先下载了完整备份）。
 - 注意：服务端同步改了（`server/store.ts`、`game.ts`、`handlers/*`、`index.ts`）；客户端与服务端行为不变，可以一起部署。
