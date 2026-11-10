@@ -2,7 +2,7 @@
 
 > 由 [spec.md](spec.md) 生成；spec 变了先改 spec，再同步本文件。
 > 对应 Issue：[EXIST-D/PixelCampus#8](https://github.com/EXIST-D/PixelCampus/issues/8)
-> 状态：**实现完成（2026-11-10）**；测试 / 本地 E2E 通过，PR 待提
+> 状态：**实现完成（2026-11-10）**；测试 / 本地 E2E 通过；PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 待合并
 
 ## 0. 已确认的设计（本轮问答）
 
@@ -200,7 +200,7 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 - [x] `npm test`（52 文件 498 通过 / 3 跳过）、`npx tsc --noEmit -p .cache/tsconfig.mondex.json`、`npx vite build` 全绿。
 - [x] 本地真实浏览器 E2E：精灵图鉴、筛选、未见过剪影、详情、手机横屏。
 - [x] `docs/FEATURES.md`、`docs/CHANGELOG.md`、feature spec/plan 同步。
-- [ ] PR 说明链接 spec/plan；纯客户端，不要求服务端改动。
+- [x] PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 说明链接 spec/plan；纯客户端，不要求服务端改动。
 
 ## 10. 提交 / PR 拆分
 
@@ -219,4 +219,4 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 - **类型检查**：本地 `server/` 是 #5 服务端分支，与 #8 共享规则不兼容；用 `.cache/tsconfig.mondex.json` 排除 `server/` 后绿。CI 检出公开仓库时没有 `server/`，根配置会通过。
 - **真实 E2E**：测试服 #5 数据 + #8 客户端（本地 dev + Origin 中继）。`已见 1 / 83`、`已收服 1 / 83`、83 个图鉴位、82 个剪影；耄耋详情显示 No.099 / 一般 / 描述 / 栖息地「登录赠送」/ 记录；未见过详情只有「？？？ No.001 还没遇到」；属性筛选「一般」剩 1 个；844×390 横屏无横向滚动。`MON_DEX_E2E_OK`。
 - **自审**：无协议 / 服务端改动；未见过不返回名字 / 描述 / 属性 / 图；无 `innerHTML`；关闭重置筛选；空状态 / 加载态正常。
-- **未完成**：提交 / PR / 部署（#8 纯客户端，测试服当前仍是 #5 客户端；#8 未部署）。
+- **PR**：[#14](https://github.com/EXIST-D/PixelCampus/pull/14) 已提；未部署（#8 纯客户端，测试服当前仍是 #5 客户端），正式服待主人手动部署。
