@@ -95,7 +95,7 @@ PixelGame/
 | [feature/](feature/spec.md) | 新功能的需求 + 计划模板（spec.md / plan.md） |
 | [CHANGELOG.md](CHANGELOG.md) | 每次更新了什么（按日期倒序） |
 | [SERVER_COLLABORATION.md](process/SERVER_COLLABORATION.md) | **别人怎么改服务端**：协作方式、新字段 / 新协议 / 校验 / 测试 / 上线规则 |
-| [adr/](adr/README.md) | 架构决策记录：为什么这样做（10 份） |
+| [adr/](adr/README.md) | 架构决策记录：为什么这样做（11 份） |
 | [COLLABORATION.md](process/COLLABORATION.md) | **多人协作流程**：怎么 fork、提 PR，主人怎么审、怎么上线 |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | 代码与数据流架构 |
 | [MULTIPLAYER.md](design/MULTIPLAYER.md) | 联机需求、协议、各批功能设计 |

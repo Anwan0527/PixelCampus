@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | 待确认（2026-11-10） |
+| 状态 | 已完成并上线（2026-11-10）；T7（GitHub Actions）未做 |
 | 对应需求 | [spec.md](spec.md)（R1~R8） |
 | 负责 | 我（脚本、文档、验证），主人（批准、提供协作者公钥、在服务器上执行一次性安装） |
 | 预计工作量 | 约 1 天（R1~R7）；R8（GitHub Actions）另算半天 |
@@ -35,12 +35,12 @@ npm run deploy:test  ──ssh──►  受限账号 pcdeploy（authorized_keys
 ## 3. 任务拆分
 | 任务 | 内容 | 主要文件 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|
-| T1 | 沙箱加固（R5）：更新测试服务单元并在服务器上验证 | `deploy/pixelcampus-test.service`（私有） | — | A3 | ☐ |
-| T2 | 服务器脚本：`pc-test-gate`（强制命令，白名单分发）、`pc-test-install`（root 脚本：解包校验、加锁、版本切换、重启）、sudo 规则、受限账号与收件箱 | `deploy/pcdeploy/*`（私有）、服务器 | T1 | A1 A2 A4 | ☐ |
-| T3 | 受限模式的 `deploy:test`：本机构建 → `tar \| ssh pcdeploy@host deploy`；`test-env` 子命令（status / logs / reset / rollback / set-admin-hash） | `deploy/deploy.sh`、`deploy/test-env.sh`、`package.json` | T2 | 协作者机器上一条命令部署成功 | ☐ |
-| T4 | 操作日志（R4）与撤销流程（R7）文档：加 / 删公钥、轮换隐藏路径 | `docs/private/DEPLOY.md`、公开协作指南 | T2 | A5 A6 | ☐ |
-| T5 | 验证：用一把临时测试密钥走完 A1~A7（含越权尝试），正式环境对比 `healthz` | — | T1~T4 | A1~A7 | ☐ |
-| T6 | 文档：协作指南第四节更新、ADR 0011、FEATURES / CHANGELOG | `docs/` | T5 | | ☐ |
+| T1 | 沙箱加固（R5）：更新测试服务单元并在服务器上验证 | `deploy/pixelcampus-test.service`（私有） | — | A3 | ✅ |
+| T2 | 服务器脚本：`pc-test-gate`（强制命令，白名单分发）、`pc-test-install`（root 脚本：解包校验、加锁、版本切换、重启）、sudo 规则、受限账号与收件箱 | `deploy/pcdeploy/*`（私有）、服务器 | T1 | A1 A2 A4 | ✅ |
+| T3 | 受限模式的 `deploy:test`：本机构建 → `tar \| ssh pcdeploy@host deploy`；`test-env` 子命令（status / logs / reset / rollback / set-admin-hash） | `deploy/deploy.sh`、`deploy/test-env.sh`、`package.json` | T2 | 协作者机器上一条命令部署成功 | ✅ |
+| T4 | 操作日志（R4）与撤销流程（R7）文档：加 / 删公钥、轮换隐藏路径 | `docs/private/DEPLOY.md`、公开协作指南 | T2 | A5 A6 | ✅ |
+| T5 | 验证：用一把临时测试密钥走完 A1~A7（含越权尝试），正式环境对比 `healthz` | — | T1~T4 | A1~A7 | ✅ |
+| T6 | 文档：协作指南第四节更新、ADR 0011、FEATURES / CHANGELOG | `docs/` | T5 | | ✅ |
 | T7（可选） | GitHub Actions：`staging/*` 自动部署；`production` 环境需主人批准 | 私有服务端仓库 | 服务端仓库独立 | | ☐ |
 
 ## 4. 协议与数据变更
@@ -68,4 +68,5 @@ npm run deploy:test  ──ssh──►  受限账号 pcdeploy（authorized_keys
 ## 8. 进度记录
 | 日期 | 做了什么 / 提交 | 备注 |
 |---|---|---|
-| 2026-11-10 | 写 spec / plan 草稿 | 等主人确认；T1~T6 需要在服务器上新增账号和脚本，**先确认再做** |
+| 2026-11-10 | 写 spec / plan 草稿 | |
+| 2026-11-10 | 主人给出第一位协作者的公钥 → 实现并上线：受限账号 + 强制命令（deploy code/full、status、logs、rollback、reset、sethash）+ sudo 固定参数 + 沙箱加固（出站断网、隐藏敏感路径）；用临时密钥走完 A1~A7（越权、恶意包、压缩炸弹、并发、坏版本自动回滚、手动回滚、沙箱 12 项）后撤销临时密钥，加入协作者公钥 | 没验证：协作者那把 RSA 公钥的真实登录（只核对了格式和指纹）；发现并修了 macOS tar 管道输出带尾部填充导致 `gzip -l` 失灵的问题，并把默认部署改为只传代码（full 才传 145MB 资源） |

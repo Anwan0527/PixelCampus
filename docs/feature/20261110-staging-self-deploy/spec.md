@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | 待确认（2026-11-10） |
+| 状态 | 已完成（2026-11-10，已上线；R8 GitHub Actions 未做） |
 | 提出人 / 日期 | 主人 / 2026-11-10 |
 | 关联 | [测试环境 spec](../20261110-staging-env/spec.md)、[ADR 0010](../../adr/0010-staging-environment.md)、[ADR 0008](../../adr/0008-deploy-by-owner.md)、[服务端协作指南](../../process/SERVER_COLLABORATION.md) |
 | 对应 plan | [plan.md](plan.md) |
