@@ -4,7 +4,6 @@
 > 对应 Issue：[EXIST-D/PixelCampus#8](https://github.com/EXIST-D/PixelCampus/issues/8)
 > 状态：**实现完成（2026-11-10）**；测试 / 本地 E2E / 测试服 #5+#8 集成验收通过；样式已统一；PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 已合并；样式 PR [#15](https://github.com/EXIST-D/PixelCampus/pull/15) 待合并
 
-
 ## 0. 已确认的设计（本轮问答）
 
 | 项 | 结论 |
@@ -233,4 +232,3 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
   - 分组标题按来源上色（开放包绿 / 猫系红 / 登录赠送紫），详情沿用现有 `cx-detail` 虚线卡片。
 - **验证**：`npm test` 59 文件 553 通过 / 3 跳过；`npx vitest run --config server/vitest.config.ts` 90 文件 1056 通过 / 5 跳过；`npx vite build` 绿。测试服 E2E：5 列（94.59px）、83 个图鉴位、82 个剪影、详情 / 筛选 / 844×390 横屏正常。
 - **状态**：测试服已部署；样式 PR [#15](https://github.com/EXIST-D/PixelCampus/pull/15) 待合并。
-
