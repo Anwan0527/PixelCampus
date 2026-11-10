@@ -20,6 +20,7 @@
     "ref:view": "tsx tools/reference/render-views.ts",
     "assets": "tsx tools/build-assets.ts",
     "guide": "tsx tools/docs/gen-fishing-guide.ts",
+    "protocol:doc": "tsx tools/docs/gen-protocol.ts",
     "assets:webp": "tsx tools/assets/webp.ts",
     "assets:art":"tsx tools/art/index.ts",
     "assets:world": "tsx tools/world/compile.ts",
