@@ -18,7 +18,7 @@ docs/
 ├─ process/             协作流程：COLLABORATION.md、SERVER_COLLABORATION.md
 ├─ adr/                 架构决策记录（为什么这样做）
 ├─ feature/             功能规范：spec.md + plan.md 模板；<日期-名称>/ 每个功能一份
-└─ private/             私有文档（仅主人本机和私有备份仓库，见 private/README.md）
+└─ private/             私有文档（仅主人本机和私有备份仓库，不在公开仓库里）
 ```
 
 ## 入口与现状（每次更新必改的放这里）
@@ -65,7 +65,7 @@ docs/
 ## process/ 协作流程
 | 文档 | 内容 | 状态 |
 |---|---|---|
-| [COLLABORATION.md](process/COLLABORATION.md) | 多人协作：fork + PR、主人审核、部署只由主人做 | ✅ |
+| [COLLABORATION.md](process/COLLABORATION.md) | 多人协作：fork + PR、主人审核、部署由主人或授权协作者手动执行 | ✅ |
 | [SERVER_COLLABORATION.md](process/SERVER_COLLABORATION.md) | **别人怎么改服务端**：三种协作方式、新字段 / 新协议 / 校验 / 测试 / 上线规则、协作者清单 | ✅（新） |
 
 ## adr/ 决策记录
@@ -79,8 +79,10 @@ docs/
 | [feature/20261110-staging-env/](feature/20261110-staging-env/spec.md) | 第一份实例：测试环境（已上线） |
 | [feature/20261110-staging-self-deploy/](feature/20261110-staging-self-deploy/spec.md) | 协作者自助部署到测试环境（已上线） |
 | [feature/20261110-collaborator-prod-deploy/](feature/20261110-collaborator-prod-deploy/spec.md) | 协作者部署正式环境（已上线） |
+| [feature/20261110-mon-battle/](feature/20261110-mon-battle/spec.md) | 精灵对战第一批：技能更换、战斗信息、结算页、快进、耄耋 5 技能槽（协作者开发，已上线） |
+| [feature/20261110-mon-dex/](feature/20261110-mon-dex/spec.md) | 精灵图鉴页：未见过剪影 / 详情 / 筛选（协作者开发，已上线） |
 - 每个新功能复制成 `docs/feature/<YYYYMMDD-功能名>/spec.md` + `plan.md`；**先 spec、主人确认，再 plan、主人确认，再写代码**。
 - 2026-11-10 起 spec 和 plan **都进公开仓库**：不要写服务器地址、口令、玩家数据（运维细节写到私有文档）。
 
 ## 私有文档
-见 [private/README.md](private/README.md)：部署手册、各功能的历史方案与服务端备忘（`plans/`）、文件地图、玩家留言整理。
+不在公开仓库里（仅主人本机和私有备份仓库）：部署手册、开发全流程与权限、本机目录管理、各功能的历史方案与服务端备忘、文件地图、玩家留言整理。

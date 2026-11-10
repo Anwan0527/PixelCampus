@@ -22,7 +22,7 @@ npm run build      # 类型检查 + 生产构建
 ```
 **联机服务器、部署和运维不在这个仓库里**，由主人在自己电脑上维护；仓库里的 `npm run server / deploy / board / admin:set / bots` 等脚本需要那部分文件，协作者用不到。
 
-**多人协作**：fork 本仓库、在自己的 fork 里改，提 Pull Request，CI 自动跑检查；主人审核合并，上线部署由主人手动执行。完整流程见 [docs/process/COLLABORATION.md](docs/process/COLLABORATION.md)。
+**多人协作**：fork 本仓库、在自己的 fork 里改，提 Pull Request，CI 自动跑检查；主人审核合并，上线部署由主人或主人授权的协作者手动执行（合并不会自动上线）。完整流程见 [docs/process/COLLABORATION.md](docs/process/COLLABORATION.md)。
 
 ## 玩法一览
 走路/奔跑、骑共享单车、和校园小猫玩（好感度、跟随、猫窝）、湖边钓鱼（拉鱼小游戏、48 种鱼、图鉴）、校园商店卖鱼买东西、校园墙发帖（需管理员审核）、每日任务/成就/称号、校园跑、好友/私聊/组队、公屏/留言板/公告、拍照、表情、手持物、季节与天气、昼夜。
