@@ -1,0 +1,103 @@
+/* ---------- 菜单整理（2026-11-10）：设置面板、背包「精灵」页、统一页签 / 标题栏 / 关闭按钮 ---------- */
+/* 统一页签：图鉴、背包、设置、精灵、猫面板之外的页签都用 .cx-tabs / .cx-tab；点击区域 ≥ 36px，窄屏自动换行 */
+.cx-tabs { flex-wrap: wrap; }
+.cx-tab { position: relative; min-height: 36px; font-family: inherit; font-size: 15px; color: var(--ink); }
+.cx-tab .badge { position: absolute; right: -6px; top: -8px; margin: 0; }
+/* 统一标题栏：右上角关闭按钮不小于 40×36（手机上好点） */
+.board-head .btn { min-width: 40px; min-height: 36px; }
+/* 设置：一个面板五页（声音 / 聊天 / 画面 / 账号 / 关于） */
+.settings { width: min(520px, 100%); box-sizing: border-box; padding: 14px 18px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
+.settings.wide { width: min(560px, 100%); }
+.set-body { overflow-y: auto; flex: 1; min-height: 0; padding-right: 4px; -webkit-overflow-scrolling: touch; }
+.set-sec { display: flex; flex-direction: column; gap: 10px; }
+.set-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dotted var(--wood-l); }
+.set-row-t { flex: 1; min-width: 0; }
+.set-row-name { font-size: 16px; font-weight: bold; }
+.set-row-desc { font-size: 12px; opacity: .75; line-height: 1.4; margin-top: 2px; }
+.set-row .btn { flex: none; min-height: 36px; padding: 4px 12px; font-size: 14px; }
+.set-check { flex: none; font-size: 14px; white-space: nowrap; }
+.set-check input { width: 18px; height: 18px; vertical-align: -3px; }
+.settings .sound-row { padding: 6px 0; }
+/* 背包：物品 / 精灵 两页；精灵页要宽一些 */
+.bag.wide { width: min(760px, 96vw); max-height: 92vh; overflow-y: auto; }
+.bag-items.hidden, .bag-mons.hidden { display: none; }
+.cx-sec { display: flex; flex-direction: column; gap: 6px; }
+/* 电脑「菜单」下拉：两列，高频在前 */
+#menu-pop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 300px; }
+#menu-pop.hidden { display: none; }
+#menu-pop .menu-item { min-height: 34px; white-space: nowrap; }
+body.touch .settings, body.touch .bag.wide { max-height: calc(100dvh - 12px); }
+body.touch .set-row { flex-wrap: wrap; }
+body.touch .set-row .btn { min-height: 40px; }
+@media (max-width: 420px) { .cx-tab { padding: 5px 10px; font-size: 14px; } .settings, .bag { padding: 10px 12px; } }
+@media (max-width: 420px) { .settings .cx-tabs { gap: 4px; flex-wrap: nowrap; } .settings .cx-tab { flex: 1 1 0; min-width: 0; padding: 5px 2px; text-align: center; } }
+
+/* ===== 校园墙：便利贴 ===== */
+.wall { width: min(720px, 100%); padding: 10px 12px; }
+.wall-head-r { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.wall .board-title { font-size: 19px; letter-spacing: 1px; white-space: nowrap; }
+.wall .btn, .wall .seg { padding: 3px 10px; font-size: 13px; }
+.wall-sort { display: flex; gap: 4px; } .wall-sort.hidden { display: none; }
+.wall-sort .seg { padding: 2px 8px; }
+.wall-modbar { display: flex; align-items: center; gap: 6px; margin: 4px 0 4px; } .wall-modbar.hidden { display: none; }
+.wall-modlbl { font-size: 12px; color: #b02a1a; font-weight: bold; }
+.wall-dot { display: inline-block; min-width: 16px; margin-left: 4px; padding: 0 4px; border-radius: 9px; background: #d6405c; color: #fff; font-size: 11px; line-height: 16px; text-align: center; }
+.wall-compose-btn { width: 100%; margin: 4px 0; text-align: left; background: #fff3b4; border-color: #c4a83a; box-shadow: 0 2px 0 #a88a28; }
+.wall-compose { margin: 4px 0; padding: 6px 8px 6px; background: #fff3b4; border: 2px solid #e6c85a; box-shadow: 2px 3px 0 rgba(0,0,0,.16); transform: rotate(-.6deg); }
+.wall-compose.hidden, .wall-compose-btn.hidden { display: none; }
+.wall-compose-tip { font-size: 11px; opacity: .7; margin-bottom: 3px; }
+.wall-compose textarea { width: 100%; box-sizing: border-box; min-height: 56px; padding: 5px 6px; border: 2px dashed #c4a83a; background: #fffbe0; font-family: inherit; font-size: 14px; color: var(--ink); resize: vertical; border-radius: 0; outline: none; }
+.wall-compose-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; gap: 6px; }
+.wall-foot-l, .wall-foot-r { display: flex; align-items: center; gap: 8px; }
+.wall-anon { font-size: 13px; cursor: pointer; user-select: none; }
+.wall .board-msg { min-height: 0; margin: 2px 0; font-size: 13px; } .wall .board-msg:empty { display: none; }
+.wall-feed { max-height: min(60vh, 470px); overflow-y: auto; border-top: 2px dashed var(--wood-l); padding: 8px 4px 2px; -webkit-overflow-scrolling: touch; }
+.wall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px 10px; }
+.wall-note { position: relative; min-height: 112px; padding: 16px 9px 7px; background: var(--paper, #fff3b4); color: #3a2c1a; border-bottom: 3px solid var(--edge, #e6c85a); box-shadow: 1px 3px 3px rgba(0,0,0,.2); transform: rotate(var(--tilt, 0deg)); cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: transform .12s; }
+.wall-note::before { content: ''; position: absolute; top: 4px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9a9a, #d6405c 60%, #8a1a2c); box-shadow: 1px 2px 2px rgba(0,0,0,.35); }
+.wall-note::after { content: ''; position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,.14) 50%); pointer-events: none; }
+.wall-note:hover { transform: rotate(0deg) scale(1.03); z-index: 1; }
+.wall-note.big { cursor: default; min-height: 0; padding: 18px 12px 8px; margin: 6px 2px 4px; transform: none; }
+.wall-note.big:hover { transform: none; }
+.wall-note.hidden-post { opacity: .6; }
+.wall-note.is-pending { border-bottom-style: dashed; }
+.wall-note-text { font-size: 13px; line-height: 1.35; word-break: break-all; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+.wall-note-text.full { display: block; font-size: 15px; line-height: 1.5; overflow: visible; }
+.wall-note-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 11px; margin-top: auto; padding-right: 10px; }
+.wall-note-who { font-weight: bold; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wall-note-time, .wall-note-cm { opacity: .6; }
+.wall-ribbon { position: absolute; top: -4px; left: -4px; padding: 0 8px; background: #ffd35a; border: 1px solid #c4803a; color: #6a3a08; font-size: 11px; font-weight: bold; transform: rotate(-4deg); box-shadow: 1px 1px 0 rgba(0,0,0,.2); z-index: 2; }
+.wall-more { position: absolute; top: 1px; right: 2px; width: 24px; height: 22px; padding: 0; background: none; border: 0; font-size: 16px; line-height: 1; font-family: inherit; color: #3a2c1a; opacity: .55; cursor: pointer; z-index: 3; }
+.wall-more:hover { opacity: 1; } .wall-more.inline { position: static; width: auto; }
+.wall-more-wrap { margin-left: auto; position: relative; display: inline-block; }
+.wall-menu { position: absolute; top: 22px; right: 2px; min-width: 88px; background: #fffaf0; border: 2px solid var(--wood); box-shadow: 2px 3px 0 rgba(0,0,0,.25); z-index: 5; display: flex; flex-direction: column; }
+.wall-menu-item { padding: 5px 10px; background: none; border: 0; border-bottom: 1px dotted var(--wood-l); font-family: inherit; font-size: 13px; text-align: left; color: var(--ink); cursor: pointer; } .wall-menu-item:last-child { border-bottom: 0; }
+.wall-menu-item:hover { background: #ffe9c0; } .wall-menu-item.danger { color: #b02a1a; }
+.wall-review { display: flex; gap: 6px; margin-top: 4px; } .wall-review .btn { flex: 1; padding: 1px 6px; font-size: 12px; }
+.wall-who { display: inline-flex; align-items: center; gap: 4px; }
+.wall-tag { font-size: 11px; background: #e8dcf4; border: 1px solid #8a5aa8; color: #5a3a78; padding: 0 4px; } .wall-tag.op { background: #fde8c8; border-color: #c4803a; color: #8a4a10; }
+.wall-real { display: block; font-size: 11px; color: #b02a1a; }
+.wall-bar { display: flex; gap: 8px; margin-top: 4px; align-items: center; }
+.wall-act { background: none; border: 0; padding: 1px 2px; font-family: inherit; font-size: 12px; color: var(--ink); cursor: pointer; opacity: .8; }
+.wall-act:hover { opacity: 1; text-decoration: underline; } .wall-act.on { color: #d6405c; opacity: 1; } .wall-act.danger { color: #b02a1a; }
+.wall-pending { font-size: 12px; color: #8a5a10; background: #fff0c8; border: 1px dashed #c4803a; padding: 1px 6px; margin: 4px 0; }
+.wall-comments { margin-top: 6px; }
+.wall-cmt { padding: 4px 4px; border-bottom: 1px dotted var(--wood-l); }
+.wall-cmt .board-text { font-size: 13px; }
+.wall-cmt-in { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+.wall-cmt-in input[type=text] { flex: 1; min-width: 0; padding: 5px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 14px; border-radius: 0; outline: none; }
+.wall-feed > .btn { margin: 4px 0 6px; }
+.wall-morebtn { display: block; margin: 10px auto 4px !important; }
+@media (max-width: 560px) { .wall-head-r { gap: 4px; } .wall .btn, .wall .seg { padding: 2px 7px; } .wall .board-title { font-size: 17px; } .wall-grid { grid-template-columns: repeat(2, 1fr); gap: 12px 8px; } .wall-note { min-height: 104px; } .wall .btn, .wall .seg { min-height: 30px; } }
+body.touch .wall-feed { max-height: calc(100dvh - 200px); }
+@media (max-height: 460px) and (orientation: landscape) { body.touch .wall-feed { max-height: calc(100dvh - 120px); } .wall-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+
+/* 「关于」页：站长编写致谢 */
+.about-edit-btn { margin-top: 6px; min-height: 30px; padding: 4px 10px; font-family: inherit; font-size: 13px; color: var(--ink); }
+.about-edit-btn.hidden, .about-edit.hidden { display: none; }
+.about-edit { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.about-edit-area { width: 100%; box-sizing: border-box; padding: 7px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 14px; line-height: 1.5; color: var(--ink); border-radius: 0; outline: none; resize: vertical; touch-action: pan-y; }
+.about-edit-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.about-edit-bar .btn { min-height: 30px; padding: 4px 12px; font-family: inherit; font-size: 13px; color: var(--ink); }
+.about-edit-note { min-height: 16px; font-size: 12px; color: #2a7a1a; }
+

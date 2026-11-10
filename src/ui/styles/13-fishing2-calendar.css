@@ -1,0 +1,109 @@
+/* ---------------- 钓鱼 2.0（2026-11-05）：图鉴子页、装备栏配件、开盲盒、合成、神话鱼 ---------------- */
+.cx-subtabs, .cx-filter { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 8px; }
+.cx-sub-tab { padding: 3px 10px; border: 2px solid var(--wood); background: var(--paper-d); cursor: pointer; font-family: inherit; font-size: 13px; color: var(--ink); }
+.cx-sub-tab.on { background: var(--wood-l); font-weight: bold; }
+.cx-filter select { padding: 2px 4px; border: 2px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 13px; color: var(--ink); }
+.cx-chk { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; cursor: pointer; }
+.cx-rar-i.done { font-weight: bold; color: #2d7a44; }
+.cx-hab { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cx-hab-t { font-size: 12px; padding: 0 6px; border: 2px solid var(--wood-l); background: #fffaf0; }
+.cx-hab-s { font-size: 12px; width: 22px; text-align: center; border: 2px solid var(--wood-l); background: #fffaf0; }
+.cx-hab-s.more { background: #ffd35a; border-color: #b8501e; font-weight: bold; } .cx-hab-s.less { opacity: .55; } .cx-hab-s.off { background: #ccc; color: #888; text-decoration: line-through; }
+.dimline { opacity: .65; font-size: 12px !important; }
+.cx-chk-line.ok { color: #2d7a44; } .cx-chk-line.no { color: #b03a2a; }
+.cx-d-line.hot, .fc-note.hot { color: #b8501e; font-weight: bold; opacity: 1; }
+.cx-gear { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; }
+.cx-gcard { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border: 2px solid var(--wood-l); background: rgba(255, 250, 240, .5); opacity: .7; }
+.cx-gcard.got { opacity: 1; background: #fffaf0; } .cx-gcard.active { border-color: #b8501e; box-shadow: 0 0 0 2px #ffd35a; opacity: 1; }
+.cx-gcard canvas { width: 42px; height: auto; flex: none; image-rendering: pixelated; filter: brightness(0) opacity(.35); } .cx-gcard.got canvas { filter: none; }
+.cx-ginfo { flex: 1; min-width: 0; } .cx-gname { font-weight: bold; font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cx-gtag { font-size: 11px; font-weight: normal; padding: 0 5px; border: 2px solid var(--wood-l); background: #efd9a0; } .cx-gtag.on { background: #ffd35a; border-color: #b8501e; }
+.cx-gnote { font-size: 11px; font-weight: normal; opacity: .7; } .cx-geff { font-size: 12px; line-height: 1.4; } .cx-ghow { font-size: 11px; opacity: .65; line-height: 1.4; }
+.cx-pbar { height: 8px; margin: 3px 0; border: 2px solid var(--wood); background: #fff; } .cx-pfill { height: 100%; background: #5bc45a; }
+.shop-group { font-size: 13px; font-weight: bold; margin: 10px 0 2px; padding-left: 6px; border-left: 4px solid var(--wood-l); }
+.shop-info select { margin-top: 4px; padding: 2px 4px; border: 2px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 13px; color: var(--ink); max-width: 100%; }
+.bag-tk { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.bag-tk-chip { padding: 1px 8px; border: 2px solid var(--wood); background: var(--paper-d); font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; }
+.bag-tk-chip.on { background: #8fd05a; border-color: #3f7a24; font-weight: bold; } .bag-tk-chip:disabled { opacity: .5; cursor: default; }
+.bag-equip-sum { font-size: 12px; color: #3f7a24; border-top: 1px dashed var(--wood-l); padding-top: 4px; }
+.bag-odds { margin-top: 6px; font-size: 13px; } .bag-odds summary { cursor: pointer; font-weight: bold; }
+.bag-odds-row { padding: 1px 0; } .bag-odds-row.gem { color: #8a5a00; font-weight: bold; }
+.bag-detail .btn.primary { margin: 6px 0; }
+.bx { width: min(380px, 100%); box-sizing: border-box; padding: 14px 18px; text-align: center; }
+.bx-stage { min-height: 200px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0; }
+.bx-box { width: 96px; height: auto; image-rendering: pixelated; } .bx-box.open { width: 56px; }
+.bx-box.shake { animation: bx-shake .5s linear infinite; }
+@keyframes bx-shake { 0%, 100% { transform: rotate(0) scale(1); } 20% { transform: rotate(-9deg) scale(1.06); } 40% { transform: rotate(8deg) scale(1.1); } 60% { transform: rotate(-6deg) scale(1.06); } 80% { transform: rotate(5deg) scale(1.02); } }
+.bx-name { font-size: 17px; font-weight: bold; } .bx-list { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.bx-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 2px solid var(--wood-l); background: #fffaf0; text-align: left; animation: bx-pop .35s ease-out both; }
+.bx-item.gem { border-color: #b8501e; background: #fff1c8; box-shadow: 0 0 8px 2px rgba(255, 211, 90, .7); } .bx-item.dim { opacity: .75; }
+.bx-item canvas { width: 32px; height: auto; image-rendering: pixelated; flex: none; } .bx-text { font-size: 15px; font-weight: bold; }
+@keyframes bx-pop { from { transform: translateY(8px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+.bx-foot { display: flex; flex-direction: column; gap: 6px; align-items: center; } .bx-pity { font-size: 12px; opacity: .7; }
+.ff-crown { position: absolute; left: 50%; top: -18px; transform: translateX(-50%); font-size: 18px; line-height: 1; pointer-events: none; }
+.ff.crowned .ff-title { color: #b8501e; } .ff.crowned { box-shadow: inset 0 0 0 3px var(--wood-l), 0 0 14px 4px rgba(255, 211, 90, .7), 0 0 0 4px var(--wood-d); }
+.fish-card.mythic { box-shadow: inset 0 0 0 3px #ff6f61, 0 0 0 4px var(--wood-d), 0 0 26px 10px rgba(255, 111, 97, .75); }
+.fc-tag.r-mythic { color: #d0384a; }
+body.touch .cx-gcard canvas { width: 34px; }
+
+/* ---------------- 钓鱼 3.0（2026-11-05）：等级页、路线、放生、钓具摊 ---------------- */
+.cx-pbar.big { height: 12px; margin: 4px 0; }
+.cx-routes { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 4px; }
+.cx-route { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cx-route-t { font-size: 13px; font-weight: bold; min-width: 108px; }
+.bag-lv { align-self: flex-start; padding: 1px 8px; border: 2px solid var(--wood); background: #fff1c8; font-family: inherit; font-size: 12px; color: var(--ink); cursor: pointer; }
+.fc-release { margin-top: 4px; padding: 3px 12px; font-size: 14px; pointer-events: auto; }
+
+/* 数量拉条（商店买卖、开盲盒共用） */
+.qty-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.qty-row.hidden, .qty-row .hidden { display: none; }
+.qty-range { flex: 1 1 120px; min-width: 90px; max-width: 220px; accent-color: #5a9e32; }
+.qty-num { width: 62px; padding: 2px 4px; border: 2px solid var(--wood-l); background: #fff; font: inherit; font-size: 14px; }
+.qty-row .btn { padding: 3px 10px; font-size: 14px; }
+.qty-hint { font-size: 12px; opacity: .65; }
+.bx-sum { font-size: 14px; line-height: 1.6; }
+
+/* 日历 / 天气预报 */
+#clock.clickable { cursor: pointer; pointer-events: auto; }
+.cal { width: min(520px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.cal-body { max-height: min(66vh, 520px); overflow-y: auto; -webkit-overflow-scrolling: touch; border-top: 2px dashed var(--wood-l); padding-top: 8px; }
+.cal-now { display: flex; align-items: center; gap: 12px; }
+.cal-now-ico { font-size: 44px; line-height: 1; }
+.cal-now-name { font-size: 22px; font-weight: bold; }
+.cal-sub { font-size: 13px; opacity: .7; margin: 2px 0; }
+.cal-tips { margin: 8px 0; display: grid; gap: 4px; }
+.cal-tip { font-size: 14px; background: var(--paper-d); border: 2px solid var(--wood-l); padding: 4px 8px; }
+.cal-h { font-weight: bold; margin: 8px 0 4px; }
+.cal-fc-row { display: grid; grid-template-columns: 84px 28px 1fr 50px; gap: 6px; align-items: center; padding: 5px 4px; border-bottom: 1px dotted var(--wood-l); font-size: 14px; }
+.cal-fc-row.now { background: rgba(255, 236, 170, .35); font-weight: bold; }
+.cal-fc-ico { font-size: 20px; text-align: center; }
+.cal-fc-g { grid-column: 1 / -1; font-size: 11px; opacity: .5; margin-top: -3px; }
+.cal-fc-t { text-align: right; }
+.cal-foot { font-size: 12px; opacity: .6; margin-top: 8px; }
+.cal-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 4px; }
+.cal-year { font-weight: bold; font-size: 17px; min-width: 130px; text-align: center; }
+.cal-season { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.cal-season-name { flex: none; width: 52px; font-weight: bold; font-size: 14px; }
+.cal-cells { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; flex: 1; }
+.cal-cell { position: relative; border: 2px solid var(--wood-l); background: var(--paper-d); padding: 6px 0 3px; cursor: pointer; font: inherit; min-height: 42px; border-radius: 0; }
+.cal-cell.past { opacity: .5; }
+.cal-cell.today { background: #8fd05a; border-color: #3f7a24; font-weight: bold; opacity: 1; }
+.cal-cell.fest { background: #ffe9a8; border-color: #c9962a; }
+.cal-cell.today.fest { background: #cfe86a; }
+.cal-cell.on { outline: 3px solid #d0502a; }
+.cal-d { display: block; font-size: 14px; } .cal-f { display: block; font-size: 15px; min-height: 18px; }
+.cal-fest { margin-top: 10px; border: 2px solid var(--wood-l); background: var(--paper-d); padding: 8px 10px; }
+.cal-fest-name { font-weight: bold; font-size: 16px; }
+.cal-fest-blurb { font-size: 14px; margin: 4px 0; line-height: 1.5; }
+.cal-fest-li { font-size: 13px; opacity: .85; }
+.cal-fest-buff { margin-top: 4px; font-size: 13px; color: #2a6a1a; font-weight: bold; }
+@media (max-width: 520px) { .cal-fc-row { grid-template-columns: 74px 24px 1fr 44px; } .cal-season-name { width: 44px; } }
+.cal-wardrobe { margin-top: 8px; }
+.cal-ward-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; border-bottom: 1px dotted var(--wood-l); }
+.cal-ward-row.lock { opacity: .55; }
+.cal-ward-ico { font-size: 20px; flex: none; width: 26px; text-align: center; }
+.cal-ward-name { flex: 1; min-width: 0; font-size: 14px; }
+.cal-ward-row .btn { padding: 3px 10px; font-size: 14px; }
+.bath-glow { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; min-height: 22px; }
+.bath-chip { border: 2px solid; padding: 0 8px; font-size: 13px; font-weight: bold; background: var(--paper-d); }
+

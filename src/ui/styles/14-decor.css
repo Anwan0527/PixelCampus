@@ -1,0 +1,104 @@
+/* 宿舍装修：右上角的「装修」按钮 + 底部的家具托盘 */
+.decor-open { position: absolute; left: 22px; top: 222px; z-index: 5; pointer-events: auto; background: #ffe9a0; padding: 6px 14px; font-size: 15px; }
+body.touch .decor-open { left: calc(10px + env(safe-area-inset-left)); top: calc(126px + env(safe-area-inset-top)); padding: 4px 10px; font-size: 13px; } /* 在头像牌、校园币、世界条（横屏时世界条在校园币下面一行）的下面 */
+body.touch:has(.decor-open:not(.hidden)) .hand-bar { top: calc(170px + env(safe-area-inset-top)); } /* 宿舍里「手持物」条让到「装修」按钮下面，不叠在一起 */
+.decor-open.hidden { display: none; }
+.decor-tray { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 7; pointer-events: auto; width: min(760px, 96vw); box-sizing: border-box; background: var(--paper); border: 3px solid var(--wood); box-shadow: 0 4px 0 var(--wood-d); padding: 6px 10px 8px; display: flex; flex-direction: column; gap: 5px; }
+.decor-tray.hidden { display: none; }
+.decor-head { display: flex; align-items: center; gap: 10px; }
+.decor-title { font-weight: bold; font-size: 17px; white-space: nowrap; }
+.decor-info { flex: 1; font-size: 13px; opacity: .85; min-width: 0; }
+.decor-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+.decor-tabs .seg { padding: 2px 10px; font-size: 13px; }
+.decor-list { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 6px; min-height: 64px; align-items: stretch; }
+.decor-item { flex: 0 0 auto; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 2px; border: 3px solid var(--wood); background: var(--paper-d); cursor: pointer; font: inherit; position: relative; }
+.decor-item.on { background: #8fd05a; border-color: #3f7a24; }
+.decor-item canvas { image-rendering: pixelated; max-width: 40px; max-height: 36px; }
+.decor-name { font-size: 11px; line-height: 1.1; text-align: center; max-width: 70px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.decor-n { position: absolute; right: 2px; top: 0; font-size: 11px; font-weight: bold; background: #fff6; padding: 0 2px; }
+.decor-empty { font-size: 13px; opacity: .8; padding: 8px 4px; }
+.decor-acts { display: flex; gap: 6px; min-height: 30px; }
+.decor-acts .btn { padding: 2px 12px; font-size: 14px; }
+.decor-head .btn { padding: 2px 10px; font-size: 13px; white-space: nowrap; }
+.decor-confirm { position: absolute; inset: 0; z-index: 12; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .45); pointer-events: auto; }
+.decor-confirm.hidden { display: none; }
+.decor-confirm-box { width: min(380px, 88vw); background: var(--paper); border: 3px solid var(--wood); box-shadow: 0 4px 0 var(--wood-d); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.decor-confirm-title { font-weight: bold; font-size: 18px; }
+.decor-confirm-text { font-size: 14px; line-height: 1.5; }
+.decor-confirm-row { display: flex; justify-content: flex-end; gap: 10px; }
+.decor-msg { font-size: 13px; min-height: 17px; color: #2f7a24; }
+.decor-msg.bad { color: #b0402a; }
+body.touch .decor-tray { bottom: calc(6px + env(safe-area-inset-bottom)); }
+body.touch .decor-tray { padding: 4px 8px 6px; gap: 3px; }
+body.touch .decor-info { display: none; }
+body.touch .decor-title { font-size: 15px; flex: 1; }
+body.touch .decor-tabs .seg { padding: 1px 8px; font-size: 12px; }
+body.touch .decor-list { min-height: 56px; }
+body.touch .decor-item { width: 62px; }
+body.touch .decor-name { font-size: 10px; max-width: 58px; }
+body.touch .decor-acts { min-height: 26px; }
+body.touch .decor-acts .btn { font-size: 12px; padding: 1px 8px; }
+
+/* 资料卡旁边的「TA 的宿舍」 */
+.dorm-peek { width: min(300px, 92vw); box-sizing: border-box; background: var(--paper); border: 3px solid var(--wood); box-shadow: 0 3px 0 var(--wood-d); padding: 6px 8px 8px; display: flex; flex-direction: column; gap: 5px; }
+.dorm-peek-head { display: flex; flex-direction: column; gap: 1px; }
+.dorm-peek-title { font-weight: bold; font-size: 16px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dorm-peek-sub { font-size: 12px; opacity: .75; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dorm-peek-img { width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--wood-d); background: #17110d; display: block; }
+.dorm-peek-foot { display: flex; align-items: center; gap: 8px; min-height: 30px; }
+.dorm-like { padding: 3px 12px; font-size: 15px; white-space: nowrap; flex: 0 0 auto; }
+.dorm-like.on { background: #ffd9e0; border-color: #c8506a; box-shadow: 0 3px 0 #7a2a3c; }
+.dorm-like:disabled { opacity: .85; cursor: default; }
+.dorm-peek-msg { font-size: 12px; opacity: .85; min-width: 0; }
+.dorm-pub { display: flex; align-items: center; gap: 4px; margin: 8px 0 2px; font-size: 14px; cursor: pointer; }
+.card-wrap.with-dorm { max-height: 94vh; overflow-y: auto; }
+@media (min-width: 761px) and (min-height: 560px) {
+  .card-wrap.with-dorm.with-sheet { display: grid; grid-template-columns: auto minmax(0, 300px); align-items: start; gap: 10px 16px; }
+  .card-wrap.with-dorm.with-sheet > :first-child { grid-row: 1 / span 3; }
+  .card-wrap.with-dorm.with-sheet > .btn { grid-column: 1; justify-self: center; }
+}
+body.touch .card-wrap.with-dorm.with-sheet { grid-template-columns: auto minmax(0, 1fr); }
+body.touch .dorm-peek { width: auto; padding: 4px 6px 6px; }
+.decor-open.dorm-like { padding: 6px 14px; font-size: 15px; }
+
+/* 装修托盘：模式标签、墙纸/地板色块、扩建 */
+.decor-modes .seg { padding: 3px 12px; font-size: 14px; }
+.decor-skin { width: 96px; }
+.decor-sw { display: flex; width: 54px; height: 30px; border: 2px solid var(--wood-d); box-sizing: border-box; }
+.decor-sw i { flex: 1; display: block; }
+.decor-skin .decor-n { position: static; background: none; font-size: 11px; }
+.decor-dyeitem { width: 54px; }
+.decor-dyesw { width: 34px; height: 30px; border: 2px solid var(--wood-d); box-sizing: border-box; margin-top: 2px; }
+.decor-dyesw.orig { background: repeating-linear-gradient(45deg, #fff6e0 0 5px, #e8d6b0 5px 10px); }  /* 原色：斜纹底，表示"不染" */
+.decor-dyeitem.on .decor-dyesw { outline: 2px solid #3f7a24; }
+body.touch .decor-dyeitem { width: 48px; }
+.decor-room { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; align-items: flex-start; }
+.decor-room-now { font-weight: bold; }
+body.touch .decor-modes .seg { padding: 1px 8px; font-size: 12px; }
+body.touch .decor-skin { width: 80px; }
+
+.hall-note { font-size: 12px; opacity: .75; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* 装修时（手机）：藏起摇杆和互动键，免得误触走路；用托盘里的方向键 + 「放这里」操作 */
+body.decorating #touch-zone, body.decorating #touch-btns { display: none !important; }
+.decor-pad { display: none; gap: 5px; margin-left: auto; align-items: center; }
+body.touch .decor-pad { display: flex; }
+.decor-arrow { padding: 2px 12px; font-size: 16px; min-width: 38px; }
+.decor-put { padding: 2px 12px; font-size: 14px; white-space: nowrap; flex: 0 0 auto; }
+.decor-arrow { flex: 0 0 auto; }
+
+/* 手机装修：托盘、顶上的信息牌、装修按钮互不挤占 */
+body.touch.decorating #profile-chip, body.touch.decorating #clock, body.touch.decorating #coin-pill, body.touch.decorating .world-chip,
+body.touch.decorating .hand-bar, body.touch.decorating #hint, body.touch.decorating #touch-menu, body.touch.decorating #emote-bar { display: none !important; } /* 装修时藏起：它们会压在房间上、也容易误触 */
+body.touch .decor-acts { flex-wrap: wrap; row-gap: 4px; }
+body.touch .decor-pad { flex: 1 0 100%; justify-content: center; margin-left: 0; } /* 方向键 + 「放这里」单独占一行，不再挤出屏幕右边 */
+body.touch .decor-arrow { flex: 1 1 0; max-width: 64px; padding: 2px 0; }
+body.touch .decor-put { flex: 2 1 0; max-width: 140px; }
+@media (orientation: landscape) and (max-height: 520px) { /* 手机横屏：托盘靠右竖着放，房间在左边，不再被托盘压成一小条 */
+  body.touch .decor-tray { left: auto; right: calc(6px + env(safe-area-inset-right)); top: calc(6px + env(safe-area-inset-top)); bottom: calc(6px + env(safe-area-inset-bottom)); transform: none; width: min(320px, 46vw); }
+  body.touch .decor-head { flex-wrap: wrap; }
+  body.touch .decor-list { flex: 1 1 auto; min-height: 0; flex-wrap: wrap; align-content: flex-start; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  body.touch .decor-pad { flex-wrap: nowrap; }
+  body.touch .decor-msg { min-height: 0; }
+}
+

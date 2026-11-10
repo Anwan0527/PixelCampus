@@ -1,0 +1,59 @@
+/* 像素字体按字切成三片（常用+游戏用到的字 80 KB / 其余 GB2312 汉字 106 KB / 生僻字 450 KB），只下载页面上实际出现的字所在的那片；生成：tools/assets/font-slices.py */
+:root { --wood-d: #3b1f10; --wood: #6b3a1e; --wood-l: #d79b4a; --paper: #f7e3b0; --paper-d: #e4c27c; --ink: #3b2412; }
+html, body { margin: 0; height: 100%; background: #1a2a1c; overflow: hidden; font-family: 'ArkPixel', 'PingFang SC', monospace; color: var(--ink); }
+#game { position: fixed; inset: 0; }
+#game canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+#hud { position: fixed; inset: 0; pointer-events: none; font-size: 16px; line-height: 1.35; }
+.hidden { display: none !important; }
+.box { background: var(--paper); border: 4px solid var(--wood); box-shadow: inset 0 0 0 3px var(--wood-l), 0 0 0 4px var(--wood-d), 3px 7px 0 4px rgba(0,0,0,.28); border-radius: 2px; padding: 8px 12px; }
+#banner { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); text-align: center; min-width: 180px; animation: pop .3s steps(5); }
+#banner-title { font-size: 24px; font-weight: bold; }
+#banner-sub { font-size: 14px; opacity: .75; margin-top: 2px; }
+#clock { position: absolute; right: 22px; top: 22px; min-width: 132px; max-width: 220px; text-align: center; }
+#clock-day { font-size: 14px; opacity: .8; }
+#clock-time { font-size: 28px; font-weight: bold; letter-spacing: 2px; }
+#clock-phase { font-size: 13px; opacity: .8; }
+#clock-place { font-size: 13px; margin-top: 3px; padding-top: 3px; border-top: 2px dotted rgba(107,58,30,.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#clock-place:empty { display: none; }
+#clock-fest { font-size: 13px; margin-top: 3px; color: #a03a1a; font-weight: bold; }
+#clock-fest:empty { display: none; }
+#hint { position: absolute; left: 50%; bottom: 62px; transform: translateX(-50%); font-size: 18px; white-space: nowrap; }
+#controls { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); color: #fff; font-size: 14px; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; white-space: nowrap; opacity: .9; }
+#minimap { position: absolute; left: 22px; bottom: 22px; padding: 4px; width: 200px; height: 156px; transition: all .18s steps(4); pointer-events: auto; cursor: pointer; }
+#minimap-img { position: absolute; inset: 4px; background: #17241a url('/assets/generated/minimap.webp') center/100% 100% no-repeat; image-rendering: pixelated; overflow: hidden; }
+#minimap-n { position: absolute; right: 9px; top: 6px; font-size: 11px; color: #fff; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; pointer-events: none; }
+#minimap:not(.big) .poi { font-size: 11px; }
+#minimap-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #ff4a3a; border: 2px solid #fff; border-radius: 50%; box-sizing: border-box; box-shadow: 0 0 0 1px #000; animation: mm-pulse 1.4s steps(4) infinite; }
+@keyframes mm-pulse { 0%, 100% { box-shadow: 0 0 0 1px #000, 0 0 0 3px rgba(255,74,58,.55); } 50% { box-shadow: 0 0 0 1px #000, 0 0 0 6px rgba(255,74,58,0); } }
+/* 大地图：宽高都不能超出屏幕（手机横屏时高度才是限制），所以宽度取 宽/高 两个限制里小的那个 */
+#minimap.big { --mw: min(86vw, 1056px, calc(82vh / 0.7727)); --mw: min(86vw, 1056px, calc(82dvh / 0.7727)); cursor: default; width: var(--mw); height: calc(var(--mw) * 0.7727); left: 50%; bottom: 50%; transform: translate(-50%, 50%); padding: 8px; }
+#minimap.big #minimap-img { inset: 8px; }
+#minimap .poi { position: absolute; transform: translate(-50%, -100%); font-size: 13px; color: #fff; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; white-space: nowrap; display: none; }
+#minimap.big .poi { display: block; }
+#minimap .poi.minor { transform: translate(-50%, -50%); font-size: 10px; color: #f4efd8; opacity: .95; }
+body.touch #minimap.big .poi { font-size: 10px; }
+body.touch #minimap.big .poi.minor { font-size: 8px; }
+#minimap-close { display: none; position: absolute; right: 6px; top: 4px; width: 30px; height: 30px; line-height: 28px; text-align: center; font-size: 24px; color: #fff; background: rgba(40, 20, 12, .82); border: 2px solid #e8c880; border-radius: 4px; z-index: 2; cursor: pointer; }
+#minimap.big #minimap-close { display: block; width: 34px; height: 34px; line-height: 32px; right: 10px; top: 8px; }   /* 大地图右上角 ✕：电脑和手机都有（Esc 也能关） */
+#minimap.big #minimap-close:hover { background: rgba(160, 50, 30, .9); }
+body.touch #minimap.big #minimap-close { display: block; }
+#dialog { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); width: min(760px, 88vw); padding: 14px 18px; pointer-events: auto; }
+#dialog-title { font-size: 22px; font-weight: bold; margin-bottom: 6px; border-bottom: 2px dashed var(--wood-l); padding-bottom: 4px; }
+#dialog-body { font-size: 18px; min-height: 52px; white-space: pre-wrap; }
+#dialog-foot { text-align: right; font-size: 13px; opacity: .6; margin-top: 6px; }
+#loading { position: absolute; inset: 0; background: #1f3a24; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #f7e3b0; pointer-events: auto; z-index: 10; }
+#loading.done { display: none; }
+/* 开屏小动画：校园插画（维生酥鱼老师贡献）先从下面浮上来、淡入，之后轻轻上下浮动；标题和进度条稍后淡入 */
+#loading-art { width: min(560px, 84vw); max-height: 44vh; object-fit: contain; margin-bottom: 2px; filter: drop-shadow(0 6px 0 rgba(20, 40, 24, .45)); animation: splash-in .9s cubic-bezier(.2, .8, .2, 1) both, splash-float 4.2s ease-in-out .9s infinite; }
+#loading-title, #loading-bar, #loading-text { animation: splash-fade .7s ease-out .35s both; }
+@keyframes splash-in { from { opacity: 0; transform: translateY(22px) scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes splash-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes splash-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-height: 460px) { #loading-art { max-height: 34vh; } #loading { gap: 8px; } #loading-title { font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) { #loading-art, #loading-title, #loading-bar, #loading-text { animation: none; } }
+#loading-title { font-size: 40px; text-shadow: 3px 3px 0 #3b1f10; letter-spacing: 6px; }
+#loading-bar { width: 320px; height: 22px; border: 4px solid var(--wood); background: #2a1a0e; box-shadow: 0 0 0 3px var(--wood-d); padding: 2px; }
+#loading-fill { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #8fd05a 0 8px, #6cb040 8px 16px); }
+#loading-text { font-size: 16px; opacity: .8; }
+@keyframes pop { from { transform: translateX(-50%) translateY(-12px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+

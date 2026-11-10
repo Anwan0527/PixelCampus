@@ -1,0 +1,94 @@
+/* ---------- 背包 / 小猫 / 身份备份 ---------- */
+.bag { width: min(460px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.bag-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 4px 0 10px; }
+.slot { position: relative; aspect-ratio: 1; padding: 0; border: 3px solid var(--wood-l); background: #fffaf0; border-radius: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.slot:disabled { cursor: default; background: rgba(255,250,240,.45); border-color: rgba(215,155,74,.45); }
+.slot.on { border-color: #c4503c; background: #ffe9c0; }
+.slot canvas, .slot img { width: 78%; height: auto; image-rendering: pixelated; }
+.slot-n { position: absolute; right: 2px; bottom: 0; font-size: 12px; font-weight: bold; color: var(--ink); text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff; }
+.bag-detail { min-height: 64px; border-top: 2px dashed var(--wood-l); padding-top: 8px; }
+.bag-detail-top { display: flex; align-items: center; gap: 8px; }
+.bag-detail-name { font-size: 18px; font-weight: bold; }
+.bag-detail-desc { margin-top: 4px; font-size: 14px; line-height: 1.5; }
+.bag-detail-desc.dim { opacity: .55; }
+.bag-note { min-height: 16px; margin-top: 4px; font-size: 12px; color: #b02a1a; }
+
+.cat-panel { position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%); width: min(480px, 94vw); box-sizing: border-box; pointer-events: auto; z-index: 6; max-height: min(62vh, 520px); overflow-y: auto; display: flex; flex-direction: column; gap: 3px; padding: 5px 10px 6px; }
+.cat-panel.hidden { display: none; }
+.cat-head { display: flex; gap: 8px; align-items: center; }
+.cat-pic { flex: none; width: 52px; height: 46px; image-rendering: pixelated; object-fit: contain; background: #fff3d6; border: 3px solid var(--wood-l); }
+.cat-head-main { flex: 1; min-width: 0; }
+.cat-title { font-size: 16px; line-height: 1.2; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cat-lvrow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.cat-bar { font-size: 13px; color: #c4503c; letter-spacing: 1px; line-height: 1.2; }
+.cat-lvline { font-size: 13px; color: var(--ink); }
+.cat-prog { height: 6px; margin: 2px 0; background: #e8d6b0; border: 2px solid var(--wood-l); }
+.cat-prog-fill { height: 100%; background: #e8806a; transition: width .3s; }
+.cat-tags { font-size: 12px; line-height: 1.25; color: #6a5a40; }
+.cat-tags.hidden, .cat-loglist.hidden { display: none; }
+.cat-bye { flex: none; align-self: flex-start; padding: 3px 8px; font-size: 13px; font-family: inherit; color: var(--ink); }
+.cat-msg { min-height: 18px; font-size: 13px; line-height: 1.3; color: #2a7a1a; }
+.cat-msg.bad { color: #b02a1a; }
+.cat-offline { font-size: 12px; color: #b02a1a; }
+.cat-offline.hidden, .cat-page.hidden, .cat-fishlist.hidden, .cat-nick.hidden { display: none; }
+.cat-tabs { display: flex; gap: 4px; }
+.cat-tab { flex: 1; min-height: 28px; padding: 2px 6px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--paper-d); border: 3px solid var(--wood-l); cursor: pointer; border-radius: 0; white-space: nowrap; }
+.cat-tab.on { background: #ffe9c0; border-color: #c4503c; font-weight: bold; }
+.cat-page { display: flex; flex-direction: column; gap: 4px; max-height: min(150px, 26vh); overflow-y: auto; }   /* 三个页签高度一致：档案/羁绊内容多时在页内滚动，面板不会长到盖住猫 */
+.cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.cat-grid .btn, .cat-fish { min-height: 30px; padding: 2px 4px; font-size: 13px; line-height: 1.2; font-family: inherit; color: var(--ink); }
+.cat-grid .btn:disabled, .cat-bye:disabled { opacity: .45; cursor: default; }
+.cat-fishlist { display: flex; flex-direction: column; gap: 3px; max-height: 150px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.cat-page.fish-open { max-height: none; overflow-y: visible; }   /* 选鱼列表展开：页面本身不限高 / 不滚，只留列表自己和外层面板两层滚动 */
+.cat-fish { text-align: left; }
+.cat-nick { display: flex; gap: 6px; flex-wrap: wrap; }
+.cat-nick input { flex: 1 1 100%; min-width: 0; padding: 7px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 16px; color: var(--ink); border-radius: 0; outline: none; }
+.cat-nick .btn { min-height: 30px; font-family: inherit; color: var(--ink); }
+.cat-dossier { display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 1.35; }
+.cat-real { font-weight: bold; color: #b0602a; }
+.cat-row { display: flex; gap: 8px; }
+.cat-k { flex: none; width: 3em; color: #8a6a3a; }
+.cat-v { flex: 1; min-width: 0; }
+.cat-story { padding: 3px 6px; background: #fff3d6; border-left: 3px solid #e8a040; }
+.cat-story.locked { opacity: .55; background: transparent; border-left-color: var(--wood-l); }
+.cat-perks { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.cat-perk-title { font-weight: bold; margin-top: 2px; }
+/* 操作记录 */
+.cat-loghead { align-self: stretch; text-align: left; padding: 1px 4px; font-family: inherit; font-size: 12px; color: #6a5a40; background: transparent; border: 0; border-top: 2px dashed var(--wood-l); cursor: pointer; }
+.cat-loghead:disabled { cursor: default; opacity: .7; }
+.cat-loglist { display: flex; flex-direction: column; gap: 1px; font-size: 12px; line-height: 1.3; }
+.cat-loglist.open { max-height: 96px; overflow-y: auto; }
+.cat-logrow { display: flex; gap: 6px; }
+.cat-logt { flex: none; width: 4.6em; color: #8a6a3a; }
+.cat-logx { flex: 1; min-width: 0; color: #2a5a1a; word-break: break-all; }
+.cat-logrow.bad .cat-logx { color: #b02a1a; }
+.cat-perkrow { opacity: .6; }
+.cat-perkrow.got { opacity: 1; color: #2a7a1a; }
+body.touch .cat-panel { bottom: calc(140px + env(safe-area-inset-bottom)); max-height: min(52vh, 420px); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+body.touch .cat-fishlist { max-height: min(34vh, 220px); }
+/* 手机：body 是 touch-action: none（摇杆 / 画面手势要用），所以凡是不在 .screen 里的可滚动区域都得自己放开手指滑动，
+   否则手指在上面只会被当成"没有手势"：猫面板（含喂鱼列表 / 记录）、表情板、公屏记录、装修托盘、对话框。.screen 里的面板已经由上面那条规则放开了。 */
+body.touch .cat-panel, body.touch .cat-panel *, body.touch #emote-bar, body.touch #emote-bar *, body.touch .chat-log, body.touch .chat-log *, body.touch #dialog, body.touch #dialog * { touch-action: pan-y; }
+body.touch .decor-list, body.touch .decor-list * { touch-action: pan-x pan-y; }
+body.touch .cat-grid .btn, body.touch .cat-fish { min-height: 36px; }
+body.touch .cat-tab { min-height: 36px; }
+body.touch .cat-nick .btn { min-height: 36px; }
+@media (max-width: 420px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } .cat-tab { font-size: 14px; } }
+/* 手机横屏（很矮）：面板靠右侧停靠，不盖住场景中间的猫 */
+@media (max-height: 460px) and (orientation: landscape) {
+  body.touch .cat-panel { left: auto; right: calc(6px + env(safe-area-inset-right)); top: calc(6px + env(safe-area-inset-top)); bottom: calc(6px + env(safe-area-inset-bottom)); transform: none; width: min(340px, 48vw); max-height: none; }
+  body.touch .cat-page { max-height: none; }
+  body.touch .cat-pic { width: 46px; height: 40px; }
+  body.touch .cat-loglist.open { max-height: 120px; }
+  body.touch .cat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.backup { width: min(520px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.backup .seg-row { margin: 6px 0 10px; }
+.backup-code { width: 100%; box-sizing: border-box; padding: 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 16px; line-height: 1.5; color: var(--ink); border-radius: 0; resize: none; outline: none; word-break: break-all; letter-spacing: 1px; }
+.backup-code:not(.shown) { color: #9a8a70; letter-spacing: 0; font-family: inherit; }
+.backup .create-btns { justify-content: flex-start; margin: 8px 0 4px; }
+.backup .btn { font-family: inherit; color: var(--ink); }
+.backup-warn { margin-top: 8px; padding: 6px 8px; font-size: 13px; background: #fff0c8; border: 2px solid #c4503c; line-height: 1.5; }
+.backup-link { margin-top: 8px; background: none; border: 0; padding: 2px 0; font-family: inherit; font-size: 14px; color: #3f78c0; text-decoration: underline; cursor: pointer; align-self: flex-start; }
+

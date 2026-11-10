@@ -1,0 +1,137 @@
+/* ---------- 聊天频道：标签条、每频道一份消息、频道管理 ---------- */
+.chat-logs .chat-log { display: none; }
+.chat-logs .chat-log.on { display: block; }
+.chat-tabs { display: flex; gap: 3px; margin-bottom: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-x; }
+.chat-tabs::-webkit-scrollbar { display: none; }
+.chat-tab { flex: none; position: relative; padding: 2px 8px; font-family: inherit; font-size: 12px; font-weight: bold; color: var(--ink); background: var(--paper-d); border: 2px solid var(--wood-l); border-bottom: 3px solid var(--ch, var(--wood)); cursor: pointer; white-space: nowrap; border-radius: 0; }
+.chat-tab.on { background: #fffaf0; border-color: var(--ch, var(--wood)); }
+.chat-tab.off { opacity: .5; text-decoration: line-through; }
+.chat-tab.muted:not(.off)::after { content: '🔇'; font-size: 10px; margin-left: 3px; }
+.chat-badge { display: inline-block; min-width: 14px; margin-left: 4px; padding: 0 4px; border-radius: 8px; background: #d93a2a; color: #fff; font-size: 10px; line-height: 14px; text-align: center; font-weight: bold; }
+.chat-badge.mute { background: #8c8c8c; }
+.chat-gear { flex: none; margin-left: auto; padding: 0 8px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--paper-d); border: 2px solid var(--wood-l); cursor: pointer; border-radius: 0; }
+.chat-gear:hover { background: #ffe9c0; }
+.chat-note { display: none; margin-top: 4px; padding: 2px 6px; font-size: 12px; color: #b02a1a; background: #fbe3dc; border: 1px solid #c4503c; }
+.chat-note.on { display: block; }
+.chat-ch { display: none; margin-right: 3px; font-size: 11px; }
+.chat-line.ch-party .chat-text { color: #1f5a10; }
+.chat-line.ch-near .chat-text { color: #1f4f6a; }
+#chat[data-ch="party"] input:not(:disabled) { border-color: #3f7a24; }
+#chat[data-ch="near"] input:not(:disabled) { border-color: #2a6a8a; }
+#chat input:disabled { background: #e8dcc0; opacity: .75; cursor: not-allowed; }
+body.touch .chat-tab { padding: 4px 10px; font-size: 14px; }
+.chans { width: min(520px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.chans-row { padding: 8px 4px; border-bottom: 1px dotted var(--wood-l); }
+.chans-row.off .chans-name, .chans-row.off .chans-desc { opacity: .55; }
+.chans-name { font-size: 16px; display: flex; align-items: center; gap: 6px; }
+.chans-ico { font-size: 18px; }
+.chans-desc { font-size: 12px; opacity: .7; margin: 2px 0 4px; }
+.chans-sws { display: flex; gap: 18px; }
+.chans-sw { font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; }
+.chans-sw input { width: 18px; height: 18px; }
+
+/* ---------- 手机竖屏紧凑布局（窄屏）：头像 / 金币 / 世界 / 时钟 / 小地图都缩小，给画面多留地方 ---------- */
+@media (orientation: portrait) and (max-width: 480px) {
+  body.touch #profile-chip { top: calc(8px + env(safe-area-inset-top)); padding: 3px 24px 3px 4px; gap: 6px; max-width: 56vw; }
+  body.touch .chip-avatar { width: 32px; height: 32px; } body.touch .chip-avatar canvas { width: 24px; height: 24px; }
+  body.touch .chip-name { font-size: 14px; } body.touch .chip-sub { font-size: 10px; }
+  body.touch #coin-pill { top: calc(54px + env(safe-area-inset-top)); left: calc(8px + env(safe-area-inset-left)); font-size: 12px; padding: 1px 7px; }
+  body.touch .world-chip { top: calc(54px + env(safe-area-inset-top)); left: calc(88px + env(safe-area-inset-left)); padding: 2px 8px; font-size: 12px; border-width: 3px; }
+  body.touch #clock { top: calc(8px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right)); min-width: 0; max-width: 40vw; padding: 2px 8px; }
+  body.touch #clock-day { font-size: 10px; } body.touch #clock-time { font-size: 16px; letter-spacing: 1px; } body.touch #clock-phase { font-size: 10px; }
+  body.touch #clock-place { font-size: 10px; margin-top: 1px; padding-top: 1px; }
+  body.touch #minimap:not(.big) { top: calc(96px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right)); width: 80px; height: 62px; }
+  body.touch #banner { top: calc(100px + env(safe-area-inset-top)); max-width: 60vw; }
+  body.touch #touch-btns { gap: 8px; right: calc(8px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+  body.touch .tb-grid { grid-template-columns: 42px 42px; gap: 6px; } body.touch .tb { min-height: 40px; font-size: 14px; }
+  body.touch .tb-act { width: 72px; height: 72px; font-size: 18px; }
+  body.touch #hint { bottom: calc(150px + env(safe-area-inset-bottom)); }
+  body.touch #touch-menu { right: calc(8px + 90px + 8px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+
+/* ---------- 沉浸模式（body.immersive）：藏起所有界面，只剩画面 ---------- */
+#imm-exit { display: none; position: absolute; right: calc(10px + env(safe-area-inset-right)); top: calc(10px + env(safe-area-inset-top)); z-index: 9; width: 34px; height: 34px; padding: 0; font-family: inherit; font-size: 18px; line-height: 30px; color: #fff; background: rgba(40, 20, 12, .45); border: 2px solid rgba(255, 255, 255, .55); border-radius: 50%; opacity: .45; cursor: pointer; pointer-events: auto; }
+#imm-exit:hover, #imm-exit:active { opacity: 1; }
+body.immersive #imm-exit { display: block; }
+body.immersive #profile-chip, body.immersive #clock, body.immersive #coin-pill, body.immersive .world-chip, body.immersive #side-btns, body.immersive #menu-btn, body.immersive #menu-pop,
+body.immersive #minimap:not(.big), body.immersive #minimap-show, body.immersive #controls, body.immersive #banner, body.immersive #rotate-tip { display: none !important; }   /* 作者水印 #wm 不藏：截图 / 录屏要带署名（见 LICENSE） */
+body.immersive #chat:not(.pop):not(.open) { display: none !important; }
+body.immersive.touch .tb-wrap { display: none; }   /* 手机：只留「互动」键，+ − 聊天 ☰ 都藏起来 */
+body.immersive.touch #touch-menu { display: none !important; }
+#imm-toast { position: absolute; left: 50%; top: calc(18px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 9; padding: 6px 12px; font-size: 14px; color: #fff4d4; background: rgba(40, 20, 12, .8); border: 2px solid #e8c070; opacity: 0; pointer-events: none; transition: opacity .3s; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
+#imm-toast.on { opacity: 1; }
+
+/* 重发身份备份码：只显示一次的大号码框 */
+.dos-code { margin: 6px 0 10px; padding: 8px 10px; background: #fff3c4; border: 3px solid #c4503c; }
+.dos-code-val { margin: 6px 0; padding: 8px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 16px; font-weight: bold; letter-spacing: 1px; word-break: break-all; background: #fffaf0; border: 2px dashed var(--wood); cursor: pointer; user-select: all; -webkit-user-select: all; }
+
+/* 管理员：玩家档案 + 找人 */
+.adm-find { flex: 1; min-width: 220px; padding: 6px 10px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 15px; color: var(--ink); border-radius: 0; outline: none; box-sizing: border-box; }
+.adm-find:focus { border-color: #c4503c; }
+.adm-hits { max-height: min(46vh, 380px); }
+.dos-head { padding: 4px 2px 6px; border-bottom: 2px dashed var(--wood-l); margin-bottom: 4px; }
+.dos-subs { flex-wrap: wrap; margin: 6px 0; }
+.dos-body { max-height: min(56vh, 480px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 2px; }
+.dos-sec { margin: 6px 0 10px; padding: 6px 8px; border: 2px solid var(--wood-l); background: rgba(255,255,255,.35); }
+.dos-sec .adm-bar-title { margin-top: 0; }
+.dos-lock { margin: 8px 0; padding: 6px 8px; background: rgba(0,0,0,.06); border-left: 4px solid #9a8a70; }
+.dos-coin { font-size: 22px; font-weight: bold; margin: 2px 0 6px; }
+.dos-inv { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 10px; }
+.dos-item { display: flex; align-items: center; gap: 4px; padding: 3px 4px; border-bottom: 1px dotted var(--wood-l); font-size: 14px; }
+.dos-item .btn { margin-left: auto; padding: 1px 8px; font-size: 12px; }
+.dos-people { display: flex; flex-wrap: wrap; gap: 6px; }
+.dos-person { padding: 3px 10px; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--paper-d); border: 2px solid var(--wood-l); cursor: pointer; }
+.dos-person:hover { background: #ffe9c0; border-color: var(--wood); }
+.dos-list { max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.dos-rep { padding: 4px 2px; border-bottom: 1px dotted var(--wood-l); font-size: 13px; }
+.dos-rep.done { opacity: .65; }
+
+/* ---------- 手机横屏（屏幕很矮：摇杆在左、按键在右下、面板压矮、聊天框放到顶上免得被键盘盖住） ---------- */
+#rotate-tip { position: absolute; left: 50%; bottom: calc(230px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; width: max-content; max-width: 88vw; box-sizing: border-box; padding: 8px 12px; font-size: 14px; pointer-events: auto; }
+#rotate-tip button { flex: none; padding: 3px 10px; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--paper-d); border: 2px solid var(--wood); cursor: pointer; }
+@media (orientation: landscape) and (max-height: 520px) {
+  /* 操作区：左半屏整高都是摇杆区；互动大按钮在最右下，四个小按钮排在它左边，不再和小地图叠在一起 */
+  body.touch #touch-zone { top: 0; width: 50vw; height: 100%; }
+  body.touch #joy-base { left: calc(80px + env(safe-area-inset-left)); bottom: calc(64px + env(safe-area-inset-bottom)); }
+  body.touch #touch-btns { flex-direction: row-reverse; align-items: flex-end; gap: 10px; right: calc(12px + env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); }
+  body.touch .tb-act { width: 74px; height: 74px; font-size: 18px; }
+  body.touch .tb-grid { grid-template-columns: 44px 44px; gap: 6px; }
+  body.touch .tb { min-height: 38px; font-size: 14px; }
+  /* 「☰ 更多」菜单：在按钮列左边铺成四列，矮屏也放得下 */
+  body.touch #touch-menu { right: calc(12px + 74px + 10px + 94px + 8px + env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); grid-template-columns: repeat(4, 1fr); width: min(460px, calc(100vw - 236px - env(safe-area-inset-right) - env(safe-area-inset-left))); max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px - env(safe-area-inset-bottom) - env(safe-area-inset-top)); gap: 6px; padding: 6px 6px 8px; }
+  body.touch .tm-item { min-height: 36px; font-size: 14px; }
+  /* 左上 / 右上的状态牌压小；小地图挪到时钟下面一点，和右下的按钮拉开距离 */
+  body.touch #profile-chip { padding: 3px 26px 3px 5px; gap: 6px; max-width: 42vw; }
+  body.touch .chip-avatar { width: 32px; height: 32px; } body.touch .chip-avatar canvas { width: 24px; height: 24px; }
+  body.touch .chip-name { font-size: 15px; } body.touch .chip-sub { font-size: 11px; }
+  body.touch #coin-pill { top: calc(66px + env(safe-area-inset-top)); }
+  body.touch .world-chip { top: calc(94px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); padding: 3px 10px; font-size: 13px; }
+  body.touch #clock { padding: 2px 8px; min-width: 76px; } body.touch #clock-time { font-size: 18px; }
+  body.touch #clock-place { margin-top: 1px; padding-top: 1px; }
+  body.touch #minimap:not(.big) { top: calc(96px + env(safe-area-inset-top)); width: 104px; height: 80px; }
+  body.touch #banner { top: calc(8px + env(safe-area-inset-top)); max-width: 38vw; padding: 4px 10px; } body.touch #banner-title { font-size: 16px; } body.touch #banner-sub { font-size: 12px; }
+  body.touch #hint { bottom: calc(96px + env(safe-area-inset-bottom)); padding: 6px 12px; font-size: 15px; }
+  body.touch #dialog { top: calc(8px + env(safe-area-inset-top)); width: min(620px, 70vw); max-height: calc(100dvh - 20px); overflow-y: auto; padding: 8px 12px; }
+  body.touch #dialog-title { font-size: 17px; margin-bottom: 3px; } body.touch #dialog-body { font-size: 15px; min-height: 30px; }
+  #rotate-tip { display: none; }
+  /* 聊天框：放在屏幕顶上（横屏时软键盘会盖掉下半屏），记录区矮一些 */
+  body.touch #chat.open { top: calc(6px + env(safe-area-inset-top)); bottom: auto; left: calc(8px + env(safe-area-inset-left)); right: calc(8px + env(safe-area-inset-right)); }
+  body.touch .chat-log { height: 56px; }
+  body.touch .chat-tab { padding: 2px 8px; font-size: 13px; }
+  body.touch .chat-head { margin-bottom: 2px; }
+  /* 各种面板：边距收小、里面的列表可以用到整个屏幕高度（面板本身整体也能上下滑） */
+  body.touch .screen { padding: 6px calc(8px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left)); }
+  body.touch .box { padding: 6px 10px; }
+  body.touch .board, body.touch .friends, body.touch .notice, body.touch .about { padding: 8px 12px; }
+  body.touch .board-title { font-size: 20px; letter-spacing: 2px; }
+  body.touch .friends-list, body.touch .board-list, body.touch .notice-body, body.touch .ach-list, body.touch .shop-list, body.touch .wall-feed, body.touch .hall-list, body.touch .about-body, body.touch .adm-list, body.touch .bag-grid { max-height: calc(100dvh - 120px); }
+  body.touch .trade-bag, body.touch .dorm-col { max-height: calc(100dvh - 170px); }
+  body.touch .tp, body.touch .mon, body.touch .adm-menu { max-height: calc(100dvh - 12px); }
+  body.touch .dos-body, body.touch .adm-hits, body.touch .dos-list { max-height: none; overflow: visible; } /* 矮屏：档案整页一起滑，不再套一层小滚动区 */
+  body.touch .adm .board-title { font-size: 18px; }
+  body.touch .card-wrap { gap: 6px; }
+  body.touch .card-wrap.with-sheet { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 8px 12px; }
+  body.touch .card-wrap.with-sheet > :first-child { grid-row: 1 / span 2; }
+  body.touch .card-wrap.with-sheet > .btn { justify-self: start; }
+}
+

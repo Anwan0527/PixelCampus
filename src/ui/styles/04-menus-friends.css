@@ -1,0 +1,123 @@
+/* ---------- 留言板 ---------- */
+
+.board { width: min(620px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.board-head { display: flex; justify-content: space-between; align-items: center; }
+.board-title { font-size: 26px; font-weight: bold; letter-spacing: 4px; }
+.board .seg-row { margin: 4px 0 8px; flex-wrap: wrap; }
+.board textarea { width: 100%; box-sizing: border-box; padding: 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 16px; color: var(--ink); resize: vertical; border-radius: 0; outline: none; }
+.board textarea:focus { border-color: #c4503c; }
+.board-foot { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 2px; }
+.board-count { font-size: 12px; opacity: .6; }
+.board-msg { min-height: 20px; font-size: 14px; color: #2a7a1a; margin-bottom: 4px; }
+.board-msg.bad { color: #b02a1a; }
+.board button:disabled, .board textarea:disabled { opacity: .5; cursor: not-allowed; }
+.board-list { max-height: min(40vh, 320px); overflow-y: auto; border-top: 2px dashed var(--wood-l); padding-top: 6px; -webkit-overflow-scrolling: touch; }
+.board-empty { text-align: center; opacity: .6; padding: 16px 0; font-size: 14px; }
+.board-item { padding: 6px 4px; border-bottom: 1px dotted var(--wood-l); }
+.board-item-top { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.board-tag { background: var(--paper-d); border: 2px solid var(--wood-l); padding: 0 6px; font-size: 12px; }
+.board-who { font-weight: bold; }
+.board-time { margin-left: auto; opacity: .5; font-size: 11px; }
+.board-text { margin-top: 2px; font-size: 15px; word-break: break-all; white-space: pre-wrap; }
+
+/* 留言板：管理员 */
+.board-bottom { display: flex; justify-content: flex-end; margin-top: 4px; }
+.board-adminlink { background: none; border: 0; padding: 2px 4px; font-family: inherit; font-size: 11px; color: var(--ink); opacity: .35; cursor: pointer; }
+.board-adminlink:hover { opacity: .8; text-decoration: underline; }
+.board-login { display: flex; gap: 8px; margin-top: 6px; }
+.board-login input { flex: 1; min-width: 0; padding: 6px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 16px; border-radius: 0; outline: none; color: var(--ink); }
+.board-admin { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fff0c8; border: 2px solid #c4503c; padding: 4px 8px; margin: 6px 0; font-size: 13px; font-weight: bold; }
+.board-admin .btn { padding: 2px 10px; font-size: 13px; }
+.board-actions { display: flex; gap: 8px; margin-top: 4px; }
+.board-del { background: #fbe3dc; border: 2px solid #c4503c; color: #8a2a1a; padding: 1px 8px; font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 0; }
+.board-del:hover { background: #f4c4b6; }
+
+/* 侧边按钮（电脑）/ 更多菜单（手机）/ 角标 */
+#side-btns { position: absolute; right: 22px; top: 168px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
+.side-btn { padding: 6px 12px; font-family: inherit; font-size: 14px; color: var(--ink); pointer-events: auto; cursor: pointer; position: relative; }
+.side-btn:hover { filter: brightness(1.06); }
+body.touch #side-btns { display: none; }
+/* 左上角「菜单」：收纳除公告/留言板/好友之外的功能 */
+#menu-btn { position: absolute; left: 22px; top: 86px; padding: 5px 14px; font-family: inherit; font-size: 14px; color: var(--ink); pointer-events: auto; cursor: pointer; z-index: 5; }
+#menu-btn:hover { filter: brightness(1.06); }
+#menu-pop { position: absolute; left: 22px; top: 126px; display: flex; flex-direction: column; gap: 4px; padding: 6px; min-width: 150px; pointer-events: auto; z-index: 5; }
+#menu-pop.hidden { display: none; }
+.menu-item { position: relative; text-align: left; padding: 6px 12px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--paper-d); border: 2px solid var(--wood-l); cursor: pointer; }
+.menu-item:hover { background: #ffe9c0; border-color: #c4503c; }
+#menu-btn .badge, .menu-item .badge { position: absolute; right: -6px; top: -6px; margin: 0; }
+body.touch #menu-btn, body.touch #menu-pop { display: none; }
+.badge { display: inline-block; min-width: 16px; padding: 0 4px; margin-left: 6px; border-radius: 9px; background: #d93a2a; color: #fff; font-size: 11px; line-height: 16px; text-align: center; font-weight: bold; }
+.tb { position: relative; }
+.tb .badge { position: absolute; top: -6px; right: -6px; margin: 0; }
+.tb-wrap { position: relative; }
+/* 手机「☰ 更多」菜单：功能多了会超出屏幕，所以固定在按钮列的左侧、限制高度、里面可以上下滑动（touch-action: pan-y），点菜单外面会收起 */
+#touch-menu { display: none; position: fixed; right: calc(12px + 104px + 8px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); box-sizing: border-box; grid-template-columns: repeat(2, 1fr); align-content: start; gap: 8px; width: min(236px, calc(100vw - 140px - env(safe-area-inset-right) - env(safe-area-inset-left))); max-height: calc(100vh - 32px - env(safe-area-inset-bottom) - env(safe-area-inset-top)); max-height: calc(100dvh - 32px - env(safe-area-inset-bottom) - env(safe-area-inset-top)); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 8px 8px 10px; background: rgba(110,72,40,.9); border: 3px solid var(--wood-d); pointer-events: auto; touch-action: pan-y; z-index: 7; }
+#touch-menu.open { display: grid; }
+@media (min-width: 560px) { #touch-menu { grid-template-columns: repeat(3, 1fr); width: min(330px, calc(100vw - 140px - env(safe-area-inset-right) - env(safe-area-inset-left))); } }
+.tm-item { position: relative; min-height: 42px; padding: 0 4px; font-family: inherit; font-size: 15px; font-weight: bold; color: var(--ink); background: rgba(247,227,176,.98); border: 3px solid var(--wood); box-shadow: 0 3px 0 var(--wood-d); border-radius: 0; white-space: nowrap; overflow: visible; touch-action: pan-y; }
+.tm-item .badge { position: absolute; top: -6px; right: -6px; margin: 0; }
+.tm-more { grid-column: 1 / -1; position: sticky; bottom: -10px; margin: 0 -8px -10px; padding: 3px 0; text-align: center; font-size: 12px; color: #fff4d4; background: rgba(90,56,30,.96); pointer-events: none; }
+body.touch.chat-open #touch-menu { display: none; }
+/* 电脑「菜单」下拉：窗口矮的时候也不会超出屏幕 */
+#menu-pop { max-height: calc(100vh - 140px); overflow-y: auto; }
+
+/* 公告 */
+.notice { width: min(620px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.notice-body { max-height: min(46vh, 380px); overflow-y: auto; margin: 6px 0; -webkit-overflow-scrolling: touch; }
+.notice-entry { padding: 6px 0; border-bottom: 1px dotted var(--wood-l); }
+.notice-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.notice-top.clickable { cursor: pointer; }
+.notice-title { font-size: 20px; font-weight: bold; }
+.notice-older .notice-title { font-size: 15px; }
+.notice-date { font-size: 12px; opacity: .55; flex: none; }
+.notice-text { margin-top: 6px; font-size: 16px; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.notice-older { max-height: 22vh; overflow-y: auto; margin-bottom: 8px; }
+.notice-older-title { font-size: 12px; opacity: .6; margin: 6px 0 2px; }
+.notice-form { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; padding: 8px; border: 2px dashed #c4503c; background: #fff7e0; }
+.notice-form input, .notice-form textarea { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 16px; color: var(--ink); border-radius: 0; outline: none; }
+.notice-form textarea { resize: vertical; }
+.notice-form-btns { display: flex; gap: 8px; }
+.notice .create-btns { margin-top: 6px; }
+
+/* 公屏：历史记录、可点的名字 */
+.chat-line.hist { opacity: .6; }
+.chat-divider { text-align: center; font-size: 11px; opacity: .5; margin: 4px 0; }
+.chat-who.clickable { cursor: pointer; text-decoration: underline dotted; }
+
+/* 好友 / 私聊 */
+.friends { width: min(520px, 100%); box-sizing: border-box; padding: 14px 18px; }
+.friends-tabs { margin: 6px 0; flex-wrap: wrap; }
+.friends-body { min-height: 120px; }
+.friends-me { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; font-size: 14px; background: var(--paper-d); border: 2px solid var(--wood-l); padding: 4px 8px; margin-bottom: 6px; }
+.friends-me .btn { padding: 2px 10px; font-size: 13px; }
+.friends-list { max-height: min(46vh, 340px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.friend-row { display: flex; align-items: center; gap: 10px; padding: 6px 4px; border-bottom: 1px dotted var(--wood-l); cursor: pointer; }
+.friend-row:hover { background: rgba(255,255,255,.35); }
+.friend-row.static { cursor: default; }
+.friend-row.static:hover { background: none; }
+.friend-mid { flex: 1; min-width: 0; }
+.friend-name { font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 6px; }
+.friend-sub { font-size: 12px; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #aaa; border: 1px solid #777; flex: none; }
+.dot.on { background: #4fc23a; border-color: #2a7a1a; }
+.friends-add { display: flex; gap: 8px; margin: 4px 0 8px; }
+.friends-add input { flex: 1; min-width: 0; padding: 6px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 16px; color: var(--ink); border-radius: 0; outline: none; }
+.friend-result { border: 2px dashed var(--wood-l); padding: 6px; background: rgba(255,255,255,.35); }
+.friend-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.friend-actions .btn { padding: 4px 12px; font-size: 14px; }
+.conv-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.conv-head .btn { padding: 2px 10px; font-size: 13px; }
+.conv-title { flex: 1; min-width: 0; font-weight: bold; font-size: 17px; display: flex; align-items: center; gap: 6px; }
+.dm-list { height: min(42vh, 320px); overflow-y: auto; background: rgba(255,250,240,.6); border: 2px solid var(--wood-l); padding: 6px; -webkit-overflow-scrolling: touch; }
+.dm-day { text-align: center; font-size: 11px; opacity: .5; margin: 6px 0; }
+.dm-row { display: flex; align-items: flex-end; gap: 6px; margin: 4px 0; }
+.dm-row.me { flex-direction: row-reverse; }
+.dm-bubble { max-width: 72%; padding: 5px 9px; border: 2px solid var(--wood-l); background: #fff; font-size: 15px; word-break: break-word; white-space: pre-wrap; }
+.dm-row.me .dm-bubble { background: #cfeaa6; border-color: #7aa64a; }
+.dm-time { font-size: 10px; opacity: .45; flex: none; }
+.dm-more { display: block; margin: 0 auto 6px; padding: 2px 10px; font-size: 12px; }
+.conv-input { display: flex; gap: 8px; margin-top: 8px; }
+.conv-input input { flex: 1; min-width: 0; padding: 7px 8px; border: 3px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 16px; color: var(--ink); border-radius: 0; outline: none; }
+.conv-note { margin-top: 6px; font-size: 11px; opacity: .6; }
+body.touch .friends-list { max-height: min(40vh, 300px); }
+

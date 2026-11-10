@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
-const css = readFileSync(new URL('../src/ui/style.css', import.meta.url), 'utf8');
+// 样式已按功能分成 src/ui/styles/NN-*.css（style.css 只是入口清单）：断言针对全部分片拼起来的内容
+const stylesDir = new URL('../src/ui/styles/', import.meta.url);
+const css = readdirSync(stylesDir).filter((f) => f.endsWith('.css')).sort().map((f) => readFileSync(new URL(f, stylesDir), 'utf8')).join('');
 /** 取出所有以 body.immersive 开头的规则里写的选择器（只看 display:none 的那几条） */
 const hidden = (() => {
   const out = new Set<string>();
