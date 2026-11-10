@@ -109,10 +109,12 @@
 .mon-dex-chain { word-break: break-word; }
 .mon-dex-group { margin-top: 10px; }
 .mon-dex-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+.codex { position: relative; }
 .mon-dex-dd { position: relative; }
+/* 弹出层挂到 .codex（position: relative），absolute 定位；不受 .cx-body 滚动容器裁切 */
 .mon-dex-dd-btn { padding: 2px 8px; border: 2px solid var(--wood); background: #fffaf0; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; border-radius: 3px; }
 .mon-dex-dd-btn.on { background: var(--wood-l); }
-.mon-dex-dd-menu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; display: grid; grid-template-columns: repeat(6, 52px); gap: 4px; padding: 6px; background: var(--paper); border: 3px solid var(--wood); box-shadow: 3px 4px 0 rgba(0,0,0,.25); overflow: visible; scrollbar-width: none; }
+.mon-dex-dd-menu { position: absolute; z-index: 60; display: grid; grid-template-columns: repeat(6, 52px); gap: 4px; padding: 6px; background: var(--paper); border: 3px solid var(--wood); box-shadow: 3px 4px 0 rgba(0,0,0,.25); overflow: visible; scrollbar-width: none; }
 .mon-dex-dd-menu::-webkit-scrollbar { display: none; }
 
 .mon-dex-dd-menu.zone { grid-template-columns: 1fr; }
@@ -126,6 +128,7 @@
   .mon-dex-img.big { width: 44px; height: 44px; }
   .mon-dex-cell { min-height: 62px; }
   .cx-grid.mon-dex-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 4px; }
-  .mon-dex-dd-menu { grid-template-columns: repeat(4, 48px); max-width: 90vw; }
+  .cx-body .mon-dex-grid { padding-right: 0; }
+  .mon-dex-dd-menu { grid-template-columns: repeat(4, 48px); }
   .mon-dex-dd-menu.zone { grid-template-columns: 1fr; }
 }

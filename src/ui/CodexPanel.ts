@@ -68,6 +68,13 @@ export class CodexPanel {
     panel.append(head, this.tabsBar, this.body);
     this.root.append(panel);
     this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
+    // 点在下拉面板之外：收起下拉（fixed 弹层不占布局，不会自己消失）
+    document.addEventListener('mousedown', (e) => {
+      if (!this.monOpen) return;
+      const t = e.target as Element | null;
+      if (t?.closest('.mon-dex-dd-menu') || t?.closest('.mon-dex-dd-btn')) return;
+      this.monOpen = null; this.render();
+    });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
     (document.getElementById('hud') ?? document.body).append(this.root);
     ui.add({ id: 'codex', label: '图鉴', key: 'H', run: () => this.toggle() });
@@ -119,7 +126,7 @@ export class CodexPanel {
     filterBar.append(
       this.monDropdown('属性', typeName, 'type', [{ value: '', label: '全部属性' }, ...CONTENT.elements.elements.map((e) => ({ value: e.id, label: e.name, color: e.color }))]),
       caughtLabel,
-      this.monDropdown('区域', zoneName, 'zone', [{ value: '', label: '全部区域' }, ...monDexZoneOptions(ZONES).map((z) => ({ value: z.id, label: z.name }))], 'zone'),
+      this.monDropdown('区域', zoneName, 'zone', [{ value: '', label: '全部区域' }, ...monDexZoneOptions(ZONES).map((z) => ({ value: z.id, label: z.name }))]),
     );
     box.append(filterBar);
     const groups = monDexGroups(CONTENT, data.dex, ZONES, this.monFilter).filter((g) => g.rows.length);
@@ -140,28 +147,41 @@ export class CodexPanel {
     }
     box.append(this.renderMonDetail(all));
   }
-  /** 精灵图鉴的像素风下拉（不用浏览器原生 select 弹层） */
-  private monDropdown(label: string, value: string, kind: 'type' | 'zone', options: { value: string; label: string; color?: string }[], cls = ''): HTMLElement {
+  /** 精灵图鉴的像素风下拉（不用浏览器原生 select 弹层）；弹出层挂到面板根节点，避免被滚动容器裁切 */
+  private monDropdown(label: string, value: string, kind: 'type' | 'zone', options: { value: string; label: string; color?: string }[]): HTMLElement {
     const wrap = el('div', 'mon-dex-dd');
     const btn = el('button', 'cx-sub-tab mon-dex-dd-btn' + (this.monOpen === kind ? ' on' : '')); btn.type = 'button'; btn.textContent = `${label}：${value}`;
     btn.addEventListener('click', () => { this.monOpen = this.monOpen === kind ? null : kind; this.render(); });
     wrap.append(btn);
-    if (this.monOpen === kind) {
-      const menu = el('div', 'mon-dex-dd-menu' + (cls ? ` ${cls}` : ''));
-      for (const o of options) {
-        const b = el('button', 'mon-dex-dd-opt' + (!o.value ? ' all' : '')); b.type = 'button';
-        if (o.color) { const s = el('span', 'mon-type', o.label); s.style.background = o.color; b.append(s); }
-        else b.append(document.createTextNode(o.value ? o.label : (kind === 'type' ? '全部' : '全部区域')));
-        b.addEventListener('click', () => {
-          this.monOpen = null;
-          if (kind === 'type') this.monFilter.type = o.value || undefined; else this.monFilter.zone = o.value || undefined;
-          this.render();
-        });
-        menu.append(b);
-      }
-      wrap.append(menu);
-    }
+    if (this.monOpen === kind) this.openDd(kind, options, btn);
     return wrap;
+  }
+  /** 把下拉面板放到 .codex 里、贴着按钮下方；按空间自动向左/向上收，避免超出面板 */
+  private openDd(kind: 'type' | 'zone', options: { value: string; label: string; color?: string }[], btn: HTMLElement) {
+    const panel = this.root.querySelector('.codex') as HTMLElement | null;
+    if (!panel) return;
+    const menu = el('div', 'mon-dex-dd-menu' + (kind === 'zone' ? ' zone' : ''));
+    for (const o of options) {
+      const b = el('button', 'mon-dex-dd-opt' + (!o.value ? ' all' : '')); b.type = 'button';
+      if (o.color) { const s = el('span', 'mon-type', o.label); s.style.background = o.color; b.append(s); }
+      else b.append(document.createTextNode(o.value ? o.label : (kind === 'type' ? '全部' : '全部区域')));
+      b.addEventListener('click', () => {
+        this.monOpen = null;
+        if (kind === 'type') this.monFilter.type = o.value || undefined; else this.monFilter.zone = o.value || undefined;
+        this.render();
+      });
+      menu.append(b);
+    }
+    panel.append(menu);
+    const pr = panel.getBoundingClientRect(), br = btn.getBoundingClientRect();
+    // 弹层 absolute 挂在 .codex 上，用相对面板的坐标；先量宽度再摆，避免抖动
+    menu.style.left = '0px'; menu.style.top = '0px';
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    const relLeft = br.left - pr.left, relTop = br.top - pr.top, relBottom = pr.bottom - br.bottom;
+    const left = Math.min(Math.max(4, relLeft), Math.max(4, pr.width - mw - 4));
+    const top = relBottom >= mh + 6 ? br.bottom - pr.top + 4 : Math.max(4, br.top - pr.top - mh - 4);
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
   }
 
   private renderMonDetail(rows: MonDexRow[]): HTMLElement {
