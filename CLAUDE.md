@@ -11,7 +11,7 @@
 - **每次更新（新功能/调整/修复）都要同步改 `docs/FEATURES.md`（现有功能清单）并在 `docs/CHANGELOG.md` 顶部按日期加一节。**
 - **新功能先写文档再写代码**：复制 `docs/feature/spec.md`、`plan.md` 到 `docs/feature/<日期-名称>/`，先写需求（spec）→ 主人确认 → 再写计划（plan）→ 主人确认 → 开发（spec / plan 都进公开仓库，别写服务器地址、口令、玩家数据）。文档索引见 `docs/README.md`；改了 `src/shared/protocol.ts` 要 `npm run protocol:doc`。
 - 提交信息用中文，每个改动单独提交；别提交 `public/assets/generated*`、`data/server/`、任何口令/令牌（已在 `.gitignore`）。
-- **上线部署只由主人手动执行**，别人合并的代码不会自动上线。多人协作流程见 `docs/process/COLLABORATION.md`。
+- **上线部署只由主人或主人授权的协作者手动执行**（受限账号 + 预备份 + 自动回滚 + 审计，见 ADR 0013），别人合并的代码不会自动上线。AI 助手只在主人明确说「部署」时才部署。多人协作流程见 `docs/process/COLLABORATION.md`。
 
 ## 常用命令
 `npm ci` · `npm run assets`（生成地图/美术资源，首次约 2 分钟，生成物不入库）· `npm run dev`（5173，浏览器开 `/?offline` 单机预览）· `npm test` · `npm run build` · `npm run editor`（**地图编辑器**，主人手动微调地图，结果在 `data/campus/manual.json`，流程见 `docs/map/MAP_EDITOR.md`）。
