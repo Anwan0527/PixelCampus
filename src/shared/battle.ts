@@ -7,8 +7,8 @@
  * 判胜负。野生精灵血量归零 = 胜利（经验给出战的精灵）；我方首发倒下且队里还有活的 = 要求换人；全部倒下 = 失败。
  */
 import {
-  MON, STRUGGLE, calcDamage, catchChance, learnsetOf, moveSlots, maxHp, monStats, xpForLevel, xpGain,
-  type Content, type Mon, type Move, type Rng, type Stats,
+  MON, STAGE_KEYS, STAGE_MAX, STRUGGLE, calcDamage, catchChance, learnsetOf, moveSlots, maxHp, monStats, stageMul, xpForLevel, xpGain,
+  type Content, type Mon, type Move, type Rng, type StageKey, type Stats,
 } from './mons';
 
 export type Action =
@@ -35,7 +35,9 @@ export type BEvent =
   | { t: 'level'; i: number; lv: number }
   | { t: 'learn'; i: number; move: string; full: boolean }
   /** 进化了：i = 队伍里的位置，to = 进化后的物种 */
-  | { t: 'evolve'; i: number; to: string };
+  | { t: 'evolve'; i: number; to: string }
+  /** 能力等级变化：k = 哪一项，d = 实际变化（可能被 ±6 截断），v = 变化后的等级 */
+  | { t: 'stage'; side: Side; k: StageKey; d: number; v: number };
 
 export interface Battle {
   bid: string;
@@ -50,14 +52,42 @@ export interface Battle {
   result?: 'win' | 'lose' | 'caught' | 'fled';
   /** 已经试过几次逃跑（越试越容易） */
   runs: number;
+  /** 能力等级：按精灵 id 记（换下再上场沿用；倒下时删除）；只活在 Battle 里，不进存档 */
+  stages: Map<string, StageStages>;
 }
+
+/** 一只精灵的战斗内能力等级（±6）；命中 / 闪避本批只记录、显示，不接入命中判定 */
+export type StageStages = Record<StageKey, number>;
+
+/** 全 0 的能力等级 */
+export const zeroStages = (): StageStages => ({ atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 });
 
 export interface StepResult { ok: boolean; err?: string; ev: BEvent[] }
 
 export function startBattle(bid: string, wild: Mon, squad: Mon[]): Battle {
   const lead = squad.findIndex((m) => m.hp > 0);
   if (lead < 0) throw new Error('队伍里没有能战斗的精灵');
-  return { bid, turn: 1, wild, squad, lead, fought: [lead], phase: 'choose', runs: 0 };
+  return { bid, turn: 1, wild, squad, lead, fought: [lead], phase: 'choose', runs: 0, stages: new Map() };
+}
+
+
+/** 取某个精灵的能力等级（没有就建一份全 0 的） */
+export function stagesOf(b: Battle, mon: Mon): StageStages {
+  let s = b.stages.get(mon.id);
+  if (!s) { s = zeroStages(); b.stages.set(mon.id, s); }
+  return s;
+}
+/** 改一项能力等级，截断到 ±6；返回实际变化（0 = 已经到顶 / 触底） */
+export function bumpStage(b: Battle, mon: Mon, k: StageKey, d: number): { d: number; v: number } {
+  const s = stagesOf(b, mon);
+  const before = s[k];
+  const after = Math.max(-STAGE_MAX, Math.min(STAGE_MAX, before + d));
+  s[k] = after;
+  return { d: after - before, v: after };
+}
+/** 把六维按能力等级放大：攻 / 防 / 特攻 / 特防 / 速度生效（生命不参与） */
+export function stagedStats(st: Stats, s: StageStages): Stats {
+  return { ...st, atk: st.atk * stageMul(s.atk), def: st.def * stageMul(s.def), spa: st.spa * stageMul(s.spa), spd: st.spd * stageMul(s.spd), spe: st.spe * stageMul(s.spe) };
 }
 
 const alive = (b: Battle) => b.squad.some((m) => m.hp > 0);
@@ -102,14 +132,24 @@ export function step(ct: Content, b: Battle, act: Action, rnd: Rng): StepResult 
   /** 一次攻击；返回目标是否倒下 */
   const attack = (side: Side, m: Move): boolean => {
     const atk = side === 'me' ? me() : foe, def = side === 'me' ? foe : me();
-    const atkSt = side === 'me' ? mySt() : foeSt(), defSt = side === 'me' ? foeSt() : mySt();
+    const atkRaw = side === 'me' ? mySt() : foeSt(), defRaw = side === 'me' ? foeSt() : mySt();
+    const atkSt = stagedStats(atkRaw, stagesOf(b, atk)), defSt = stagedStats(defRaw, stagesOf(b, def));
     const atkSp = side === 'me' ? mySp() : foeSp(), defSp = side === 'me' ? foeSp() : mySp();
     ev.push({ t: 'use', side, move: m.id });
+    // 命中 / 闪避等级本批只记录、显示，不参与这里的命中判定
     if (rnd() * 100 >= m.acc) { ev.push({ t: 'miss', side }); return false; }
     const r = calcDamage(ct, { lv: atk.lv, stats: atkSt, types: atkSp.types }, { stats: defSt, types: defSp.types }, m, rnd);
     def.hp = Math.max(0, def.hp - r.dmg);
     ev.push({ t: 'hit', side: side === 'me' ? 'foe' : 'me', dmg: r.dmg, hp: def.hp, mult: r.mult, crit: r.crit });
-    if (def.hp <= 0) { ev.push({ t: 'faint', side: side === 'me' ? 'foe' : 'me' }); return true; }
+    // 招式附带的能力变化（命中后才判定；chance 未命中不改等级）
+    if (m.stat && def.hp > 0) {
+      const st = m.stat, targetMon = st.target === 'self' ? atk : def, targetSide: Side = st.target === 'self' ? side : (side === 'me' ? 'foe' : 'me');
+      if (rnd() * 100 < (st.chance ?? 100)) {
+        const { d, v } = bumpStage(b, targetMon, st.k, st.d);
+        if (d !== 0) ev.push({ t: 'stage', side: targetSide, k: st.k, d, v });
+      }
+    }
+    if (def.hp <= 0) { ev.push({ t: 'faint', side: side === 'me' ? 'foe' : 'me' }); b.stages.delete(def.id); return true; }
     return false;
   };
   const wildMove = (): Move => { const list = foe.mv.length ? foe.mv : [{ id: 'struggle', pp: 1 }]; return moveOf(ct, list[Math.floor(rnd() * list.length)].id); };
@@ -119,7 +159,8 @@ export function step(ct: Content, b: Battle, act: Action, rnd: Rng): StepResult 
 
   if (act.t === 'move' && mv) {
     if (slot >= 0 && mv !== STRUGGLE) me().mv[slot].pp--;
-    const myFirst = (mv.priority ?? 0) !== 0 ? (mv.priority ?? 0) > 0 : mySt().spe !== foeSt().spe ? mySt().spe > foeSt().spe : rnd() < 0.5;
+    const mySpe = mySt().spe * stageMul(stagesOf(b, me()).spe), foeSpe = foeSt().spe * stageMul(stagesOf(b, foe).spe);
+    const myFirst = (mv.priority ?? 0) !== 0 ? (mv.priority ?? 0) > 0 : mySpe !== foeSpe ? mySpe > foeSpe : rnd() < 0.5;
     if (myFirst) { if (attack('me', mv)) over = true; else foeTurn(); }
     else { attack('foe', wildMove()); if (me().hp > 0) { if (attack('me', mv)) over = true; } }
   } else if (act.t === 'swap') {

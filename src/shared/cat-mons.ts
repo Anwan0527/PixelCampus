@@ -5,7 +5,7 @@
  * 全部由下面的表算出来，不需要逐个物种手写；物种 id = c<毛色两位><阶段 a/b/c>，如 c00a = 橘猫幼崽。
  */
 import { COAT_LABELS, COAT_RARITY } from './cats';
-import type { Base, Move, MoveCat, Species } from './mons';
+import type { Base, Move, MoveCat, MoveStat, Species } from './mons';
 
 export const CAT_EVO_LV = [16, 32] as const;
 const STEM = ['橘', '黑', '白', '三花', '奶牛', '灰', '狸花', '橘白', '蓝白', '燕尾', '玳瑁', '银渐', '金渐', '银虎', '蓝', '奶油', '暹罗', '布偶', '异瞳', '胖橘', '胡椒', '芝士', '蒲公英', '领结'] as const;
@@ -57,7 +57,15 @@ const MOVE_NAME: Record<string, [string, string]> = {
 };
 export const catMoveId = (el: string, k: 'p50' | 's50' | 'p85' | 's85') => `cat:${el}:${k}`;
 
-/** 老吴系列技能：每个属性 4 个 */
+/** 老吴系列四档各自附带的能力变化：物理降对方防御（20%），特殊降对方特攻（30%） */
+const CAT_STAT: Record<'p50' | 's50' | 'p85' | 's85', MoveStat> = {
+  p50: { k: 'def', d: -1, target: 'foe', chance: 20 },
+  p85: { k: 'def', d: -1, target: 'foe', chance: 20 },
+  s50: { k: 'spa', d: -1, target: 'foe', chance: 30 },
+  s85: { k: 'spa', d: -1, target: 'foe', chance: 30 },
+};
+
+/** 老吴系列技能：每个属性 4 个。特殊技能（咆哮 / 喷嚏 / 呼噜…）有 30% 概率降低对方特攻，物理技能有 20% 概率降低对方防御 */
 export function catMoves(elements: readonly string[]): Move[] {
   const out: Move[] = [];
   for (const el of elements) {
@@ -65,7 +73,7 @@ export function catMoves(elements: readonly string[]): Move[] {
     for (const [k, cat, power, acc, pp, name] of [
       ['p50', 'physical', 50, 100, 25, `老吴${p}`], ['s50', 'special', 50, 100, 25, `老吴${s}`],
       ['p85', 'physical', 85, 90, 15, `老吴终极${p}`], ['s85', 'special', 85, 90, 15, `老吴终极${s}`],
-    ] as [('p50' | 's50' | 'p85' | 's85'), MoveCat, number, number, number, string][]) out.push({ id: catMoveId(el, k), name, type: el, cat, power, acc, pp });
+    ] as [('p50' | 's50' | 'p85' | 's85'), MoveCat, number, number, number, string][]) out.push({ id: catMoveId(el, k), name, type: el, cat, power, acc, pp, stat: CAT_STAT[k] });
   }
   return out;
 }

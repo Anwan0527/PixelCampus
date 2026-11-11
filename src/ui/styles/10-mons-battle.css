@@ -132,3 +132,10 @@
   .mon-dex-dd-menu { grid-template-columns: repeat(4, 48px); }
   .mon-dex-dd-menu.zone { grid-template-columns: 1fr; }
 }
+
+/* 战斗：能力等级标记（文字 + 箭头，不只靠颜色） */
+.bt-stages { display: flex; flex-wrap: wrap; gap: 3px 6px; margin-top: 3px; font-size: 12px; line-height: 18px; }
+.bt-stage { padding: 0 5px; border: 2px solid rgba(0,0,0,.25); border-radius: 8px; background: #fffaf0; white-space: nowrap; }
+.bt-stage.up { color: #2d7a44; border-color: #2d7a44; }
+.bt-stage.down { color: #b03a2a; border-color: #b03a2a; }
+@media (max-width: 560px) { .bt-stages { font-size: 11px; line-height: 16px; gap: 2px 4px; } }

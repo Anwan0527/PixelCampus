@@ -11,6 +11,25 @@ export type Rng = () => number;
 export type StatKey = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 export const STAT_KEYS: readonly StatKey[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 export const STAT_NAMES: Record<StatKey, string> = { hp: '生命', atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' };
+
+// ------------------------------------------------------------------ 能力等级
+/** 能在战斗中被强化 / 削弱的项：五维 + 命中 / 闪避（命中 / 闪避本批只记录、显示，不接入命中判定） */
+export type StageKey = Exclude<StatKey, 'hp'> | 'acc' | 'eva';
+export const STAGE_KEYS: readonly StageKey[] = ['atk', 'def', 'spa', 'spd', 'spe', 'acc', 'eva'];
+export const STAGE_NAMES: Record<StageKey, string> = { ...STAT_NAMES, acc: '命中', eva: '闪避' } as Record<StageKey, string>;
+/** 能力等级上下限 ±6 */
+export const STAGE_MAX = 6;
+
+/** 分档倍率：+1..+6 = 1.5 / 2 / 2.5 / 3 / 3.5 / 4；-1..-6 = 2/3 / 1/2 / 2/5 / 1/3 / 2/7 / 1/4 */
+export function stageMul(n: number): number {
+  const v = Math.max(-STAGE_MAX, Math.min(STAGE_MAX, Math.trunc(n)));
+  return v >= 0 ? (2 + v) / 2 : 2 / (2 - v);
+}
+/** 命中 / 闪避的比值表：+1 = 3/4，-1 = 4/3 …（本批只用于显示） */
+export function accuracyMul(n: number): number {
+  const v = Math.max(-STAGE_MAX, Math.min(STAGE_MAX, Math.trunc(n)));
+  return v >= 0 ? (3 + v) / 3 : 3 / (3 - v);
+}
 export type Stats = Record<StatKey, number>;
 /** 种族值，顺序同 STAT_KEYS */
 export type Base = readonly [number, number, number, number, number, number];
@@ -63,7 +82,9 @@ export interface Species {
 }
 
 export type MoveCat = 'physical' | 'special';
-export interface Move { id: string; name: string; type: string; cat: MoveCat; power: number; acc: number; pp: number; priority?: number }
+/** 招式附带的能力变化：d 为正升、为负降；chance 是触发概率（百分比，没写 = 100） */
+export interface MoveStat { k: StageKey; d: number; target: 'self' | 'foe'; chance?: number }
+export interface Move { id: string; name: string; type: string; cat: MoveCat; power: number; acc: number; pp: number; priority?: number; /** 命中后附带的能力变化（本批只有伤害招式带） */ stat?: MoveStat }
 
 export interface MonMove { id: string; pp: number }
 /** 一只精灵（存档里的样子）。id 是实例编号，不是物种号；iv 顺序同 STAT_KEYS */
