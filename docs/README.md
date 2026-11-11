@@ -82,6 +82,7 @@ docs/
 | [feature/20261110-mon-battle/](feature/20261110-mon-battle/spec.md) | 精灵对战第一批：技能更换、战斗信息、结算页、快进、耄耋 5 技能槽（协作者开发，已上线） |
 | [feature/20261110-mon-dex/](feature/20261110-mon-dex/spec.md) | 精灵图鉴页：未见过剪影 / 详情 / 筛选（协作者开发，已上线） |
 | [feature/20261110-dining-halls/](feature/20261110-dining-halls/spec.md) | 室内扩展：三个餐厅（各三层）、两个公共教学楼（各五层）、图书馆、第二 / 第三超市；楼梯、直达某层传送、室内椅子可坐（v3，已实现，未部署）；含 plan.md 与 SOURCES.md（窗口来源 / 未核实清单） |
+| [feature/20261111-battle-stages/](feature/20261111-battle-stages/spec.md) | 战斗深度 2A-1：能力等级（±6、伤害与先手倍率、卡片显示；协作者开发，已合并未部署） |
 - 每个新功能复制成 `docs/feature/<YYYYMMDD-功能名>/spec.md` + `plan.md`；**先 spec、主人确认，再 plan、主人确认，再写代码**。
 - 2026-11-10 起 spec 和 plan **都进公开仓库**：不要写服务器地址、口令、玩家数据（运维细节写到私有文档）。
 
