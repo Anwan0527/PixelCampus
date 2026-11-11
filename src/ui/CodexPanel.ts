@@ -53,6 +53,8 @@ export class CodexPanel {
   private monSel: string | null = null;
   /** 精灵图鉴当前展开的筛选下拉：属性 / 区域 */
   private monOpen: 'type' | 'zone' | null = null;
+  /** 本次渲染待摆位的下拉弹层（render 之后再测量按钮位置） */
+  private pendingDd: { kind: 'type' | 'zone'; options: { value: string; label: string; color?: string }[]; btn: HTMLElement } | null = null;
   private tabs: TabDef[] = [
     { id: 'animals', label: '动物图鉴', render: (b) => this.renderAnimals(b) },
     { id: 'fish', label: '钓鱼图鉴', render: (b) => this.renderFish(b) },
@@ -99,6 +101,8 @@ export class CodexPanel {
   refresh() { if (this.isOpen) this.render(); }
 
   private render() {
+    // 弹层挂在 .codex 上（不在 body 里），每次重建前先清掉，否则会越堆越多、选完也不消失
+    this.root.querySelectorAll('.mon-dex-dd-menu').forEach((m) => m.remove());
     this.tabsBar.replaceChildren(...this.tabs.map((t) => {
       const b = el('button', 'cx-tab' + (t.id === this.tab ? ' on' : ''), t.label); b.type = 'button';
       b.addEventListener('click', () => { this.tab = t.id; this.enter(); this.render(); });
@@ -106,6 +110,7 @@ export class CodexPanel {
     }));
     this.body.replaceChildren();
     this.tabs.find((t) => t.id === this.tab)?.render(this.body);
+    this.flushDd();
   }
 
   // ------------------------------------------------------------ 精灵图鉴
@@ -153,8 +158,14 @@ export class CodexPanel {
     const btn = el('button', 'cx-sub-tab mon-dex-dd-btn' + (this.monOpen === kind ? ' on' : '')); btn.type = 'button'; btn.textContent = `${label}：${value}`;
     btn.addEventListener('click', () => { this.monOpen = this.monOpen === kind ? null : kind; this.render(); });
     wrap.append(btn);
-    if (this.monOpen === kind) this.openDd(kind, options, btn);
+    if (this.monOpen === kind) { wrap.classList.add('open'); this.pendingDd = { kind, options, btn }; }
     return wrap;
+  }
+  /** 渲染完成后（按钮已经在文档里、能量到矩形）再摆弹层 */
+  private flushDd() {
+    const p = this.pendingDd; this.pendingDd = null;
+    if (!p) return;
+    this.openDd(p.kind, p.options, p.btn);
   }
   /** 把下拉面板放到 .codex 里、贴着按钮下方；按空间自动向左/向上收，避免超出面板 */
   private openDd(kind: 'type' | 'zone', options: { value: string; label: string; color?: string }[], btn: HTMLElement) {
@@ -177,7 +188,7 @@ export class CodexPanel {
     // 弹层 absolute 挂在 .codex 上，用相对面板的坐标；先量宽度再摆，避免抖动
     menu.style.left = '0px'; menu.style.top = '0px';
     const mw = menu.offsetWidth, mh = menu.offsetHeight;
-    const relLeft = br.left - pr.left, relTop = br.top - pr.top, relBottom = pr.bottom - br.bottom;
+    const relLeft = br.left - pr.left, relBottom = pr.bottom - br.bottom;
     const left = Math.min(Math.max(4, relLeft), Math.max(4, pr.width - mw - 4));
     const top = relBottom >= mh + 6 ? br.bottom - pr.top + 4 : Math.max(4, br.top - pr.top - mh - 4);
     menu.style.left = `${Math.round(left)}px`;
