@@ -2,7 +2,7 @@
 
 > 由 [spec.md](spec.md) 生成；spec 变了先改 spec，再同步本文件。
 > 对应 Issue：[EXIST-D/PixelCampus#8](https://github.com/EXIST-D/PixelCampus/issues/8)
-> 状态：**实现完成（2026-11-10）**；测试 / 本地 E2E 通过；PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 待合并
+> 状态：**实现完成（2026-11-10）**；测试 / 本地 E2E / 测试服 #5+#8 集成验收通过；样式已统一；PR [#14](https://github.com/EXIST-D/PixelCampus/pull/14) 已合并；样式 PR [#15](https://github.com/EXIST-D/PixelCampus/pull/15) 待合并
 
 ## 0. 已确认的设计（本轮问答）
 
@@ -38,7 +38,7 @@
 | P9 | `int_codex_mon_detail` | 集成 | `tests/integration/codex-mon.test.ts` | 点见过精灵：DOM 显示 No.、属性、描述、栖息地、记录 |
 | P10 | `e2e_mondex_mobile` | E2E（手工） | §3 清单 | 手机横屏 4 列、详情不横向溢出 |
 | P11 | `int_codex_mon_filter_reset` | 集成 | `tests/integration/codex-mon.test.ts` | 关闭再打开筛选恢复「全部」；同次切 tab 保留 |
-| N1 | `unit_mondex_unseen_no_leak` | 单元 | `tests/mondex.test.ts` | 未见过 `art=null`，不构造 `monArt` URL；名字 / 描述 / 属性 / 栖息地 / 进化链为空 |
+| N1 | `unit_mondex_unseen_no_leak` | 单元 | `tests/mondex.test.ts` | 模型 `art=null`；UI 用 `monArt` + `brightness(0)` 剪影；名字 / 描述 / 属性 / 栖息地 / 进化链为空 |
 | N2 | `unit_mondex_filters_exclude_unseen` | 单元 | 同上 | 任一筛选开启时未见过行被排除 |
 | N3 | `unit_mondex_unknown_species` | 单元 | 同上 | 不认识的物种 id 跳过，不抛错 |
 | N4 | `unit_mondex_missing_entry` | 单元 | 同上 | `dex` 缺条目按未见过处理 |
@@ -130,7 +130,7 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 - `renderMons(box)`：
   - 无数据 →「读取中…」。
   - 顶部：`已见 X / 总数 · 已收服 Y / 总数` + 进度条。
-  - 筛选条：属性 select（全部 + 18 属性）、「只看已收服」checkbox、区域 select（`monDexZoneOptions(ZONES)` + 校园猫 + 登录赠送）。
+  - 筛选条：属性 / 区域用像素风下拉（按钮 + 面板，不用原生 `<select>` 弹层）；属性 18 个、区域 = 三野外 + 校园猫 + 登录赠送；「只看已收服」checkbox。
   - 分组标题 + `cx-grid`；卡片：未见过剪影 + No. +「？？？」；见过 `img` + 名字 + No. + 属性徽章 + `收服 ×N` / `见过 ×N`。
   - 点击设置 `monSel` 并重绘；详情 `renderMonDetail`。
   - 关闭时 `monFilter = {}`、`monSel = null`；同一次打开里切 tab 保留。
@@ -186,7 +186,7 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 
 | 风险 | 处理 |
 |---|---|
-| 未见过泄露名字 / 图 | 模型层返回 `name='？？？'`、`art=null`；测试 N1 锁住 |
+| 未见过泄露名字 / 图 | 模型层返回 `name='？？？'`、`art=null`；UI 只显示 `brightness(0)` 剪影；测试 N1 锁住 |
 | 筛选泄露属性 / 区域 | 未见过不参与筛选；测试 N2 |
 | `mon_data` 未到 | 显示「读取中…」；不崩溃 |
 | 猫系 72 阶（24 毛色 × 3 阶段）太多 | 分组 + 4 列网格 + 滚动 |
@@ -219,4 +219,18 @@ export function chainOf(sp: Species, ct: Content, dex: Record<string, DexEntry>)
 - **类型检查**：本地 `server/` 是 #5 服务端分支，与 #8 共享规则不兼容；用 `.cache/tsconfig.mondex.json` 排除 `server/` 后绿。CI 检出公开仓库时没有 `server/`，根配置会通过。
 - **真实 E2E**：测试服 #5 数据 + #8 客户端（本地 dev + Origin 中继）。`已见 1 / 83`、`已收服 1 / 83`、83 个图鉴位、82 个剪影；耄耋详情显示 No.099 / 一般 / 描述 / 栖息地「登录赠送」/ 记录；未见过详情只有「？？？ No.001 还没遇到」；属性筛选「一般」剩 1 个；844×390 横屏无横向滚动。`MON_DEX_E2E_OK`。
 - **自审**：无协议 / 服务端改动；未见过不返回名字 / 描述 / 属性 / 图；无 `innerHTML`；关闭重置筛选；空状态 / 加载态正常。
-- **PR**：[#14](https://github.com/EXIST-D/PixelCampus/pull/14) 已提；未部署（#8 纯客户端，测试服当前仍是 #5 客户端），正式服待主人手动部署。
+- **PR**：[#14](https://github.com/EXIST-D/PixelCampus/pull/14) 已提；测试服已部署 #5+#8 集成验收；正式服待主人手动部署（#8 基于 main，待 #5 合并后 rebase / 部署）。
+
+
+## 12. 样式统一（2026-11-10）
+
+- **反馈**：精灵图鉴和现有动物 / 钓鱼图鉴风格不一致。
+- **调整**：
+  - 改为和动物 / 钓鱼图鉴同一套 5 列卡片（手机 3 列），36px 像素图。
+  - 卡片只保留「图 + 名字 + No. · 见过 / 收服次数」，属性徽章收进详情，和现有图鉴一样紧凑。
+  - 未见过用物种图 `brightness(0)` 做灰度剪影（和现有 canvas 剪影一致），不再用深色圆块。
+  - 分组标题按来源上色（开放包绿 / 猫系红 / 登录赠送紫），详情沿用现有 `cx-detail` 虚线卡片。
+  - 属性 / 区域筛选从原生 `<select>` 改成像素风下拉（按钮 + 面板），和游戏内其他面板一致；下拉按内容自适应、不出现滚动条。
+  - 手机横屏：卡片 6 列紧凑排列、图片留安全边距、无横向溢出；卡片高度自适应。
+- **验证**：`npm test` 59 文件 553 通过 / 3 跳过；`npx vitest run --config server/vitest.config.ts` 90 文件 1056 通过 / 5 跳过；`npx vite build` 绿。测试服 E2E：5 列（94.59px）、83 个图鉴位、82 个剪影、详情 / 筛选 / 844×390 横屏正常。
+- **状态**：测试服已部署；样式 PR [#15](https://github.com/EXIST-D/PixelCampus/pull/15) 待合并。

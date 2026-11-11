@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { NetClient } from '@/net/client';
 import type { ServerMsg } from '@/shared/protocol';
-import { CONTENT, ZONES } from '@/shared/mons-content';
+import { CONTENT, ZONES, monArt } from '@/shared/mons-content';
 import { elementName } from '@/shared/mons';
 import { monDexGroups, monDexProgress, monDexRows, monDexZoneOptions, type MonDexFilter, type MonDexRow } from './mondexModel';
 import { REAL_FISH, RARITY_COLORS, RARITY_NAMES, RARITY_ORDER, MOVE_NAMES, diffStars, fishDef, fmtKg, habitat, habitatText, type FishDef, type FishLog } from '@/shared/fishing';
@@ -28,9 +28,9 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 export type CodexTab = 'animals' | 'fish' | 'mons' | 'ach' | 'titles';
 type MonData = Extract<ServerMsg, { t: 'mon_data' }>;
 const COLOR = new Map(CONTENT.elements.elements.map((e) => [e.id, e.color]));
+const GROUP_COLORS: Record<'open' | 'cat' | 'dm', string> = { open: '#6aa84f', cat: '#b8501e', dm: '#8a5ac4' };
 const typeBadge = (id: string) => { const b = el('span', 'mon-type', elementName(CONTENT.elements, id)); b.style.background = COLOR.get(id) ?? '#aaa'; return b; };
 const dexNo = (no: number) => `No.${String(no).padStart(3, '0')}`;
-const addOption = (sel: HTMLSelectElement, label: string, value: string) => { const o = el('option'); o.textContent = label; o.value = value; sel.append(o); };
 interface TabDef { id: CodexTab; label: string; render: (box: HTMLElement) => void; /** 切到这一页时调用（取数据） */ enter?: () => void }
 
 /**
@@ -51,6 +51,10 @@ export class CodexPanel {
   /** 精灵图鉴：筛选 / 选中的精灵（关闭图鉴时重置） */
   private monFilter: MonDexFilter = {};
   private monSel: string | null = null;
+  /** 精灵图鉴当前展开的筛选下拉：属性 / 区域 */
+  private monOpen: 'type' | 'zone' | null = null;
+  /** 本次渲染待摆位的下拉弹层（render 之后再测量按钮位置） */
+  private pendingDd: { kind: 'type' | 'zone'; options: { value: string; label: string; color?: string }[]; btn: HTMLElement } | null = null;
   private tabs: TabDef[] = [
     { id: 'animals', label: '动物图鉴', render: (b) => this.renderAnimals(b) },
     { id: 'fish', label: '钓鱼图鉴', render: (b) => this.renderFish(b) },
@@ -66,6 +70,13 @@ export class CodexPanel {
     panel.append(head, this.tabsBar, this.body);
     this.root.append(panel);
     this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
+    // 点在下拉面板之外：收起下拉（fixed 弹层不占布局，不会自己消失）
+    document.addEventListener('mousedown', (e) => {
+      if (!this.monOpen) return;
+      const t = e.target as Element | null;
+      if (t?.closest('.mon-dex-dd-menu') || t?.closest('.mon-dex-dd-btn')) return;
+      this.monOpen = null; this.render();
+    });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
     (document.getElementById('hud') ?? document.body).append(this.root);
     ui.add({ id: 'codex', label: '图鉴', key: 'H', run: () => this.toggle() });
@@ -84,12 +95,14 @@ export class CodexPanel {
     this.tabs.push({ id, label, render: (b) => b.append(section.view), enter: () => section.enter() });
     section.attach({ open: (t) => this.open(t), close: () => this.close(), isOpenOn: (t) => this.isOpen && this.tab === t });
   }
-  close() { this.root.classList.add('hidden'); this.monFilter = {}; this.monSel = null; }
+  close() { this.root.classList.add('hidden'); this.monFilter = {}; this.monSel = null; this.monOpen = null; }
   toggle() { this.isOpen ? this.close() : this.open(); }
   /** 数据变了（小猫好感度、钓鱼记录）就刷新 */
   refresh() { if (this.isOpen) this.render(); }
 
   private render() {
+    // 弹层挂在 .codex 上（不在 body 里），每次重建前先清掉，否则会越堆越多、选完也不消失
+    this.root.querySelectorAll('.mon-dex-dd-menu').forEach((m) => m.remove());
     this.tabsBar.replaceChildren(...this.tabs.map((t) => {
       const b = el('button', 'cx-tab' + (t.id === this.tab ? ' on' : ''), t.label); b.type = 'button';
       b.addEventListener('click', () => { this.tab = t.id; this.enter(); this.render(); });
@@ -97,6 +110,7 @@ export class CodexPanel {
     }));
     this.body.replaceChildren();
     this.tabs.find((t) => t.id === this.tab)?.render(this.body);
+    this.flushDd();
   }
 
   // ------------------------------------------------------------ 精灵图鉴
@@ -109,32 +123,28 @@ export class CodexPanel {
     const bar = el('div', 'cx-pbar big mon-dex-pbar'), fill = el('div', 'cx-pfill');
     fill.style.width = `${p.total ? Math.round((p.seen / p.total) * 100) : 0}%`; bar.append(fill); box.append(bar);
     const filterBar = el('div', 'cx-filter mon-dex-filter');
-    const typeSel = el('select'); typeSel.setAttribute('aria-label', '按属性筛选'); addOption(typeSel, '全部属性', '');
-    for (const e of CONTENT.elements.elements) addOption(typeSel, e.name, e.id);
-    typeSel.value = this.monFilter.type ?? '';
-    typeSel.addEventListener('change', () => { this.monFilter.type = typeSel.value || undefined; this.render(); });
     const caughtLabel = el('label', 'cx-chk'); const caught = el('input'); caught.type = 'checkbox'; caught.checked = !!this.monFilter.caughtOnly;
-    caught.addEventListener('change', () => { this.monFilter.caughtOnly = caught.checked || undefined; this.render(); });
+    caught.addEventListener('change', () => { this.monFilter.caughtOnly = caught.checked || undefined; this.monOpen = null; this.render(); });
     caughtLabel.append(caught, document.createTextNode('只看已收服'));
-    const zoneSel = el('select'); zoneSel.setAttribute('aria-label', '按区域筛选'); addOption(zoneSel, '全部区域', '');
-    for (const z of monDexZoneOptions(ZONES)) addOption(zoneSel, z.name, z.id);
-    zoneSel.value = this.monFilter.zone ?? '';
-    zoneSel.addEventListener('change', () => { this.monFilter.zone = zoneSel.value || undefined; this.render(); });
-    filterBar.append(typeSel, caughtLabel, zoneSel); box.append(filterBar);
+    const typeName = this.monFilter.type ? elementName(CONTENT.elements, this.monFilter.type) : '全部';
+    const zoneName = this.monFilter.zone ? monDexZoneOptions(ZONES).find((z) => z.id === this.monFilter.zone)?.name ?? '全部' : '全部';
+    filterBar.append(
+      this.monDropdown('属性', typeName, 'type', [{ value: '', label: '全部属性' }, ...CONTENT.elements.elements.map((e) => ({ value: e.id, label: e.name, color: e.color }))]),
+      caughtLabel,
+      this.monDropdown('区域', zoneName, 'zone', [{ value: '', label: '全部区域' }, ...monDexZoneOptions(ZONES).map((z) => ({ value: z.id, label: z.name }))]),
+    );
+    box.append(filterBar);
     const groups = monDexGroups(CONTENT, data.dex, ZONES, this.monFilter).filter((g) => g.rows.length);
     if (!groups.length) box.append(el('div', 'cx-dim mon-dex-empty', '没有符合条件的精灵'));
     for (const g of groups) {
       const title = el('div', 'cx-group mon-dex-group', `${g.title}　见过 ${g.seen} / ${g.total} · 收服 ${g.caught} / ${g.total}`);
+      title.style.borderLeftColor = GROUP_COLORS[g.id];
       const grid = el('div', 'cx-grid mon-dex-grid');
       for (const row of g.rows) {
         const cell = el('button', 'cx-cell mon-dex-cell' + (row.seen ? ' got' : '') + (this.monSel === row.sp.id ? ' on' : '')); cell.type = 'button';
-        if (!row.seen) {
-          cell.append(el('div', 'mon-dex-silhouette'), el('div', 'cx-name', '？？？'), el('div', 'cx-sub', dexNo(row.no)));
-        } else {
-          const im = el('img', 'mon-img mon-dex-img'); im.src = row.art ?? ''; im.alt = ''; im.draggable = false;
-          const types = el('div', 'mon-types'); types.append(...row.types.map(typeBadge));
-          cell.append(im, el('div', 'cx-name', row.name), el('div', 'cx-sub', dexNo(row.no)), types, el('div', 'cx-sub', row.caught ? `收服 ×${row.caught}` : `见过 ×${row.seenCount}`));
-        }
+        const im = el('img', 'mon-img mon-dex-img' + (row.seen ? '' : ' silhouette'));
+        im.src = row.art ?? monArt(row.sp.id, 'front'); im.alt = ''; im.draggable = false;
+        cell.append(im, el('div', 'cx-name', row.seen ? row.name : '？？？'), el('div', 'cx-sub', row.seen ? `${dexNo(row.no)} · ${row.caught ? `收服 ×${row.caught}` : `见过 ×${row.seenCount}`}` : dexNo(row.no)));
         cell.addEventListener('click', () => { this.monSel = row.sp.id; this.render(); });
         grid.append(cell);
       }
@@ -142,12 +152,56 @@ export class CodexPanel {
     }
     box.append(this.renderMonDetail(all));
   }
+  /** 精灵图鉴的像素风下拉（不用浏览器原生 select 弹层）；弹出层挂到面板根节点，避免被滚动容器裁切 */
+  private monDropdown(label: string, value: string, kind: 'type' | 'zone', options: { value: string; label: string; color?: string }[]): HTMLElement {
+    const wrap = el('div', 'mon-dex-dd');
+    const btn = el('button', 'cx-sub-tab mon-dex-dd-btn' + (this.monOpen === kind ? ' on' : '')); btn.type = 'button'; btn.textContent = `${label}：${value}`;
+    btn.addEventListener('click', () => { this.monOpen = this.monOpen === kind ? null : kind; this.render(); });
+    wrap.append(btn);
+    if (this.monOpen === kind) { wrap.classList.add('open'); this.pendingDd = { kind, options, btn }; }
+    return wrap;
+  }
+  /** 渲染完成后（按钮已经在文档里、能量到矩形）再摆弹层 */
+  private flushDd() {
+    const p = this.pendingDd; this.pendingDd = null;
+    if (!p) return;
+    this.openDd(p.kind, p.options, p.btn);
+  }
+  /** 把下拉面板放到 .codex 里、贴着按钮下方；按空间自动向左/向上收，避免超出面板 */
+  private openDd(kind: 'type' | 'zone', options: { value: string; label: string; color?: string }[], btn: HTMLElement) {
+    const panel = this.root.querySelector('.codex') as HTMLElement | null;
+    if (!panel) return;
+    const menu = el('div', 'mon-dex-dd-menu' + (kind === 'zone' ? ' zone' : ''));
+    for (const o of options) {
+      const b = el('button', 'mon-dex-dd-opt' + (!o.value ? ' all' : '')); b.type = 'button';
+      if (o.color) { const s = el('span', 'mon-type', o.label); s.style.background = o.color; b.append(s); }
+      else b.append(document.createTextNode(o.value ? o.label : (kind === 'type' ? '全部' : '全部区域')));
+      b.addEventListener('click', () => {
+        this.monOpen = null;
+        if (kind === 'type') this.monFilter.type = o.value || undefined; else this.monFilter.zone = o.value || undefined;
+        this.render();
+      });
+      menu.append(b);
+    }
+    panel.append(menu);
+    const pr = panel.getBoundingClientRect(), br = btn.getBoundingClientRect();
+    // 弹层 absolute 挂在 .codex 上，用相对面板的坐标；先量宽度再摆，避免抖动
+    menu.style.left = '0px'; menu.style.top = '0px';
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    const relLeft = br.left - pr.left, relBottom = pr.bottom - br.bottom;
+    const left = Math.min(Math.max(4, relLeft), Math.max(4, pr.width - mw - 4));
+    const top = relBottom >= mh + 6 ? br.bottom - pr.top + 4 : Math.max(4, br.top - pr.top - mh - 4);
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
+  }
+
   private renderMonDetail(rows: MonDexRow[]): HTMLElement {
     const d = el('div', 'cx-detail mon-dex-detail');
     const row = this.monSel ? rows.find((r) => r.sp.id === this.monSel) : undefined;
     if (!row) { d.append(el('div', 'cx-dim', '点一只精灵看详情。')); return d; }
     if (!row.seen) {
-      d.append(el('div', 'mon-dex-silhouette big'), el('div', 'cx-dname', '？？？'), el('div', 'cx-dline', dexNo(row.no)), el('div', 'cx-dim', '还没遇到'));
+      const im = el('img', 'mon-img mon-dex-img big silhouette'); im.src = monArt(row.sp.id, 'front'); im.alt = '';
+      d.append(im, el('div', 'cx-dname', '？？？'), el('div', 'cx-dline', dexNo(row.no)), el('div', 'cx-dim', '还没遇到'));
       return d;
     }
     const top = el('div', 'cx-d-top'); top.append(el('span', 'cx-d-name', row.name), el('span', 'board-tag', dexNo(row.no)));
