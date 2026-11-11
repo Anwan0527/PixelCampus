@@ -3,7 +3,7 @@
  * 真正的结算在服务器；这里只把数据变成文字和显示用的字段。
  */
 import type { BEvent } from '@/shared/battle';
-import { elementName, typeMult, type Content, type Move, type MonMove } from '@/shared/mons';
+import { STAGE_KEYS, STAGE_NAMES, elementName, typeMult, type Content, type Move, type MonMove, type StageKey } from '@/shared/mons';
 
 export interface MoveView {
   name: string;
@@ -105,4 +105,24 @@ export function writeFast(on: boolean, storage?: Pick<Storage, 'setItem'> | null
   } catch {
     /* 存储不可用：仅本次有效 */
   }
+}
+
+// ------------------------------------------------------------------ 能力等级
+/** 能力等级一行文字：`攻击 +2`、`特攻 −1`；0 级不显示 */
+export function stageText(k: StageKey, v: number): string {
+  if (!v) return '';
+  return `${STAGE_NAMES[k]} ${v > 0 ? '+' : '−'}${Math.abs(v)}`;
+}
+/** 卡片下方的所有非 0 能力等级；没有变化时返回空数组 */
+export function stageBadges(s: Partial<Record<StageKey, number>> | undefined): string[] {
+  if (!s) return [];
+  return STAGE_KEYS.map((k) => stageText(k, s[k] ?? 0)).filter(Boolean);
+}
+/** 日志：`XX 的攻击提升了！` / `大幅提升了！` / `降低了！` / `大幅降低了！` */
+export function stageLog(name: string, k: StageKey, d: number): string {
+  const who = name;
+  const what = STAGE_NAMES[k];
+  const big = Math.abs(d) >= 2;
+  if (d > 0) return `${who}的${what}${big ? '大幅' : ''}提升了！`;
+  return `${who}的${what}${big ? '大幅' : ''}降低了！`;
 }

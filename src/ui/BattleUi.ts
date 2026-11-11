@@ -3,7 +3,7 @@ import type { ServerMsg } from '@/shared/protocol';
 import type { BEvent } from '@/shared/battle';
 import { CONTENT, monArt, speciesOf } from '@/shared/mons-content';
 import { elementName, maxHp, type Mon } from '@/shared/mons';
-import { fastDelay, hpText, learnLogText, moveView, readFast, summaryRows, writeFast } from './monBattleHelpers';
+import { fastDelay, hpText, learnLogText, moveView, readFast, stageBadges, stageLog, summaryRows, writeFast } from './monBattleHelpers';
 import { isCatSpecies } from '@/shared/cat-mons';
 import { sfx, type SfxName } from '@/audio/sfx';
 
@@ -23,7 +23,7 @@ const badge = (id: string) => { const b = el('span', 'mon-type', elementName(CON
 const bar = (frac: number) => { const b = el('div', 'mon-bar hp'), f = el('div', 'mon-bar-fill'); f.style.width = `${Math.round(Math.max(0, Math.min(1, frac)) * 100)}%`; if (frac < 0.25) f.style.background = '#c0392b'; else if (frac < 0.5) f.style.background = '#e0a020'; else f.style.background = '#6aa84f'; b.append(f); return b; };
 
 /** 显示用的状态：事件播放时一点点更新，播完再和服务器的权威状态对齐 */
-interface View { lead: number; hp: number[]; foeHp: number; foeMax: number }
+interface View { lead: number; hp: number[]; foeHp: number; foeMax: number; /** 我方 / 对手的能力等级（按精灵 id）；只用于显示 */ meStages: Record<string, Record<string, number>>; foeStages: Record<string, number> }
 
 /**
  * 战斗界面（全屏）：对手在右上、我方在左下；底下是文字和按钮（战斗 / 零食包 / 换精灵 / 逃跑）。
@@ -39,7 +39,7 @@ export class BattleUi {
   private log = el('div', 'bt-log');
   private menu = el('div', 'bt-menu');
   private bt: Bt | null = null;
-  private view: View = { lead: 0, hp: [], foeHp: 1, foeMax: 1 };
+  private view: View = { lead: 0, hp: [], foeHp: 1, foeMax: 1, meStages: {}, foeStages: {} };
   private mode: 'main' | 'moves' | 'swap' = 'main';
   private busy = false;
   private prompt = el('div', 'mon-enc hidden');
@@ -93,7 +93,7 @@ export class BattleUi {
     if (fresh) {
       this.hidePrompt(); this.bt = m; this.busy = false; this.mode = 'main';
       this.root.classList.remove('hidden'); this.onOpen?.();
-      this.view = this.viewOf(m); this.log.replaceChildren();
+      this.view = { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max, meStages: {}, foeStages: {} }; this.log.replaceChildren();
       this.say(m.cat ? `${m.cat.name} 想和你切磋一下！（${m.zone}）` : `野生的 ${speciesOf(m.foe.sp)?.name ?? m.foe.sp} 出现了！`);
       this.renderStage(); this.renderMenu();
       // 两只猫对战：打出「老吴对战」的横幅
@@ -107,7 +107,7 @@ export class BattleUi {
     if (m.phase === 'over') this.say(m.result === 'win' ? '战斗胜利！' : m.result === 'caught' ? '收服成功！' : m.result === 'fled' ? '成功脱离了战斗。' : m.cat ? '你的精灵都倒下了……友谊赛到此为止，下次再来切磋！' : '你的精灵全部倒下了……眼前一黑，你回到了校门口。');
     this.renderMenu();
   }
-  private viewOf(m: Bt): View { return { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max }; }
+  private viewOf(m: Bt): View { return { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max, meStages: this.view?.meStages ?? {}, foeStages: this.view?.foeStages ?? {} }; }
   private lead(m = this.bt): Mon | undefined { return m?.sq[this.view.lead]; }
   private say(text: string) { this.log.append(el('div', undefined, text)); this.log.scrollTop = this.log.scrollHeight; }
   /** 动画 / 文字等待；快进时缩短，服务器计时不受影响 */
@@ -146,6 +146,14 @@ export class BattleUi {
         case 'level': this.say(`${nameOf(mons[e.i])} 升到了 Lv.${e.lv}！`); snd('achieve'); await this.wait(600); break;
         case 'evolve': { const from = nameOf(bt0.sq[e.i] ?? { sp: e.to }); this.say(`咦？${from} 的样子发生了变化！`); await anim(this.meImg, 'evolve', 1100); this.say(`${from} 进化成了 ${speciesOf(e.to)?.name ?? e.to}！`); snd('achieve'); if (e.i === this.view.lead) this.meImg.src = monArt(e.to, 'back', !!bt0.sq[e.i]?.sh); await this.wait(700); break; }
         case 'learn': this.say(learnLogText(nameOf(mons[e.i]), CONTENT.moves.get(e.move)?.name ?? e.move, e.full)); await this.wait(550); break;
+        case 'stage': {
+          if (e.side === 'foe') { this.view.foeStages = { ...this.view.foeStages, [e.k]: e.v }; }
+          else { const cur = mons[this.view.lead]?.id ?? ''; this.view.meStages = { ...this.view.meStages, [cur]: { ...(this.view.meStages[cur] ?? {}), [e.k]: e.v } }; }
+          this.say(stageLog(e.side === 'me' ? myName() : foeName(), e.k, e.d));
+          this.renderStage();
+          await this.wait(500);
+          break;
+        }
       }
     }
   }
@@ -156,12 +164,23 @@ export class BattleUi {
     this.foeImg.src = monArt(m.foe.sp, 'front', !!m.foe.sh);
     const foeTypes = el('div', 'mon-types'); foeTypes.append(...(foeSp?.types ?? []).map(badge));
     this.foeCard.replaceChildren(el('div', 'mon-name', `${m.cat ? `${m.cat.name}（${foeSp?.name ?? m.foe.sp}）` : foeSp?.name ?? m.foe.sp}  Lv.${m.foe.lv}`), bar(this.view.foeHp / Math.max(1, this.view.foeMax)), el('div', 'mon-sub', hpText(this.view.foeHp, m.foe.max)), foeTypes);
+    this.renderStages(this.foeCard, this.view.foeStages);
     if (me) {
       this.meImg.src = monArt(me.sp, 'back', !!me.sh);
       const max = maxHp(CONTENT, me), hp = this.view.hp[this.view.lead] ?? me.hp;
       const meTypes = el('div', 'mon-types'); meTypes.append(...(speciesOf(me.sp)?.types ?? []).map(badge));
       this.meCard.replaceChildren(el('div', 'mon-name', `${nameOf(me)}  Lv.${me.lv}`), bar(hp / Math.max(1, max)), el('div', 'mon-sub', hpText(hp, max)), meTypes);
+      this.renderStages(this.meCard, this.view.meStages[me.id]);
     }
+  }
+
+  /** 卡片下方的能力等级：只有非 0 的项显示，文字 + 箭头（不只靠颜色） */
+  private renderStages(card: HTMLElement, s: Partial<Record<string, number>> | undefined) {
+    const list = stageBadges(s as Record<string, number> | undefined);
+    if (!list.length) return;
+    const box = el('div', 'bt-stages');
+    for (const t of list) { const up = t.includes('+'); const b = el('span', 'bt-stage' + (up ? ' up' : ' down'), t); box.append(b); }
+    card.append(box);
   }
 
   private btn(label: string, run: () => void, cls = 'btn') { const b = el('button', cls, label); b.type = 'button'; b.addEventListener('click', run); b.disabled = this.busy; return b; }
