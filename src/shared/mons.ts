@@ -92,7 +92,25 @@ export interface MoveStatus { s: StatusKind; chance: number }
 export type MoveCat = 'physical' | 'special';
 /** 招式附带的能力变化：d 为正升、为负降；chance 是触发概率（百分比，没写 = 100） */
 export interface MoveStat { k: StageKey; d: number; target: 'self' | 'foe'; chance?: number }
-export interface Move { id: string; name: string; type: string; cat: MoveCat; power: number; acc: number; pp: number; priority?: number; /** 命中后附带的能力变化（本批只有伤害招式带） */ stat?: MoveStat; /** 命中后附带状态异常的概率 */ status?: MoveStatus }
+export interface Move {
+  id: string; name: string; type: string; cat: MoveCat; power: number; acc: number; pp: number; priority?: number;
+  /** 命中后附带的能力变化（本批只有伤害招式带） */ stat?: MoveStat;
+  /** 命中后附带状态异常的概率 */ status?: MoveStatus;
+  /** 回复：ratio = 最大生命的比例；selfSleep = 回满后自睡几回合（睡觉招） */
+  heal?: { ratio: number; selfSleep?: number };
+  /** 保护：本回合免伤（连续使用衰减） */
+  guard?: true;
+  /** 吸取：按造成伤害的比例回血 */
+  drain?: number;
+  /** 界面上的一句话效果说明（没写就按上面的字段自动生成） */
+  desc?: string;
+}
+
+/** 命中率：基础命中 × 命中/闪避倍率，夹在 5%–100%；必中招式（acc >= 100）不受影响 */
+export function hitRate(acc: number, stageDiff: number): number {
+  if (acc >= 100) return 100;
+  return Math.max(5, Math.min(100, acc * accuracyMul(stageDiff)));
+}
 
 export interface MonMove { id: string; pp: number }
 /** 一只精灵（存档里的样子）。id 是实例编号，不是物种号；iv 顺序同 STAT_KEYS */

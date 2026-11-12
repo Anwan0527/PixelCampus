@@ -105,6 +105,8 @@ function build(): Species[] {
         { lv: 1, id: catMoveId('一般', 'p50') }, { lv: 1, id: normal ? catMoveId('一般', 's50') : pick(t0, false, phys) }, { lv: 6, id: catMoveId('一般', 's50') }, { lv: 10, id: pick(t0, false, !phys) },
         ...(t1 ? [{ lv: 14, id: pick(t1, false, phys) }] : []), { lv: 18, id: pick(t0, true, phys) },
         ...(t1 ? [{ lv: 24, id: pick(t1, true, !phys) }] : []), { lv: 28, id: pick(t0, true, !phys) }, { lv: 34, id: catMoveId('一般', 'p85') },
+        // 猫系非伤害招式：12 级学「老吴哈气护体」（守住），20 级学「老吴打盹」（睡觉）
+        { lv: 12, id: 'catnd:hiss-guard' }, { lv: 20, id: 'catnd:nap' },
       ].filter((e, i, a) => a.findIndex((x) => x.id === e.id) === i);
       const sp: Species = {
         id: catSpeciesId(coat, stage), no: 100 + coat * 3 + stage, name: `${STEM[coat]}${SUFFIX[stage - 1]}`, types: ln.types, base,
