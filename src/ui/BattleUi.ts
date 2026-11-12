@@ -2,8 +2,8 @@ import type { NetClient } from '@/net/client';
 import type { ServerMsg } from '@/shared/protocol';
 import type { BEvent } from '@/shared/battle';
 import { CONTENT, monArt, speciesOf } from '@/shared/mons-content';
-import { elementName, maxHp, type Mon } from '@/shared/mons';
-import { fastDelay, hpText, learnLogText, moveView, readFast, stageBadges, stageLog, summaryRows, writeFast } from './monBattleHelpers';
+import { elementName, maxHp, type Mon, type StatusKind } from '@/shared/mons';
+import { fastDelay, hpText, learnLogText, moveView, readFast, stageBadges, stageLog, statusLog, statusText, summaryRows, writeFast } from './monBattleHelpers';
 import { isCatSpecies } from '@/shared/cat-mons';
 import { sfx, type SfxName } from '@/audio/sfx';
 
@@ -23,7 +23,7 @@ const badge = (id: string) => { const b = el('span', 'mon-type', elementName(CON
 const bar = (frac: number) => { const b = el('div', 'mon-bar hp'), f = el('div', 'mon-bar-fill'); f.style.width = `${Math.round(Math.max(0, Math.min(1, frac)) * 100)}%`; if (frac < 0.25) f.style.background = '#c0392b'; else if (frac < 0.5) f.style.background = '#e0a020'; else f.style.background = '#6aa84f'; b.append(f); return b; };
 
 /** 显示用的状态：事件播放时一点点更新，播完再和服务器的权威状态对齐 */
-interface View { lead: number; hp: number[]; foeHp: number; foeMax: number; /** 我方 / 对手的能力等级（按精灵 id）；只用于显示 */ meStages: Record<string, Record<string, number>>; foeStages: Record<string, number> }
+interface View { lead: number; hp: number[]; foeHp: number; foeMax: number; /** 我方 / 对手的能力等级（按精灵 id）；只用于显示 */ meStages: Record<string, Record<string, number>>; foeStages: Record<string, number>; /** 我方 / 对手的状态（按精灵 id） */ meStatus: Record<string, StatusKind>; foeStatus: StatusKind | null }
 
 /**
  * 战斗界面（全屏）：对手在右上、我方在左下；底下是文字和按钮（战斗 / 零食包 / 换精灵 / 逃跑）。
@@ -39,7 +39,7 @@ export class BattleUi {
   private log = el('div', 'bt-log');
   private menu = el('div', 'bt-menu');
   private bt: Bt | null = null;
-  private view: View = { lead: 0, hp: [], foeHp: 1, foeMax: 1, meStages: {}, foeStages: {} };
+  private view: View = { lead: 0, hp: [], foeHp: 1, foeMax: 1, meStages: {}, foeStages: {}, meStatus: {}, foeStatus: null };
   private mode: 'main' | 'moves' | 'swap' = 'main';
   private busy = false;
   private prompt = el('div', 'mon-enc hidden');
@@ -93,7 +93,7 @@ export class BattleUi {
     if (fresh) {
       this.hidePrompt(); this.bt = m; this.busy = false; this.mode = 'main';
       this.root.classList.remove('hidden'); this.onOpen?.();
-      this.view = { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max, meStages: {}, foeStages: {} }; this.log.replaceChildren();
+      this.view = { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max, meStages: {}, foeStages: {}, meStatus: {}, foeStatus: null }; this.log.replaceChildren();
       this.say(m.cat ? `${m.cat.name} 想和你切磋一下！（${m.zone}）` : `野生的 ${speciesOf(m.foe.sp)?.name ?? m.foe.sp} 出现了！`);
       this.renderStage(); this.renderMenu();
       // 两只猫对战：打出「老吴对战」的横幅
@@ -107,7 +107,7 @@ export class BattleUi {
     if (m.phase === 'over') this.say(m.result === 'win' ? '战斗胜利！' : m.result === 'caught' ? '收服成功！' : m.result === 'fled' ? '成功脱离了战斗。' : m.cat ? '你的精灵都倒下了……友谊赛到此为止，下次再来切磋！' : '你的精灵全部倒下了……眼前一黑，你回到了校门口。');
     this.renderMenu();
   }
-  private viewOf(m: Bt): View { return { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max, meStages: this.view?.meStages ?? {}, foeStages: this.view?.foeStages ?? {} }; }
+  private viewOf(m: Bt): View { return { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max, meStages: this.view?.meStages ?? {}, foeStages: this.view?.foeStages ?? {}, meStatus: this.view?.meStatus ?? {}, foeStatus: this.view?.foeStatus ?? null }; }
   private lead(m = this.bt): Mon | undefined { return m?.sq[this.view.lead]; }
   private say(text: string) { this.log.append(el('div', undefined, text)); this.log.scrollTop = this.log.scrollHeight; }
   /** 动画 / 文字等待；快进时缩短，服务器计时不受影响 */
@@ -146,6 +146,27 @@ export class BattleUi {
         case 'level': this.say(`${nameOf(mons[e.i])} 升到了 Lv.${e.lv}！`); snd('achieve'); await this.wait(600); break;
         case 'evolve': { const from = nameOf(bt0.sq[e.i] ?? { sp: e.to }); this.say(`咦？${from} 的样子发生了变化！`); await anim(this.meImg, 'evolve', 1100); this.say(`${from} 进化成了 ${speciesOf(e.to)?.name ?? e.to}！`); snd('achieve'); if (e.i === this.view.lead) this.meImg.src = monArt(e.to, 'back', !!bt0.sq[e.i]?.sh); await this.wait(700); break; }
         case 'learn': this.say(learnLogText(nameOf(mons[e.i]), CONTENT.moves.get(e.move)?.name ?? e.move, e.full)); await this.wait(550); break;
+        case 'status': {
+          if (e.side === 'foe') this.view.foeStatus = e.k;
+          else { const cur = mons[this.view.lead]?.id ?? ''; this.view.meStatus = { ...this.view.meStatus, [cur]: e.k }; }
+          this.say(statusLog(e.side === 'me' ? myName() : foeName(), e.k, 'apply'));
+          this.renderStage(); await this.wait(450); break;
+        }
+        case 'statusdmg': {
+          if (e.side === 'foe') this.view.foeHp = e.hp; else this.view.hp[this.view.lead] = e.hp;
+          this.say(statusLog(e.side === 'me' ? myName() : foeName(), e.k, 'dmg'));
+          this.renderStage(); await this.wait(450); break;
+        }
+        case 'statusend': {
+          if (e.side === 'foe') this.view.foeStatus = null;
+          else { const cur = mons[this.view.lead]?.id ?? ''; const next = { ...this.view.meStatus }; delete next[cur]; this.view.meStatus = next; }
+          this.say(statusLog(e.side === 'me' ? myName() : foeName(), e.k, 'end'));
+          this.renderStage(); await this.wait(400); break;
+        }
+        case 'blocked': {
+          this.say(statusLog(e.side === 'me' ? myName() : foeName(), e.k, 'blocked'));
+          await this.wait(500); break;
+        }
         case 'stage': {
           if (e.side === 'foe') { this.view.foeStages = { ...this.view.foeStages, [e.k]: e.v }; }
           else { const cur = mons[this.view.lead]?.id ?? ''; this.view.meStages = { ...this.view.meStages, [cur]: { ...(this.view.meStages[cur] ?? {}), [e.k]: e.v } }; }
@@ -164,21 +185,22 @@ export class BattleUi {
     this.foeImg.src = monArt(m.foe.sp, 'front', !!m.foe.sh);
     const foeTypes = el('div', 'mon-types'); foeTypes.append(...(foeSp?.types ?? []).map(badge));
     this.foeCard.replaceChildren(el('div', 'mon-name', `${m.cat ? `${m.cat.name}（${foeSp?.name ?? m.foe.sp}）` : foeSp?.name ?? m.foe.sp}  Lv.${m.foe.lv}`), bar(this.view.foeHp / Math.max(1, this.view.foeMax)), el('div', 'mon-sub', hpText(this.view.foeHp, m.foe.max)), foeTypes);
-    this.renderStages(this.foeCard, this.view.foeStages);
+    this.renderStages(this.foeCard, this.view.foeStages, this.view.foeStatus ?? undefined);
     if (me) {
       this.meImg.src = monArt(me.sp, 'back', !!me.sh);
       const max = maxHp(CONTENT, me), hp = this.view.hp[this.view.lead] ?? me.hp;
       const meTypes = el('div', 'mon-types'); meTypes.append(...(speciesOf(me.sp)?.types ?? []).map(badge));
       this.meCard.replaceChildren(el('div', 'mon-name', `${nameOf(me)}  Lv.${me.lv}`), bar(hp / Math.max(1, max)), el('div', 'mon-sub', hpText(hp, max)), meTypes);
-      this.renderStages(this.meCard, this.view.meStages[me.id]);
+      this.renderStages(this.meCard, this.view.meStages[me.id], this.view.meStatus[me.id]);
     }
   }
 
   /** 卡片下方的能力等级：只有非 0 的项显示，文字 + 箭头（不只靠颜色） */
-  private renderStages(card: HTMLElement, s: Partial<Record<string, number>> | undefined) {
+  private renderStages(card: HTMLElement, s: Partial<Record<string, number>> | undefined, status?: StatusKind) {
     const list = stageBadges(s as Record<string, number> | undefined);
-    if (!list.length) return;
+    if (!list.length && !status) return;
     const box = el('div', 'bt-stages');
+    if (status) box.append(el('span', `bt-status ${status}`, statusText(status)));
     for (const t of list) { const up = t.includes('+'); const b = el('span', 'bt-stage' + (up ? ' up' : ' down'), t); box.append(b); }
     card.append(box);
   }
@@ -192,13 +214,26 @@ export class BattleUi {
     if (m.phase === 'over') { this.menu.append(this.renderSummary(m), this.btn('离开', () => this.close(), 'btn primary')); return; }
     const forced = m.phase === 'swap';
     const mode = forced ? 'swap' : this.mode;
+    const lead = m.sq[this.view.lead];
+    const blockedK = lead ? (this.view.meStatus[lead.id] as StatusKind | undefined) : undefined;
     if (mode === 'main') {
       this.menu.append(
         this.btn('战斗', () => { this.mode = 'moves'; this.renderMenu(); }, 'btn primary'),
         this.btn(`零食包 ×${m.ball}`, () => this.act({ t: 'ball' })), this.btn('换精灵', () => { this.mode = 'swap'; this.renderMenu(); }), this.btn('逃跑', () => this.act({ t: 'run' })),
       );
-      (this.menu.children[1] as HTMLButtonElement).disabled = this.busy || m.ball <= 0;
-      (this.menu.children[2] as HTMLButtonElement).disabled = this.busy || m.sq.filter((x, i) => i !== this.view.lead && x.hp > 0).length === 0;
+      // 不能行动时：先禁用所有按钮，再放提示（提示不是按钮，index 用 querySelector 取）
+      const fightBtn = [...this.menu.querySelectorAll('button')].find((b) => b.textContent === '战斗') as HTMLButtonElement | undefined;
+      const ballBtn = [...this.menu.querySelectorAll('button')].find((b) => b.textContent?.startsWith('零食包')) as HTMLButtonElement | undefined;
+      const swapBtn = [...this.menu.querySelectorAll('button')].find((b) => b.textContent === '换精灵') as HTMLButtonElement | undefined;
+      const runBtn = [...this.menu.querySelectorAll('button')].find((b) => b.textContent === '逃跑') as HTMLButtonElement | undefined;
+      if (ballBtn) ballBtn.disabled = this.busy || m.ball <= 0;
+      if (swapBtn) swapBtn.disabled = this.busy || m.sq.filter((x, i) => i !== this.view.lead && x.hp > 0).length === 0;
+      if (blockedK) {
+        const b = el('div', 'bt-blocked');
+        b.textContent = `你${blockedK === 'sleep' ? '正在睡觉' : blockedK === 'freeze' ? '被冻住了' : '被麻痹住了'}，无法行动……`;
+        this.menu.prepend(b);
+        for (const btn of [fightBtn, ballBtn, swapBtn, runBtn]) if (btn) btn.disabled = true;
+      }
     } else if (mode === 'moves') {
       const me = this.lead(m)!;
       const foeTypes = speciesOf(m.foe.sp)?.types ?? [];
