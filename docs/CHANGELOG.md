@@ -12,6 +12,7 @@
 - 门槛规则收敛在 `src/shared/fishing.ts` 的 `shouldBroadcastCatch()`（纯函数，客户端 / 服务端共用）；消息类型 `ChatMessage.kind` 新增 `'broadcast'`，带可选 `tone` 字段用于横幅配色。
 **测试**：新增 `tests/fishing-broadcast.test.ts`（6）；全量测试通过；`tsc` / `vite build` 绿。
 **服务端**（私有仓库）：钓到结算处判定后向全服发 chat 消息（`tone`：mythic / record）；原来的「首次钓到神话鱼」系统消息并入新播报，之后**神话鱼每次钓到都会播**；破纪录只算不是第一次钓到的。详见 `docs/feature/20261112-fishing-broadcast/`。
+**调整（同日）**：「刷新个人纪录」的播报改进**系统频道**（仍弹横幅），不再占世界频道；神话鱼播报仍在世界频道。客户端 `channelOf` 对 `tone==='record'` 的广播一律归系统频道，服务端同时下发 `ch:'sys'`。
 （2026-11-12 已部署。）
 
 ## 2026.11.11（战斗深度 2A-2：状态异常）更新内容

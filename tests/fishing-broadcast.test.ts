@@ -41,6 +41,15 @@ describe('广播消息的频道归类与气泡', () => {
     expect(channelOf(noCh)).toBe('world');
   });
 
+  it('刷新纪录的播报进系统频道（不占世界频道）；神话鱼播报仍进世界频道', () => {
+    expect(channelOf(broadcast('🎣 某某刷新了「鲫鱼」的个人纪录！', 'record'))).toBe('sys');
+    expect({ ...broadcast('x', 'record'), ch: 'world' as const }).toSatisfy((m: ChatMessage) => channelOf(m) === 'sys'); // 就算服务端写了 world（旧服务端）也进系统
+    expect(channelOf(broadcast('🎣 某某钓到了神话·河工锦！', 'mythic'))).toBe('world');
+    const s = new ChatState(); s.setChannels(DEFAULT_CHANNEL_STATES.map((c) => ({ ...c })));
+    const m = broadcast('🎣 某某刷新了「鲫鱼」的个人纪录！', 'record');
+    expect(s.receive(m).ch).toBe('sys'); expect(s.buffers.world.some((x) => x.id === m.id)).toBe(false);
+  });
+
   it('广播消息不冒气泡（不是真实玩家发言）', () => {
     const s = new ChatState();
     const st: ChannelState[] = DEFAULT_CHANNEL_STATES.map((c) => ({ ...c }));
