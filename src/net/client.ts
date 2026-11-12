@@ -271,7 +271,7 @@ export class NetClient implements ChatTransport {
       case 'fz_state': this.handlers.fzState?.(m.own, m.on, m.news, m.gift); break;
       case 'despawn': this.handlers.despawn?.(m.id); break;
       case 'correct': this.handlers.correct?.(m.x, m.y); break;
-      case 'chat': this.emit({ id: ++this.seq, kind: 'chat', pid: m.pid, uid: m.uid, from: m.from, hue: m.hue, text: m.text, ts: m.ts, mid: m.mid, ...(m.ch ? { ch: m.ch } : {}) }); break;
+      case 'chat': this.emit({ id: ++this.seq, kind: m.tone ? 'broadcast' : 'chat', pid: m.pid, uid: m.uid, from: m.from, hue: m.hue, text: m.text, ts: m.ts, mid: m.mid, ...(m.ch ? { ch: m.ch } : {}), ...(m.tone ? { tone: m.tone } : {}) }); break;
       case 'channels': this.setChannels(m.items); break;
       case 'ch_result': for (const cb of this.chResultCbs) cb(m.ok, m.msg); break;
       case 'chat_recall': this.handlers.chatRecall?.(m.mids); break;

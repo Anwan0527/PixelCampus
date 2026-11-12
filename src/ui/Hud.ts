@@ -39,10 +39,22 @@ export class Hud {
     const b = $('banner');
     $('banner-title').textContent = title;
     $('banner-sub').textContent = sub ?? '';
-    b.classList.remove('hidden');
+    b.classList.remove('hidden', 'broadcast');
     b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
     window.clearTimeout(this.bannerTimer);
     this.bannerTimer = window.setTimeout(() => b.classList.add('hidden'), 2600);
+  }
+  /** 全服广播横幅：金色、停留更久、带稀有度配色（tone 影响主色） */
+  broadcast(title: string, sub?: string, tone?: 'epic' | 'legendary' | 'mythic' | 'record') {
+    const b = $('banner');
+    $('banner-title').textContent = title;
+    $('banner-sub').textContent = sub ?? '';
+    b.classList.remove('hidden');
+    b.classList.toggle('broadcast', true);
+    if (tone) b.dataset.tone = tone; else delete b.dataset.tone;
+    b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
+    window.clearTimeout(this.bannerTimer);
+    this.bannerTimer = window.setTimeout(() => b.classList.add('hidden'), 4200);
   }
   hint(text: string | null) {
     const h = $('hint');

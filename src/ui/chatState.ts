@@ -8,7 +8,7 @@ import type { ChatMessage } from '@/shared/chat';
 export const KEEP = 60;
 export { DEFAULT_CHANNEL_STATES, OFFLINE_CHANNEL_STATES };
 
-/** 这条消息属于哪个频道：系统消息一律进系统频道，聊天消息按 ch（不写 = 世界） */
+/** 这条消息属于哪个频道：系统消息一律进系统频道；广播消息进它带的频道（服务端下发时写 world），聊天消息按 ch（不写 = 世界） */
 export const channelOf = (m: Pick<ChatMessage, 'kind' | 'ch'>): ChannelId => (m.kind === 'system' ? 'sys' : m.ch && isChannelId(m.ch) ? m.ch : 'world');
 
 export interface Received {
@@ -102,10 +102,10 @@ export class ChatState {
   totalUnread(): number { let n = 0; for (const c of this.chans) if (c.on && !c.mute) n += this.unread[c.id]; return n; }
 }
 
-/** 这条消息要不要在 NPC / 玩家头上冒气泡：系统不冒；静音和关闭的频道不冒；世界 / 附近普通气泡，队伍另一种样式 */
+/** 这条消息要不要在 NPC / 玩家头上冒气泡：系统不冒；广播不冒；静音和关闭的频道不冒；世界 / 附近普通气泡，队伍另一种样式 */
 export function bubbleStyle(state: ChatState, m: ChatMessage): 'normal' | 'party' | null {
   const ch = channelOf(m);
-  if (ch === 'sys') return null;
+  if (ch === 'sys' || m.kind === 'broadcast') return null;
   const s = state.stateOf(ch);
   if (!s || !s.on || s.mute) return null;
   return ch === 'party' ? 'party' : 'normal';

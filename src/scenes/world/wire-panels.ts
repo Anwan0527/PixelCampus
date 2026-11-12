@@ -245,6 +245,7 @@ export function wireMenus(sc: WorldScene) {
 
 export function wireChatBubbles(sc: WorldScene) {
   sc.net.onMessage((m) => {
+    if (m.kind === 'broadcast') { sc.hud.broadcast('🎣 全服播报', m.text, m.tone); sfx('achieve'); return; }
     if (m.kind !== 'chat') return;
     const style = sc.chatUi.bubbleOf(m); if (!style) return; // 静音 / 关闭的频道不冒气泡
     (sc.registry.get('roomSay') as ((pid: number, text: string) => void) | null | undefined)?.(m.pid as number, m.text); // 人在宿舍里时，话冒泡在宿舍里的人头上
