@@ -35,19 +35,16 @@ describe('广播消息的频道归类与气泡', () => {
   let id = 0;
   const broadcast = (text: string, tone?: ChatMessage['tone']): ChatMessage => ({ id: ++id, kind: 'broadcast', text, ts: 1, ch: 'world', ...(tone ? { tone } : {}) });
 
-  it('广播消息进世界频道（服务端下发时带 ch=world），不进系统频道', () => {
-    expect(channelOf(broadcast('🎣 某某钓到了神话·河工锦！'))).toBe('world');
-    const noCh: Pick<ChatMessage, 'kind' | 'ch'> = { kind: 'broadcast' }; // 不写 ch 也归世界
-    expect(channelOf(noCh)).toBe('world');
-  });
-
-  it('刷新纪录的播报进系统频道（不占世界频道）；神话鱼播报仍进世界频道', () => {
+  it('所有广播（神话鱼 / 刷新纪录）都进系统频道，不占世界频道；就算服务端写了 ch=world 也进系统', () => {
+    expect(channelOf(broadcast('🎣 某某钓到了神话·河工锦！', 'mythic'))).toBe('sys');
     expect(channelOf(broadcast('🎣 某某刷新了「鲫鱼」的个人纪录！', 'record'))).toBe('sys');
-    expect({ ...broadcast('x', 'record'), ch: 'world' as const }).toSatisfy((m: ChatMessage) => channelOf(m) === 'sys'); // 就算服务端写了 world（旧服务端）也进系统
-    expect(channelOf(broadcast('🎣 某某钓到了神话·河工锦！', 'mythic'))).toBe('world');
+    const noCh: Pick<ChatMessage, 'kind' | 'ch'> = { kind: 'broadcast' };
+    expect(channelOf(noCh)).toBe('sys');
     const s = new ChatState(); s.setChannels(DEFAULT_CHANNEL_STATES.map((c) => ({ ...c })));
-    const m = broadcast('🎣 某某刷新了「鲫鱼」的个人纪录！', 'record');
-    expect(s.receive(m).ch).toBe('sys'); expect(s.buffers.world.some((x) => x.id === m.id)).toBe(false);
+    for (const tone of ['mythic', 'record'] as const) {
+      const m = broadcast('🎣 播报', tone);
+      expect(s.receive(m).ch).toBe('sys'); expect(s.buffers.world.some((x) => x.id === m.id)).toBe(false);
+    }
   });
 
   it('广播消息不冒气泡（不是真实玩家发言）', () => {
@@ -58,13 +55,13 @@ describe('广播消息的频道归类与气泡', () => {
     expect(bubbleStyle(s, broadcast('🎣 某某刷新了纪录！', 'mythic'))).toBe(null);
   });
 
-  it('广播消息能被 receive 收进世界频道缓冲（可静音/关闭仍走现有机制）', () => {
+  it('广播消息能被 receive 收进系统频道缓冲（可静音/关闭仍走现有机制）', () => {
     const s = new ChatState();
     s.setChannels(DEFAULT_CHANNEL_STATES.map((c) => ({ ...c })));
     const m = broadcast('🎣 某某钓到了神话·应龙！');
     const r = s.receive(m);
-    expect(r.ch).toBe('world');
+    expect(r.ch).toBe('sys');
     expect(r.accepted).toBe(true);
-    expect(s.buffers.world.some((x) => x.id === m.id)).toBe(true);
+    expect(s.buffers.sys.some((x) => x.id === m.id)).toBe(true);
   });
 });
