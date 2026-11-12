@@ -119,6 +119,14 @@ export const FISH_TIERS: readonly Rarity[] = ['common', 'uncommon', 'rare', 'epi
 export const FISH_FEED_GAIN: Record<Exclude<Rarity, 'junk'>, number> = { common: 5, uncommon: 8, rare: 14, epic: 20, legendary: 30, mythic: 50 };
 
 /**
+ * 这一钩要不要全服播报：神话鱼，或破了该玩家的个人纪录。
+ * 客户端与服务端共用（服务端结算时判定，客户端只渲染服务端下发的广播）。放宽门槛只改这一处 + 测试。
+ */
+export function shouldBroadcastCatch(def: FishDef, record: boolean): boolean {
+  return def.rarity === 'mythic' || record === true;
+}
+
+/**
  * 每一档在湖里的"总权重"（杂物也算一档）：新增 / 删除一条鱼不会改变这一档整体出现的概率，只是在档内重新分。
  * 条件倍率（夜里 / 雨天 / 季节）仍乘在单条鱼上。神话鱼不在这里（权重是绝对值，条件满足才进抽签池）。
  */

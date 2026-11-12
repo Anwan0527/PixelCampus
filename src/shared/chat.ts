@@ -6,12 +6,12 @@ export const CHAT_COOLDOWN_MS = 800;
 
 export interface ChatMessage {
   id: number;
-  kind: 'chat' | 'system';
+  kind: 'chat' | 'system' | 'broadcast';
   /** 发言者在服务器上的编号（用来在头顶冒气泡；离线/系统消息没有） */
   pid?: number;
   /** 发言者的校园号（点名字可以看资料、加好友）；离线回显/系统消息没有 */
   uid?: number;
-  /** 发言者昵称（system 没有） */
+  /** 发言者昵称（system / broadcast 没有，broadcast 的姓名由服务器拼进 text） */
   from?: string;
   /** 昵称配色色相 */
   hue?: number;
@@ -22,6 +22,8 @@ export interface ChatMessage {
   ts: number;
   /** 所在频道；不写 = world（系统消息客户端会标成 sys） */
   ch?: ChannelId;
+  /** 广播类型（kind === 'broadcast' 时用于横幅配色）：鱼种稀有度或纪录 */
+  tone?: 'epic' | 'legendary' | 'mythic' | 'record';
 }
 
 /** 与 profile.cleanText 同一套规则：去控制/零宽字符，折叠空白，按字截断；清洗后为空则返回 '' */

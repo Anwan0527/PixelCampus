@@ -338,8 +338,8 @@ export type ServerMsg =
   /** ttl = 这个玩家佩戴的称号 id（服务器认定的，没戴就没有这个字段） */
   | { t: 'spawn'; id: number; uid: number; x: number; y: number; flags: number; p: PublicProfile; ttl?: string; /** 手持物（没拿就没有这个字段） */ held?: number; /** 节日装扮编号（没戴就没有这个字段） */ fz?: number; /** 正在保持的持续型表情（躺下 / 坐地）的编号 */ pose?: number }
   | { t: 'despawn'; id: number }
-  /** ch 不写 = world；party 的话客户端用不同颜色的气泡 */
-  | { t: 'chat'; pid: number; uid: number; from: string; hue: number; text: string; ts: number; /** 记录编号（管理员撤回用） */ mid?: number; ch?: ChannelId }
+  /** ch 不写 = world；party 的话客户端用不同颜色的气泡。broadcast = 系统广播（如钓鱼全服播报），客户端弹金色横幅、不进普通气泡 */
+  | { t: 'chat'; pid: number; uid: number; from: string; hue: number; text: string; ts: number; /** 记录编号（管理员撤回用） */ mid?: number; ch?: ChannelId; /** 广播类型（广播时用，横幅配色）：鱼稀有度 / 纪录 */ tone?: 'epic' | 'legendary' | 'mythic' | 'record' }
   /** 我现在有哪些频道和各自的状态：登录、组队 / 退队、切世界、ch_set 之后都会发。world / near / sys 永远在；party 只在有队伍时才有 */
   | { t: 'channels'; items: ChannelState[] }
   /** 频道操作失败的提示（如「先把这个频道打开」「你还没有队伍」） */
