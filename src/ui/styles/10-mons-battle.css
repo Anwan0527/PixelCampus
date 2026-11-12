@@ -148,3 +148,6 @@
 .bt-status.sleep { background: #5b6b8a; }
 .bt-status.freeze { background: #3a8fb0; }
 .bt-blocked { grid-column: 1 / -1; margin-bottom: 4px; padding: 4px 8px; border: 3px solid var(--wood-l); background: #fff3d6; font-size: 14px; }
+
+/* 非伤害招式：效果说明 */
+.bt-mmove-desc { flex-basis: 100%; font-size: 12px; opacity: .8; }

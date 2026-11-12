@@ -15,6 +15,8 @@ export interface MoveView {
   pp: number;
   maxPp: number;
   effect: string;
+  /** 非伤害招式的一句话说明（伤害招式为空） */
+  desc: string;
 }
 
 /** 倍率 → 克制文字；1 倍不显示。 */
@@ -37,7 +39,21 @@ export function moveView(ct: Content, move: Move, pp: number, foeTypes: readonly
     pp,
     maxPp: move.pp,
     effect: effectText(typeMult(ct.elements, move.type, foeTypes)),
+    desc: moveDesc(move),
   };
+}
+
+/** 非伤害招式的一句话说明：优先用 `desc`，否则按 heal / guard / stat 自动生成 */
+export function moveDesc(m: Move): string {
+  if (m.desc) return m.desc;
+  if (m.heal) {
+    const pct = m.heal.ratio >= 1 ? '回满' : `回复 ${m.heal.ratio === 0.5 ? '1/2' : m.heal.ratio === 0.25 ? '1/4' : `${Math.round(m.heal.ratio * 100)}%`} 生命`;
+    return m.heal.selfSleep ? `${pct}，但会睡 ${m.heal.selfSleep} 回合` : pct;
+  }
+  if (m.guard) return '本回合免伤（连续使用成功率减半）';
+  if (m.drain) return `造成伤害的 ${Math.round(m.drain * 100)}% 回复自身`;
+  if (m.stat) return `${m.stat.target === 'self' ? '自身' : '对方'}${STAGE_NAMES[m.stat.k]} ${m.stat.d > 0 ? '+' : '−'}${Math.abs(m.stat.d)}`;
+  return '';
 }
 
 /** 血量文字；max 为 0 / 缺失时按 1 显示，避免 NaN。 */

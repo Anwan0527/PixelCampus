@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { catchChance, makeContent, makeRng, maxHp, newMon, type Content, type ElementPack, type Species } from '@/shared/mons';
 import {
-  applyStatus, cannotAct, catchStatusMul, clearStatus, startBattle, statusOf, step,
+  applyStatus, cannotAct, catchStatusMul, clearStatus, hasStatus, oneStatus, startBattle, statusOf, step,
   type Battle, type BEvent,
 } from '@/shared/battle';
 import { cleanMonSave, emptyMonSave } from '@/shared/monbox';
@@ -22,29 +22,31 @@ describe('状态异常 · 施加与互斥', () => {
   it('P1：施加状态成功并记录', () => {
     const bt = b();
     expect(applyStatus(bt, bt.wild, 'poison', makeRng(1))).toBe(true);
-    expect(statusOf(bt, bt.wild)?.k).toBe('poison');
+    expect(oneStatus(bt, bt.wild)?.k).toBe('poison');
   });
 
   it('P9/N2：同种状态重复施加无效、不刷新', () => {
     const bt = b();
     applyStatus(bt, bt.wild, 'sleep', makeRng(1));
-    const n0 = statusOf(bt, bt.wild)!.n;
+    const n0 = oneStatus(bt, bt.wild)!.n;
     expect(applyStatus(bt, bt.wild, 'sleep', makeRng(9))).toBe(false);
-    expect(statusOf(bt, bt.wild)!.n).toBe(n0);
+    expect(oneStatus(bt, bt.wild)!.n).toBe(n0);
   });
 
   it('N1：睡眠和冰冻互斥', () => {
     const bt = b();
     applyStatus(bt, bt.wild, 'sleep', makeRng(1));
     expect(applyStatus(bt, bt.wild, 'freeze', makeRng(1))).toBe(false);
-    expect(statusOf(bt, bt.wild)!.k).toBe('sleep');
+    expect(oneStatus(bt, bt.wild)!.k).toBe('sleep');
   });
 
   it('毒性 / 灼伤 / 麻痹可以共存', () => {
     const bt = b();
     expect(applyStatus(bt, bt.wild, 'poison', makeRng(1))).toBe(true);
-    expect(applyStatus(bt, bt.wild, 'burn', makeRng(1))).toBe(true); // 覆盖：同精灵只保留一个
-    expect(statusOf(bt, bt.wild)!.k).toBe('burn');
+    expect(applyStatus(bt, bt.wild, 'burn', makeRng(1))).toBe(true);
+    expect(applyStatus(bt, bt.wild, 'paralysis', makeRng(1))).toBe(true);
+    const ks = statusOf(bt, bt.wild).map((x) => x.k).sort();
+    expect(ks).toEqual(['burn', 'paralysis', 'poison']);
   });
 });
 
@@ -73,11 +75,11 @@ describe('状态异常 · 回合结算', () => {
   it('P5：睡眠 1–3 回合，计数 −1，到 0 解除', () => {
     const bt = b(); bt.wild.hp = 9999; bt.squad[0].hp = 9999;
     applyStatus(bt, bt.squad[0], 'sleep', makeRng(1));
-    const n0 = statusOf(bt, bt.squad[0])!.n!;
+    const n0 = oneStatus(bt, bt.squad[0])!.n!;
     expect(n0).toBeGreaterThanOrEqual(1); expect(n0).toBeLessThanOrEqual(3);
     let guard = 0;
-    while (statusOf(bt, bt.squad[0]) && guard++ < 10) step(CT, bt, { t: 'move', i: 0 }, makeRng(1));
-    expect(statusOf(bt, bt.squad[0])).toBeUndefined();
+    while (oneStatus(bt, bt.squad[0]) && guard++ < 10) step(CT, bt, { t: 'move', i: 0 }, makeRng(1));
+    expect(statusOf(bt, bt.squad[0])).toEqual([]);
   });
 
   it('P6：冰冻行动前 20% 解冻；未解冻 blocked', () => {
@@ -104,7 +106,7 @@ describe('状态异常 · 回合结算', () => {
     applyStatus(bt, bt.squad[0], 'burn', makeRng(1));
     bt.squad[0].hp = 1;
     step(CT, bt, { t: 'swap', i: 1 }, makeRng(1));
-    expect(statusOf(bt, bt.squad[0])?.k).toBe('burn');
+    expect(oneStatus(bt, bt.squad[0])?.k).toBe('burn');
   });
 
   it('N6/N9：掉血不为负；解除后不再掉血', () => {
@@ -122,7 +124,7 @@ describe('状态异常 · 回合结算', () => {
     const bt = b(); bt.wild.hp = 1;
     step(CT, bt, { t: 'move', i: 0 }, makeRng(3));
     expect(bt.result).toBe('win');
-    expect(statusOf(bt, bt.wild)).toBeUndefined();
+    expect(statusOf(bt, bt.wild)).toEqual([]);
   });
 });
 

@@ -241,7 +241,9 @@ export class BattleUi {
         const d = CONTENT.moves.get(x.id); if (!d) return;
         const v = moveView(CONTENT, d, x.pp, foeTypes);
         const b = el('button', 'btn bt-move'); b.type = 'button';
-        b.append(badge(d.type), el('span', 'mon-mname', v.name), el('span', 'bt-mmeta', `${v.cat} 威力${v.power} 命中${v.acc}%  PP ${v.pp}/${v.maxPp}`));
+        const power = v.power ? `${v.power}` : '—';
+        b.append(badge(d.type), el('span', 'mon-mname', v.name), el('span', 'bt-mmeta', `${v.cat} 威力${power} 命中${v.acc}%  PP ${v.pp}/${v.maxPp}`));
+        if (v.desc) b.append(el('span', 'bt-mmove-desc', v.desc));
         if (v.effect) b.append(el('span', 'bt-eff', v.effect));
         b.style.borderColor = COLOR.get(d.type) ?? '';
         b.disabled = this.busy || (x.pp <= 0 && me.mv.some((y) => y.pp > 0));
