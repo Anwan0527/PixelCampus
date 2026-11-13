@@ -5,9 +5,10 @@
  */
 import elements from '../../data/mons/packs/open/elements.json';
 import species from '../../data/mons/packs/open/species.json';
+import moves from '../../data/mons/packs/open/moves.json';
 import zones from '../../data/mons/zones.json';
 import type { Zone } from './wild';
-import { makeContent, type Base, type ElementPack, type Species } from './mons';
+import { makeContent, type Base, type ElementPack, type Move, type Species } from './mons';
 import { CAT_SPECIES, DM_MOVES, DM_SPECIES, catMoves } from './cat-mons';
 import { ALL_ND_MOVES } from './nondamage-moves';
 
@@ -24,12 +25,26 @@ const ND_BY_TYPE: Record<string, string[]> = {
   龙: ['nd:swords'], 妖精: ['nd:small'],
 };
 const ND_LEVEL = 12;
+/** 属性 → 招式库 slug（和 tools/mons/gen-moves.ts 的 SLUG 一致） */
+const SLUG: Record<string, string> = {
+  一般: 'normal', 火: 'fire', 水: 'water', 电: 'electric', 草: 'grass', 冰: 'ice', 格斗: 'fighting', 毒: 'poison', 地面: 'ground',
+  飞行: 'flying', 超能力: 'psychic', 虫: 'bug', 岩石: 'rock', 幽灵: 'ghost', 龙: 'dragon', 恶: 'dark', 钢: 'steel', 妖精: 'fairy',
+};
+/** 学习等级曲线：稳定A / 稳定B / 控制 / 辅助 / 爆发 / 高风险 */
+const LV = [1, 8, 12, 15, 20, 28] as const;
+/** 专属招式：物种 id → 招式 id */
+const SIGNATURE: Record<string, string> = { o01: 'sig:o01', o02: 'sig:o02', o04: 'sig:o04' };
 const SPECIES_ND: Species[] = SPECIES.map((sp) => {
   const add = [...new Set(sp.types.flatMap((t) => ND_BY_TYPE[t] ?? []))];
-  if (!add.length) return sp;
-  return { ...sp, learnset: [...(sp.learnset ?? []), ...add.map((id) => ({ lv: ND_LEVEL, id }))] };
+  const line = sp.types.map((t) => SLUG[t]).filter((x): x is string => !!x);
+  const learnset: { lv: number; id: string }[] = line.length
+    ? [...line.flatMap((s) => LV.map((lv, i) => ({ lv, id: `mv:${s}:${i + 1}` })))]
+    : [...(sp.learnset ?? [])];
+  if (SIGNATURE[sp.id]) learnset.push({ lv: 18, id: SIGNATURE[sp.id] });
+  return { ...sp, learnset: [...learnset, ...add.map((id) => ({ lv: ND_LEVEL, id }))] };
 });
-export const CONTENT = makeContent(ELEMENTS, [...SPECIES_ND, ...CAT_SPECIES, DM_SPECIES], [...catMoves(ELEMENTS.elements.map((e) => e.id)), ...DM_MOVES, ...ALL_ND_MOVES]);
+const LIBRARY = moves as unknown as Move[];
+export const CONTENT = makeContent(ELEMENTS, [...SPECIES_ND, ...CAT_SPECIES, DM_SPECIES], [...catMoves(ELEMENTS.elements.map((e) => e.id)), ...DM_MOVES, ...ALL_ND_MOVES, ...LIBRARY]);
 export const SPECIES_LIST: readonly OpenSpecies[] = SPECIES;
 /** 任意物种（开放包的 10 只 + 猫系 60 阶） */
 export const speciesOf = (id: string): Species | undefined => CONTENT.species.get(id);

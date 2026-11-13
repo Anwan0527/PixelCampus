@@ -1,0 +1,1512 @@
+[
+ {
+  "id": "mv:normal:1",
+  "name": "抓挠",
+  "type": "一般",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:normal:2",
+  "name": "撞击",
+  "type": "一般",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:normal:3",
+  "name": "猛撞",
+  "type": "一般",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:normal:4",
+  "name": "舍身冲撞",
+  "type": "一般",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:normal:5",
+  "name": "瞪眼",
+  "type": "一般",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手攻击"
+ },
+ {
+  "id": "mv:normal:6",
+  "name": "聚气",
+  "type": "一般",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身攻击 +1"
+ },
+ {
+  "id": "mv:fire:1",
+  "name": "火花",
+  "type": "火",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:fire:2",
+  "name": "火焰牙",
+  "type": "火",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "status": {
+   "s": "burn",
+   "chance": 10
+  },
+  "desc": "10% 让对手灼伤"
+ },
+ {
+  "id": "mv:fire:3",
+  "name": "喷射火焰",
+  "type": "火",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "status": {
+   "s": "burn",
+   "chance": 10
+  },
+  "desc": "10% 让对手灼伤"
+ },
+ {
+  "id": "mv:fire:4",
+  "name": "烈焰冲锋",
+  "type": "火",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:fire:5",
+  "name": "鬼火",
+  "type": "火",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "status": {
+   "s": "burn",
+   "chance": 100
+  },
+  "desc": "让对手灼伤"
+ },
+ {
+  "id": "mv:fire:6",
+  "name": "冥想",
+  "type": "火",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spa",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身特攻 +1"
+ },
+ {
+  "id": "mv:water:1",
+  "name": "水枪",
+  "type": "水",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:water:2",
+  "name": "水流喷射",
+  "type": "水",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "spd",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手特防"
+ },
+ {
+  "id": "mv:water:3",
+  "name": "冲浪",
+  "type": "水",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spd",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手特防"
+ },
+ {
+  "id": "mv:water:4",
+  "name": "水炮",
+  "type": "水",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:water:5",
+  "name": "浸水",
+  "type": "水",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "spd",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手特防"
+ },
+ {
+  "id": "mv:water:6",
+  "name": "求雨",
+  "type": "水",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spd",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身特防 +1"
+ },
+ {
+  "id": "mv:electric:1",
+  "name": "电击",
+  "type": "电",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:electric:2",
+  "name": "电光",
+  "type": "电",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "status": {
+   "s": "paralysis",
+   "chance": 10
+  },
+  "desc": "10% 让对手麻痹"
+ },
+ {
+  "id": "mv:electric:3",
+  "name": "十万伏特",
+  "type": "电",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "status": {
+   "s": "paralysis",
+   "chance": 10
+  },
+  "desc": "10% 让对手麻痹"
+ },
+ {
+  "id": "mv:electric:4",
+  "name": "疯狂伏特",
+  "type": "电",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:electric:5",
+  "name": "电磁波",
+  "type": "电",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "status": {
+   "s": "paralysis",
+   "chance": 100
+  },
+  "desc": "让对手麻痹"
+ },
+ {
+  "id": "mv:electric:6",
+  "name": "充电",
+  "type": "电",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spe",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身速度 +1"
+ },
+ {
+  "id": "mv:grass:1",
+  "name": "吸取",
+  "type": "草",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:grass:2",
+  "name": "藤鞭",
+  "type": "草",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "status": {
+   "s": "sleep",
+   "chance": 10
+  },
+  "desc": "10% 让对手睡眠"
+ },
+ {
+  "id": "mv:grass:3",
+  "name": "飞叶风暴",
+  "type": "草",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "status": {
+   "s": "sleep",
+   "chance": 10
+  },
+  "desc": "10% 让对手睡眠"
+ },
+ {
+  "id": "mv:grass:4",
+  "name": "木槌",
+  "type": "草",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:grass:5",
+  "name": "催眠粉",
+  "type": "草",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "status": {
+   "s": "sleep",
+   "chance": 100
+  },
+  "desc": "让对手睡眠"
+ },
+ {
+  "id": "mv:grass:6",
+  "name": "光合作用",
+  "type": "草",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身防御 +1"
+ },
+ {
+  "id": "mv:ice:1",
+  "name": "细雪",
+  "type": "冰",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:ice:2",
+  "name": "冰冻光束",
+  "type": "冰",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "status": {
+   "s": "freeze",
+   "chance": 10
+  },
+  "desc": "10% 让对手冰冻"
+ },
+ {
+  "id": "mv:ice:3",
+  "name": "暴风雪",
+  "type": "冰",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "status": {
+   "s": "freeze",
+   "chance": 10
+  },
+  "desc": "10% 让对手冰冻"
+ },
+ {
+  "id": "mv:ice:4",
+  "name": "冰锥",
+  "type": "冰",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:ice:5",
+  "name": "冰冻之风",
+  "type": "冰",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "status": {
+   "s": "freeze",
+   "chance": 100
+  },
+  "desc": "让对手冰冻"
+ },
+ {
+  "id": "mv:ice:6",
+  "name": "极光幕",
+  "type": "冰",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身防御 +1"
+ },
+ {
+  "id": "mv:fighting:1",
+  "name": "空手劈",
+  "type": "格斗",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:fighting:2",
+  "name": "连环巴掌",
+  "type": "格斗",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:fighting:3",
+  "name": "近身战",
+  "type": "格斗",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:fighting:4",
+  "name": "蛮力",
+  "type": "格斗",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:fighting:5",
+  "name": "看穿",
+  "type": "格斗",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手攻击"
+ },
+ {
+  "id": "mv:fighting:6",
+  "name": "健美",
+  "type": "格斗",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身攻击 +1"
+ },
+ {
+  "id": "mv:poison:1",
+  "name": "毒针",
+  "type": "毒",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:poison:2",
+  "name": "毒液冲击",
+  "type": "毒",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "status": {
+   "s": "poison",
+   "chance": 10
+  },
+  "desc": "10% 让对手中毒"
+ },
+ {
+  "id": "mv:poison:3",
+  "name": "污泥炸弹",
+  "type": "毒",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "status": {
+   "s": "poison",
+   "chance": 10
+  },
+  "desc": "10% 让对手中毒"
+ },
+ {
+  "id": "mv:poison:4",
+  "name": "垃圾射击",
+  "type": "毒",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:poison:5",
+  "name": "毒粉",
+  "type": "毒",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "status": {
+   "s": "poison",
+   "chance": 100
+  },
+  "desc": "让对手中毒"
+ },
+ {
+  "id": "mv:poison:6",
+  "name": "溶化",
+  "type": "毒",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spa",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身特攻 +1"
+ },
+ {
+  "id": "mv:ground:1",
+  "name": "踢沙",
+  "type": "地面",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:ground:2",
+  "name": "大地之力",
+  "type": "地面",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手防御"
+ },
+ {
+  "id": "mv:ground:3",
+  "name": "地震",
+  "type": "地面",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手防御"
+ },
+ {
+  "id": "mv:ground:4",
+  "name": "地裂",
+  "type": "地面",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:ground:5",
+  "name": "撒沙",
+  "type": "地面",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手防御"
+ },
+ {
+  "id": "mv:ground:6",
+  "name": "铁壁",
+  "type": "地面",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身防御 +1"
+ },
+ {
+  "id": "mv:flying:1",
+  "name": "啄",
+  "type": "飞行",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:flying:2",
+  "name": "翅膀攻击",
+  "type": "飞行",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "spe",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手速度"
+ },
+ {
+  "id": "mv:flying:3",
+  "name": "空气斩",
+  "type": "飞行",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spe",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手速度"
+ },
+ {
+  "id": "mv:flying:4",
+  "name": "勇鸟猛攻",
+  "type": "飞行",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:flying:5",
+  "name": "起风",
+  "type": "飞行",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "spe",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手速度"
+ },
+ {
+  "id": "mv:flying:6",
+  "name": "羽栖",
+  "type": "飞行",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spe",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身速度 +1"
+ },
+ {
+  "id": "mv:psychic:1",
+  "name": "念力",
+  "type": "超能力",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:psychic:2",
+  "name": "精神冲击",
+  "type": "超能力",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "spa",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手特攻"
+ },
+ {
+  "id": "mv:psychic:3",
+  "name": "精神强念",
+  "type": "超能力",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spa",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手特攻"
+ },
+ {
+  "id": "mv:psychic:4",
+  "name": "预知未来",
+  "type": "超能力",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:psychic:5",
+  "name": "催眠术",
+  "type": "超能力",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "spa",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手特攻"
+ },
+ {
+  "id": "mv:psychic:6",
+  "name": "冥想",
+  "type": "超能力",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spa",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身特攻 +1"
+ },
+ {
+  "id": "mv:bug:1",
+  "name": "虫咬",
+  "type": "虫",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:bug:2",
+  "name": "连斩",
+  "type": "虫",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:bug:3",
+  "name": "十字剪",
+  "type": "虫",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:bug:4",
+  "name": "超级角击",
+  "type": "虫",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:bug:5",
+  "name": "吐丝",
+  "type": "虫",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手攻击"
+ },
+ {
+  "id": "mv:bug:6",
+  "name": "蝶舞",
+  "type": "虫",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身攻击 +1"
+ },
+ {
+  "id": "mv:rock:1",
+  "name": "落石",
+  "type": "岩石",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:rock:2",
+  "name": "岩石封锁",
+  "type": "岩石",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手防御"
+ },
+ {
+  "id": "mv:rock:3",
+  "name": "岩崩",
+  "type": "岩石",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手防御"
+ },
+ {
+  "id": "mv:rock:4",
+  "name": "双刃头槌",
+  "type": "岩石",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:rock:5",
+  "name": "沙暴",
+  "type": "岩石",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手防御"
+ },
+ {
+  "id": "mv:rock:6",
+  "name": "铁壁",
+  "type": "岩石",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身防御 +1"
+ },
+ {
+  "id": "mv:ghost:1",
+  "name": "舌舔",
+  "type": "幽灵",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:ghost:2",
+  "name": "暗影拳",
+  "type": "幽灵",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "status": {
+   "s": "sleep",
+   "chance": 10
+  },
+  "desc": "10% 让对手睡眠"
+ },
+ {
+  "id": "mv:ghost:3",
+  "name": "暗影球",
+  "type": "幽灵",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "status": {
+   "s": "sleep",
+   "chance": 10
+  },
+  "desc": "10% 让对手睡眠"
+ },
+ {
+  "id": "mv:ghost:4",
+  "name": "潜灵奇袭",
+  "type": "幽灵",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:ghost:5",
+  "name": "催眠术",
+  "type": "幽灵",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "status": {
+   "s": "sleep",
+   "chance": 100
+  },
+  "desc": "让对手睡眠"
+ },
+ {
+  "id": "mv:ghost:6",
+  "name": "同命",
+  "type": "幽灵",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spa",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身特攻 +1"
+ },
+ {
+  "id": "mv:dragon:1",
+  "name": "龙息",
+  "type": "龙",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:dragon:2",
+  "name": "龙爪",
+  "type": "龙",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:dragon:3",
+  "name": "逆鳞",
+  "type": "龙",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:dragon:4",
+  "name": "龙之俯冲",
+  "type": "龙",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:dragon:5",
+  "name": "龙之舞",
+  "type": "龙",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手攻击"
+ },
+ {
+  "id": "mv:dragon:6",
+  "name": "龙声鼓舞",
+  "type": "龙",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身攻击 +1"
+ },
+ {
+  "id": "mv:dark:1",
+  "name": "追打",
+  "type": "恶",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:dark:2",
+  "name": "咬碎",
+  "type": "恶",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:dark:3",
+  "name": "恶之波动",
+  "type": "恶",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手攻击"
+ },
+ {
+  "id": "mv:dark:4",
+  "name": "欺诈",
+  "type": "恶",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:dark:5",
+  "name": "挑衅",
+  "type": "恶",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "atk",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手攻击"
+ },
+ {
+  "id": "mv:dark:6",
+  "name": "磨牙",
+  "type": "恶",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "atk",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身攻击 +1"
+ },
+ {
+  "id": "mv:steel:1",
+  "name": "金属爪",
+  "type": "钢",
+  "cat": "physical",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:steel:2",
+  "name": "铁头",
+  "type": "钢",
+  "cat": "physical",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手防御"
+ },
+ {
+  "id": "mv:steel:3",
+  "name": "加农光炮",
+  "type": "钢",
+  "cat": "physical",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手防御"
+ },
+ {
+  "id": "mv:steel:4",
+  "name": "铁蹄光线",
+  "type": "钢",
+  "cat": "physical",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:steel:5",
+  "name": "金属音",
+  "type": "钢",
+  "cat": "special",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "def",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手防御"
+ },
+ {
+  "id": "mv:steel:6",
+  "name": "铁壁",
+  "type": "钢",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "def",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身防御 +1"
+ },
+ {
+  "id": "mv:fairy:1",
+  "name": "妖精之风",
+  "type": "妖精",
+  "cat": "special",
+  "power": 40,
+  "acc": 100,
+  "pp": 25,
+  "desc": "稳定输出"
+ },
+ {
+  "id": "mv:fairy:2",
+  "name": "吸取之吻",
+  "type": "妖精",
+  "cat": "special",
+  "power": 65,
+  "acc": 95,
+  "pp": 20,
+  "stat": {
+   "k": "spd",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手特防"
+ },
+ {
+  "id": "mv:fairy:3",
+  "name": "魔法闪耀",
+  "type": "妖精",
+  "cat": "special",
+  "power": 90,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spd",
+   "d": -1,
+   "target": "foe",
+   "chance": 10
+  },
+  "desc": "10% 降低对手特防"
+ },
+ {
+  "id": "mv:fairy:4",
+  "name": "嬉闹",
+  "type": "妖精",
+  "cat": "special",
+  "power": 120,
+  "acc": 85,
+  "pp": 5,
+  "recoil": 0.3333333333333333,
+  "desc": "高威力，自身受到 1/3 反伤"
+ },
+ {
+  "id": "mv:fairy:5",
+  "name": "魅惑之声",
+  "type": "妖精",
+  "cat": "physical",
+  "power": 0,
+  "acc": 90,
+  "pp": 10,
+  "stat": {
+   "k": "spd",
+   "d": -1,
+   "target": "foe"
+  },
+  "desc": "降低对手特防"
+ },
+ {
+  "id": "mv:fairy:6",
+  "name": "薄雾场地",
+  "type": "妖精",
+  "cat": "physical",
+  "power": 0,
+  "acc": 100,
+  "pp": 15,
+  "stat": {
+   "k": "spd",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "自身特防 +1"
+ },
+ {
+  "id": "sig:o01",
+  "name": "尾焰回旋",
+  "type": "火",
+  "cat": "physical",
+  "power": 70,
+  "acc": 100,
+  "pp": 15,
+  "status": {
+   "s": "burn",
+   "chance": 20
+  },
+  "desc": "20% 让对手灼伤"
+ },
+ {
+  "id": "sig:o02",
+  "name": "潮汐咏唱",
+  "type": "水",
+  "cat": "special",
+  "power": 0,
+  "acc": 100,
+  "pp": 10,
+  "heal": {
+   "ratio": 0.25
+  },
+  "stat": {
+   "k": "spd",
+   "d": 1,
+   "target": "self"
+  },
+  "desc": "回复 1/4 生命，自身特防 +1"
+ },
+ {
+  "id": "sig:o04",
+  "name": "葱油喷溅",
+  "type": "毒",
+  "cat": "special",
+  "power": 75,
+  "acc": 95,
+  "pp": 10,
+  "status": {
+   "s": "poison",
+   "chance": 30
+  },
+  "desc": "30% 让对手中毒"
+ }
+]

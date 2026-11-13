@@ -102,6 +102,8 @@ export interface Move {
   guard?: true;
   /** 吸取：按造成伤害的比例回血 */
   drain?: number;
+  /** 反伤：自身受到造成伤害的这个比例（0–1） */
+  recoil?: number;
   /** 界面上的一句话效果说明（没写就按上面的字段自动生成） */
   desc?: string;
 }

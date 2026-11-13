@@ -149,3 +149,20 @@ describe('容错 / 兼容', () => {
     expect(() => step(CT, bt, { t: 'move', i: 0 }, makeRng(1))).not.toThrow();
   });
 });
+
+describe('反伤（recoil）', () => {
+  it('P4：使用反伤招式后自身掉血，且至少 1 点', () => {
+    const ct = makeContent(OPEN, [sp('a', [{ lv: 1, id: '一般:p50' }])], [
+      { id: 'test:recoil', name: '反伤测试', type: '一般', cat: 'physical', power: 120, acc: 100, pp: 5, recoil: 1 / 3, desc: '反伤 1/3' },
+    ]);
+    const m = newMon(ct, 'a', 50, () => 0.5, 'me', 0);
+    m.mv = [{ id: 'test:recoil', pp: 5 }];
+    const foe = newMon(ct, 'a', 50, () => 0.5, 'foe', 0);
+    foe.hp = 9999; m.hp = 9999;
+    const bt = startBattle('b', foe, [m]);
+    const r = step(ct, bt, { t: 'move', i: 0 }, makeRng(3));
+    expect(m.hp).toBeLessThan(9999);
+    // 反伤事件是我方受伤
+    expect(r.ev.some((e) => e.t === 'hit' && e.side === 'me')).toBe(true);
+  });
+});
