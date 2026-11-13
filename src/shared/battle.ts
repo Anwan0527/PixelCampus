@@ -180,9 +180,10 @@ export function step(ct: Content, b: Battle, act: Action, rnd: Rng): StepResult 
     return { ok: true, ev };
   }
 
-  // ---- 校验行动
+  // ---- 校验行动（睡着 / 冻住时已知不能行动，直接跳过校验，后面只推进回合）
+  const hardBlocked = (() => { const st = statusOf(b, me()); return st?.k === 'sleep' || st?.k === 'freeze'; })();
   let mv: Move | null = null, slot = -1;
-  if (act.t === 'move') {
+  if (hardBlocked) { /* 不校验，交给 canMyAct 处理 */ } else if (act.t === 'move') {
     const mon = me();
     if (!Number.isInteger(act.i) || act.i < 0 || act.i >= mon.mv.length) return { ok: false, err: '没有这个技能', ev };
     if (mon.mv[act.i].pp <= 0 && mon.mv.some((x) => x.pp > 0)) return { ok: false, err: '这个技能的 PP 用完了', ev };
@@ -254,20 +255,15 @@ export function step(ct: Content, b: Battle, act: Action, rnd: Rng): StepResult 
   const myAct = canMyAct();
   const foeAct = canFoeAct();
 
-  if (act.t === 'move' && mv) {
-    if (!myAct) {
-      // 自己不能行动：本回合什么都不做，但野生精灵仍可能行动
-      if (foeAct) foeTurn();
-    } else {
+  if (!myAct) {
+    // 不能行动：无论客户端提交什么（出招 / 换人 / 扔球 / 逃跑）都只推进回合，不执行该行动
+    if (foeAct) foeTurn();
+  } else if (act.t === 'move' && mv) {
       if (slot >= 0 && mv !== STRUGGLE) me().mv[slot].pp--;
       const mySpe = mySt().spe * stageMul(stagesOf(b, me()).spe) * paraSpeMul(b, me()), foeSpe = foeSt().spe * stageMul(stagesOf(b, foe).spe) * paraSpeMul(b, foe);
       const myFirst = (mv.priority ?? 0) !== 0 ? (mv.priority ?? 0) > 0 : mySpe !== foeSpe ? mySpe > foeSpe : rnd() < 0.5;
       if (myFirst) { if (attack('me', mv)) over = true; else if (foeAct) foeTurn(); }
       else { if (foeAct) attack('foe', wildMove()); if (me().hp > 0) { if (attack('me', mv)) over = true; } }
-    }
-  } else if (!myAct) {
-    // 不能行动：换人 / 扔球 / 逃跑也一并无效；野生精灵照常行动
-    if (foeAct) foeTurn();
   } else if (act.t === 'swap') {
     b.lead = act.i; if (!b.fought.includes(act.i)) b.fought.push(act.i);
     ev.push({ t: 'swap', i: act.i }); foeTurn();

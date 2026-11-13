@@ -212,6 +212,18 @@ export class BattleUi {
     card.append(box);
   }
 
+  /** 不能行动时自动提交一次行动，让服务器推进回合（防死锁）；同一回合只发一次 */
+  private skippedTurn = -1;
+  private autoSkip() {
+    const m = this.bt; if (!m) return;
+    const lead = m.sq[this.view.lead]; if (!lead) return;
+    const k = this.view.meStatus[lead.id];
+    if (!k || !['sleep', 'freeze'].includes(k)) return;
+    if (this.skippedTurn === m.turn) return;
+    this.skippedTurn = m.turn;
+    window.setTimeout(() => { if (this.bt?.turn === m.turn && !this.busy) this.act({ t: 'run' }); }, 60);
+  }
+
   private btn(label: string, run: () => void, cls = 'btn') { const b = el('button', cls, label); b.type = 'button'; b.addEventListener('click', run); b.disabled = this.busy; return b; }
   private act(a: Parameters<NetClient['monAct']>[2]) { if (!this.bt || this.busy) return; this.busy = true; this.renderMenu(); this.net.monAct(this.bt.bid, this.bt.turn, a); window.setTimeout(() => { if (this.busy && this.isOpen && this.bt?.phase !== 'over') { this.busy = false; this.renderMenu(); } }, 8000); }
 
@@ -237,9 +249,10 @@ export class BattleUi {
       if (swapBtn) swapBtn.disabled = this.busy || m.sq.filter((x, i) => i !== this.view.lead && x.hp > 0).length === 0;
       if (blockedK) {
         const b = el('div', 'bt-blocked');
-        b.textContent = `你${blockedK === 'sleep' ? '正在睡觉' : blockedK === 'freeze' ? '被冻住了' : '被麻痹住了'}，无法行动……`;
+        b.textContent = `你${blockedK === 'sleep' ? '正在睡觉' : blockedK === 'freeze' ? '被冻住了' : '被麻痹住了'}，这一回合无法行动……`;
         this.menu.prepend(b);
-        for (const btn of [fightBtn, ballBtn, swapBtn, runBtn]) if (btn) btn.disabled = true;
+        // 不能行动：不禁用按钮（否则服务器等不到行动会卡住），自动替玩家提交一次「跳过」
+        this.autoSkip();
       }
     } else if (mode === 'moves') {
       const me = this.lead(m)!;
