@@ -8,6 +8,9 @@
 .mon-img { width: 48px; height: 48px; object-fit: contain; image-rendering: pixelated; flex: none; }
 .mon-img.big { width: 128px; height: 128px; } .mon-img.huge { width: 112px; height: 112px; }
 .mon-type { display: inline-block; flex: none; white-space: nowrap; padding: 0 8px; margin-right: 4px; border: 2px solid rgba(0,0,0,.35); border-radius: 9px; font-size: 13px; line-height: 18px; color: #222; }
+/* 战斗卡片里的属性徽章压小，避免和状态 / 能力等级挤成一片 */
+.bt-card .mon-type { padding: 0 4px; margin-right: 2px; border-width: 1px; border-radius: 3px; font-size: 10px; line-height: 14px; }
+.bt-card .mon-types { gap: 0 2px; margin-top: 2px; }
 .mon-types { display: flex; flex-wrap: wrap; gap: 2px 0; margin-top: 3px; }
 .mon-name { font-weight: bold; } .mon-sub { font-size: 13px; opacity: .75; margin-top: 2px; } .mon-desc { font-size: 14px; margin: 4px 0; opacity: .9; }
 .mon-h { font-weight: bold; margin: 8px 0 3px; }
@@ -134,14 +137,16 @@
 }
 
 /* 战斗：能力等级标记（文字 + 箭头，不只靠颜色） */
-.bt-stages { display: flex; flex-wrap: wrap; gap: 3px 6px; margin-top: 3px; font-size: 12px; line-height: 18px; }
-.bt-stage { padding: 0 5px; border: 2px solid rgba(0,0,0,.25); border-radius: 8px; background: #fffaf0; white-space: nowrap; }
-.bt-stage.up { color: #2d7a44; border-color: #2d7a44; }
-.bt-stage.down { color: #b03a2a; border-color: #b03a2a; }
-@media (max-width: 560px) { .bt-stages { font-size: 11px; line-height: 16px; gap: 2px 4px; } }
+/* 能力等级 / 状态：单行紧凑，高度压到 16px，不撑高卡片 */
+.bt-stages { display: flex; flex-wrap: wrap; gap: 2px 3px; margin-top: 2px; font-size: 10px; line-height: 14px; }
+.bt-stage-tag, .bt-status { display: inline-block; padding: 0 3px; border: 1px solid rgba(0,0,0,.28); border-radius: 3px; white-space: nowrap; box-sizing: border-box; }
+.bt-stage-tag { background: #fffaf0; }
+.bt-stage-tag.up { color: #2d7a44; border-color: #2d7a44; }
+.bt-stage-tag.down { color: #b03a2a; border-color: #b03a2a; }
+@media (max-width: 560px) { .bt-stages { font-size: 9px; line-height: 12px; gap: 1px 2px; } }
 
 /* 战斗：状态异常标签 */
-.bt-status { padding: 0 6px; border: 2px solid rgba(0,0,0,.3); border-radius: 8px; color: #fff; background: #777; white-space: nowrap; }
+.bt-status { color: #fff; background: #777; border-color: rgba(0,0,0,.35); }
 .bt-status.poison { background: #8a4fa8; }
 .bt-status.burn { background: #c4552a; }
 .bt-status.paralysis { background: #b89a12; color: #2a2200; }

@@ -201,7 +201,7 @@ export class BattleUi {
     if (!list.length && !status) return;
     const box = el('div', 'bt-stages');
     if (status) box.append(el('span', `bt-status ${status}`, statusText(status)));
-    for (const t of list) { const up = t.includes('+'); const b = el('span', 'bt-stage' + (up ? ' up' : ' down'), t); box.append(b); }
+    for (const t of list) { const up = t.includes('+'); const b = el('span', 'bt-stage-tag' + (up ? ' up' : ' down'), t); box.append(b); }
     card.append(box);
   }
 

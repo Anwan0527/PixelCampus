@@ -47,7 +47,7 @@ describe('战斗界面 · 能力等级', () => {
     const foe = document.querySelector('.bt-card.foe')?.textContent ?? '';
     expect(foe).toContain('攻击');
     expect(foe).toContain('−2');
-    expect(document.querySelectorAll('.bt-card.foe .bt-stage.down').length).toBe(1);
+    expect(document.querySelectorAll('.bt-card.foe .bt-stage-tag.down').length).toBe(1);
   });
 
   it('P9：我方能力等级上升显示 +', async () => {
