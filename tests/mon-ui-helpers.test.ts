@@ -14,10 +14,10 @@ const CT: Content = makeContent(OPEN, []);
 describe('effectText / moveView', () => {
   it('倍率文字阈值', () => {
     expect(effectText(0)).toBe('无效');
-    expect(effectText(2)).toBe('效果拔群 ×2');
-    expect(effectText(4)).toBe('效果拔群 ×4');
-    expect(effectText(0.5)).toBe('效果不佳 ×0.5');
-    expect(effectText(0.25)).toBe('效果不佳 ×0.25');
+    expect(effectText(2)).toBe('克制');
+    expect(effectText(4)).toBe('克制');
+    expect(effectText(0.5)).toBe('削弱');
+    expect(effectText(0.25)).toBe('削弱');
     expect(effectText(1)).toBe('');
   });
   it('与 typeMult 的已知事实一致', () => {
@@ -27,12 +27,12 @@ describe('effectText / moveView', () => {
     ];
     for (const [atk, def, mult] of cases) {
       expect(typeMult(CT.elements, atk, def)).toBe(mult);
-      expect(effectText(mult)).toBe(mult === 0 ? '无效' : mult >= 2 ? `效果拔群 ×${mult}` : `效果不佳 ×${mult}`);
+      expect(effectText(mult)).toBe(mult === 0 ? '无效' : mult >= 2 ? '克制' : '削弱');
     }
   });
   it('moveView 字段齐全，克制按对手属性算', () => {
     const v = moveView(CT, CT.moves.get('水:p50')!, 7, ['火', '地面']);
-    expect(v).toMatchObject({ name: '水·冲击', type: '水', typeName: '水', cat: '物理', power: 50, acc: 100, pp: 7, maxPp: 25, effect: '效果拔群 ×4' });
+    expect(v).toMatchObject({ name: '水·冲击', type: '水', typeName: '水', cat: '物理', power: 50, acc: 100, pp: 7, maxPp: 25, effect: '克制' });
   });
 });
 

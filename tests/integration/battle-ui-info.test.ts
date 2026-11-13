@@ -62,10 +62,10 @@ describe('战斗界面 · 招式信息 / 血量 / 结算 / 快进', () => {
     expect(fire).toContain('威力50');
     expect(fire).toContain('命中100%');
     expect(fire).toContain('PP 25/25');
-    expect(fire).toContain('效果拔群 ×2');
+    expect(fire).toContain('克制');
     const normal = moves[3].textContent ?? '';
-    expect(normal).not.toContain('效果拔群');
-    expect(normal).not.toContain('效果不佳');
+    expect(normal).not.toContain('克制');
+    expect(normal).not.toContain('削弱');
   });
 
   it('对手显示 hp/max，我方显示属性；max = 0 不出现 NaN', async () => {

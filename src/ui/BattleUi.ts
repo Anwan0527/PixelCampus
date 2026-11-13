@@ -130,7 +130,7 @@ export class BattleUi {
         case 'hit': {
           if (e.side === 'foe') this.view.foeHp = e.hp; else this.view.hp[this.view.lead] = e.hp;
           this.renderStage(); snd('click');
-          const note = e.dmg === 0 ? '完全没有效果……' : `${e.mult >= 2 ? '效果拔群！' : ''}${e.mult > 0 && e.mult < 1 ? '效果不太好……' : ''}${e.crit ? '击中要害！' : ''}`;
+          const note = e.dmg === 0 ? '完全没有效果……' : `${e.mult >= 2 ? '克制！' : ''}${e.mult > 0 && e.mult < 1 ? '削弱……' : ''}${e.crit ? '击中要害！' : ''}`;
           if (note) this.say(note);
           await anim(e.side === 'foe' ? this.foeImg : this.meImg, 'hit', 420); break;
         }

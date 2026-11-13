@@ -22,8 +22,8 @@ export interface MoveView {
 /** 倍率 → 克制文字；1 倍不显示。 */
 export function effectText(mult: number): string {
   if (mult === 0) return '无效';
-  if (mult >= 2) return `效果拔群 ×${mult}`;
-  if (mult > 0 && mult < 1) return `效果不佳 ×${mult}`;
+  if (mult >= 2) return '克制';
+  if (mult > 0 && mult < 1) return '削弱';
   return '';
 }
 
