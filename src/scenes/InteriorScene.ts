@@ -5,6 +5,8 @@ import { Npc } from '@/entities/Npc';
 import { Hud } from '@/ui/Hud';
 import { TILE, ZOOMS } from '@/core/const';
 import { standNear } from '@/shared/teleport';
+import { enterFloor } from './world/transitions';
+import type { WorldScene } from './WorldScene';
 import type { TeleportPanel } from '@/ui/TeleportPanel';
 import type { NetClient } from '@/net/client';
 import type { DormPanel } from '@/ui/DormPanel';
@@ -104,10 +106,10 @@ export class InteriorScene extends Phaser.Scene {
     const me = this.registry.get('profile') as Profile | undefined; this.seenProfile = me;
     const sp = (this.fromId && d.stairs?.find((t) => t.to === this.fromId)?.land) || d.spawn; // 走楼梯过来：落在通向来处的那个楼梯口旁边
     this.seats = d.seats ? d.seats.slice() : []; // 数据里的椅子 / 沙发（宿舍的座位来自摆放数据，setLay 里会覆盖）
-    this.player = new Player(this, sp.x * TILE, sp.y * TILE, this.dorm && me ? me.look : 0, this.dorm ? me?.app : undefined); // 宿舍里是你自己的样子（换装后也跟着变）
+    this.player = new Player(this, sp.x * TILE, sp.y * TILE, me ? me.look : 0, me?.app); // 所有室内都是你自己的样子（换装后也跟着变）；之前只有宿舍这样，进餐厅 / 教学楼会变回默认造型
     Character.umbrella = false; // 屋里不打伞（外面下雨时，校园场景每帧会把它设回去，所以这里只管室内）
     this.player.facing = 'up'; this.player.sprite.setFrame('c0_up_0');
-    if (this.dorm) this.player.setFz(festData.on); // 自己戴着的节日装扮：在宿舍里（自己的、别人的）也要显示
+    this.player.setFz(festData.on); // 自己戴着的节日装扮：室内也要显示
 
     const cam = this.cameras.main;
     cam.startFollow(this.player.sprite, true, 0.15, 0.15);
@@ -258,7 +260,9 @@ export class InteriorScene extends Phaser.Scene {
   private backToWorld() {
     const mgr = this.scene.manager;
     this.clearRemotes(); this.hud.showMinimap(true);
+    const floor = this.afterFloor; this.afterFloor = undefined;
     this.scene.stop('Interior'); this.scene.wake('World');
+    if (floor) window.setTimeout(() => { try { const w = mgr.getScene('World') as WorldScene | null; if (w && w.sys.isActive()) enterFloor(w, floor); } catch { /* 忽略 */ } }, 450); // 等校园场景淡入完再进那一层
     window.setTimeout(() => { try { const w = mgr.getScene('World'); if (w && w.sys.isSleeping() && !mgr.isActive('Interior')) mgr.wake('World'); } catch { /* 忽略 */ } }, 1500);
   }
   /** 把屋里其他人的画面都销毁（要在场景还活着的时候调；关闭阶段 tweens 等插件已经没了） */
@@ -507,7 +511,13 @@ export class InteriorScene extends Phaser.Scene {
     this.bathFx?.update(Math.min(0.1, delta / 1000));
     this.updateDormCats(Math.min(50, delta) / 1000);
     const dt = Math.min(delta, 50) / 1000, k = this.keys, joy = this.touchState(), tap = this.takeTouchPress();
+    { const me = this.registry.get('profile') as Profile | undefined; if (me && me !== this.seenProfile) { this.seenProfile = me; this.player.setLook(me.look, me.app); } } // 换装后刷新外观（所有室内）
     if (this.dorm && this.dormFrame(dt, k, joy, tap)) return;
+    if (!this.dorm) { // 非宿舍的室内也能开传送（Y / 菜单）；面板开着时不能走动
+      const tp = this.registry.get('tpUi') as TeleportPanel | undefined;
+      if (Phaser.Input.Keyboard.JustDown(k.y) && !this.hud.dialogOpen && !this.leaving) tp?.toggle();
+      if (tp?.isOpen && !this.leaving) { this.player.update(dt, 0, 0, false, this.map); this.hud.hint(null); return; }
+    }
     if (this.hud.dialogOpen) {
       if (Phaser.Input.Keyboard.JustDown(k.esc)) { this.hud.closeDialog(); this.talking = null; }
       else if (Phaser.Input.Keyboard.JustDown(k.e) || Phaser.Input.Keyboard.JustDown(k.space) || tap) { if (!this.hud.advanceDialog()) this.talking = null; }
@@ -568,8 +578,6 @@ export class InteriorScene extends Phaser.Scene {
       if (net.status === 'online') { if (!this.isHost) { this.leaveForced(); return true; } net.dormEnter(); if (this.sleeping) this.endSleep(false); }
     }
     { const now = performance.now(); for (const r of this.remotes.values()) r.tick(now); this.reportPos(now); }
-    const me = this.registry.get('profile') as Profile | undefined;
-    if (me && me !== this.seenProfile) { this.seenProfile = me; this.player.setLook(me.look, me.app); }
     if (Phaser.Input.Keyboard.JustDown(k.enter) && !this.hud.dialogOpen && !this.registry.get('editorOpen')) this.chat?.focus();
     { const hp = this.player.holdingEmote; if (this.heldPoseId >= 0 && hp < 0 && this.player.moving && !this.remotes.size && net?.status === 'online') net.emote(this.heldPoseId); this.heldPoseId = hp; } // 屋里没人时不上报位置：自己走开了，用再发一次同一个表情的方式让服务器也知道站起来了
     const tp = this.registry.get('tpUi') as TeleportPanel | undefined;
@@ -584,6 +592,14 @@ export class InteriorScene extends Phaser.Scene {
     if (busy && !this.hud.dialogOpen) { this.player.update(dt, 0, 0, false, this.map); this.hud.hint(null); return true; }
     return false;
   }
+
+  /** 传送成功（世界场景的传送面板回调进来）：服务器已把人传到新位置，直接离开室内回校园，人留在新位置；选了某一层的话回到校园后再进那一层。宿舍里被传走时服务器会先发 dorm_out，这里已经在离开了，只补记「要进的那一层」 */
+  teleportOut(floor?: string) {
+    if (floor) this.afterFloor = floor;
+    if (this.leaving) return;
+    this.standUp(); this.leaveForced();
+  }
+  private afterFloor: string | undefined;
 
   /** 服务器把我从宿舍里带走了：不用再告诉服务器，也别把人放回宿舍楼门口，直接回校园 */
   private leaveForced() {
