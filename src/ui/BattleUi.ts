@@ -94,7 +94,7 @@ export class BattleUi {
       this.hidePrompt(); this.bt = m; this.busy = false; this.mode = 'main';
       this.root.classList.remove('hidden'); this.onOpen?.();
       this.view = { lead: m.lead, hp: m.sq.map((x) => x.hp), foeHp: m.foe.hp, foeMax: m.foe.max, meStages: {}, foeStages: {}, meStatus: {}, foeStatus: null }; this.log.replaceChildren();
-      this.say(m.cat ? `${m.cat.name} 想和你切磋一下！（${m.zone}）` : `野生的 ${speciesOf(m.foe.sp)?.name ?? m.foe.sp} 出现了！`);
+      this.say(m.trainer ? `${m.trainer.name} 想和你切磋一下！` : m.cat ? `${m.cat.name} 想和你切磋一下！（${m.zone}）` : `野生的 ${speciesOf(m.foe.sp)?.name ?? m.foe.sp} 出现了！`);
       this.renderStage(); this.renderMenu();
       // 两只猫对战：打出「老吴对战」的横幅
       if (m.cat && m.sq[m.lead] && isCatSpecies(m.sq[m.lead].sp) && isCatSpecies(m.foe.sp)) { sfx('achieve'); this.banner.textContent = '老吴对战'; this.banner.classList.remove('hidden'); this.banner.style.animation = 'none'; void this.banner.offsetWidth; this.banner.style.animation = ''; window.setTimeout(() => this.banner.classList.add('hidden'), 2200); }
@@ -120,7 +120,7 @@ export class BattleUi {
     const bt0 = this.bt!; const mons = m.sq;
     const myName = () => nameOf(mons[this.view.lead] ?? bt0.sq[this.view.lead]);
     const foeName = () => m.cat?.name ?? speciesOf(m.foe.sp)?.name ?? m.foe.sp;
-    const who = (s: 'me' | 'foe') => (s === 'me' ? myName() : m.cat ? foeName() : `野生的${foeName()}`);
+    const who = (s: 'me' | 'foe') => (s === 'me' ? myName() : m.trainer ? m.trainer.name : m.cat ? foeName() : `野生的${foeName()}`);
     const anim = async (img: HTMLElement, cls: string, ms: number) => { img.classList.remove(cls); void img.offsetWidth; img.classList.add(cls); await this.wait(ms); img.classList.remove(cls); };
     const snd = (n: SfxName) => sfx(n);
     for (const e of m.ev as BEvent[]) {
@@ -167,6 +167,13 @@ export class BattleUi {
           this.say(statusLog(e.side === 'me' ? myName() : foeName(), e.k, 'blocked'));
           await this.wait(500); break;
         }
+        case 'foeswap': {
+          const nm = m.foe.sp ? speciesOf(m.foe.sp)?.name ?? m.foe.sp : '';
+          this.say(`${m.trainer?.name ?? '对手'} 派出了 ${nm}！`);
+          this.renderStage();
+          await this.wait(600);
+          break;
+        }
         case 'stage': {
           if (e.side === 'foe') { this.view.foeStages = { ...this.view.foeStages, [e.k]: e.v }; }
           else { const cur = mons[this.view.lead]?.id ?? ''; this.view.meStages = { ...this.view.meStages, [cur]: { ...(this.view.meStages[cur] ?? {}), [e.k]: e.v } }; }
@@ -184,7 +191,7 @@ export class BattleUi {
     const foeSp = speciesOf(m.foe.sp), me = this.lead(m);
     this.foeImg.src = monArt(m.foe.sp, 'front', !!m.foe.sh);
     const foeTypes = el('div', 'mon-types'); foeTypes.append(...(foeSp?.types ?? []).map(badge));
-    this.foeCard.replaceChildren(el('div', 'mon-name', `${m.cat ? `${m.cat.name}（${foeSp?.name ?? m.foe.sp}）` : foeSp?.name ?? m.foe.sp}  Lv.${m.foe.lv}`), bar(this.view.foeHp / Math.max(1, this.view.foeMax)), el('div', 'mon-sub', hpText(this.view.foeHp, m.foe.max)), foeTypes);
+    this.foeCard.replaceChildren(el('div', 'mon-name', `${m.trainer ? `${m.trainer.name} 的 ` : ''}${m.cat ? `${m.cat.name}（${foeSp?.name ?? m.foe.sp}）` : foeSp?.name ?? m.foe.sp}  Lv.${m.foe.lv}`), bar(this.view.foeHp / Math.max(1, this.view.foeMax)), el('div', 'mon-sub', hpText(this.view.foeHp, m.foe.max)), foeTypes);
     this.renderStages(this.foeCard, this.view.foeStages, this.view.foeStatus ?? undefined);
     if (me) {
       this.meImg.src = monArt(me.sp, 'back', !!me.sh);
