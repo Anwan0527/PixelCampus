@@ -89,6 +89,8 @@ export class SocialUi {
   onHand: ((uid: number) => void) | null = null;
   /** 点「邀请来宿舍 / 去做客」时（场景设置） */
   onDorm: ((uid: number, kind: 'invite' | 'knock') => void) | null = null;
+  /** PvP：邀请对方对战 */
+  onPvp: ((uid: number) => void) | null = null;
   /** 点「一起玩」时（场景设置）：打开世界面板，对这位好友邀请 / 申请加入 */
   onWorld: ((uid: number) => void) | null = null;
   /** 好友位置更新了（世界面板要跟着刷新「TA 在哪个世界」） */
@@ -221,6 +223,7 @@ export class SocialUi {
       if (online && this.onWorld) b(main, '一起玩', () => { this.closePlayer(); this.onWorld?.(uid); }, false, '邀请 TA 进我的好友世界，或申请加入 TA 的世界');
       if (online && this.onHand) b(main, '牵手', () => { this.closePlayer(); this.onHand?.(uid); }, false, '邀请 TA 手拉手一起走');
       if (trade) b(main, '交易', () => { this.closePlayer(); this.onTrade?.(uid); });
+      if (this.onPvp) b(main, '对战', () => { this.closePlayer(); this.onPvp?.(uid); }, false, '邀请 TA 进行精灵对战（要在附近）');
       if (online && this.onDorm) {
         const dorm = group('宿舍');
         b(dorm, '邀请来宿舍', () => { this.closePlayer(); this.onDorm?.(uid, 'invite'); }, false, '邀请 TA 来我的宿舍做客（你得先在自己的宿舍里）');
@@ -240,6 +243,7 @@ export class SocialUi {
     else if (relation === 'blocked') b(row, '解除屏蔽', () => this.net.unblock(uid));
     else { b(row, '加好友', () => this.net.friendReq(uid), true); b(row, '屏蔽', () => { if (confirm(`屏蔽 ${name}？`)) this.net.block(uid); }); }
     if (trade) b(row, '交易', () => { this.closePlayer(); this.onTrade?.(uid); });
+    if (relation !== 'self' && relation !== 'blocked' && this.onPvp) b(row, '对战', () => { this.closePlayer(); this.onPvp?.(uid); }, false, '邀请 TA 进行精灵对战（要在附近）');
     if (relation !== 'self') b(row, '举报', report);
     return bar;
   }

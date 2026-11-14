@@ -107,6 +107,9 @@ export interface NetHandlers {
   monEnc?: (m: Extract<ServerMsg, { t: 'mon_enc' }>) => void;
   monEncEnd?: () => void;
   monBt?: (m: Extract<ServerMsg, { t: 'mon_bt' }>) => void;
+  pvpInvite?: (m: Extract<ServerMsg, { t: 'pvp_invite' }>) => void;
+  pvpState?: (m: Extract<ServerMsg, { t: 'pvp_state' }>) => void;
+  pvpEnd?: (m: Extract<ServerMsg, { t: 'pvp_end' }>) => void;
   /** 各只小猫对我的好感度（猫编号 → 点数） */
   cats?: (aff: Record<string, number>, beds?: number[], info?: Record<string, CatInfo>, gifts?: { today: number; total: number }) => void;
   /** 校园币余额（gain = 这次刚得到的数量）；商店买卖结果 */
@@ -339,6 +342,9 @@ export class NetClient implements ChatTransport {
       case 'mon_enc': this.handlers.monEnc?.(m); break;
       case 'mon_enc_end': this.handlers.monEncEnd?.(); break;
       case 'mon_bt': this.handlers.monBt?.(m); break;
+      case 'pvp_invite': this.handlers.pvpInvite?.(m); break;
+      case 'pvp_state': this.handlers.pvpState?.(m); break;
+      case 'pvp_end': this.handlers.pvpEnd?.(m); break;
       case 'cats': this.handlers.cats?.(m.aff, m.beds, m.info, m.gifts); break;
       case 'coins': this.handlers.coins?.(m.n, m.gain); break;
       case 'shop_result': this.handlers.shopResult?.(m.ok, m.msg); break;
@@ -482,6 +488,10 @@ export class NetClient implements ChatTransport {
   monFree(id: string) { this.tx({ t: 'mon_free', id }); }
   monReplace(id: string, move: string, drop: number) { this.tx({ t: 'mon_replace', id, move, drop }); }
   trainerBattle(id: string) { this.tx({ t: 'trainer_battle', id }); }
+  pvpInvite(uid: number) { this.tx({ t: 'pvp_invite', uid }); }
+  pvpReply(uid: number, accept: boolean) { this.tx({ t: 'pvp_reply', uid, accept }); }
+  pvpAct(bid: string, turn: number, a: { t: 'move'; i: number } | { t: 'swap'; i: number } | { t: 'run' }) { this.tx({ t: 'pvp_act', bid, turn, a }); }
+  pvpLeave() { this.tx({ t: 'pvp_leave' }); }
   catTame(id: number) { this.tx({ t: 'cat_tame', id }); }
   catBattle(id: number) { this.tx({ t: 'cat_battle', id }); }
   tpGo(id: string) { this.tx({ t: 'tp_go', id }); }

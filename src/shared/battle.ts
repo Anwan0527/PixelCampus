@@ -55,7 +55,10 @@ export type BEvent =
   /** 对方（训练家）换人：i = foeSquad 下标 */
   | { t: 'foeswap'; i: number };
 
-export interface Battle {
+/** 能力等级 / 状态只需要这两个容器；PvP 等其它战斗也能复用这些函数 */
+export interface FighterState { stages: Map<string, StageStages>; status: Map<string, StatusState[]> }
+
+export interface Battle extends FighterState {
   bid: string;
   turn: number;
   /** 对方队伍（野生精灵是长度 1 的特例；训练家有多只） */
@@ -113,13 +116,13 @@ export const foeAlive = (b: Battle): boolean => b.foeSquad.some((m) => m.hp > 0)
 
 
 /** 取某个精灵的能力等级（没有就建一份全 0 的） */
-export function stagesOf(b: Battle, mon: Mon): StageStages {
+export function stagesOf(b: FighterState, mon: Mon): StageStages {
   let s = b.stages.get(mon.id);
   if (!s) { s = zeroStages(); b.stages.set(mon.id, s); }
   return s;
 }
 /** 改一项能力等级，截断到 ±6；返回实际变化（0 = 已经到顶 / 触底） */
-export function bumpStage(b: Battle, mon: Mon, k: StageKey, d: number): { d: number; v: number } {
+export function bumpStage(b: FighterState, mon: Mon, k: StageKey, d: number): { d: number; v: number } {
   const s = stagesOf(b, mon);
   const before = s[k];
   const after = Math.max(-STAGE_MAX, Math.min(STAGE_MAX, before + d));
@@ -136,9 +139,9 @@ export function stagedStats(st: Stats, s: StageStages): Stats {
 const SLEEP_FREEZE: readonly StatusKind[] = ['sleep', 'freeze'];
 /** 取某个精灵的状态（没有就是 undefined） */
 /** 某个精灵的全部状态（没有就是空数组） */
-export const statusOf = (b: Battle, mon: Mon): StatusState[] => b.status.get(mon.id) ?? [];
+export const statusOf = (b: FighterState, mon: Mon): StatusState[] => b.status.get(mon.id) ?? [];
 /** 有没有某个状态 */
-export const hasStatus = (b: Battle, mon: Mon, k: StatusKind): boolean => statusOf(b, mon).some((s) => s.k === k);
+export const hasStatus = (b: FighterState, mon: Mon, k: StatusKind): boolean => statusOf(b, mon).some((s) => s.k === k);
 /** 单个状态的快捷读取（兼容旧测试 / 显示）：优先返回睡眠 / 冰冻，否则第一个 */
 export const oneStatus = (b: Battle, mon: Mon): StatusState | undefined => {
   const list = statusOf(b, mon);
@@ -149,7 +152,7 @@ export const oneStatus = (b: Battle, mon: Mon): StatusState | undefined => {
  * 施加状态：同种状态不叠加、不刷新；睡眠和冰冻互斥；成功返回 true。
  * 睡眠随机 1–3 回合（用注入的随机源）。
  */
-export function applyStatus(b: Battle, mon: Mon, k: StatusKind, rnd: Rng, n?: number): boolean {
+export function applyStatus(b: FighterState, mon: Mon, k: StatusKind, rnd: Rng, n?: number): boolean {
   const list = statusOf(b, mon);
   if (list.some((s) => s.k === k)) return false;                       // 同种：无效
   if (SLEEP_FREEZE.includes(k) && list.some((s) => SLEEP_FREEZE.includes(s.k))) return false; // 睡眠 / 冰冻互斥
@@ -158,7 +161,7 @@ export function applyStatus(b: Battle, mon: Mon, k: StatusKind, rnd: Rng, n?: nu
   return true;
 }
 /** 解除某个状态；返回是否真的解除了 */
-export function clearStatus(b: Battle, mon: Mon, k?: StatusKind): boolean {
+export function clearStatus(b: FighterState, mon: Mon, k?: StatusKind): boolean {
   const list = statusOf(b, mon);
   if (!list.length) return false;
   if (k === undefined) { b.status.delete(mon.id); return true; }
@@ -169,16 +172,16 @@ export function clearStatus(b: Battle, mon: Mon, k?: StatusKind): boolean {
 }
 
 /** 灼伤：物理攻击威力减半（作用在攻击方的攻击力上） */
-export const burnAtkMul = (b: Battle, mon: Mon): number => (hasStatus(b, mon, 'burn') ? 0.5 : 1);
+export const burnAtkMul = (b: FighterState, mon: Mon): number => (hasStatus(b, mon, 'burn') ? 0.5 : 1);
 /** 麻痹：速度减半 */
-export const paraSpeMul = (b: Battle, mon: Mon): number => (hasStatus(b, mon, 'paralysis') ? 0.5 : 1);
+export const paraSpeMul = (b: FighterState, mon: Mon): number => (hasStatus(b, mon, 'paralysis') ? 0.5 : 1);
 /** 睡眠 / 冰冻：完全不能行动 */
-export const cannotAct = (b: Battle, mon: Mon): StatusKind | null => {
+export const cannotAct = (b: FighterState, mon: Mon): StatusKind | null => {
   const list = statusOf(b, mon);
   return list.find((s) => SLEEP_FREEZE.includes(s.k))?.k ?? null;
 };
 /** 捕捉加成：睡眠 / 冰冻 ×2 */
-export const catchStatusMul = (b: Battle, mon: Mon): number => (statusOf(b, mon).some((s) => s.k === 'sleep' || s.k === 'freeze' || s.k === 'paralysis') ? 2 : 1);
+export const catchStatusMul = (b: FighterState, mon: Mon): number => (statusOf(b, mon).some((s) => s.k === 'sleep' || s.k === 'freeze' || s.k === 'paralysis') ? 2 : 1);
 
 const alive = (b: Battle) => b.squad.some((m) => m.hp > 0);
 
