@@ -126,6 +126,9 @@ export function decodeSnapshot(d: ArrayBuffer | Uint8Array): SnapEntry[] | null 
 export type PublicProfile = Pick<Profile, 'name' | 'gender' | 'look' | 'college' | 'major' | 'year' | 'motto' | 'cardNo' | 'app'>;
 export const toPublic = (p: Profile): PublicProfile => ({ name: p.name, gender: p.gender, look: p.look, college: p.college, major: p.major, year: p.year, motto: p.motto, cardNo: p.cardNo, ...(p.app ? { app: p.app } : {}) });
 
+/** PvP 一方的公开状态 */
+export interface PvpSideView { uid: number; name: string; lead: number; squad: { sp: string; lv: number; hp: number; max: number; sh?: 1 }[]; stages?: Record<string, number>; status?: string[] }
+
 export type ClientMsg =
   | { t: 'hello'; v: number; token: string; profile: Profile }
   /** ch 不写 = world；sys 不能发言 */
@@ -288,6 +291,11 @@ export type ClientMsg =
   | { t: 'mon_replace'; id: string; move: string; drop: number }
   /** 和训练家 NPC 切磋：id 见 shared/trainers.ts */
   | { t: 'trainer_battle'; id: string }
+  /** PvP：邀请对方对战 / 回应 / 每回合行动 / 离开 */
+  | { t: 'pvp_invite'; uid: number }
+  | { t: 'pvp_reply'; uid: number; accept: boolean }
+  | { t: 'pvp_act'; bid: string; turn: number; a: { t: 'move'; i: number } | { t: 'swap'; i: number } | { t: 'run' } }
+  | { t: 'pvp_leave' }
   /** 野外遭遇：迎战 / 走开；战斗行动（bid 与回合号必须是服务器当前的；捕捉的倍率由服务器按背包里的道具定） */
   /** 手拉手：邀请好友 / 接受（uid = 邀请我的人）/ 拒绝 / 松手 */
   | { t: 'hand_invite'; uid: number }
@@ -510,6 +518,10 @@ export type ServerMsg =
   /** 我的精灵：出战队伍、精灵背包、图鉴、是否领过初始精灵；starters = 可选的初始精灵（只在没领过时有用） */
   | { t: 'mon_data'; sq: Mon[]; bx: Mon[]; dex: Record<string, DexEntry>; starter: boolean; starters: string[]; /** 已经收服过的校园猫编号 */ tamed: number[]; /** 服务端算好的可学技能（精灵 id → 技能 id，按等级排序）；没有就不显示更换入口 */ learnable?: Record<string, string[]> }
   | { t: 'mon_result'; ok: boolean; msg: string }
+  /** PvP：收到邀请 / 战斗状态 / 结束 */
+  | { t: 'pvp_invite'; uid: number; name: string; ms: number }
+  | { t: 'pvp_state'; bid: string; turn: number; phase: 'choose' | 'over'; me: PvpSideView; foe: PvpSideView; ev: BEvent[]; result?: { winner: 'a' | 'b' | 'none'; reason: 'win' | 'lose' | 'fled' | 'timeout' } }
+  | { t: 'pvp_end'; bid: string; result: 'win' | 'lose' | 'fled' | 'timeout'; msg: string }
   | { t: 'tp_result'; ok: boolean; msg: string }
   /** 我的宿舍：楼栋（没绑定 = 没有）、今天还能不能改楼栋、空调、宝箱；options = 能选的楼栋（按社区分组） */
   | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 房间级别（1 中屋 / 2 大屋，没有 = 小屋）、墙纸地板（w、f 正在用的样式；ow、of 已拥有的样式，按位记） */ rm?: 1 | 2; sk?: { w?: number; f?: number; ow?: number; of?: number }; /** 我的宿舍收到的赞数 */ likes?: number; /** 养在宿舍的小猫编号 */ dc?: number[]; /** true = 刚做过一键还原、还能撤回 */ ru?: boolean; options: { group: string; names: string[] }[] }

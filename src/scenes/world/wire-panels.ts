@@ -21,6 +21,7 @@ import { Cat } from '@/entities/Cat';
 import { BackpackPanel } from '@/ui/BackpackPanel';
 import { MonPanel } from '@/ui/MonPanel';
 import { BattleUi } from '@/ui/BattleUi';
+import { PvpUi } from '@/ui/PvpUi';
 import { TeleportPanel } from '@/ui/TeleportPanel';
 import { setDormDefs } from '@/ui/DormPeek';
 import { DormPanel } from '@/ui/DormPanel';
@@ -132,6 +133,9 @@ export function wireBackpackShop(sc: WorldScene) {
 
 export function wireHand(sc: WorldScene) {
   sc.battleUi = new BattleUi(sc.net);
+  sc.pvpUi = new PvpUi(sc.net);
+  sc.pvpUi.onOpen = () => { sc.battleUi.close(); closeCat(sc); };
+  sc.socialUi.onPvp = (uid) => sc.net.pvpInvite(uid);
   sc.handUi = new HandUi(sc.net);
   sc.handUi.onNote = (title, text) => { sc.hud.banner(title, text); sc.net.system(`${title}：${text}`); };
   sc.handUi.onRole = (role, pid, side) => { const was = sc.holdPid; sc.holdPid = role === 'follow' ? pid : 0; sc.holdSide = side; sc.player.led = role === 'follow'; if (role !== 'none' && !(was && was === sc.holdPid)) sfx('pickup'); };
