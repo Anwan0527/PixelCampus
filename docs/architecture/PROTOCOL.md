@@ -1,7 +1,7 @@
 <!-- 本文件由 npm run protocol:doc 根据 src/shared/protocol.ts 生成，不要手改（改了协议后重新生成） -->
 # 联机协议索引
 
-> 共 161 种客户端消息、129 种服务器消息（另有位置上报 / 快照两种二进制帧，见 protocol.ts 的 encodePos / decodeSnapshot）。
+> 共 165 种客户端消息、132 种服务器消息（另有位置上报 / 快照两种二进制帧，见 protocol.ts 的 encodePos / decodeSnapshot）。
 > 字段定义以 [`src/shared/protocol.ts`](../../src/shared/protocol.ts) 为准；规则细节在 `src/shared/` 对应文件；每批功能的设计背景见 [MULTIPLAYER.md](../design/MULTIPLAYER.md) 与 [CHANGELOG.md](../CHANGELOG.md)。
 > 新增消息：在 protocol.ts 的联合类型里加一行并写注释 → `npm run protocol:doc` → 服务端在对应 handler 里登记。
 
@@ -232,7 +232,7 @@
 |---|---|---|
 | `hall_get` | → 服务器 | — |
 
-## 其他（23）
+## 其他（30）
 
 | 消息 | 方向 | 说明 |
 |---|---|---|
@@ -243,6 +243,10 @@
 | `pvp_reply` | → 服务器 | — |
 | `pvp_act` | → 服务器 | — |
 | `pvp_leave` | → 服务器 | — |
+| `boss_challenge` | → 服务器 | 世界 BOSS：发起挑战 / 回应 / 行动 / 离开 |
+| `boss_reply` | → 服务器 | — |
+| `boss_act` | → 服务器 | — |
+| `boss_leave` | → 服务器 | — |
 | `spawn` | → 客户端 | ttl = 这个玩家佩戴的称号 id（服务器认定的，没戴就没有这个字段） |
 | `despawn` | → 客户端 | — |
 | `channels` | → 客户端 | 我现在有哪些频道和各自的状态：登录、组队 / 退队、切世界、ch_set 之后都会发。world / near / sys 永远在；party 只在有队伍时才有 |
@@ -258,6 +262,9 @@
 | `pvp_invite` | → 客户端 | PvP：收到邀请 / 战斗状态 / 结束 |
 | `pvp_state` | → 客户端 | — |
 | `pvp_end` | → 客户端 | — |
+| `boss_invite` | → 客户端 | 世界 BOSS：邀请 / 战斗状态 / 结束 |
+| `boss_state` | → 客户端 | ready = 这一回合已提交；ev 里的玩家事件带 uid（谁被打中 / 谁出的招） |
+| `boss_end` | → 客户端 | — |
 | `restored` | → 客户端 | — |
 
 ## 骑行（7）
