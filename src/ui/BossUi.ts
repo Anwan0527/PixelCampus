@@ -210,16 +210,29 @@ export class BossUi {
       if (p.down) head.append(el('span', 'boss-p-tag down-tag', ' 倒下'));
       else if (p.ready) head.append(el('span', 'boss-p-tag', ' 已出招'));
       const squad = el('div', 'boss-p-squad');
-      p.squad.forEach((s, i) => {
-        const row = el('div', 'boss-p-mon' + (i === p.lead && !p.down ? ' on' : '') + (s.hp <= 0 ? ' out' : ''));
-        const types = speciesOf(s.sp)?.types ?? [];
-        row.append(
-          el('span', 'boss-p-n', monName(s.sp)),
-          el('span', 'boss-p-hp', hpText(s.hp, s.max)),
-          (() => { const ts = el('span', 'boss-p-t'); ts.append(...types.map(badge)); return ts; })(),
-        );
-        squad.append(row);
-      });
+      // 当前上场的那只放最显眼的位置：名字 + 等级 + 血条 + 数值
+      const lead = p.squad[p.lead];
+      if (lead) {
+        const top = el('div', 'boss-p-lead' + (p.down ? ' out' : ''));
+        const types = speciesOf(lead.sp)?.types ?? [];
+        const line = el('div', 'boss-p-lead-line');
+        line.append(el('span', 'boss-p-lead-n', `${monName(lead.sp)} Lv.${lead.lv}`), (() => { const ts = el('span', 'boss-p-t'); ts.append(...types.map(badge)); return ts; })());
+        const hp = el('div', 'boss-p-lead-hp');
+        hp.append(bar(lead.hp / Math.max(1, lead.max), 'hp mini'), el('span', 'boss-p-hp', hpText(lead.hp, lead.max)));
+        top.append(line, hp);
+        squad.append(top);
+      }
+      // 后备精灵只列「还有几只、各剩多少」，缩成一行
+      const rest = p.squad.map((s, i) => ({ s, i })).filter((x) => x.i !== p.lead);
+      if (rest.length) {
+        const row = el('div', 'boss-p-rest');
+        for (const { s } of rest) {
+          const chip = el('span', 'boss-p-chip' + (s.hp <= 0 ? ' out' : ''));
+          chip.append(el('span', 'boss-p-chip-n', monName(s.sp)), el('span', 'boss-p-chip-hp', `${s.hp}`));
+          row.append(chip);
+        }
+        squad.append(el('div', 'boss-p-rest-title', '后备'), row);
+      }
       card.append(head, squad);
       this.team.append(card);
     }
