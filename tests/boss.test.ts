@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import { teleportCell, teleportDef } from '@/shared/teleport';
+import { TILE } from '@/core/const';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { makeContent, makeRng, maxHp, newMon, type Content, type ElementPack, type Species } from '@/shared/mons';
 import {
-  BOSS_DEF, BOSS_SPOT, alivePlayers, bossMaxHp, bossSquad, bossStep, skipIdle, startBoss, submitBoss, type BossBattle,
+  BOSS_DEF, BOSS_POI, BOSS_SPOT, alivePlayers, bossMaxHp, bossSquad, bossStep, skipIdle, startBoss, submitBoss, type BossBattle,
 } from '@/shared/boss';
 
 const f = (p: string) => fileURLToPath(new URL(p, import.meta.url));
@@ -211,6 +213,19 @@ describe('入口坐标', () => {
     expect(BOSS_SPOT).toEqual({ x: 399, y: 193 });
     // 世界格坐标 = 原 5 m/格 × 2；入口离亭台中心（198.6..201.6, 97.4..101.0 的格）不超过 5 格
     expect(Math.hypot(BOSS_SPOT.x - 2 * 200, BOSS_SPOT.y - 2 * 99.2)).toBeLessThan(2 * 5);
+  });
+
+  it('传送落点与入口用同一套世界格坐标（别再写成原始 5 m/格，会把玩家传到别处）', () => {
+    expect(BOSS_POI).toEqual({ tx: BOSS_SPOT.x, ty: BOSS_SPOT.y });
+  });
+
+  it('传送点解析出来就落在入口上，玩家传过去立刻能挑战', () => {
+    const def = teleportDef('boss');
+    expect(def?.name).toContain('世界 BOSS');
+    const c = teleportCell(def!, { pois: [], buildings: [] });
+    expect(c).toEqual({ x: BOSS_SPOT.x, y: BOSS_SPOT.y });
+    // 服务端把人放在目标格中心；这个距离必须 < 挑战半径
+    expect(Math.hypot(0.5 * TILE, 0.5 * TILE)).toBeLessThan(BOSS_DEF.reachPx);
   });
 });
 

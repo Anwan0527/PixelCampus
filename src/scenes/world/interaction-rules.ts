@@ -39,13 +39,18 @@ export interface InteractInput {
   mateBike: { uid: number; name: string } | null; mateFar: { name: string } | null;
   bike: boolean; bin: number; binLeft: number; seat: { ref: unknown } | null; inStart: boolean;
   npc: { ref: unknown } | null;
-  /** 站在世界 BOSS 入口附近（可选，旧测试不传） */
-  boss?: boolean;
+  /** 站在世界 BOSS 入口附近（可选，旧测试不传）；world = 在公共世界（spec 只允许公共世界挑战） */
+  boss?: { worldOk: boolean };
 }
 
 export function decideInteraction(i: InteractInput): Decision {
   const act = (a: Act): Act | undefined => (i.press ? a : undefined);
-  if (i.boss && i.online) return { hint: 'E  挑战世界 BOSS：精工湖·青鳞', act: act({ t: 'panel', which: 'boss' }) };
+  if (i.boss) {
+    if (!i.online) return { hint: '连上服务器才能挑战世界 BOSS' };
+    // 只在公共世界能挑战（个人 / 好友世界下不给按键，免得按了才报错）
+    if (!i.boss.worldOk) return { hint: '世界 BOSS 在公共世界才能挑战（按 O 切换世界）' };
+    return { hint: 'E  挑战世界 BOSS：精工湖·青鳞', act: act({ t: 'panel', which: 'boss' }) };
+  }
   if (i.paxPid) return { hint: 'E  下车', act: act({ t: 'pax_leave' }) }; // 坐在队友车后座：只能下车
   if (i.runActive) return { hint: '校园跑进行中：沿跑道按顺序跑（点屏幕上的「放弃」退出）' };
   if (i.fishPhase === 'fight') return { hint: undefined };

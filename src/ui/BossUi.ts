@@ -44,8 +44,12 @@ export class BossUi {
   private menu = el('div', 'bt-menu');
   private st: St | null = null;
   private busy = false;
+  /** 已经提交这一回合（服务器要等所有人，期间界面上先显示「等队友」） */
+  private submitted = false;
   private mode: 'main' | 'moves' | 'swap' = 'main';
   private promptTimer = 0;
+  /** boss_end 可能在回放播到一半就到了：先存着，等这一回合播完再显示（否则「挑战失败」会跑到 BOSS 出招前面） */
+  private pendingEnd: End | null = null;
   private wrap = el('div', 'boss-wrap');
   /** 本地记一下当前在场（boss_state 里没有自己 = 已退出） */
   onOpen: (() => void) | null = null;
@@ -95,17 +99,30 @@ export class BossUi {
       this.say(`挑战开始！${m.boss.name} 出现了！`);
       this.renderAll(); return;
     }
+    // 回放还在播的时候收到「有人已出招」的轻量状态：只更新 ready 标记，别打断动画、也别换掉整份状态
+    if (this.busy && !m.ev.length && m.turn === this.st?.turn) {
+      this.st = { ...this.st!, players: m.players };
+      this.renderTeam();
+      return;
+    }
     // 有新回放：先按事件播放，再落到新状态
     if (m.ev.length) {
       this.busy = true; this.renderMenu();
       await this.play(m, m.ev);
       if (this.st?.bid !== m.bid) return; // 播放期间对方结束 / 换场
     }
-    this.st = m; this.busy = false; this.mode = 'main';
+    this.st = m; this.busy = false; this.submitted = false; this.mode = 'main';
     this.renderAll();
+    if (this.pendingEnd) { const e = this.pendingEnd; this.pendingEnd = null; this.showEnd(e); }
   }
 
   private onEnd(m: End) {
+    // 这一回合还在播（boss_state 的回放没播完）就先排队，等 onState 播完再显示
+    if (this.busy) { this.pendingEnd = m; return; }
+    this.showEnd(m);
+  }
+
+  private showEnd(m: End) {
     sfx(m.result === 'win' ? 'achieve' : 'fail');
     this.say(m.result === 'win' ? `挑战成功！${m.msg}` : m.result === 'lose' ? `挑战失败……${m.msg}` : m.msg || '你离开了挑战。');
     if (m.reward) this.say(`获得 ${m.reward.coins} 校园币、${itemNames(m.reward.items)}`);
@@ -155,6 +172,7 @@ export class BossUi {
         case 'guard': this.say(`${foe(e.uid)} 守住了！`); await sleep(300); break;
         case 'guardfail': this.say(`${foe(e.uid)} 没能守住……`); await sleep(300); break;
         case 'escape': this.say(`${this.who(e.uid).name} 离开了战斗`); await sleep(320); break;
+        case 'bossout': this.say(`${this.who(e.uid).name} 的精灵都倒下了，退出战斗`); this.renderAll(); await sleep(500); break;
         case 'bossphase':
           this.say(`—— ${bossName} 进入了${e.label}！攻击提升了 ——`);
           sfx('achieve'); this.renderAll(); await sleep(900); break;
@@ -213,11 +231,11 @@ export class BossUi {
   }
 
   private act(a: { t: 'move'; i: number } | { t: 'swap'; i: number }) {
-    if (!this.st || this.busy) return;
-    this.busy = true; this.renderMenu();
+    if (!this.st || this.busy || this.submitted) return;
+    this.busy = true; this.submitted = true; this.renderMenu();
     this.net.bossAct(this.st.bid, this.st.turn, a);
-    // 服务器迟迟不回（断线 / 超时）：8 秒后放开按钮，免得卡死
-    window.setTimeout(() => { if (this.busy && this.isOpen) { this.busy = false; this.renderMenu(); } }, 8000);
+    // 服务器要等所有人都出招才会回 state：先显示「等队友」；8 秒还没动静就放开按钮，免得卡死
+    window.setTimeout(() => { if (this.busy && this.isOpen) { this.busy = false; this.submitted = false; this.renderMenu(); } }, 8000);
   }
 
   private renderMenu() {
@@ -227,7 +245,7 @@ export class BossUi {
     if (!me) { this.menu.append(this.btn('关闭', () => this.close(), 'btn primary')); return; }
     if (m.phase === 'over') { this.menu.append(this.btn('离开', () => this.close(), 'btn primary')); return; }
     if (me.down) { this.menu.append(el('div', 'mon-sub', '你的精灵都倒下了，等队友打完吧')); return; }
-    if (m.phase === 'choose' && me.ready && !this.busy) {
+    if (m.phase === 'choose' && (this.submitted || me.ready)) {
       this.menu.append(el('div', 'mon-sub', '这一回合已经出招，等队友……'));
       return;
     }
@@ -266,7 +284,7 @@ export class BossUi {
   close(tellServer = true) {
     this.root.classList.add('hidden');
     const had = !!this.st;
-    this.st = null; this.busy = false; this.mode = 'main';
+    this.st = null; this.busy = false; this.submitted = false; this.mode = 'main'; this.pendingEnd = null;
     if (tellServer && had) this.net.bossLeave();
   }
 }

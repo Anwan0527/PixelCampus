@@ -52,8 +52,8 @@ export const BOSS_DEF = {
  */
 export const BOSS_SPOT = { x: 399, y: 193 } as const; // = (199.5, 96.5) 原 5 m/格 × 2
 
-/** 传送面板里的「世界 BOSS · 精工湖」落点（格坐标；= BOSS_SPOT / 2） */
-export const BOSS_POI = { tx: 199.5, ty: 96.5 } as const;
+/** 传送面板里的「湖心岛 · 世界 BOSS」落点（**世界格**坐标 = 原始 5 m/格 × geo 的 scale；其它传送点也都用世界格） */
+export const BOSS_POI = { tx: 399, ty: 193 } as const;
 
 /**
  * 世界 BOSS 的战斗事件：在通用 `BEvent` 上附带 uid（这条事件是哪个玩家的精灵/行动）。
@@ -224,12 +224,13 @@ export function bossStep(ct: Content, bb: BossBattle, now = 0): { ok: boolean; e
   }
 
   // 倒下处理：换下一只 or 标记 down
+  // 注意：倒下那只的 faint 事件已经在 BOSS 反击里发过了，这里不再重复发（否则界面会喊两次「倒下了」）
   for (const p of bb.players) {
     if (p.down) continue;
     if (leadMon(p).hp > 0) continue;
     const next = p.squad.findIndex((m) => m.hp > 0);
     if (next >= 0) { p.lead = next; ev.push({ t: 'swap', i: next, uid: p.uid }); }
-    else { p.down = true; p.ready = false; ev.push({ t: 'faint', side: 'me', uid: p.uid }); }
+    else { p.down = true; p.ready = false; ev.push({ t: 'bossout', uid: p.uid }); }
   }
 
   // 胜负
