@@ -38,7 +38,7 @@ export interface InteractInput {
   egg: { ref: unknown; hint: string; action?: string } | null;
   mateBike: { uid: number; name: string } | null; mateFar: { name: string } | null;
   bike: boolean; bin: number; binLeft: number; seat: { ref: unknown } | null; inStart: boolean;
-  npc: { ref: unknown } | null;
+  npc: { ref: unknown; name?: string; trainer?: boolean } | null;
   /** 站在世界 BOSS 入口附近（可选，旧测试不传）；world = 在公共世界（spec 只允许公共世界挑战） */
   boss?: { worldOk: boolean };
 }
@@ -91,6 +91,6 @@ export function decideInteraction(i: InteractInput): Decision {
   if (i.seat) return { hint: 'E  坐下', act: act({ t: 'sit', ref: i.seat.ref }) };
   if (i.online && i.inStart) return { hint: 'E  校园跑：东区田径场', act: act({ t: 'run_open' }) };
   if (i.fishSpot) return cast();
-  if (i.npc) return { hint: 'E  和同学聊聊', act: act({ t: 'talk', ref: i.npc.ref }) };
+  if (i.npc) return { hint: i.npc.trainer ? `E  挑战训练家：${i.npc.name ?? ''}` : 'E  和同学聊聊', act: act({ t: 'talk', ref: i.npc.ref }) };
   return { hint: null };
 }

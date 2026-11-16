@@ -201,3 +201,8 @@
   .boss-team { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .boss-p { font-size: 12px; padding: 3px 6px; }
 }
+
+/* 传送面板：NPC 挑战列表（入口点开才展开） */
+.tp-npc-list { margin-top: 6px; }
+.tp-npc-place { font-size: 11px; line-height: 14px; opacity: .7; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 420px) { .tp-npc-place { font-size: 10px; } }

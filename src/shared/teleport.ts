@@ -5,6 +5,7 @@
  */
 import { FARM_POI } from './farming';
 import { BOSS_POI } from './boss';
+import { TRAINERS } from './trainers';
 export type TeleportGroup = '大门' | '教学' | '食堂' | '宿舍' | '湖边' | '其他';
 /** 多层建筑的某一层：传送面板里点它，服务器照常把人传到建筑门口，传到之后客户端自动进入这一层的室内（interior = 室内 id） */
 export interface TeleportFloor { label: string; interior: string }
@@ -18,6 +19,8 @@ export interface TeleportDef {
   building?: string;
   /** 直接给的格坐标（地图里没有对应 POI 的地点用，如湖心岛） */
   cell?: { tx: number; ty: number };
+  /** 一句话说明（NPC 挑战列表里显示「在哪儿」） */
+  desc?: string;
 }
 
 const floorsOf = (prefix: string, n: number): TeleportFloor[] => Array.from({ length: n }, (_, i) => ({ label: `${i + 1}F`, interior: `${prefix}-f${i + 1}` }));
@@ -48,7 +51,16 @@ export const TELEPORT_GROUPS: readonly TeleportGroup[] = ['大门', '教学', '�
 /** 传送冷却（毫秒，每个人） */
 export const TP_COOLDOWN_MS = 8000;
 
-export const teleportDef = (id: unknown): TeleportDef | undefined => (typeof id === 'string' ? TELEPORTS.find((t) => t.id === id) : undefined);
+/**
+ * NPC 挑战：三个训练家的传送点，直接由 `TRAINERS` 生成——以后加训练家，这里自动多一条，
+ * 传送面板的「NPC 挑战」列表也跟着多一条。坐标和训练家 NPC 一样：原 5 m/格 × 2。
+ */
+export const NPC_TELEPORTS: readonly TeleportDef[] = TRAINERS.map((t) => ({
+  id: `npc-${t.id}`, name: t.name, group: '其他', desc: t.place, cell: { tx: t.tx * 2, ty: t.ty * 2 },
+}));
+
+export const teleportDef = (id: unknown): TeleportDef | undefined =>
+  typeof id === 'string' ? (TELEPORTS.find((t) => t.id === id) ?? NPC_TELEPORTS.find((t) => t.id === id)) : undefined;
 
 export interface TeleportCtx {
   pois: readonly { id: string; x: number; y: number }[];

@@ -86,7 +86,7 @@ export function gatherInteraction(sc: WorldScene): InteractInput {
     egg: egg ? { ref: egg, hint: egg.hint, action: egg.action } : null,
     mateBike: mateBike ? { uid: (mateBike as { uid: number }).uid, name: (mateBike as { info: { name: string } }).info.name } : null,
     mateFar: mateFar ? { name: (mateFar as { info: { name: string } }).info.name } : null,
-    boss: bossSpot(sc) ? { worldOk: sc.worldUi.state?.kind === 'public' } : undefined, bike: !!bike, bin, binLeft: sc.binLeft, seat: seat ? { ref: seat } : null, inStart: online && inStartZone(p.x, p.y), npc: npc ? { ref: npc } : null,
+    boss: bossSpot(sc) ? { worldOk: sc.worldUi.state?.kind === 'public' } : undefined, bike: !!bike, bin, binLeft: sc.binLeft, seat: seat ? { ref: seat } : null, inStart: online && inStartZone(p.x, p.y), npc: npc ? { ref: npc, name: npc.trainer?.name ?? npc.name, trainer: !!npc.trainer } : null,
   };
 }
 
