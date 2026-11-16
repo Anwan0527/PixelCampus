@@ -32,6 +32,7 @@ import type { FarmLogEntry, FarmOp, FarmPlot } from './farming';
 import type { ChannelId, ChannelState } from './channels';
 import type { Mon } from './mons';
 import type { BEvent } from './battle';
+import type { BossEvent } from './boss';
 import type { DexEntry } from './monbox';
 
 /**
@@ -296,6 +297,11 @@ export type ClientMsg =
   | { t: 'pvp_reply'; uid: number; accept: boolean }
   | { t: 'pvp_act'; bid: string; turn: number; a: { t: 'move'; i: number } | { t: 'swap'; i: number } | { t: 'run' } }
   | { t: 'pvp_leave' }
+  /** 世界 BOSS：发起挑战 / 回应 / 行动 / 离开 */
+  | { t: 'boss_challenge' }
+  | { t: 'boss_reply'; uid: number; accept: boolean }
+  | { t: 'boss_act'; bid: string; turn: number; a: { t: 'move'; i: number } | { t: 'swap'; i: number } }
+  | { t: 'boss_leave' }
   /** 野外遭遇：迎战 / 走开；战斗行动（bid 与回合号必须是服务器当前的；捕捉的倍率由服务器按背包里的道具定） */
   /** 手拉手：邀请好友 / 接受（uid = 邀请我的人）/ 拒绝 / 松手 */
   | { t: 'hand_invite'; uid: number }
@@ -522,6 +528,11 @@ export type ServerMsg =
   | { t: 'pvp_invite'; uid: number; name: string; ms: number }
   | { t: 'pvp_state'; bid: string; turn: number; phase: 'choose' | 'over'; me: PvpSideView; foe: PvpSideView; ev: BEvent[]; result?: { winner: 'a' | 'b' | 'none'; reason: 'win' | 'lose' | 'fled' | 'timeout' } }
   | { t: 'pvp_end'; bid: string; result: 'win' | 'lose' | 'fled' | 'timeout'; msg: string }
+  /** 世界 BOSS：邀请 / 战斗状态 / 结束 */
+  | { t: 'boss_invite'; uid: number; name: string; ms: number }
+  /** ready = 这一回合已提交；ev 里的玩家事件带 uid（谁被打中 / 谁出的招） */
+  | { t: 'boss_state'; bid: string; turn: number; phase: 'choose' | 'over'; boss: { name: string; sp: string; lv: number; hp: number; max: number; stage: number }; players: { uid: number; name: string; lead: number; down: boolean; ready: boolean; squad: { sp: string; lv: number; hp: number; max: number; mv?: { id: string; pp: number }[] }[] }[]; ev: BossEvent[]; result?: { winner: 'players' | 'boss'; reason: 'faint' | 'timeout' | 'left' } }
+  | { t: 'boss_end'; bid: string; result: 'win' | 'lose' | 'left'; msg: string; reward?: { coins: number; items?: { id: string; n: number }[] } }
   | { t: 'tp_result'; ok: boolean; msg: string }
   /** 我的宿舍：楼栋（没绑定 = 没有）、今天还能不能改楼栋、空调、宝箱；options = 能选的楼栋（按社区分组） */
   | { t: 'dorm_data'; /** 门牌（房主起的名字，没起过就没有） */ title?: string; b?: string; canChange: boolean; ac: number; ch: Record<string, number>; /** 浴缸里养的鱼（只有房主收到） */ bt?: Record<string, number>; /** 浴缸概览（闪光用） */ bv?: BathView; /** 家具摆放（装修过才有；没有 = 默认布局） */ lay?: Placed[]; /** 1 = 不在资料卡上展示 */ hid?: boolean; /** 房间级别（1 中屋 / 2 大屋，没有 = 小屋）、墙纸地板（w、f 正在用的样式；ow、of 已拥有的样式，按位记） */ rm?: 1 | 2; sk?: { w?: number; f?: number; ow?: number; of?: number }; /** 我的宿舍收到的赞数 */ likes?: number; /** 养在宿舍的小猫编号 */ dc?: number[]; /** true = 刚做过一键还原、还能撤回 */ ru?: boolean; options: { group: string; names: string[] }[] }

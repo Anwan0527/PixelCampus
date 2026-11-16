@@ -26,6 +26,8 @@ export interface MonSave {
   ct?: number[];
   /** 打败过的训练家 id（首次胜利发奖励；只增不减） */
   trainers?: string[];
+  /** 世界 BOSS：是否首杀过、累计击杀次数 */
+  boss?: { first: boolean; kills: number };
 }
 export interface OpResult { ok: boolean; msg: string }
 
@@ -62,6 +64,7 @@ export function cleanMonSave(raw: unknown, ct: Content): MonSave | undefined {
   if (Array.isArray(r.ct)) { const ct = [...new Set(r.ct.filter((c): c is number => Number.isInteger(c) && c >= 0 && c < 256))].slice(0, 64); if (ct.length) s.ct = ct; }
   if (r.rt !== undefined) { const rt = int(r.rt, 0, 8.64e15, 0); if (rt) s.rt = rt; }
   if (Array.isArray(r.trainers)) { const tr = [...new Set(r.trainers.filter((x): x is string => typeof x === 'string' && /^[a-z0-9]{1,16}$/.test(x)))].slice(0, 32); if (tr.length) s.trainers = tr; }
+  if (r.boss && typeof r.boss === 'object') { const first = (r.boss as { first?: unknown }).first === true; const kills = int((r.boss as { kills?: unknown }).kills, 0, 1e6, 0); if (first || kills) s.boss = { first, kills }; }
   if (r.dm === 1) s.dm = 1;
   return s;
 }
