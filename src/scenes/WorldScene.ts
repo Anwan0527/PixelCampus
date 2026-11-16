@@ -30,6 +30,7 @@ import { BackpackPanel } from '@/ui/BackpackPanel';
 import { MonPanel } from '@/ui/MonPanel';
 import { BattleUi } from '@/ui/BattleUi';
 import { PvpUi } from '@/ui/PvpUi';
+import { BossUi } from '@/ui/BossUi';
 import { TeleportPanel } from '@/ui/TeleportPanel';
 import { FarmPanel } from '@/ui/FarmPanel';
 import { DormPanel } from '@/ui/DormPanel';
@@ -143,6 +144,7 @@ export class WorldScene extends Phaser.Scene {
   monUi!: MonPanel;
   battleUi!: BattleUi;
   pvpUi!: PvpUi;
+  bossUi!: BossUi;
   tpUi!: TeleportPanel;
   farmUi!: FarmPanel;
   dormUi!: DormPanel;
@@ -283,7 +285,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /** 有没有面板/弹窗盖在游戏上（有的话点击不该穿透到场景） */
-  anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.placeUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.calUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.settingsUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.pvpUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
+  anyOverlay() { return this.profileUi.isOpen || this.editing || this.boardUi.isOpen || this.shopUi.isOpen || this.wallUi.isOpen || this.placeUi.isOpen || this.noticeUi.isOpen || this.socialUi.isOpen || this.backpackUi.isOpen || this.boxUi.isOpen || this.codexUi.isOpen || this.achUi.isOpen || this.backupUi.isOpen || this.catUi.isOpen || this.titleUi.isOpen || this.questUi.isOpen || this.calUi.isOpen || this.runUi.isOpen || this.partyUi.isOpen || this.adminUi.isOpen || this.settingsUi.isOpen || this.photo.isOpen || this.hallUi.isOpen || this.monUi.isOpen || this.tpUi.isOpen || this.worldUi.isOpen || this.dormUi.anyOpen || this.battleUi.isOpen || this.pvpUi.isOpen || this.bossUi.isOpen || this.tradeUi.isOpen || this.hud.dialogOpen; }
 
   /** 点中的位置（世界坐标）有没有别的玩家：有就弹出资料卡；多个重叠时取最靠前（y 最大）的 */
   pickPlayerAt(wx: number, wy: number) {

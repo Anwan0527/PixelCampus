@@ -20,6 +20,7 @@ import { castTarget } from '@/shared/fishing';
 import { pickBait, pickRod } from '@/shared/economy';
 import { itemDef } from '@/shared/items';
 import { BIRD_FEED_ITEM } from '@/shared/waterfowl';
+import { BOSS_DEF, BOSS_SPOT } from '@/shared/boss';
 import { inStartZone } from '@/shared/run';
 import { eggAdvance } from '@/world/egg';
 import { sfx } from '@/audio/sfx';
@@ -85,7 +86,7 @@ export function gatherInteraction(sc: WorldScene): InteractInput {
     egg: egg ? { ref: egg, hint: egg.hint, action: egg.action } : null,
     mateBike: mateBike ? { uid: (mateBike as { uid: number }).uid, name: (mateBike as { info: { name: string } }).info.name } : null,
     mateFar: mateFar ? { name: (mateFar as { info: { name: string } }).info.name } : null,
-    bike: !!bike, bin, binLeft: sc.binLeft, seat: seat ? { ref: seat } : null, inStart: online && inStartZone(p.x, p.y), npc: npc ? { ref: npc } : null,
+    boss: !!bossSpot(sc), bike: !!bike, bin, binLeft: sc.binLeft, seat: seat ? { ref: seat } : null, inStart: online && inStartZone(p.x, p.y), npc: npc ? { ref: npc } : null,
   };
 }
 
@@ -104,7 +105,7 @@ export function runAct(sc: WorldScene, a: Act) {
     case 'dorm_enter': sc.net.dormEnter(); break;
     case 'enter_interior': enterInterior(sc, a.ref as BuildingOut); break;
     case 'dialog': sc.hud.openDialog(a.title, a.text); break;
-    case 'panel': if (a.which === 'board') sc.boardUi.open(); else if (a.which === 'shop') sc.shopUi.open(); else if (a.which === 'fishshop') sc.shopUi.open('stall'); else if (a.which === 'portal') { /* 大树洞是彩蛋：按 E 直接回我的农场（菜单传送里不列它）；第一次钻先放一小段剧情 */
+    case 'panel': if (a.which === 'boss') { if (sc.net.status !== 'online') sc.net.system('连上服务器才能挑战世界 BOSS'); else sc.net.bossChallenge(); } else if (a.which === 'board') sc.boardUi.open(); else if (a.which === 'shop') sc.shopUi.open(); else if (a.which === 'fishshop') sc.shopUi.open('stall'); else if (a.which === 'portal') { /* 大树洞是彩蛋：按 E 直接回我的农场（菜单传送里不列它）；第一次钻先放一小段剧情 */
       let seen = true; try { seen = !!localStorage.getItem('pixelcampus.farmTreeStory'); } catch { /* 存储不可用就当看过了，直接进 */ }
       if (seen) sc.tpUi.goFarm(true);
       else {
@@ -156,6 +157,17 @@ function openTrainerAsk(sc: WorldScene, npc: Npc) {
   yes.addEventListener('click', (e) => { e.stopPropagation(); sc.hud.closeDialog(); sc.net.trainerBattle(t.id); });
   no.addEventListener('click', (e) => { e.stopPropagation(); sc.hud.closeDialog(); });
   foot.append(yes, no);
+}
+
+/**
+ * 世界 BOSS 入口：精工湖湖心岛的亭台旁（栈桥从东岸通到这儿）。
+ * `BOSS_SPOT` 在 `src/shared/boss.ts`，和服务器校验用的是同一个坐标与半径。
+ */
+function bossSpot(sc: WorldScene) {
+  const p = sc.player;
+  const tx = BOSS_SPOT.x * TILE, ty = BOSS_SPOT.y * TILE;
+  if (Math.hypot(p.x - tx, p.y - ty) > BOSS_DEF.reachPx) return null;
+  return { x: tx, y: ty };
 }
 
 export function updateInteraction(sc: WorldScene) {

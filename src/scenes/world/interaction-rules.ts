@@ -20,7 +20,7 @@ export type Act =
   | { t: 'pax_leave' } | { t: 'fish_reel' } | { t: 'fish_cancel' } | { t: 'stand' } | { t: 'dismount' } | { t: 'mount' }
   | { t: 'bird_feed'; id: number } | { t: 'cast' } | { t: 'open_cat'; ref: unknown }
   | { t: 'dorm_enter' } | { t: 'enter_interior'; ref: unknown } | { t: 'dialog'; title: string; text: string | string[] }
-  | { t: 'panel'; which: 'board' | 'shop' | 'fishshop' | 'wall' | 'portal' } | { t: 'egg'; ref: unknown }
+  | { t: 'panel'; which: 'board' | 'shop' | 'fishshop' | 'wall' | 'portal' | 'boss' } | { t: 'egg'; ref: unknown }
   | { t: 'pax_join'; uid: number } | { t: 'bin'; idx: number } | { t: 'sit'; ref: unknown } | { t: 'run_open' } | { t: 'talk'; ref: unknown };
 /** hint：undefined = 这一帧不动提示；null = 清掉提示；string = 显示这句。act 只有按了 E / 空格 / 触屏互动才有 */
 export interface Decision { hint: string | null | undefined; act?: Act }
@@ -39,10 +39,13 @@ export interface InteractInput {
   mateBike: { uid: number; name: string } | null; mateFar: { name: string } | null;
   bike: boolean; bin: number; binLeft: number; seat: { ref: unknown } | null; inStart: boolean;
   npc: { ref: unknown } | null;
+  /** 站在世界 BOSS 入口附近（可选，旧测试不传） */
+  boss?: boolean;
 }
 
 export function decideInteraction(i: InteractInput): Decision {
   const act = (a: Act): Act | undefined => (i.press ? a : undefined);
+  if (i.boss && i.online) return { hint: 'E  挑战世界 BOSS：精工湖·青鳞', act: act({ t: 'panel', which: 'boss' }) };
   if (i.paxPid) return { hint: 'E  下车', act: act({ t: 'pax_leave' }) }; // 坐在队友车后座：只能下车
   if (i.runActive) return { hint: '校园跑进行中：沿跑道按顺序跑（点屏幕上的「放弃」退出）' };
   if (i.fishPhase === 'fight') return { hint: undefined };
