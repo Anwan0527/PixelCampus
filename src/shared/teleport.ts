@@ -4,6 +4,7 @@
  * 服务器再在目标附近找一个真能站的位置，并限制冷却与状态（骑车/坐着/钓鱼/战斗中不能传）。
  */
 import { FARM_POI } from './farming';
+import { BOSS_POI } from './boss';
 export type TeleportGroup = '大门' | '教学' | '食堂' | '宿舍' | '湖边' | '其他';
 /** 多层建筑的某一层：传送面板里点它，服务器照常把人传到建筑门口，传到之后客户端自动进入这一层的室内（interior = 室内 id） */
 export interface TeleportFloor { label: string; interior: string }
@@ -15,6 +16,8 @@ export interface TeleportDef {
   poi?: string;
   /** 建筑名前缀：取同名里占地最大的一栋，目标是它南面（门前）约 2.5 格 */
   building?: string;
+  /** 直接给的格坐标（地图里没有对应 POI 的地点用，如湖心岛） */
+  cell?: { tx: number; ty: number };
 }
 
 const floorsOf = (prefix: string, n: number): TeleportFloor[] => Array.from({ length: n }, (_, i) => ({ label: `${i + 1}F`, interior: `${prefix}-f${i + 1}` }));
@@ -35,6 +38,8 @@ export const TELEPORTS: readonly TeleportDef[] = [
   { id: 'dorm-4', name: '四社区', group: '宿舍', poi: 'dorm-4' },
   { id: 'intl', name: '留学生公寓', group: '宿舍', building: '留学生公寓' },
   { id: 'fish-stall', name: '精工湖钓具摊', group: '湖边', poi: 'fish-stall' },
+  // 世界 BOSS 入口在湖心岛上，没有对应 POI（地图数据里不加，省得地图编译要重跑）：直接给格坐标
+  { id: 'boss', name: '湖心岛 · 世界 BOSS', group: '湖边', cell: BOSS_POI },
   // 我的农场：传到北山林地后客户端淡出进入私人农场室内（和宿舍一样的独立空间，见 docs/feature/20261112-farming/）
   { id: 'farm', name: '我的农场', group: '其他', poi: FARM_POI },
 ];
@@ -51,6 +56,7 @@ export interface TeleportCtx {
 }
 /** 解析成格坐标（可能是小数）；世界里找不到这个地标/建筑返回 null */
 export function teleportCell(def: TeleportDef, c: TeleportCtx): { x: number; y: number } | null {
+  if (def.cell) return { x: def.cell.tx, y: def.cell.ty };
   if (def.poi) { const p = c.pois.find((q) => q.id === def.poi); return p ? { x: p.x, y: p.y } : null; }
   if (def.building) {
     let best: TeleportCtx['buildings'][number] | undefined;
