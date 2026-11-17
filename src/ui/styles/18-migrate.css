@@ -1,6 +1,6 @@
 /* 老域名上的「搬到新网址」提示条 / 搬家页（MigrateBanner.ts，docs/feature/20261117-domain-migration） */
-.migrate-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: min(520px, calc(100vw - 24px)); pointer-events: auto; z-index: 50; }
-.migrate-overlay { display: flex; align-items: center; justify-content: center; pointer-events: auto; z-index: 60; }
+.migrate-bar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: min(520px, calc(100vw - 24px)); pointer-events: auto; z-index: 15; } /* 比面板（.screen 是 20）低：点「查看 / 保存我的身份码」打开的备份面板要盖在提示条上面 */
+.migrate-overlay { display: flex; align-items: center; justify-content: center; pointer-events: auto; z-index: 19; }
 .migrate-card { background: var(--paper); border: 4px solid var(--wood); box-shadow: inset 0 0 0 3px var(--wood-l), 0 0 0 4px var(--wood-d), 3px 7px 0 4px rgba(0,0,0,.28); padding: 10px 14px; color: var(--ink); box-sizing: border-box; max-width: 520px; }
 .migrate-title { font-size: 17px; font-weight: bold; }
 .migrate-text { font-size: 13px; margin: 4px 0 8px; line-height: 1.5; }
@@ -8,3 +8,4 @@
 .migrate-msg { font-size: 12px; margin-top: 6px; min-height: 0; }
 .migrate-msg.bad { color: #b3261e; }
 body.touch .migrate-bar { top: calc(6px + env(safe-area-inset-top)); }
+.migrate-tip { font-size: 12px; margin-top: 8px; padding-top: 6px; border-top: 1px dotted rgba(107,58,30,.4); line-height: 1.5; opacity: .85; }

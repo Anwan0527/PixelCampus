@@ -2,6 +2,7 @@ import { makeMigrationTicket } from '@/net/migrate';
 import { peekToken } from '@/core/profileStore';
 import { NEW_HOST, NEW_URL, OLD_HOST_GATE, migrateUrl, shouldOfferMigration } from '@/shared/migrate';
 import { ui } from './actions';
+import { BackupPanel } from './BackupPanel';
 
 /**
  * 老域名上的「搬到新网址」入口（方案见 docs/feature/20261117-domain-migration/spec.md）：
@@ -47,11 +48,15 @@ function card(onClose?: () => void): HTMLElement {
     if (err) { msg.textContent = `${err}（也可以在「备份」里用备份码找回）`; msg.classList.add('bad'); go.disabled = false; } else msg.textContent = '正在带你去新网址…';
   });
   const row = el('div', 'migrate-row'); row.append(go);
+  const keep = el('button', 'btn', '查看 / 保存我的身份码'); keep.type = 'button';
+  keep.addEventListener('click', () => new BackupPanel().open('show'));
+  row.append(keep);
   if (onClose) { const x = el('button', 'btn', '以后再说'); x.type = 'button'; x.addEventListener('click', onClose); row.append(x); }
   box.append(
     el('div', 'migrate-title', '🏠 我们有新家啦！'),
     el('div', 'migrate-text', `游戏已经搬到备案的新网址 ${NEW_HOST}。点「一键搬家」，带着你现在的角色、好友和背包过去——之后新老网址登录的都是你自己。别把搬家后跳转的链接发给别人。`),
     row, msg,
+    el('div', 'migrate-tip', '💾 也可以自己把「身份码」保存好：以后在新网址的新生报到页点「已有备份码？恢复身份」，粘贴身份码就能找回你的角色。身份码要自己收好，别发给别人。新网址是备案后的长期地址，建议收藏、长期使用。'),
   );
   return box;
 }
