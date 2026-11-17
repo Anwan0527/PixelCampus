@@ -78,6 +78,7 @@ export class BackupPanel {
   private renderRestore() {
     const b = this.body;
     b.append(el('div', 'create-sub', '在这里输入之前保存的备份码，找回你的身份。大小写、空格、横线都不用管，直接粘贴就行。'));
+    b.append(el('div', 'create-sub', '从老网址（exist.qd.je）搬到新网址（huepixel.top）：不用抄备份码，在老网址的菜单里点「搬到新网址」一键搬家就行。'));
     const input = el('textarea', 'backup-code shown'); input.rows = 3; input.placeholder = 'PX-XXXXX-XXXXX-XXXXX-…'; input.spellcheck = false; input.autocomplete = 'off';
     const msg = el('div', 'board-msg');
     const go = el('button', 'btn primary', '恢复身份'); go.type = 'button';

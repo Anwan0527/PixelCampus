@@ -351,7 +351,10 @@ export type ClientMsg =
   | { t: 'mon_go'; accept: boolean }
   | { t: 'mon_act'; bid: string; turn: number; a: { t: 'move'; i: number } | { t: 'ball' } | { t: 'swap'; i: number } | { t: 'run' } }
   /** 身份恢复：新浏览器里输入备份码解出的 token，在 hello 之前发；服务器只回资料，不建立会话 */
-  | { t: 'restore'; token: string };
+  | { t: 'restore'; token: string }
+  /** 搬家（老域名 → 备案新域名，hello 之前的临时连接）：用 token 换一张一次性搬家券；新域名凭券换回 token（见 docs/feature/20261117-domain-migration） */
+  | { t: 'migrate_make'; token: string }
+  | { t: 'migrate_claim'; ticket: string };
 
 export type ServerMsg =
   | { t: 'welcome'; id: number; uid: number; x: number; y: number; online: number }
@@ -560,7 +563,11 @@ export type ServerMsg =
   | { t: 'mon_enc_end' }
   /** 战斗状态（结算后的权威状态 + 这一回合发生的事件，客户端按事件播放动画）；foe 只含对手公开的信息 */
   | { t: 'mon_bt'; bid: string; turn: number; phase: 'choose' | 'swap' | 'over'; result?: 'win' | 'lose' | 'caught' | 'fled'; lead: number; sq: Mon[]; foe: { sp: string; lv: number; hp: number; max: number; sh?: 1 }; ev: BEvent[]; ball: number; zone: string; /** 对手是校园小猫（友谊赛）：猫编号与名字 */ cat?: { id: number; name: string }; /** 训练家对战：训练家信息与对方队伍（按上场顺序） */ trainer?: { id: string; name: string; squad?: { sp: string; lv: number; hp: number; max: number; sh?: 1 }[] } }
-  | { t: 'restored'; ok: boolean; profile?: Profile; msg?: string };
+  | { t: 'restored'; ok: boolean; profile?: Profile; msg?: string }
+  /** 搬家券：ok 时带 ticket 与有效毫秒数；失败带一句话原因 */
+  | { t: 'migrate_ticket'; ok: boolean; ticket?: string; ms?: number; msg?: string }
+  /** 凭券换回身份：ok 时带 token 与学生证资料（券用一次即作废） */
+  | { t: 'migrate_claimed'; ok: boolean; token?: string; profile?: Profile; msg?: string };
 
 /** token：客户端随机生成，只用来"记住你"。16–64 位字母数字/横线/下划线 */
 export const validToken = (t: unknown): t is string => typeof t === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(t);

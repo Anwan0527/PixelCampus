@@ -3,6 +3,9 @@ import { ABOUT } from '@/shared/about';
 import { BootScene } from '@/scenes/BootScene';
 import { WorldScene } from '@/scenes/WorldScene';
 import { InteriorScene } from '@/scenes/InteriorScene';
+import { receiveMigration } from '@/core/migrateBoot';
+import { mountMigrateBanner } from '@/ui/MigrateBanner';
+import { OLD_HOST_GATE, shouldOfferMigration } from '@/shared/migrate';
 
 /** 测试环境构建（VITE_ENV=test，见 docs/feature/20261110-staging-env）：标题加前缀 + 顶部红色小标签，避免和正式环境混淆 */
 function markTestEnv() {
@@ -42,4 +45,12 @@ function whenSized(cb: () => void) {
   window.addEventListener('resize', onResize);
 }
 try { console.info(`%c${ABOUT.title}%c\n© ${ABOUT.year} ${ABOUT.author} · ${ABOUT.github}\n项目：${ABOUT.repo}（欢迎提 PR）\n${ABOUT.license}`, 'font-weight:bold;font-size:14px', ''); } catch { /* 没有控制台也不影响 */ }
-whenSized(start);
+// 搬家（docs/feature/20261117-domain-migration）：新域名带着搬家券（#m=）打开时，先导入老身份再启动游戏；老域名上挂「搬到新网址」入口
+whenSized(() => {
+  void receiveMigration().then((r) => {
+    if (r === 'reloading') return; // 页面马上刷新，不启动游戏
+    mountMigrateBanner();
+    if (OLD_HOST_GATE && shouldOfferMigration(location)) return; // 第二阶段：老域名只显示搬家页
+    start();
+  });
+});

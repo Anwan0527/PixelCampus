@@ -38,6 +38,12 @@ export function getToken(): string {
   return t;
 }
 
+/** 只读本机已有的 token（没有就返回 null，**不会**新建）：搬家要用本机原来的身份，不能顺手造一个新的 */
+export function peekToken(): string | null {
+  try { const t = globalThis.localStorage?.getItem(TOKEN_KEY); if (t && /^[A-Za-z0-9_-]{16,64}$/.test(t)) return t; } catch { /* 存储不可用 */ }
+  return memToken;
+}
+
 /** 用备份码恢复身份：把还原出来的 token 存进本机（之后 getToken 返回它）。存储不可用时仅本次有效。 */
 export function setToken(t: string) {
   memToken = t;
