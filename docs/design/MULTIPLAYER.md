@@ -161,3 +161,16 @@
 **校验**：服务器确认精灵存在、技能在 `learnable` 里、当前没带、`drop` 合法（`-1` 仅空槽；`>= 0` 下标存在）、不在战斗中；成功后更新 `mv`（新技能满 PP）并推回 `mon_data`。不需要新增存档字段。
 **客户端**：`MonPanel` 在当前技能旁显示「更换」、空槽显示「学习新技能」，选择后发 `mon_replace`，等 `mon_data` 再刷新；没有 `learnable` 时不显示入口。`BattleUi` 出招菜单显示属性 / 物理特殊 / 威力 / 命中 / PP / 克制，对手显示 `hp/max`，战斗结束显示结算摘要，增加快进（`localStorage`）。
 **服务端**：本地已实现（私有服务端仓库 `develop`）：`mon_data` 带 `learnableMap()`、`mon_replace` 走共享 `learnMove()`，`run()` 的战斗保护会拒绝战斗中更换；**测试服已部署（2026-11-10），正式服待部署**。
+
+## 玩家对战 PvP（2026-11-15，协议版本 11，additive）
+**共享规则**：`src/shared/pvp.ts`（`startPvp` / `submit` / `pvpStep` / `sideView` / `fullSquad`，纯函数 + 注入随机源；双方各自一份事件列表）。
+**消息**：C→S `pvp_invite {uid}` / `pvp_reply {uid, accept}` / `pvp_act {bid, turn, a}` / `pvp_leave`；S→C `pvp_invite {uid, name, ms}` / `pvp_state {bid, turn, phase, me, foe, ev, result?}` / `pvp_end {bid, result, msg}`。`PROTOCOL_VERSION` 不升。
+**校验**：只能在同一世界、视野内邀请；双方都是满血副本；不能用零食包；和野外战斗、世界 BOSS 互斥。每回合 60 秒超时判负；断线 30 秒可重连，超时判负。
+**客户端**：`src/ui/PvpUi.ts`；入口是对方学生证上的「对战」。
+
+## 世界 BOSS（组队 PVE，2026-11-16，协议版本 11，additive）
+**共享规则**：`src/shared/boss.ts`——`BOSS_DEF`（物种 `o09` 青鳞 Lv.30、人数血量倍数 `hpMul = [8,12,16,20]`、阶段 70% / 40% 与攻击 ×1.2 / ×1.5、首杀与重复奖励、45 秒回合超时、30 秒重连窗口、60 秒全员断线、入口 `BOSS_SPOT` 与 `reachPx`）、`startBoss` / `submitBoss` / `skipIdle` / `bossStep` / `bossSquad` / `bossMaxHp` 全是纯函数，随机源注入。`BEvent` 新增 `bossphase {n, label}`；`BossEvent = BEvent & { uid? }`——多人共享一场时，事件带 uid 才能让界面认出「谁被打中了」。
+**消息**：C→S `boss_challenge` / `boss_reply {uid, accept}` / `boss_act {bid, turn, a}` / `boss_leave`；S→C `boss_invite {uid, name, ms}` / `boss_state {bid, turn, phase, boss, players, ev, result?}` / `boss_end {bid, result, msg, reward?}`。`MonSave` 增加 `boss?: { first, kills }`（旧存档缺省 `{first:false, kills:0}`）。`PROTOCOL_VERSION` 不升。
+**校验与流程**（服务端）：只有队长能发起（单人无队伍也可以）；必须在公共世界、入口半径内；队伍 ≤ 4 人；和 PvP / 野外战斗互斥。邀请发给每个队员，**全员点头**才开局；一人拒绝就取消（30 秒没人回应也取消并告诉队长，拒绝后别的队员再点也不会开局）；队友必须在线且和队长在同一个世界。行动：所有还能行动的人都 `ready` 才 `bossStep`，有人提交时补发一次状态让队友看到「已出招」；45 秒到点用 `skipIdle` 把没提交的人跳过再结算（不结束战斗）。全员倒下判负；BOSS 清零判胜。断线 30 秒后该玩家 `down = true` 退出战斗（队伍继续），重连则清标记并重发状态；全员断线 60 秒作废。奖励只在胜利且未倒下时发，首杀按 `first`/`kills` 判定，只发一次。
+**客户端**：`src/ui/BossUi.ts`（邀请条、BOSS 卡片 + 阶段、队友列表（`ready` / 倒下 / 当前上场）、出招菜单、事件播报）；入口提示在 `src/scenes/world/interaction-rules.ts`（`boss` 优先于其它交互），发起在 `interaction.ts` 的 `bossSpot()`。
+**不写存档血量**：`bossSquad` / `fullSquad` 都是满血副本，战斗结束就丢。

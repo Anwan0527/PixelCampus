@@ -2,7 +2,7 @@
 
 > 对应 Issue：[EXIST-D/PixelCampus#20](https://github.com/EXIST-D/PixelCampus/issues/20)
 > 规范：[docs/feature/spec.md](../spec.md)
-> 状态：已确认（2026-11-15），待开工
+> 状态：已确认（2026-11-15）；客户端共享规则 / 界面 / 协议已实现（2026-11-16），服务端在私有仓库同步实现
 > 前置：PvP（#11 第二部分，PR #28）——组队 PVE 复用同一套「多玩家共享一场战斗」的骨架
 
 ## 0. 已确认的设计（本轮问答）

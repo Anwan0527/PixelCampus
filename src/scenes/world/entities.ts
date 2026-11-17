@@ -31,12 +31,16 @@ export function spawnNpcs(sc: WorldScene) {
   }
 }
 
-/** 训练家 NPC：按 shared/trainers.ts 的坐标放置，常驻不游走 */
+/** 训练家 NPC：按 shared/trainers.ts 的坐标放置，常驻不游走。
+ * 注意 tx/ty 是**原 5 m/格**的蓝图坐标（和 data/campus 一致），世界是放大 2 倍的，所以要 ×2 再 ×TILE。 */
 export function spawnTrainers(sc: WorldScene) {
   const count = (sc.cache.json.get('charsMeta') as { count: number }).count;
   for (const t of TRAINERS) {
-    const n = new Npc(sc, t.tx * TILE, t.ty * TILE, Math.min(t.look, count - 1), t.name, [t.before], false, 'down');
+    const n = new Npc(sc, t.tx * 2 * TILE, t.ty * 2 * TILE, Math.min(t.look, count - 1), t.name, [t.before], false, 'down');
     n.trainer = t;
+    // 头顶名字牌（和钓具老板同一套样式）：站在他旁边就知道这是哪位训练家
+    const tagStyle = { fontFamily: 'ArkPixel, monospace', fontSize: '12px', color: '#ffe9a0', stroke: '#2e1a10', strokeThickness: 3 };
+    n.nameTag = sc.add.text(n.x, n.y - 44, t.name, tagStyle).setOrigin(0.5, 1).setDepth(n.y + 2000);
     sc.trainers.set(t.id, n);
     sc.npcs.push(n);
   }

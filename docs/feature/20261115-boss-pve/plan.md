@@ -2,7 +2,7 @@
 
 > 由 [spec.md](spec.md) 生成；spec 变了先改 spec，再同步本文件。
 > 对应 Issue：[EXIST-D/PixelCampus#20](https://github.com/EXIST-D/PixelCampus/issues/20)
-> 状态：待开工（2026-11-15）
+> 状态：实现中（2026-11-16）：共享规则、协议、客户端界面与入口、单元 / 源码扫描 / 服务端测试已完成
 > 前置：PvP（PR #28），复用「多玩家共享一场战斗」的骨架
 
 ## 1. 第一步：验收标准 → 测试函数
