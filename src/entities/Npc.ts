@@ -9,6 +9,8 @@ import type { TrainerDef } from '@/shared/trainers';
 export class Npc extends Character {
   /** 训练家 NPC 的定义（普通行人是 null） */
   trainer: TrainerDef | null = null;
+  /** 头顶的名字牌（只有固定在场地的 NPC 有：训练家、钓具老板） */
+  nameTag: Phaser.GameObjects.Text | null = null;
   private tx: number; private ty: number;
   private wait = 0;
   /** 室内溜达范围（像素矩形）：设了就在这个范围里挑目标，也不做广场判断（室内没有广场） */

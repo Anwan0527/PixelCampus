@@ -1,5 +1,5 @@
 import type { NetClient } from '@/net/client';
-import { TELEPORTS, TELEPORT_GROUPS, TP_COOLDOWN_MS } from '@/shared/teleport';
+import { NPC_TELEPORTS, TELEPORTS, TELEPORT_GROUPS, TP_COOLDOWN_MS } from '@/shared/teleport';
 import { ui } from './actions';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -49,6 +49,7 @@ export class TeleportPanel {
       }
       panel.append(row);
     }
+    this.renderNpc(panel);
     this.root.append(panel);
     this.root.addEventListener('mousedown', (e) => { if (e.target === this.root) this.close(); });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); });
@@ -70,6 +71,38 @@ export class TeleportPanel {
     this.lastGo = Date.now(); this.pendingFloor = floor; this.pendingId = id; this.net.tpGo(id);
   }
   get isOpen() { return !this.root.classList.contains('hidden'); }
+
+  /**
+   * 「NPC 挑战」：一个入口，点开是训练家列表（名字 + 在哪儿），点一条就传到他旁边。
+   * 列表由 `NPC_TELEPORTS` 生成，以后加训练家会自动出现。
+   */
+  private renderNpc(panel: HTMLElement) {
+    if (!NPC_TELEPORTS.length) return;
+    panel.append(el('div', 'tp-group', 'NPC 挑战'));
+    const row = el('div', 'tp-row');
+    const entry = el('button', 'btn tp-btn', `NPC 挑战（${NPC_TELEPORTS.length}）`);
+    entry.type = 'button';
+    // 默认就展开：三条 NPC 的名字一眼能看到，点入口可以收起来
+    const list = el('div', 'tp-row tp-npc-list');
+    for (const t of NPC_TELEPORTS) {
+      const cell = el('div', 'tp-cell');
+      const b = el('button', 'btn tp-btn', t.name);
+      b.type = 'button'; b.dataset.id = t.id;
+      if (t.desc) b.title = `${t.name}：${t.desc}`;
+      b.addEventListener('click', () => this.go(t.id, null));
+      cell.append(b);
+      if (t.desc) cell.append(el('div', 'tp-npc-place', t.desc));
+      list.append(cell);
+    }
+    entry.classList.add('on'); entry.setAttribute('aria-expanded', 'true');
+    entry.addEventListener('click', () => {
+      const closed = list.classList.toggle('hidden');
+      entry.classList.toggle('on', !closed);
+      entry.setAttribute('aria-expanded', String(!closed));
+    });
+    row.append(entry);
+    panel.append(row, list);
+  }
   open() { this.say('', true); this.root.classList.remove('hidden'); }
   close() { this.root.classList.add('hidden'); }
   toggle() { this.isOpen ? this.close() : this.open(); }

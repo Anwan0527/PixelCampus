@@ -20,7 +20,7 @@ export type Act =
   | { t: 'pax_leave' } | { t: 'fish_reel' } | { t: 'fish_cancel' } | { t: 'stand' } | { t: 'dismount' } | { t: 'mount' }
   | { t: 'bird_feed'; id: number } | { t: 'cast' } | { t: 'open_cat'; ref: unknown }
   | { t: 'dorm_enter' } | { t: 'enter_interior'; ref: unknown } | { t: 'dialog'; title: string; text: string | string[] }
-  | { t: 'panel'; which: 'board' | 'shop' | 'fishshop' | 'wall' | 'portal' } | { t: 'egg'; ref: unknown }
+  | { t: 'panel'; which: 'board' | 'shop' | 'fishshop' | 'wall' | 'portal' | 'boss' } | { t: 'egg'; ref: unknown }
   | { t: 'pax_join'; uid: number } | { t: 'bin'; idx: number } | { t: 'sit'; ref: unknown } | { t: 'run_open' } | { t: 'talk'; ref: unknown };
 /** hint：undefined = 这一帧不动提示；null = 清掉提示；string = 显示这句。act 只有按了 E / 空格 / 触屏互动才有 */
 export interface Decision { hint: string | null | undefined; act?: Act }
@@ -38,11 +38,19 @@ export interface InteractInput {
   egg: { ref: unknown; hint: string; action?: string } | null;
   mateBike: { uid: number; name: string } | null; mateFar: { name: string } | null;
   bike: boolean; bin: number; binLeft: number; seat: { ref: unknown } | null; inStart: boolean;
-  npc: { ref: unknown } | null;
+  npc: { ref: unknown; name?: string; trainer?: boolean } | null;
+  /** 站在世界 BOSS 入口附近（可选，旧测试不传）；world = 在公共世界（spec 只允许公共世界挑战） */
+  boss?: { worldOk: boolean };
 }
 
 export function decideInteraction(i: InteractInput): Decision {
   const act = (a: Act): Act | undefined => (i.press ? a : undefined);
+  if (i.boss) {
+    if (!i.online) return { hint: '连上服务器才能挑战世界 BOSS' };
+    // 只在公共世界能挑战（个人 / 好友世界下不给按键，免得按了才报错）
+    if (!i.boss.worldOk) return { hint: '世界 BOSS 在公共世界才能挑战（按 O 切换世界）' };
+    return { hint: 'E  挑战世界 BOSS：精工湖·青鳞', act: act({ t: 'panel', which: 'boss' }) };
+  }
   if (i.paxPid) return { hint: 'E  下车', act: act({ t: 'pax_leave' }) }; // 坐在队友车后座：只能下车
   if (i.runActive) return { hint: '校园跑进行中：沿跑道按顺序跑（点屏幕上的「放弃」退出）' };
   if (i.fishPhase === 'fight') return { hint: undefined };
@@ -83,6 +91,6 @@ export function decideInteraction(i: InteractInput): Decision {
   if (i.seat) return { hint: 'E  坐下', act: act({ t: 'sit', ref: i.seat.ref }) };
   if (i.online && i.inStart) return { hint: 'E  校园跑：东区田径场', act: act({ t: 'run_open' }) };
   if (i.fishSpot) return cast();
-  if (i.npc) return { hint: 'E  和同学聊聊', act: act({ t: 'talk', ref: i.npc.ref }) };
+  if (i.npc) return { hint: i.npc.trainer ? `E  挑战训练家：${i.npc.name ?? ''}` : 'E  和同学聊聊', act: act({ t: 'talk', ref: i.npc.ref }) };
   return { hint: null };
 }

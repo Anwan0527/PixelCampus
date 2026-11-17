@@ -37,6 +37,8 @@ export class PvpUi {
   private menu = el('div', 'bt-menu');
   private st: PvpState | null = null;
   private busy = false;
+  /** 已经提交这一回合（服务器要等对方，期间界面上显示「等对方」） */
+  private submitted = false;
   private mode: 'main' | 'moves' | 'swap' = 'main';
   private promptTimer = 0;
   /** 战斗开始时调用（收起其它面板） */
@@ -76,7 +78,7 @@ export class PvpUi {
   private async onState(m: PvpState) {
     const fresh = !this.st || this.st.bid !== m.bid;
     if (fresh) {
-      this.st = m; this.busy = false; this.mode = 'main';
+      this.st = m; this.busy = false; this.submitted = false; this.mode = 'main';
       this.root.classList.remove('hidden'); this.onOpen?.();
       this.log.replaceChildren();
       this.say(`和 ${m.foe.name} 的对战开始了！`);
@@ -85,13 +87,16 @@ export class PvpUi {
     }
     this.busy = true; this.renderMenu();
     await this.play(m);
-    this.st = m; this.busy = false; this.mode = 'main';
+    this.st = m; this.busy = false; this.submitted = false; this.mode = 'main';
     this.renderStage(); this.renderMenu();
   }
 
   private onEnd(m: PvpEnd) {
     this.say(m.result === 'win' ? '对战胜利！' : m.result === 'lose' ? '对战失败……' : m.result === 'fled' ? '你离开了对战。' : '对战超时了。');
     if (m.msg) this.say(m.msg);
+    // 对战已经结束：把界面切成 over，否则「战斗 / 换精灵 / 逃跑」还留在上面，点了只会被服务器拒绝
+    this.busy = false; this.submitted = false;
+    if (this.st) this.st = { ...this.st, phase: 'over' };
     this.renderMenu();
   }
 
@@ -153,16 +158,19 @@ export class PvpUi {
 
   private btn(label: string, run: () => void, cls = 'btn') { const b = el('button', cls, label); b.type = 'button'; b.addEventListener('click', run); b.disabled = this.busy; return b; }
   private act(a: { t: 'move'; i: number } | { t: 'swap'; i: number } | { t: 'run' }) {
-    if (!this.st || this.busy) return;
-    this.busy = true; this.renderMenu();
+    if (!this.st || this.busy || this.submitted) return;
+    this.busy = true; this.submitted = true; this.renderMenu();
     this.net.pvpAct(this.st.bid, this.st.turn, a);
-    window.setTimeout(() => { if (this.busy && this.isOpen) { this.busy = false; this.renderMenu(); } }, 8000);
+    // 服务器要等双方都出招才会回 state：先显示「等对方」；8 秒还没动静就放开按钮，免得卡死
+    window.setTimeout(() => { if (this.busy && this.isOpen) { this.busy = false; this.submitted = false; this.renderMenu(); } }, 8000);
   }
 
   private renderMenu() {
     this.menu.replaceChildren();
     const m = this.st; if (!m) return;
     if (m.phase === 'over') { this.menu.append(this.btn('离开', () => this.close(), 'btn primary')); return; }
+    // 已经出招、在等对方：明确写一句，别只把按钮灰掉（玩家会以为技能用不了）
+    if (this.submitted || this.busy) { this.menu.append(el('div', 'mon-sub', '这一回合已经出招，等对方……')); return; }
     if (this.mode === 'main') {
       this.menu.append(
         this.btn('战斗', () => { this.mode = 'moves'; this.renderMenu(); }, 'btn primary'),
@@ -197,7 +205,7 @@ export class PvpUi {
 
   close() {
     this.root.classList.add('hidden');
-    this.st = null; this.busy = false;
+    this.st = null; this.busy = false; this.submitted = false;
     this.net.pvpLeave();
     this.onClose?.();
   }

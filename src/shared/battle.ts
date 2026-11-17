@@ -53,7 +53,11 @@ export type BEvent =
   /** 保护失败（连续使用衰减） */
   | { t: 'guardfail'; side: Side }
   /** 对方（训练家）换人：i = foeSquad 下标 */
-  | { t: 'foeswap'; i: number };
+  | { t: 'foeswap'; i: number }
+  /** 世界 BOSS 进入新阶段：n = 第几阶段（从 2 起），label = 界面上的叫法（如「第二阶段」） */
+  | { t: 'bossphase'; n: number; label: string }
+  /** 世界 BOSS：这个玩家的精灵全倒下了，退出出招（队伍继续打）；uid 由 BossEvent 带上 */
+  | { t: 'bossout' };
 
 /** 能力等级 / 状态只需要这两个容器；PvP 等其它战斗也能复用这些函数 */
 export interface FighterState { stages: Map<string, StageStages>; status: Map<string, StatusState[]> }

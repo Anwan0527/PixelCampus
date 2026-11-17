@@ -110,6 +110,9 @@ export interface NetHandlers {
   pvpInvite?: (m: Extract<ServerMsg, { t: 'pvp_invite' }>) => void;
   pvpState?: (m: Extract<ServerMsg, { t: 'pvp_state' }>) => void;
   pvpEnd?: (m: Extract<ServerMsg, { t: 'pvp_end' }>) => void;
+  bossInvite?: (m: Extract<ServerMsg, { t: 'boss_invite' }>) => void;
+  bossState?: (m: Extract<ServerMsg, { t: 'boss_state' }>) => void;
+  bossEnd?: (m: Extract<ServerMsg, { t: 'boss_end' }>) => void;
   /** 各只小猫对我的好感度（猫编号 → 点数） */
   cats?: (aff: Record<string, number>, beds?: number[], info?: Record<string, CatInfo>, gifts?: { today: number; total: number }) => void;
   /** 校园币余额（gain = 这次刚得到的数量）；商店买卖结果 */
@@ -345,6 +348,9 @@ export class NetClient implements ChatTransport {
       case 'pvp_invite': this.handlers.pvpInvite?.(m); break;
       case 'pvp_state': this.handlers.pvpState?.(m); break;
       case 'pvp_end': this.handlers.pvpEnd?.(m); break;
+      case 'boss_invite': this.handlers.bossInvite?.(m); break;
+      case 'boss_state': this.handlers.bossState?.(m); break;
+      case 'boss_end': this.handlers.bossEnd?.(m); break;
       case 'cats': this.handlers.cats?.(m.aff, m.beds, m.info, m.gifts); break;
       case 'coins': this.handlers.coins?.(m.n, m.gain); break;
       case 'shop_result': this.handlers.shopResult?.(m.ok, m.msg); break;
@@ -492,6 +498,10 @@ export class NetClient implements ChatTransport {
   pvpReply(uid: number, accept: boolean) { this.tx({ t: 'pvp_reply', uid, accept }); }
   pvpAct(bid: string, turn: number, a: { t: 'move'; i: number } | { t: 'swap'; i: number } | { t: 'run' }) { this.tx({ t: 'pvp_act', bid, turn, a }); }
   pvpLeave() { this.tx({ t: 'pvp_leave' }); }
+  bossChallenge() { this.tx({ t: 'boss_challenge' }); }
+  bossReply(uid: number, accept: boolean) { this.tx({ t: 'boss_reply', uid, accept }); }
+  bossAct(bid: string, turn: number, a: { t: 'move'; i: number } | { t: 'swap'; i: number }) { this.tx({ t: 'boss_act', bid, turn, a }); }
+  bossLeave() { this.tx({ t: 'boss_leave' }); }
   catTame(id: number) { this.tx({ t: 'cat_tame', id }); }
   catBattle(id: number) { this.tx({ t: 'cat_battle', id }); }
   tpGo(id: string) { this.tx({ t: 'tp_go', id }); }
