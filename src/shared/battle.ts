@@ -7,8 +7,8 @@
  * 判胜负。野生精灵血量归零 = 胜利（经验给出战的精灵）；我方首发倒下且队里还有活的 = 要求换人；全部倒下 = 失败。
  */
 import {
-  MON, STAGE_KEYS, STAGE_MAX, STRUGGLE, calcDamage, catchChance, hitRate, learnsetOf, moveSlots, maxHp, monStats, stageMul, xpForLevel, xpGain,
-  type Content, type Mon, type Move, type Rng, type StageKey, type Stats, type StatusKind, type StatusState,
+  MON, STAGE_KEYS, STAGE_MAX, STRUGGLE, calcDamage, catchChance, hitRate, learnsetOf, moveSlots, maxHp, monStats, stageMul, typeMult, xpForLevel, xpGain,
+  type Content, type Mon, type MonMove, type Move, type Rng, type StageKey, type Stats, type StatusKind, type StatusState,
 } from './mons';
 
 export type Action =
@@ -76,6 +76,8 @@ export interface Battle extends FighterState {
   lead: number;
   /** 参战过的下标（胜利后分经验） */
   fought: number[];
+  /** 对手的“认真程度”（选中最优招的概率）；缺省按野生算。只活在战斗里，不进存档 */
+  foeSmart?: number;
   phase: 'choose' | 'swap' | 'over';
   result?: 'win' | 'lose' | 'caught' | 'fled';
   /** 已经试过几次逃跑（越试越容易） */
@@ -99,10 +101,10 @@ export const zeroStages = (): StageStages => ({ atk: 0, def: 0, spa: 0, spd: 0, 
 
 export interface StepResult { ok: boolean; err?: string; ev: BEvent[] }
 
-export function startBattle(bid: string, wild: Mon, squad: Mon[]): Battle {
+export function startBattle(bid: string, wild: Mon, squad: Mon[], foeSmart?: number): Battle {
   const lead = squad.findIndex((m) => m.hp > 0);
   if (lead < 0) throw new Error('队伍里没有能战斗的精灵');
-  return { bid, turn: 1, foeSquad: [wild], foeLead: 0, wild, squad, lead, fought: [lead], phase: 'choose', runs: 0, stages: new Map(), status: new Map(), guardChain: new Map(), guarding: new Map() };
+  return { bid, turn: 1, foeSquad: [wild], foeLead: 0, wild, squad, lead, fought: [lead], phase: 'choose', runs: 0, stages: new Map(), status: new Map(), guardChain: new Map(), guarding: new Map(), ...(foeSmart === undefined ? {} : { foeSmart }) };
 }
 
 /** 训练家对战：对方也是队伍（第一只活的上场） */
@@ -196,6 +198,53 @@ export function runChance(mySpe: number, foeSpe: number, tries: number): number 
 
 const moveOf = (ct: Content, id: string): Move => ct.moves.get(id) ?? STRUGGLE;
 
+/**
+ * 对手的“认真程度”（选中“最优招”的概率）。野生温和、校园猫认真；
+ * 训练家沿用 `trainers.ts` 的 `aiChooseMove`（0.60），本表只改野生 / 猫战。
+ */
+export const FOE_SMART = { wild: 0.35, cat: 0.55, trainer: 0.6 } as const;
+
+/** 一招对当前目标的评分；`-Infinity` = 这一招不该选（0 倍、重复状态、血满时的回复招等） */
+export function scoreFoeMove(ct: Content, b: FighterState, self: Mon, target: Mon, mv: Move): number {
+  const types = ct.species.get(target.sp)?.types ?? [];
+  const frac = self.hp / Math.max(1, maxHp(ct, self));
+  if (mv.power > 0) {
+    const mult = typeMult(ct.elements, mv.type, types);
+    if (mult <= 0) return -Infinity;
+    return mv.power * mult * (Math.max(1, mv.acc) / 100) * (mv.drain ? 1.15 : 1);
+  }
+  if (mv.heal) {
+    if (frac >= 0.95) return -Infinity; // 血满别浪费回合
+    const base = frac <= 0.4 ? 90 : 20 + (1 - frac) * 40;
+    return mv.heal.selfSleep ? base * 0.5 : base;
+  }
+  if (mv.status) {
+    if (hasStatus(b, target, mv.status.s)) return -Infinity; // 同一个状态别叠
+    return 25 * ((mv.status.chance ?? 100) / 100);
+  }
+  if (mv.stat) return 15;
+  if (mv.guard) return 10;
+  return 5;
+}
+
+/**
+ * 对手选招（野生 / 校园猫共用）：先筛掉 PP 用完的，再按 `smart` 概率认真挑一次，否则随机。
+ * 只用注入的 rnd，相同种子结果一致。返回招式下标。
+ */
+export function pickFoeMove(ct: Content, b: FighterState, self: Mon, target: Mon, mvs: readonly MonMove[], smart: number, rnd: Rng): number {
+  const usable = mvs.map((m, i) => ({ m, i })).filter((x) => x.m.pp > 0);
+  const pool = usable.length ? usable : mvs.map((m, i) => ({ m, i }));
+  if (!pool.length) return 0;
+  if (pool.length === 1 || rnd() >= smart) return pool[Math.floor(rnd() * pool.length)].i;
+  let best = -Infinity, bestIdx = pool[0].i;
+  for (const { m, i } of pool) {
+    const sc = scoreFoeMove(ct, b, self, target, moveOf(ct, m.id));
+    if (sc > best || (sc === best && rnd() < 0.5)) { best = sc; bestIdx = i; }
+  }
+  // 所有招都被否决（理论上不会）：退回随机
+  return best === -Infinity ? pool[Math.floor(rnd() * pool.length)].i : bestIdx;
+}
+
 /** 一个回合的结算；改动 b（和里面的 Mon），返回事件。非法行动不改任何东西 */
 export function step(ct: Content, b: Battle, act: Action, rnd: Rng): StepResult {
   if (b.phase === 'over') return { ok: false, err: '战斗已经结束', ev: [] };
@@ -275,7 +324,11 @@ export function step(ct: Content, b: Battle, act: Action, rnd: Rng): StepResult 
     if (def.hp <= 0) { ev.push({ t: 'faint', side: side === 'me' ? 'foe' : 'me' }); b.stages.delete(def.id); return true; }
     return false;
   };
-  const wildMove = (): Move => { const list = foe.mv.length ? foe.mv : [{ id: 'struggle', pp: 1 }]; return moveOf(ct, list[Math.floor(rnd() * list.length)].id); };
+  const wildMove = (): Move => {
+    const list: readonly MonMove[] = foe.mv.length ? foe.mv : [{ id: 'struggle', pp: 1 }];
+    const i = pickFoeMove(ct, b, foe, me(), list, b.foeSmart ?? FOE_SMART.wild, rnd);
+    return moveOf(ct, list[i]?.id ?? 'struggle');
+  };
 
   let over = false;
   const foeTurn = () => { if (!over && foe.hp > 0 && me().hp > 0) attack('foe', wildMove()); };
@@ -387,6 +440,8 @@ export function step(ct: Content, b: Battle, act: Action, rnd: Rng): StepResult 
   b.guarding.clear();
 
   // ---- 判胜负
+  // 同归于尽（反伤、状态伤害等）：自己队伍全倒就是输，不给经验也不算胜利
+  if (me().hp <= 0 && !alive(b)) { b.phase = 'over'; b.result = 'lose'; b.turn++; return { ok: true, ev }; }
   if (foe.hp <= 0) {
     // 训练家：对方换人，战斗继续（经验在最终胜利时结算）
     const next = b.foeSquad.findIndex((m) => m.hp > 0);

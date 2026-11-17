@@ -91,6 +91,7 @@ docs/
 | [feature/20261114-pvp/](feature/20261114-pvp/spec.md) | 玩家对战（PvP）：1 对 1 邀请、服务器权威、超时与断线（协作者开发，公开 + 服务端 PR 一起上线） |
 | [feature/20261112-farming/](feature/20261112-farming/spec.md) | 校园耕作：16 块私田、大树洞入口、农场管理员、好友帮浇 / 偷摘（协作者开发客户端与共享规则，服务端由维护者补齐，已上线） |
 | [feature/20261115-boss-pve/](feature/20261115-boss-pve/spec.md) | 组队 PVE 世界 BOSS「精工湖·青鳞」+ 传送面板 NPC 挑战入口（协作者开发客户端与共享规则，服务端由维护者补齐，已上线） |
+| [feature/20261117-wild-ai/](feature/20261117-wild-ai/spec.md) | 野生 / 校园猫对战 AI：按克制与血量选招、难度分档、纯共享规则不改协议（Issue #11，开发中） |
 - 每个新功能复制成 `docs/feature/<YYYYMMDD-功能名>/spec.md` + `plan.md`；**先 spec、主人确认，再 plan、主人确认，再写代码**。
 - 2026-11-10 起 spec 和 plan **都进公开仓库**：不要写服务器地址、口令、玩家数据（运维细节写到私有文档）。
 
