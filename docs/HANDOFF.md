@@ -1,4 +1,4 @@
-# 项目交接 / 现状（2026-11-10 整理）
+# 项目交接 / 现状（2026-11-17 整理）
 
 > 给新开的对话、新协作者用：先读这一份和 `CLAUDE.md`，再按需读专题文档（§8 索引）。
 > 本文只写**现在是什么样**；做过什么看 [CHANGELOG.md](CHANGELOG.md)，有什么功能看 [FEATURES.md](FEATURES.md)，接下来做什么听主人的安排。
@@ -18,7 +18,8 @@
 PixelGame/
 ├─ data/campus/       **manual.json（手动层：主人用地图编辑器改的，编译时最后处理）**；蓝图 JSON：terrain/*.json（按文件名顺序叠图层）、buildings/*.json、pois.json、geo.json（卫星配准+视差+放大倍数）、osm-roads.json
 ├─ data/interiors/    室内数据（宿舍室内 + 214 室 + 2026-11-10 新增：三个餐厅各 3 层、两个公共教学楼各 5 层、图书馆、第二/第三超市；`tools/world/gen-halls.ts` 是起稿脚本，改过的文件别再跑它）；建筑 → 室内的对应在 `data/campus/interior-links.json`
-├─ data/mons/         精灵内容包
+├─ data/mons/         精灵内容包（packs/open/ 含 moves.json 招式库）、zones.json 野外区域、typechart-18.json
+├─ data/art/          非程序化的美术素材及来源登记（目前只有农场底图与 16 张地块状态图，**AI 生成，主人已确认接受**，见 farm-scene/SOURCE.md）
 ├─ tools/
 │  ├─ editor/           地图编辑器（`npm run editor`，本地 5174；server.ts + index.html + main.ts），见 MAP_EDITOR.md
 │  ├─ world/            compile.ts（蓝图→地面块/图集/碰撞/world.json/小地图，含自动景观与清理 pass）、scale.ts、terrain.ts、seasons.ts（四季配色）
@@ -34,14 +35,17 @@ PixelGame/
 │  │                       systems/ 里还有节日氛围 festival.ts、宿舍浴缸闪光 bathfx.ts、宿舍装修 decoredit.ts / decorview.ts（家具目录与摆放规则在 shared/decor.ts）；art/festival.ts 画节日头饰和粒子贴图
 │  └─ shared/           **客户端和（私有的）服务端共用**：协议、规则、价格、目录
 ├─ tools/docs/          钓鱼攻略生成器（`npm run guide`：docs/guide 模板 + shared 规则 → docs/guide/FISHING_GUIDE.md）
-├─ tests/               客户端与共享规则的测试；generated-world 测试要先 npm run assets
+├─ server/              **服务端（独立私有仓库 PixelCampus-server 的克隆，公开仓库里没有）**：handlers/*-handler.ts 按功能分模块，tests/ 是服务端集成测试；见 ARCHITECTURE.md 第 3 节与 SYSTEMS_MAP.md
+├─ deploy/              部署与测试环境脚本（由私有备份库跟踪，不在公开仓库）
+├─ tests/               客户端与共享规则的测试（含 integration/ 的 happy-dom 面板测试）；generated-world 测试要先 npm run assets
 ├─ .github/             CI（PR 自动跑 生成资源 + 类型检查 + 测试 + 构建）+ PR 模板
 └─ docs/
 ```
 
-## 2.5 当前规模与最近的批次（2026-11-10）
-- 客户端约 200 个源文件、2.4 万行；共享规则 `src/shared/` 65 个文件；测试：公开仓库 CI 跑 59 个文件 556 项；加上服务端私有仓库的测试共 90 个文件 1061 项（只在有 `server/` 的机器上跑）；世界 88 栋建筑、17 个地标、7593 个对象。
-- 功能全貌见 [FEATURES.md](FEATURES.md)；联机消息见 [PROTOCOL.md](architecture/PROTOCOL.md)（自动生成）；最近批次：宿舍装修 / 家具 / 染色 / 一键还原 → 校猫与好感度 2.0 → 水禽与宿舍养猫 → 商店 / 任务 / 校园墙 / Esc → 四栋新宿舍楼 / 学院合并 → 盲盒合成 / 地点留言板（可传图）→ 大文件拆分与玩家档案冻结。
+## 2.5 当前规模与最近的批次（2026-11-17）
+- 客户端 188 个源文件、2.5 万行；共享规则 `src/shared/` 69 个文件；服务端 57 个源文件、约 8 千行；工具 76 个文件、约 1.1 万行；测试：公开 76 个文件 + 集成 8 个，服务端 34 个文件，**全量 110 个测试文件 1273 项**（公开仓库 CI 只跑公开那部分；服务端测试只在有 `server/` 的机器上跑）；世界 88 栋建筑、18 个地标、27 份室内数据；联机消息约 300 条（见 PROTOCOL.md）。线上档案约 9 千份（2 万份时评估换 SQLite，见 ADR 0006）。
+- 功能全貌见 [FEATURES.md](FEATURES.md)；**每个功能的代码在哪（共享 / 服务端 / 客户端 / 数据 / 测试）见 [SYSTEMS_MAP.md](architecture/SYSTEMS_MAP.md)**；联机消息见 [PROTOCOL.md](architecture/PROTOCOL.md)（自动生成）。
+- 最近批次（按时间）：宿舍装修 / 家具 / 染色 → 校猫 2.0 → 水禽与宿舍养猫 → 商店 / 任务 / 校园墙 → 四栋新宿舍楼 → 盲盒合成 / 地点留言板 → 大文件拆分与档案冻结（11-10）→ **多层室内（餐厅 / 教学楼 / 图书馆 / 超市）与按层传送**（11-10）→ **精灵战斗深度：图鉴 / 能力等级 / 状态异常 / 非伤害招式 / 技能库 / 训练家 NPC / PvP / 世界 BOSS**（11-10 ～ 11-17，协作者 Anwan0527 开发）→ **钓鱼全服播报 + 校园耕作**（11-12 ～ 11-14，协作者 Tiantian-17 开发客户端与规则，服务端由主人补）→ 室内传送与造型修复（11-13）。
 - **新功能的开发流程**：先写 `docs/feature/<日期-名称>/spec.md`（需求，主人确认）→ `plan.md`（计划，主人确认）→ 开发 → 测试 → 同步 FEATURES / CHANGELOG（见 [feature/spec.md](feature/spec.md)、[feature/plan.md](feature/plan.md)）。
 - 文档总索引：[docs/README.md](README.md)。
 
@@ -64,7 +68,11 @@ PixelGame/
 - 室内：自己的宿舍（InteriorScene，好友可做客）+ 214 室 + **多层大楼**（餐厅 3 层、教学楼 5 层，楼梯换层，`floor`/`building`/`stairs` 字段，见 `docs/feature/20261110-dining-halls/`）；椅子 / 沙发都能坐；窗口名与台词是占位（未核实）；**第一超市在地图上没有建筑，待主人指定**。编辑用 `/interior`（见 MAP_EDITOR.md「室内编辑器」）。
 - 蓝图里 `ground:true` 的楼（模型脚印）不再做视差修正，与旧的"量自屋顶"条目并存；编辑器里改的是脚印，两种来源的楼编辑体验一致。
 - Vite 构建 chunk > 1.4 MB（Phaser）；`WorldScene.ts` 已按功能拆成 `scenes/world/*`（2026-11-10，主文件 401 行），样式表拆成 `ui/styles/01~16`；新功能请在新文件里写、在骨架里登记一行，别再往大文件里堆。
-- 手机真机体验（摇杆手感、键盘弹出、首屏加载慢、面板排版）还没有系统测过。
+- 手机真机体验（摇杆手感、键盘弹出、首屏加载慢、面板排版）还没有系统测过；2026-11 上线的室内多层 / 农场 / PvP / BOSS 都只在桌面浏览器实测过。
+- **公开 CI 不跑服务端测试**：改了 `src/shared/*`（规则、传送点数量、物种招式、协议）后，要在有 `server/` 的机器上跑全量 `npx vitest run`；审协作者 PR 时同样（见 process/SERVER_COLLABORATION.md）。
+- 大文件拆分候选：`src/scenes/InteriorScene.ts`（宿舍 / 多层 / 农场混在一起）、`src/net/client.ts`、`server/progress.ts`、`server/game.ts`。
+- 战斗相关占位值待调：世界 BOSS 的血量倍数 / 奖励、AI 方（野生 / 训练家）使用 power 为 0 的非伤害招式时效果不生效（只走伤害公式）。
+- 第一超市在地图上没有建筑（待主人指定位置）；室内窗口名 / NPC 台词是占位（`docs/feature/20261110-dining-halls/SOURCES.md`）。
 - 价格/平衡（ECONOMY.md §6）是推演值，上线后要看真实数据再调。
 
 ## 6. 开发与调试手册
@@ -98,6 +106,7 @@ PixelGame/
 | [adr/](adr/README.md) | 架构决策记录：为什么这样做（13 份） |
 | [COLLABORATION.md](process/COLLABORATION.md) | **多人协作流程**：怎么 fork、提 PR，主人怎么审、怎么上线 |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | 代码与数据流架构 |
+| [SYSTEMS_MAP.md](architecture/SYSTEMS_MAP.md) | **功能 → 代码在哪**（共享规则 / 服务端 / 客户端 / 数据 / 测试） |
 | [MULTIPLAYER.md](design/MULTIPLAYER.md) | 联机需求、协议、各批功能设计 |
 | [ECONOMY.md](design/ECONOMY.md) | 货币、商店、校园墙的设计 |
 | [MAP_EDITOR.md](map/MAP_EDITOR.md) | **地图编辑器**：主人手动微调地图的小工具、手动层格式 |

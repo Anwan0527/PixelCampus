@@ -160,7 +160,7 @@
 **消息**：S→C `mon_data` 增加 `learnable?: Record<string, string[]>`（精灵 id → 技能 id，服务端算、不持久化）；C→S 新增 `mon_replace { id, move, drop }`；S→C 复用 `mon_result { ok, msg }` 并推回 `mon_data`。`PROTOCOL_VERSION` 不升。
 **校验**：服务器确认精灵存在、技能在 `learnable` 里、当前没带、`drop` 合法（`-1` 仅空槽；`>= 0` 下标存在）、不在战斗中；成功后更新 `mv`（新技能满 PP）并推回 `mon_data`。不需要新增存档字段。
 **客户端**：`MonPanel` 在当前技能旁显示「更换」、空槽显示「学习新技能」，选择后发 `mon_replace`，等 `mon_data` 再刷新；没有 `learnable` 时不显示入口。`BattleUi` 出招菜单显示属性 / 物理特殊 / 威力 / 命中 / PP / 克制，对手显示 `hp/max`，战斗结束显示结算摘要，增加快进（`localStorage`）。
-**服务端**：本地已实现（私有服务端仓库 `develop`）：`mon_data` 带 `learnableMap()`、`mon_replace` 走共享 `learnMove()`，`run()` 的战斗保护会拒绝战斗中更换；**测试服已部署（2026-11-10），正式服待部署**。
+**服务端**：本地已实现（私有服务端仓库 `develop`）：`mon_data` 带 `learnableMap()`、`mon_replace` 走共享 `learnMove()`，`run()` 的战斗保护会拒绝战斗中更换；**测试服 2026-11-10 16:32 已部署，正式服 2026-11-10 22:35 已上线**（服务端后来合进了 `main`）。
 
 ## 玩家对战 PvP（2026-11-15，协议版本 11，additive）
 **共享规则**：`src/shared/pvp.ts`（`startPvp` / `submit` / `pvpStep` / `sideView` / `fullSquad`，纯函数 + 注入随机源；双方各自一份事件列表）。

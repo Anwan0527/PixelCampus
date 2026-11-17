@@ -2,7 +2,7 @@
 
 > 对应 Issue：[EXIST-D/PixelCampus#8](https://github.com/EXIST-D/PixelCampus/issues/8)
 > 规范：[docs/feature/spec.md](../spec.md)
-> 状态：**已确认并实现（2026-11-10）**；测试 / 本地 E2E 通过，PR 待提
+> 状态：**已确认并实现（2026-11-10）**；已上线（2026-11-10 22:35）；测试 / 本地 E2E 通过
 
 ## 0. 已确认的设计（本轮问答）
 

@@ -1,4 +1,4 @@
-# 文档索引（2026-11-10 按工程化目录整理）
+# 文档索引（2026-11-10 按工程化目录整理，2026-11-17 复查）
 
 > 文档按用途分目录：入口与现状 → 架构 → 设计 → 地图 → 美术 → 指南 → 流程 → 决策记录（ADR）→ 功能规范（feature）。**新增 / 删除 / 重命名文档时同步改这里。**
 > 状态：✅ 现行（和代码一致）· 🔄 自动生成（别手改）· 📜 历史记录（细节以代码为准）· ⚠️ 部分过期（已标注）。
@@ -34,6 +34,7 @@ docs/
 | 文档 | 内容 | 状态 |
 |---|---|---|
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | 数据流、客户端 / 服务端分层、信任模型、测试与 CI、世界放大与流式加载 | ✅ |
+| [SYSTEMS_MAP.md](architecture/SYSTEMS_MAP.md) | **系统地图：功能 → 共享规则 / 服务端 / 客户端 / 数据 / 测试在哪**（2026-11-17 新增） | ✅ |
 | [PROTOCOL.md](architecture/PROTOCOL.md) | 联机消息索引（每种消息的方向与说明，按功能分组） | 🔄 `npm run protocol:doc`，测试检查是否最新 |
 
 ## design/ 系统设计
@@ -81,7 +82,7 @@ docs/
 | [feature/20261110-collaborator-prod-deploy/](feature/20261110-collaborator-prod-deploy/spec.md) | 协作者部署正式环境（已上线） |
 | [feature/20261110-mon-battle/](feature/20261110-mon-battle/spec.md) | 精灵对战第一批：技能更换、战斗信息、结算页、快进、耄耋 5 技能槽（协作者开发，已上线） |
 | [feature/20261110-mon-dex/](feature/20261110-mon-dex/spec.md) | 精灵图鉴页：未见过剪影 / 详情 / 筛选（协作者开发，已上线） |
-| [feature/20261110-dining-halls/](feature/20261110-dining-halls/spec.md) | 室内扩展：三个餐厅（各三层）、两个公共教学楼（各五层）、图书馆、第二 / 第三超市；楼梯、直达某层传送、室内椅子可坐（v3，已实现，未部署）；含 plan.md 与 SOURCES.md（窗口来源 / 未核实清单） |
+| [feature/20261110-dining-halls/](feature/20261110-dining-halls/spec.md) | 室内扩展：三个餐厅（各三层）、两个公共教学楼（各五层）、图书馆、第二 / 第三超市；楼梯、直达某层传送、室内椅子可坐（v3，已上线）；含 plan.md 与 SOURCES.md（窗口来源 / 未核实清单） |
 | [feature/20261111-battle-stages/](feature/20261111-battle-stages/spec.md) | 战斗深度 2A-1：能力等级（±6、伤害与先手倍率、卡片显示；协作者开发，已上线） |
 | [feature/20261111-battle-status/](feature/20261111-battle-status/spec.md) | 战斗深度 2A-2：状态异常（中毒 / 灼伤 / 麻痹 / 睡眠 / 冰冻、回合结算、捕捉倍率；协作者开发，已上线） |
 | [feature/20261112-fishing-broadcast/](feature/20261112-fishing-broadcast/spec.md) | 钓鱼全服播报：神话鱼 / 破个人纪录触发，世界频道 + 金色横幅（协作者开发客户端与共享规则，服务端由维护者补齐，已上线） |

@@ -30,9 +30,14 @@ tools/art/*  ──────────►│ 图集（人物、小猫、道
 - `index.ts`：HTTP（静态页 + `/healthz` + 图片上传 `POST /up/<券>` / 读取 `GET /img/<名>`）+ WS 入口，组装各存储；`game.ts`：核心（连接、加入 / 退出、移动校验、视野快照、发送、tick）+ 「消息类型 → 处理函数」分发表；各功能在 `server/handlers/*-handler.ts`（管理员、举报、任务、宿舍、留言板、校园墙、钓鱼、商店、交易、社交、组队、牵手、世界、传送、精灵、节日、聊天…），handler 只通过窄接口 `GameCtx` 访问核心。联机消息清单见 [PROTOCOL.md](PROTOCOL.md)。
 - 持久化都是 `data/server/`下的文件：`store.ts`（玩家档案：快照 + 增量日志，防抖 + 原子写；离线 10 分钟的档案在内存里冻结成压缩 JSON，`/healthz` 有 heapMB / rssMB / profiles / frozen）、`place`（地点留言：`place.jsonl` + `place-img/` 图片文件）、`board`/`wall`（追加写 JSONL，删除/审核也是事件行，启动时重放）、`notices`、`social`（好友 JSON + 私聊 JSONL）、`chatlog`、`config`。
 - 规则分层：`progress.ts`（背包/好感/每日任务/币/商店/猫窝，和网络解耦便于测试）、`run.ts`（校园跑房间）、`party.ts`（组队）、`bikes.ts`（留车）、`admin.ts`（口令/令牌/限流）。
+- **handler 分层**（`server/handlers/*-handler.ts`，2026-11-10 起）：`game.ts` 只管连接、玩家表、收发和子系统，每个功能模块在自己的 `register(d)` 里往分发表（`dispatch.ts`）登记消息类型，并用 `ctx.ts`（`GameCtx`）声明自己要用核心的哪些成员；新增一种消息 = 在对应 handler 里加一行 `d.on([...])`。限频由 `dispatch` 的 `limit`（`action` / `social`）统一做。
+- **战斗相关会话**都只在内存里：`mons.ts`（野外 / 训练家）、`pvp.ts`、`boss.ts`；互相检查 `inBattle`，战斗中不能传送；断线 / 重连钩子在 `game.ts` 的 `remove` 与登录里。
+- **懒结算**：耕作成长、精灵回血等不跑定时器遍历档案，读到时按时间差补算（`shared/farming.ts` 的 `settleFarm`、`monbox.ts` 的 `regenSave`）。
+- 详细的「功能 → 文件」对照见 [SYSTEMS_MAP.md](SYSTEMS_MAP.md)。
 - **信任模型**：客户端只上报位置和"想做什么"；价格、掉落、判定、限频、距离检查都在服务器；`src/shared` 里放可共用的纯函数规则，客户端用来显示、服务器用来裁决。
 
 ## 4. 测试与 CI
+- **测试分三处**：`tests/`（公开仓库，客户端与共享规则；`tests/integration/` 是 happy-dom 面板测试）、`server/tests/`（服务端仓库，真起服务器 + ws 客户端，覆盖各 handler）、两者合起来才是全量（`npx vitest run`，约 1 分钟）。**公开仓库的 CI 看不到 `server/tests`**，改了共享规则要本地跑全量。
 - `tests/`：蓝图/保真度/生成世界（需先 `npm run assets`）、服务器集成（真起服务器 + ws 客户端）、进度/经济/外观/社交等纯逻辑。
 - `.github/workflows/ci.yml`：PR 与 main 推送时 生成资源 → 类型检查 → 测试 → 构建；部署只由主人手动执行（见 COLLABORATION.md）。
 
