@@ -218,7 +218,17 @@ export function learnsetOf(ct: Content, sp: Species): LearnEntry[] {
 export const moveSlots = (sp: Pick<Species, 'moveSlots'> | undefined): number => sp?.moveSlots ?? MON.MOVES_MAX;
 /** 这个等级时会的技能：已学到的里取最近学的几个（技能槽数见 moveSlots），PP 满 */
 export function movesAtLevel(ct: Content, sp: Species, lv: number): MonMove[] {
-  return learnsetOf(ct, sp).filter((e) => e.lv <= lv).slice(-moveSlots(sp)).map((e) => ({ id: e.id, pp: ct.moves.get(e.id)!.pp }));
+  const known = learnsetOf(ct, sp).filter((e) => e.lv <= lv);
+  const slots = moveSlots(sp);
+  let out = known.slice(-slots).map((e) => ({ id: e.id, pp: ct.moves.get(e.id)!.pp }));
+  // 技能库里每个属性的第 5、6 号招都是变化招，而这里取的是「最后学到的 N 个」，
+  // 于是 Lv28 以上会一个伤害招都没有（怎么打都打不动）。兜底：至少留一个威力最高的伤害招。
+  if (!out.some((m) => (ct.moves.get(m.id)?.power ?? 0) > 0)) {
+    const dmg = known.filter((e) => (ct.moves.get(e.id)?.power ?? 0) > 0)
+      .sort((a, b) => (ct.moves.get(b.id)!.power) - (ct.moves.get(a.id)!.power));
+    if (dmg.length && slots > 0) out = [...out.slice(0, slots - 1), { id: dmg[0].id, pp: ct.moves.get(dmg[0].id)!.pp }];
+  }
+  return out;
 }
 
 // ------------------------------------------------------------------ 生成一只精灵
